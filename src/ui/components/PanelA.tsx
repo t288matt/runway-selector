@@ -2,8 +2,10 @@
 // the recommendation comes from the engine's explanation or from the pack.
 import { currentModeOptions, type PanelAModel } from '../model/panels';
 import type { ViewData } from '../model/dashboard';
+import type { CurrentModeStatus as Status } from '../model/drawer';
+import { CurrentModeStatus } from './CurrentModeStatus';
 
-export function PanelA({ view, model, onCurrentMode }: { view: ViewData; model: PanelAModel; onCurrentMode: (id: string | null) => void }) {
+export function PanelA({ view, model, onCurrentMode, status, onConfirmCurrent }: { view: ViewData; model: PanelAModel; onCurrentMode: (id: string | null) => void; status: Status; onConfirmCurrent: () => void }) {
   const options = currentModeOptions(view);
   const select = (
     <div className="cur">
@@ -14,6 +16,7 @@ export function PanelA({ view, model, onCurrentMode }: { view: ViewData; model: 
         ))}
       </select>
       <div className="small">{model.currentNote}</div>
+      <CurrentModeStatus status={status} onConfirm={onConfirmCurrent} />
     </div>
   );
 

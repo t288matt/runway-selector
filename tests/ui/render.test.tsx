@@ -15,6 +15,7 @@ import { PACKS, readJson, toRaw, TEST_PACK, TEST1_PACK } from '../helpers/packs'
 import { baseFor, inputFor, quietTraffic, steady, tailwindOn } from '../engine/helpers';
 import { BASE, packOf, rigFor, same, type Wx } from '../engine/planHelpers';
 import { decodeMetarFixture, decodeTafFixture, fixture, nowOf, packWith } from '../weather/helpers';
+import { createMemoryStore } from '../../src/store';
 import { zoneOffsetLabel } from '../../src/ui/format';
 import { gridCellClasses, renderDashboard, textOf, viewFromInput, viewOf } from './helpers';
 
@@ -380,7 +381,7 @@ describe('text safety (SEC-2)', () => {
 });
 
 describe('the application states', () => {
-  const deps = { fetch: () => Promise.reject(new Error('not used')), now: () => 0 };
+  const deps = { fetch: () => Promise.reject(new Error('not used')), now: () => 0, store: createMemoryStore() };
   it('draws only the error when the pack is invalid', () => {
     const html = renderToStaticMarkup(<AppBody state={{ status: 'error', message: 'modes.json: unknown field' }} deps={deps} />);
     expect(textOf(html)).toContain('modes.json: unknown field');
@@ -400,7 +401,7 @@ describe('the application states', () => {
   it('starts with empty weather boxes and "No weather entered" for any pack', () => {
     for (const ref of PACKS) {
       const pack = packWith(ref);
-      const html = renderToStaticMarkup(<AppBody state={{ status: 'ready', pack }} deps={deps} />);
+      const html = renderToStaticMarkup(<AppBody state={{ status: 'ready', pack, airports: [pack.airport.icao], airportError: null }} deps={deps} />);
       const text = textOf(html);
       expect(text).toContain('No weather entered');
       expect(html).toMatch(/<textarea id="wx-metar"[^>]*><\/textarea>/);

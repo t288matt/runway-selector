@@ -1,6 +1,7 @@
 // The scheduling rules (UP-1, UP-2, UP-3) with a fake clock, fake timers and a
 // fake fetch: no React, no real time, no network.
 import { describe, expect, it } from 'vitest';
+import { createMemoryStore } from '../../src/store';
 import { createController, TICK_MS, type Controller, type Timers } from '../../src/ui/controller';
 import { freshness, freshnessChips } from '../../src/ui/model/dashboard';
 import { YSSY_PACK } from '../helpers/packs';
@@ -57,6 +58,7 @@ function rig(start: number = NOW0): Rig {
     pack,
     now: () => clock.now,
     timers: fake,
+    store: createMemoryStore(),
     fetch: async () => {
       calls.n += 1;
       if (feed.fail) throw new Error('network down');

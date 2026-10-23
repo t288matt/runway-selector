@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { plan, type EngineInput, type PlanResult } from '../../src/engine';
 import type { AirportPack } from '../../src/refdata';
 import { Dashboard } from '../../src/ui/components/Dashboard';
+import type { SettingsBridge } from '../../src/ui/components/SettingsDrawer';
 import { EMPTY_FEED, type FeedState, type ViewData } from '../../src/ui/model/dashboard';
 import { BASE, specsFor, trafficFor, type Rig, type Wx } from '../engine/planHelpers';
 import { inputFor } from '../engine/helpers';
@@ -49,12 +50,31 @@ export function viewFromInput(pack: AirportPack, input: EngineInput): ViewData {
 
 const NOOP_OUTCOME = { ok: true, message: null, warnings: [] };
 
-export function renderDashboard(view: ViewData, feed: FeedState = EMPTY_FEED, drawerOpen = false): string {
+/** A drawer bridge with nothing stored and no-op actions; override what a test needs. */
+export function testBridge(overrides: Partial<SettingsBridge> = {}): SettingsBridge {
+  return {
+    currentModeRecord: null,
+    audit: [],
+    reload: { status: 'idle', message: null },
+    airports: [],
+    airportError: null,
+    notices: [],
+    onConfirmCurrent: () => undefined,
+    onReload: () => undefined,
+    onSwitchAirport: () => undefined,
+    onClearAudit: () => undefined,
+    onExportAudit: () => ({ filename: 'x.json', text: '{}' }),
+    onDismissNotice: () => undefined,
+    ...overrides,
+  };
+}
+
+export function renderDashboard(view: ViewData, feed: FeedState = EMPTY_FEED, drawerOpen = false, bridge: SettingsBridge = testBridge(), displayNowMs: number = view.calcNowMs + 12 * 60_000): string {
   return renderToStaticMarkup(
     <Dashboard
       view={view}
       feed={feed}
-      displayNowMs={view.calcNowMs + 12 * 60_000}
+      displayNowMs={displayNowMs}
       busy={false}
       drawerOpen={drawerOpen}
       onRefresh={() => undefined}
@@ -63,6 +83,7 @@ export function renderDashboard(view: ViewData, feed: FeedState = EMPTY_FEED, dr
       onCurrentMode={() => undefined}
       onApplyMetar={() => NOOP_OUTCOME}
       onApplyTaf={() => NOOP_OUTCOME}
+      settings={bridge}
     />,
   );
 }
