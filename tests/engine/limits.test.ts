@@ -241,6 +241,24 @@ describeEachPack('direction range', (pack) => {
   });
 });
 
+describeEachPack('full-circle direction range', (pack) => {
+  const first = uniformModes(pack)[0];
+  if (first === undefined) throw new Error('no mode');
+  const id = first.mode.id;
+  const h = first.used[0]?.headingDegrees ?? 0;
+  const limit = first.mode.maxCrosswindKt;
+
+  it('000V360 and equal ends cover every direction: the worst tailwind and crosswind are the full speed', () => {
+    for (const range of [[0, 360], [90, 90], [10, 370]] as const) {
+      const speed = Math.max(pack.settings.tailwindDryKt, limit) + 0.2;
+      const c = runMode(pack, id, [{ wind: steady(h, speed, null, range) }]).cell(0);
+      expect(c.runways[0]?.tailwindKt).toBeCloseTo(speed, 9);
+      expect(c.runways[0]?.crosswindKt).toBeCloseTo(speed, 9);
+      expect(c.status).toBe('UNSUITABLE');
+    }
+  });
+});
+
 describeEachPack('tolerance and noise', (pack, ref) => {
   const first = uniformModes(pack)[0];
   if (first === undefined) throw new Error('no mode');
