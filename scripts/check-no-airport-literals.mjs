@@ -2,11 +2,17 @@
 // DESIGN section 4c). Facts checked: the ICAO code, every runway name and every
 // mode id of each pack under refdata/airports/* and tests/fixtures/*.
 //
-// Matching is by whole token (letters, digits, underscore) and case-sensitive,
-// anywhere in code including string literals, so "16L" and 'SODPROPS' match but
-// "16Left" and "NOSODPROPS" do not. Comments are removed first.
+// Matching is by whole token (letters, digits, underscore) and case-INsensitive,
+// anywhere in code including string literals, so "16L", "16l", 'SODPROPS' and
+// 'sodprops' match but "16Left" and "NOSODPROPS" do not. Comments are removed
+// first. Code, CSS, HTML/SVG/XML and data files (.json, .txt, .csv, .yaml ...)
+// under src/ are scanned.
 //
 // LIMITS (by design):
+//  - Evasion by building a value at run time (string concatenation, template
+//    pieces, character codes, reading it from elsewhere) CANNOT be detected by
+//    a static token check. It is caught only by review and by running the
+//    scenario suite against the fictional TEST pack.
 //  - Ids of 2 characters or fewer and purely numeric ids are NOT checked: they
 //    collide with ordinary code (0, 1, 25, "A"). That means numeric mode ids
 //    (for example "1", "5") and two-digit runway names (for example "07", "25")
@@ -19,7 +25,11 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const CODE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.mts', '.cts', '.css', '.html']);
+const CODE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.mts', '.cts', '.css']);
+// Markup and data files: scanned too, so a pack fact cannot hide in src/data.json.
+const MARKUP_EXTENSIONS = new Set(['.html', '.svg', '.xml']);
+const DATA_EXTENSIONS = new Set(['.json', '.jsonc', '.txt', '.csv', '.tsv', '.yaml', '.yml', '.toml']);
+const SCANNED = new Set([...CODE_EXTENSIONS, ...MARKUP_EXTENSIONS, ...DATA_EXTENSIONS]);
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
@@ -66,7 +76,8 @@ const blank = (s) => s.replace(/[^\n]/g, ' ');
 /** Replace comments with spaces (newlines kept so line numbers stay right). */
 export function stripComments(text, ext) {
   const cssOnly = ext === '.css';
-  const htmlOnly = ext === '.html';
+  const htmlOnly = MARKUP_EXTENSIONS.has(ext);
+  if (DATA_EXTENSIONS.has(ext)) return text; // data files have no comments
   let out = '';
   let i = 0;
   const n = text.length;
@@ -122,7 +133,7 @@ function* walk(dir) {
     const p = join(dir, name);
     if (statSync(p).isDirectory()) {
       if (name !== 'node_modules') yield* walk(p);
-    } else if (CODE_EXTENSIONS.has(extname(name))) {
+    } else if (SCANNED.has(extname(name).toLowerCase())) {
       yield p;
     }
   }
@@ -141,11 +152,11 @@ export function check(root) {
   // index.html is part of the shipped page too
   if (existsSync(join(root, 'index.html'))) files.push(join(root, 'index.html'));
   for (const file of files) {
-    const code = stripComments(readFileSync(file, 'utf8'), extname(file));
+    const code = stripComments(readFileSync(file, 'utf8'), extname(file).toLowerCase());
     code.split('\n').forEach((line, idx) => {
       for (const m of line.matchAll(/[A-Za-z0-9_]+/g)) {
         for (const f of facts) {
-          if (m[0] === f.value) {
+          if (m[0].toLowerCase() === f.value.toLowerCase()) {
             violations.push({ file: rel(root, file), line: idx + 1, value: f.value, kind: f.kind, pack: rel(root, f.pack) });
           }
         }

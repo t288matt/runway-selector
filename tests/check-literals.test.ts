@@ -77,6 +77,27 @@ describe('check-no-airport-literals', () => {
     expect(r.stderr).toContain('09X');
   });
 
+  it('is case-insensitive', () => {
+    plant('bad.ts', "export const a = 'yssy'; export const b = 'sodprops'; export const c = '16l';");
+    const r = run(tmp);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toMatch(/yssy/i);
+    expect(r.stderr).toMatch(/sodprops/i);
+    expect(r.stderr).toMatch(/16l/i);
+  });
+
+  it('scans data files under src/', () => {
+    plant('data.json', '{ "airport": "YSSY" }');
+    const r = run(tmp);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain('data.json');
+  });
+
+  it('scans svg files under src/', () => {
+    plant('pic.svg', '<svg><text>34R</text></svg>');
+    expect(run(tmp).status).toBe(1);
+  });
+
   it('refuses to pass when no pack exists', () => {
     rmSync(join(tmp, 'refdata'), { recursive: true });
     expect(run(tmp).status).toBe(2);
