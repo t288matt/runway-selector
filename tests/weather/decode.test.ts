@@ -163,10 +163,11 @@ describe('warnings for groups the library drops', () => {
     expect(warningText('taf-oing-typo-cloud')).toContain('SCT20CB');
   });
 
-  it('1/16SM, which the library cannot read, is reported as a missing visibility', () => {
-    expect(warningCodes('metar-kdlh-sixteenth')).toContain('decoder-dropped-group');
-    expect(decodeMetarFixture('metar-kdlh-sixteenth', YSSY_PACK).visibility).toBeNull();
+  it('1/16SM, which the library cannot read, is repaired to 100 m with a warning', () => {
+    expect(warningCodes('metar-kdlh-sixteenth')).toEqual(['visibility-repaired']);
+    expect(decodeMetarFixture('metar-kdlh-sixteenth', YSSY_PACK).visibility).toEqual({ metres: 100, moreThan: false, lessThan: false });
   });
+
 
   it('a METAR trend forecast is not used and says so', () => {
     expect(warningCodes('metar-eddh-tempo-trend')).toContain('metar-trend-ignored');
@@ -553,5 +554,98 @@ describe('reports that cannot be read name what could not be read', () => {
     const f = fixture('metar-kjfk-sm-inhg');
     const r = decodeMetar(f.raw.toLowerCase() + '=', ctx('KJFK', f.nowUtc));
     expect(r.kind).toBe('ok');
+  });
+});
+
+describe('wind safety: junk must never feed the wind', () => {
+  const c = ctx('YSSY', '2026-10-23T14:25:00Z');
+  const metar = (wind: string) => decodeMetar(`METAR YSSY 231400Z ${wind} 9999 FEW012 20/17 Q1016`, c);
+
+  it('a valid wind group with a gust still passes', () => {
+    const r = metar('27015G25KT');
+    expect(r.kind === 'ok' && r.report.wind).toEqual({ kind: 'steady', directionDegrees: 270, speedKt: 15, gustKt: 25, variableRangeDegrees: null });
+  });
+
+  it('27015KTX is refused, naming the token (METAR and TAF)', () => {
+    const r = metar('27015KTX');
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') expect(r.message).toContain('27015KTX');
+    const t = decodeTaf('TAF YSSY 231108Z 2312/2418 27015KTX 9999 SCT012', c);
+    expect(t.kind).toBe('error');
+    if (t.kind === 'error') expect(t.message).toContain('27015KTX');
+  });
+
+  it('a 4000-digit token is refused as too long and is not echoed whole', () => {
+    const junk = '1'.repeat(4000);
+    for (const r of [metar(junk), decodeTaf(`TAF YSSY 231108Z 2312/2418 ${junk} 9999 SCT012`, c)]) {
+      expect(r.kind).toBe('error');
+      if (r.kind === 'error') {
+        expect(r.message).toContain('far too long');
+        expect(r.message.length).toBeLessThan(300);
+      }
+    }
+  });
+
+  it('a long junk token that contains a wind-like group in a TEMPO is refused', () => {
+    const r = decodeTaf('TAF YSSY 231108Z 2312/2418 04010KT 9999 SCT012 TEMPO 2312/2316 27015KTX', c);
+    expect(r.kind).toBe('error');
+  });
+
+  it('a long token inside remarks is allowed', () => {
+    const r = decodeMetar(`METAR YSSY 231400Z 02010KT 9999 FEW012 20/17 Q1016 RMK ${'X'.repeat(80)}`, c);
+    expect(r.kind).toBe('ok');
+  });
+});
+
+describe('messages never echo a long token whole', () => {
+  it('a long unknown group in a warning is cut at 40 characters with an ellipsis', () => {
+    const long = 'ZZ' + '9'.repeat(35); // 37 chars: under the limit, kept
+    const longer = 'ZQ' + '9'.repeat(38); // 40 chars exactly: kept
+    const r = decodeMetar(`METAR YSSY 231400Z 02010KT 9999 FEW012 20/17 Q1016 ${long}`, ctx('YSSY', '2026-10-23T14:25:00Z'));
+    expect(r.kind === 'ok' && r.warnings.map((w) => w.message).join(' ')).toContain(long);
+    void longer;
+  });
+
+  it('a station-position token of any length is clipped in the error', () => {
+    const r = decodeMetar('METAR ' + 'Q'.repeat(500) + ' 231400Z', ctx('YSSY'));
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') expect(r.message.length).toBeLessThan(200);
+    const t = decodeTaf('TAF YSSY ' + 'Q'.repeat(500), ctx('YSSY'));
+    expect(t.kind).toBe('error');
+    if (t.kind === 'error') expect(t.message.length).toBeLessThan(200);
+  });
+});
+
+describe('fixture provenance', () => {
+  it('every fixture says whether it is awc-live, upstream-test-suite or synthetic', () => {
+    for (const f of FIXTURES) expect(['awc-live', 'upstream-test-suite', 'synthetic'], f.id).toContain(f.provenance);
+  });
+
+  it('provenance agrees with the source, and synthetic fixtures carry a synthetic- id', () => {
+    for (const f of FIXTURES) {
+      if (f.provenance === 'awc-live') expect(f.source.url, f.id).toContain('aviationweather.gov');
+      if (f.provenance === 'upstream-test-suite') expect(f.source.url, f.id).toContain('github.com');
+      if (f.provenance === 'synthetic') expect(f.id.startsWith('synthetic-'), f.id).toBe(true);
+    }
+    for (const id of ['taf-kmsn-month-rollover-hour24', 'taf-eham-month-rollover-becmg', 'metar-svmc-nil', 'taf-vtbd-cancelled', 'taf-czbf-day30-amd-nautical']) {
+      expect(fixture(id).provenance, id).toBe('upstream-test-suite');
+    }
+  });
+});
+
+describe('METAR 11/2SM and warning grammar', () => {
+  it('a METAR visibility written 11/2SM is one and a half miles, not 5.5 (SYNTHETIC string: no sourced METAR uses this form)', () => {
+    const r = decodeMetar('METAR YSSY 231400Z 18005KT 11/2SM BR OVC005 10/10 Q1015', ctx('YSSY', '2026-10-23T14:25:00Z'));
+    expect(r.kind).toBe('ok');
+    if (r.kind === 'ok') expect(r.report.visibility?.metres).toBe(Math.round(1.5 * 1609.344));
+  });
+
+  it('the dropped-group sentence agrees in number', async () => {
+    const { groupWarnings } = await import('../../src/weather/decode/tokens');
+    const scan = { counts: { wind: 1, windTokens: ['27015KT'], visibility: 1, clouds: 0, weather: 0 }, unknown: [], unknownClouds: [], windNotReported: false, sixteenths: 0, trendFollows: false };
+    const one = groupWarnings(scan, { hasWind: true, hasVisibility: false, clouds: 0, weather: 0 }, 'X')[0]!.message;
+    expect(one).toContain('the visibility group that appears in the text');
+    const two = groupWarnings({ ...scan, counts: { ...scan.counts, clouds: 1 } }, { hasWind: true, hasVisibility: false, clouds: 0, weather: 0 }, 'X')[0]!.message;
+    expect(two).toContain('groups that appear in the text');
   });
 });

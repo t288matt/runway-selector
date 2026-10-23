@@ -6,6 +6,13 @@
 import type { DecodeWarning } from '../types';
 
 export const MAX_LISTED_WARNING_TOKENS = 6;
+/** Longest token text shown in any message, and the longest token allowed outside remarks. */
+export const MAX_TOKEN_CHARS = 40;
+
+/** Token text for a message: cut at 40 characters with an ellipsis, so pasted junk is never echoed whole. */
+export function clip(token: string): string {
+  return token.length > MAX_TOKEN_CHARS ? `${token.slice(0, MAX_TOKEN_CHARS)}...` : token;
+}
 
 const DESC = '(?:MI|BC|PR|DR|BL|SH|TS|FZ)';
 const PHEN = '(?:DZ|RA|SN|SG|IC|PL|GR|GS|UP|FG|BR|HZ|VA|DU|SA|FU|PY|SQ|PO|DS|SS|FC)';
@@ -66,6 +73,8 @@ export interface GroupScan {
   readonly unknownClouds: readonly string[];
   /** Wind group present but the speed or direction is not reported (/////KT). */
   readonly windNotReported: boolean;
+  /** Number of 1/16SM visibility groups (the library cannot read them; we repair them to 100 m). */
+  readonly sixteenths: number;
   /** A METAR trend forecast (TEMPO/BECMG) followed the body. */
   readonly trendFollows: boolean;
 }
@@ -90,6 +99,7 @@ export function scanGroup(tokens: readonly string[], opts: ScanOptions): GroupSc
   const unknownAt: number[] = [];
   const unknownClouds: string[] = [];
   let windNotReported = false;
+  let sixteenths = 0;
   let trendFollows = false;
 
   for (let i = 0; i < tokens.length; i++) {
@@ -111,6 +121,8 @@ export function scanGroup(tokens: readonly string[], opts: ScanOptions): GroupSc
       windNotReported = true;
     } else if (WIND_RANGE.test(t) || VIS_DIRECTIONAL.test(t)) {
       // Part of the wind or visibility group above.
+    } else if (/^[PM]?1\/16SM$/.test(t)) {
+      sixteenths++;
     } else if (VIS_SM.test(t)) {
       visibility++;
     } else if (VIS_METRES.test(t)) {
@@ -151,7 +163,7 @@ export function scanGroup(tokens: readonly string[], opts: ScanOptions): GroupSc
     a = b + 1;
   }
   const kept = unknown.filter((_, k) => !isRemark.has(unknownAt[k] as number));
-  return { counts: { wind, windTokens, visibility, clouds, weather }, unknown: kept, unknownClouds, windNotReported, trendFollows };
+  return { counts: { wind, windTokens, visibility, clouds, weather }, unknown: kept, unknownClouds, windNotReported, sixteenths, trendFollows };
 }
 
 export interface LibraryCounts {
@@ -162,7 +174,7 @@ export interface LibraryCounts {
 }
 
 function listTokens(tokens: readonly string[]): string {
-  const shown = tokens.slice(0, MAX_LISTED_WARNING_TOKENS).join(', ');
+  const shown = tokens.slice(0, MAX_LISTED_WARNING_TOKENS).map(clip).join(', ');
   return tokens.length > MAX_LISTED_WARNING_TOKENS ? `${shown} and ${tokens.length - MAX_LISTED_WARNING_TOKENS} more` : shown;
 }
 
@@ -188,7 +200,7 @@ export function groupWarnings(scan: GroupScan, lib: LibraryCounts, where: string
   if (scan.counts.clouds > lib.clouds) dropped.push('cloud');
   if (scan.counts.weather > lib.weather) dropped.push('weather');
   if (dropped.length > 0) {
-    out.push({ code: 'decoder-dropped-group', message: `${where}: the decoder did not return the ${dropped.join(', ')} group${dropped.length > 1 ? 's' : ''} that appear in the text.` });
+    out.push({ code: 'decoder-dropped-group', message: `${where}: the decoder did not return the ${dropped.join(', ')} group${dropped.length > 1 ? 's that appear' : ' that appears'} in the text.` });
   }
   return out;
 }
@@ -214,6 +226,48 @@ export function tokensMissingFromGroups(messageTokens: readonly string[], groups
     }
   }
   return missing;
+}
+
+/** A token longer than the maximum, outside remark text (a TAF remark ends at the next change group). Null if none. */
+export function overlongToken(tokens: readonly string[]): string | null {
+  let inRemark = false;
+  for (const t of tokens) {
+    if (TAF_GROUP_START.test(t)) inRemark = false;
+    if (t === 'RMK') inRemark = true;
+    if (!inRemark && t.length > MAX_TOKEN_CHARS) return t;
+  }
+  return null;
+}
+
+interface LibWind {
+  readonly speed: number;
+  readonly gust?: number;
+  readonly degrees?: number;
+  readonly direction: string;
+  readonly unit: string;
+}
+
+/**
+ * The library's wind regex is not anchored, so junk containing digits (a
+ * 4000-digit token, "27015KTX") can be read as a wind. Every wind the library
+ * returns must match, number for number, a wind group of ours that is exactly
+ * a valid group. Returns a message naming the problem, or null when it agrees.
+ */
+export function windDisagreement(scan: GroupScan, wind: LibWind | undefined): string | null {
+  if (wind === undefined) return null;
+  const tokens = scan.counts.windTokens;
+  if (tokens.length === 0) {
+    const odd = scan.unknown.find((t) => /\d{5}/.test(t) || /(KT|MPS|KMH)/.test(t));
+    return odd === undefined ? 'a wind was returned that is not in a valid wind group' : `"${clip(odd)}" is not a valid wind group`;
+  }
+  const unit = wind.unit === 'KM/H' ? 'KMH' : wind.unit;
+  const ok = tokens.some((t) => {
+    const m = /^(VRB|\d{3})(\d{2,3})(?:G(\d{2,3}))?(KT|MPS|KMH)$/.exec(t);
+    if (m === null) return false;
+    const dirOk = m[1] === 'VRB' ? wind.direction === 'VRB' : wind.degrees === Number(m[1]);
+    return dirOk && wind.speed === Number(m[2]) && (m[3] === undefined ? wind.gust === undefined : wind.gust === Number(m[3])) && unit === m[4];
+  });
+  return ok ? null : `the wind the decoder returned does not match the wind group "${clip(tokens[0] as string)}"`;
 }
 
 export function droppedGroupWarning(tokens: readonly string[]): DecodeWarning {

@@ -99,6 +99,12 @@ export function convertConditions(g: IAbstractWeatherContainer, where: string): 
   };
 }
 
+/** 1/16SM (about 100 m) is a real report the library cannot read; when it returned no visibility, use 100 m. */
+export function repairSixteenth(conditions: DecodedConditions, sixteenths: number): { conditions: DecodedConditions; repaired: boolean } {
+  if (sixteenths === 0 || conditions.visibility !== null) return { conditions, repaired: false };
+  return { conditions: { ...conditions, visibility: { metres: 100, moreThan: false, lessThan: false } }, repaired: true };
+}
+
 export function qnhToHpa(a: { value: number; unit: string } | undefined): number | null {
   if (a === undefined || !Number.isFinite(a.value)) return null;
   if (a.unit === 'hPa') return a.value;

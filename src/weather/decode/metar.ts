@@ -1,10 +1,10 @@
 // METAR adapter: pasted text in, our DecodedMetar (or a plain error) out.
 import { parseMetar } from 'metar-taf-parser';
 import type { DecodeContext, DecodeResult, DecodeWarning, DecodedMetar, DecodedWeatherCondition } from '../types';
-import { convertConditions, qnhToHpa } from './convert';
+import { convertConditions, qnhToHpa, repairSixteenth } from './convert';
 import { parseMetarHeader, splitMixedFractions } from './header';
 import { cleanReportText } from './input';
-import { groupWarnings, recentWeatherTokens, scanGroup, splitWeatherToken, tokenise } from './tokens';
+import { clip, groupWarnings, overlongToken, recentWeatherTokens, scanGroup, splitWeatherToken, tokenise, windDisagreement } from './tokens';
 import { resolveRecent } from './time';
 
 /** An observation this far ahead of the clock is reported (clock skew or a wrong day), though it is still used. */
@@ -39,6 +39,10 @@ export function decodeMetar(raw: string, ctx: DecodeContext): DecodeResult<Decod
   }
 
   const bodyTokens = tokens.slice(h.bodyStart);
+  const overlong = overlongToken(bodyTokens);
+  if (overlong !== null) {
+    return { kind: 'error', message: `The METAR contains a group that is far too long to be real ("${clip(overlong)}", ${overlong.length} characters). Nothing was read.` };
+  }
   if (bodyTokens.includes('NIL') && bodyTokens.filter((t) => t !== 'AUTO' && t !== 'COR' && t !== 'NIL').length === 0) {
     return { kind: 'none', reason: 'nil', station: h.station, warnings: [] };
   }
@@ -49,22 +53,30 @@ export function decodeMetar(raw: string, ctx: DecodeContext): DecodeResult<Decod
     lib = parseMetar(text);
   } catch (e) {
     const reason = e instanceof Error ? e.message : 'unknown error';
-    const where = scan.unknown.length > 0 ? ` Groups not recognised: ${scan.unknown.slice(0, 6).join(', ')}.` : ' No single group could be pointed to; check the report is a complete METAR.';
+    const where = scan.unknown.length > 0 ? ` Groups not recognised: ${scan.unknown.slice(0, 6).map(clip).join(', ')}.` : ' No single group could be pointed to; check the report is a complete METAR.';
     return { kind: 'error', message: `The METAR could not be read (the decoder said "${reason}").${where} The previous report, if any, stays in use.` };
   }
 
   if (scan.counts.wind > 0 && lib.wind === undefined) {
-    return { kind: 'error', message: `The METAR could not be read: the wind group ${scan.counts.windTokens.join(', ')} was not understood. A report whose wind cannot be read is not used.` };
+    return { kind: 'error', message: `The METAR could not be read: the wind group ${scan.counts.windTokens.map(clip).join(', ')} was not understood. A report whose wind cannot be read is not used.` };
+  }
+  const disagree = windDisagreement(scan, lib.wind);
+  if (disagree !== null) {
+    return { kind: 'error', message: `The METAR could not be read: ${disagree}. A report whose wind cannot be read is not used.` };
   }
   const converted = convertConditions(lib, 'METAR');
   if (!converted.ok) return { kind: 'error', message: `The METAR could not be read: ${converted.message}` };
-  const { conditions } = converted.value;
+  const fixed = repairSixteenth(converted.value.conditions, scan.sixteenths);
+  const conditions = fixed.conditions;
 
   const warnings: DecodeWarning[] = groupWarnings(
     scan,
-    { hasWind: lib.wind !== undefined, hasVisibility: lib.visibility !== undefined, clouds: lib.clouds.length, weather: lib.weatherConditions.length },
+    { hasWind: lib.wind !== undefined, hasVisibility: lib.visibility !== undefined || scan.sixteenths > 0, clouds: lib.clouds.length, weather: lib.weatherConditions.length },
     'METAR',
   );
+  if (fixed.repaired) {
+    warnings.push({ code: 'visibility-repaired', message: 'METAR: visibility 1/16SM could not be read by the decoder and is taken as 100 m.' });
+  }
   if (scan.trendFollows) {
     warnings.push({ code: 'metar-trend-ignored', message: 'METAR: the trend forecast (TEMPO or BECMG) at the end of the report is not used; the TAF is the forecast.' });
   }
