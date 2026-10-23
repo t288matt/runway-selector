@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "PROVISIONAL (23-10-2026). Day band follows the owner's Sydney priority order (picture: sydney-mode-priority-order.png): 1 SODPROPS; 2 modes 14A, 8, 7, 5 (equal); 3 modes 9, 10 (equal); 4 modes 12, 13 (equal). The picture gives an order only, so the penalties are placeholders on the design example scale (0, 2, 5, 12) for the owner to confirm; lower is preferred, equal numbers are equal priority. SODPROPS ranks first but its mode is still disabled in modes.json, so it is never recommended until enabled. Mode 1 is not allowed by day. Mode 4 is disabled, no row. Night band (curfew) unchanged: Mode 1 preferred, others carry a higher penalty rather than being forbidden; the picture does not say whether the order also applies at night. Replace with the current LTOP when supplied.",
+  "description": "PROVISIONAL (23-10-2026). Day band follows the owner's Sydney priority order (picture: sydney-mode-priority-order.png): 1 SODPROPS; 2 modes 07A16D, 34AD25, 34A25D, 25A16D (equal); 3 modes 34AD, 16AD (equal); 4 modes 07AD, 25AD (equal). The picture gives an order only, so the penalties are placeholders on the design example scale (0, 2, 5, 12) for the owner to confirm; lower is preferred, equal numbers are equal priority. SODPROPS ranks first but its mode is still disabled in modes.json, so it is never recommended until enabled. Curfew is not allowed by day. Night band (curfew) unchanged: Curfew preferred, others carry a higher penalty rather than being forbidden; the picture does not say whether the order also applies at night. Replace with the current LTOP when supplied.",
   "status": "provisional",
   "bands": [
     {
@@ -9,7 +9,7 @@
       "end": "23:00",
       "rows": [
         {
-          "mode": "1",
+          "mode": "Curfew",
           "allowed": false,
           "penalty": 0
         },
@@ -19,42 +19,42 @@
           "penalty": 0
         },
         {
-          "mode": "14A",
+          "mode": "07A16D",
           "allowed": true,
           "penalty": 2
         },
         {
-          "mode": "8",
+          "mode": "34AD25",
           "allowed": true,
           "penalty": 2
         },
         {
-          "mode": "7",
+          "mode": "34A25D",
           "allowed": true,
           "penalty": 2
         },
         {
-          "mode": "5",
+          "mode": "25A16D",
           "allowed": true,
           "penalty": 2
         },
         {
-          "mode": "9",
+          "mode": "34AD",
           "allowed": true,
           "penalty": 5
         },
         {
-          "mode": "10",
+          "mode": "16AD",
           "allowed": true,
           "penalty": 5
         },
         {
-          "mode": "12",
+          "mode": "07AD",
           "allowed": true,
           "penalty": 12
         },
         {
-          "mode": "13",
+          "mode": "25AD",
           "allowed": true,
           "penalty": 12
         }
@@ -66,47 +66,47 @@
       "end": "06:00",
       "rows": [
         {
-          "mode": "1",
+          "mode": "Curfew",
           "allowed": true,
           "penalty": 0
         },
         {
-          "mode": "5",
+          "mode": "25A16D",
           "allowed": true,
           "penalty": 20
         },
         {
-          "mode": "7",
+          "mode": "34A25D",
           "allowed": true,
           "penalty": 20
         },
         {
-          "mode": "8",
+          "mode": "34AD25",
           "allowed": true,
           "penalty": 20
         },
         {
-          "mode": "9",
+          "mode": "34AD",
           "allowed": true,
           "penalty": 20
         },
         {
-          "mode": "10",
+          "mode": "16AD",
           "allowed": true,
           "penalty": 20
         },
         {
-          "mode": "12",
+          "mode": "07AD",
           "allowed": true,
           "penalty": 20
         },
         {
-          "mode": "13",
+          "mode": "25AD",
           "allowed": true,
           "penalty": 20
         },
         {
-          "mode": "14A",
+          "mode": "07A16D",
           "allowed": true,
           "penalty": 20
         }

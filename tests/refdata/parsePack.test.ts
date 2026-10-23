@@ -54,8 +54,9 @@ describe('good packs', () => {
     expect(pack.settings.trafficBands).toEqual({ light: [0, 5], medium: [6, 11], busy: [12, null] });
     expect(pack.settings.forecastWindowMinutes).toBeNull();
     expect(pack.settings.precipitationCodes).toEqual(files['settings.json'].precipitationCodes.value);
-    expect(pack.modes.find((m) => m.id === '4')?.enabled).toBe(false);
-    expect(pack.modes.find((m) => m.id === '4')?.arrivals).toEqual([]);
+    expect(pack.modes.find((m) => m.id === 'SODPROPS')?.enabled).toBe(false);
+    expect(pack.modes.find((m) => m.id === 'SODPROPS')?.arrivals).toEqual(['34L']);
+    expect(pack.modes.some((m) => m.id === '4')).toBe(false);
     expect(pack.modes.every((m) => m.maxCrosswindKt === 20)).toBe(true);
     expect(pack.meta.operatingPlan.status).toBe('provisional');
   });
@@ -66,7 +67,7 @@ describe('good packs', () => {
       ['day', 360, 1380],
       ['night', 1380, 360],
     ]);
-    expect(pack.plan[1]?.rows[0]).toMatchObject({ mode: '1', allowed: true, penalty: 0 });
+    expect(pack.plan[1]?.rows[0]).toMatchObject({ mode: 'Curfew', allowed: true, penalty: 0 });
   });
 
   it('every tunable of every pack is unwrapped and its description kept apart', () => {
