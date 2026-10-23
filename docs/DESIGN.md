@@ -1,0 +1,304 @@
+# Runway Mode Planner (first airport: Sydney, YSSY): design and architecture
+
+Status: DRAFT for the owner's approval, 22-10-2026; amended 23-10-2026 for per-mode crosswind (OD-8) and airport-agnostic, fully refdata-driven code (OD-9). Nothing is built.
+Language: British English. Dates DD-MM-YYYY, times UTC. Plain words; no emoji.
+Process: [WORKING_AGREEMENT.md](WORKING_AGREEMENT.md), [TEAM_ROLES.md](TEAM_ROLES.md) and [TRACKER.md](TRACKER.md).
+
+## 1. Purpose and intent
+A decision-support tool for VATSIM controllers working an airport, first Sydney (YSSY). It is built to serve other airports later without code changes (section 4c). It recommends a runway mode that is likely to stay suitable through the forecast, not just the best mode for the latest METAR. It also avoids mode changes during busy traffic. It is a simulation aid and has no real-world operational standing.
+
+**Goals**
+1. Recommend a sequence of the airport's standard modes across a forecast window (default: the full TAF validity), using METAR, TAF, live VATSIM traffic and the operating-plan preference order.
+2. Show a runway-mode survival timeline: every mode against every 30-minute slot, with the reason for each red, amber or grey cell.
+3. Plan changeovers: when, why, to which mode, and at what traffic level.
+4. Keep every tunable value (limits, traffic bands, mode order, penalties, window) in editable reference data, never in code.
+5. Make every recommendation deterministic, explainable and testable.
+6. **Airport-agnostic by construction (key requirement, OD-9).** The code knows nothing about YSSY. Every airport fact comes from that airport's reference-data pack. A new airport is a new pack, not new code.
+
+**Non-goals**
+- No language model chooses the mode.
+- No real-world operational claims. Capacities and thresholds are labelled simulation assumptions.
+- The only controller input is the optional current mode, chosen from a pull-down menu (OD-21). There is no runway-condition control (OD-14). The tool only advises and never changes anything.
+- No arbitrary runway combinations; only listed standard modes.
+
+**Anti-goals (a failure even if it runs):** a green cell that breaks a tailwind limit; an unverified rule presented as official; a silent assumption of a dry runway; a hard limit overridden by a change penalty.
+
+## 2. Where the design choices are recorded
+Each design choice and open point sits in the section it belongs to:
+- Stack, relay, data sources: section 4 (Architecture).
+- Airport-agnostic rule, per-mode crosswind: sections 4c and 5.
+- Future server: section 4a. Local first, publication later: section 4b.
+- Provenance of rules, self-describing values, traffic bands: section 5.
+- Report formats from other countries: section 7.
+- Sydney-specific choices and open points: section 3.
+
+## 3. Sydney (YSSY) pack: decisions and reference research
+Everything in this section is specific to Sydney and lives in the YSSY pack as data. Nothing here is built into the code (section 4c). Sydney's operating plan is the Long Term Operating Plan (LTOP); elsewhere in this document the generic term is operating plan.
+
+**Sydney pack design choices**
+- **Reference rules start from the 2015 Airservices table.** All of them are provisional until the owner supplies the current LTOP. If the 2015 table and the current LTOP differ, the owner decides.
+- **Mode 4 ships disabled and provisional.** No arrival or departure runways were found for it. The manager proposes this; the owner is to confirm.
+- **Simulation limits.** Tailwind is 5 kt on a dry runway and 0 kt on a wet one. Crosswind is 20 kt for every mode. These are labelled simulation settings, not official limits.
+
+**Phase 1 reference research**
+Best readable source: Airservices "Sydney Airport Operational Statistics", September 2015 (Preferred Runway Selection effective 01-07-2010, LOA 3181 V1). The LTOP pages on airservicesaustralia.com and sacf.infrastructure.gov.au are indexes; their PDFs were not readable and the SACF fetch timed out. Everything below is therefore **provisional until checked against the current LTOP**.
+
+| Mode | Departures | Arrivals | Status |
+|---|---|---|---|
+| 1 (curfew) | 16R | 34L | provisional |
+| SODPROPS | 16L, 16R(h) | 34L | provisional |
+| 5 | 16L, 16R | 25, 16R(h) | provisional |
+| 7 | 25, 34L(h) | 34L, 34R | provisional |
+| 8 | 25, 34R, 34L(h) | 34L, 34R | provisional |
+| 9 | 34L, 34R | 34L, 34R | provisional |
+| 10 | 16L, 16R | 16L, 16R | provisional |
+| 12 | 07 | 07 | provisional |
+| 13 | 25 | 25 | provisional |
+| 14A | 16L, 16R | 07, 16R(h) | provisional |
+| 4 | not found | not found | gap; disabled |
+
+(h) = long-haul jets only. Wind criteria in the 2015 report: 20 kt crosswind and 5 kt downwind, dry runways only.
+
+**Known gaps:** current LTOP text; Mode 4; official capacities (none found); an official wet-runway limit (0 kt is the owner's simulation rule); VATSIM rate limits (feed regenerates every 15 seconds, no limit published); exact runway headings.
+
+## 4. Architecture
+```
+refdata/airports/<ICAO>/*.json  -->  loader + validator  -->  engine (pure functions)  -->  UI
+                                                ^
+ METAR/TAF fetch --> parsers --> forecast slots |
+ VATSIM fetch --> traffic model --> demand slots +
+```
+One TypeScript project. The engine has no network, clock or storage access: it takes (refdata, settings, weather slots, traffic slots, current mode (optional), now) and returns a plan. That makes it deterministic and testable. Fetching, storage and rendering sit around it.
+
+```
+refdata/
+  app.json          airport list, default airport (the only cross-airport file)
+  airports/
+    YSSY/           the first pack (section 5)
+                    (the fictional TEST airport lives in tests/fixtures/TEST, never here, so it is not listed in app.json and not offered in the airport selector)
+src/
+  refdata/          loader, schema validation, audit-trail writer
+  weather/          fetch, metar parser, taf parser, slot builder
+  traffic/          vatsim fetch, classify arrivals and departures, demand model
+  engine/
+    wind.ts         component maths (any runway end given by data)
+    runwayCondition.ts
+    eligibility.ts  mode x slot matrix
+    survival.ts     continuous viability, failure time and cause
+    optimiser.ts    dynamic programming over the matrix
+    changeover.ts   trigger, window, replacement
+    explain.ts      plain-language rationale
+  store/            settings, audit trail (browser storage)
+  ui/               panels A to D and F, timeline, settings
+tests/              Vitest; scenarios from REQUIREMENTS.md section 11, run against every pack
+  fixtures/         saved METAR/TAF strings
+scripts/            literal check: fails the build if an airport fact is in src/
+docs/
+```
+Modules: weather ingestion, METAR parsing, TAF parsing, traffic processing, wind components, runway condition, eligibility, operating-plan priorities, survivability, optimisation, explanations, presentation.
+
+**Stack.** We will build the app as one TypeScript project with React, Vite and Tailwind, running in the browser. The engine is plain TypeScript modules with no dependence on the page. Settings, the current mode and the audit trail are kept in browser storage.
+
+**Dependencies.** Runtime (shipped in the page): React, React-DOM, one small schema-validation library (owner approved a library, 23-10-2026; valibot or zod/mini, chosen when the skeleton is built) and the metar-taf-parser library for decoding pasted weather reports (owner approved, OD-29). Build-time only: Vite and Tailwind CSS (the styling tool, not the wind term). Dev tools: TypeScript, Vitest, ESLint. Anything else needs the owner's yes. The validator checks every external input (packs, settings, imports, feeds) with strict types, ranges and unknown-key rejection; cross-reference checks (a mode naming a missing runway, gaps in time bands) are our own code. Pasted weather reports are decoded by metar-taf-parser behind our own adapter (Weather source, below).
+
+**Data sources:** the station and feed identifiers come from the pack. METAR and TAF are pasted by the user in phase 1 (see Weather source below); VATSIM `data.vatsim.net/v3/vatsim-data.json`, polled every 5 minutes by default (refdata value `vatsimPollSeconds`, default 300, editable; no enforced minimum). The feed itself regenerates every 15 seconds, so each snapshot is up to 5 minutes old; the traffic panel shows its age. Every source keeps its entry or fetch time, issue or observation time, and a stale flag.
+
+**Weather source (OD-28).** In phase 1 the user pastes the METAR and the TAF by hand. The weather source is an interface (`WeatherSource`, section 4a) with one implementation today, the paste box, which returns the raw text, the time it was entered and the report's own time group. Automatic fetching is a later phase: it will be another implementation of the same interface, with its provider, address, format and any proxy held in configuration, not in code. No provider is named in the engine, the parser or the screens.
+- **How reports are read (OD-29).** The library is the npm package named exactly `metar-taf-parser` (the TypeScript library by aeharding, repository github.com/aeharding/metar-taf-parser, version 9.1.3 when researched, MIT). It is not any of the similarly named packages (metar-parser, metar-decoder, taf-parser, aewx-metar-parser, metar) and not the sibling libraries by mivek in Python and Java, which are only sources of test fixtures. Before installing, the package name, publisher and repository are checked against these details, because look-alike package names are a supply-chain risk. It decodes the raw ICAO text from the paste box, pinned to an exact version and used only inside one adapter module (`weather/decode`). The adapter is ours: nothing else imports the library, so it can be replaced, or copied into the repository and patched, without touching the engine. The adapter does the things the library does not: it catches a NIL TAF (the library throws); it converts units to knots, metres and hectopascals (the library returns m/s, statute miles and inHg as tagged); it carries visibility and cloud forward through FM groups (the library's FM entries hold only their own fields); it decodes the recent-weather (RE) group; it warns when the library silently drops a group (for example a `///015` cloud group); and it builds the 30-minute slots with TEMPO and PROB handling. A regression set of real METARs and TAFs from many airports is part of the tests, and the tests rely on our own checks, not the library's. Research record: docs/reviews/2026-10-23-metar-taf-library-research.md.
+- **Provider selection is deferred** to the automation phase (tracker YR-17).
+
+**Proxy.** Not needed in phase 1: nothing weather-related is fetched (OD-28). When weather fetching is added, a pass-through proxy is needed only if the chosen provider refuses requests from a browser page; the fetching implementation takes an optional base address so a proxy can be added without changing the engine. A proxy would be stateless, accept only fixed endpoints and station identifiers that match the pack, and hold no secrets in the browser bundle.
+
+### 4c. Airport-agnostic rule (OD-9, requirements AG-1 to AG-13)
+This is the governing design rule. Every other section is read through it.
+
+**The engine and UI are a generic runway-mode planner.** They are given one `AirportPack` object (loaded from the pack folder) and never read anything about an airport from anywhere else. Concretely:
+- **No airport literal in `src/`.** No ICAO code, runway name, mode number, bearing, coordinate, time zone, hour, limit, URL or label. Where code needs the arrival runways of a mode it reads `mode.arrivals`; where it needs the station for a weather request it reads `airport.weather.station`.
+- **Modes and runways are lists, not constants.** The eligibility matrix is built by looping over `pack.modes` and the runway ends each one names. Three runways, one runway or six all work. Timeline rows, the weather runway table and the runway diagram are generated from the same lists.
+- **Rules are data, not branches.** Curfew and shoulder periods are expressed as generic rule records: a time band in the airport's own time zone and a list of modes with penalties, some of which may be marked not allowed. One operating plan applies every day of the week (OD-19). The engine reads rule kinds from a fixed, airport-neutral vocabulary. If an airport needs something the vocabulary lacks, the vocabulary grows with an optional field whose default leaves other airports untouched (AG-12). The code never contains a test on which airport is loaded.
+- **Wording comes from the pack.** App title, notices and labels that name an airport are built at run time from `airport.json`.
+- **State is keyed by airport.** Settings, the current mode and the audit trail live under the airport's ICAO, so switching never mixes data (AG-8).
+- **Validation first.** On load the schema checks the pack, including cross-references: a mode may only name runway ends that exist, every ranked mode must exist, and every time band must cover its day without gaps or overlaps. An invalid pack is refused with a precise message and never partly used (AG-10).
+
+**How agnosticism is enforced, not just intended (AG-11):**
+1. A fictional `TEST` pack with a different shape: two runways, different names, a different mode set and numbering, a different time zone, different limits (for example tailwind 8 kt dry), and one mode with a different crosswind limit. The full scenario suite runs against both `YSSY` and `TEST`. Any hidden YSSY assumption fails on `TEST`.
+2. A script (`scripts/check-no-airport-literals`) runs in `npm test` and CI. It reads the ICAO codes, runway names and mode ids from every pack and fails if any appears in `src/` outside comments.
+3. A review question in the working agreement: does this change add an airport fact to code?
+
+**Why packs (rationale).**
+- A pack is plain data. It can be diffed, reviewed, validated by a schema and tested on its own, without reading any code.
+- Adding an airport then needs no review of logic. The only review is whether the facts in the pack are right and sourced.
+- A fictional second pack can prove the engine is correct for an airport the engine has never been written for. A code branch per airport could not be tested that way.
+- Alternatives rejected: code branches per airport (airport facts leak into logic and every new airport changes code); a database (no server in phase 1, and files are easier to review and version); one shared file with an airport section per airport (edits to one airport risk another, and a bad entry could break all).
+- Folder per airport keeps each airport's data, sources and history of changes together and independent.
+
+**Run-time sequence.**
+1. Read `refdata/app.json`: the list of packs and the default airport.
+2. Choose the airport: the one the controller last selected, if its pack is still listed and valid; otherwise the default in `app.json`. The selector appears only when more than one pack is listed.
+3. Load that pack's files and validate them against the shared schema, including cross-references. If invalid, refuse the pack and show the precise error. Never partly use it.
+4. Strip `description` and `_` note fields, unwrap each tunable to its `value`, and build one immutable `AirportPack`.
+5. Hand the `AirportPack` to the engine and the UI. Wording, runway diagram, timeline rows, weather station, VATSIM filter and time zone all come from it.
+6. Recalculate whenever the pack or a setting changes.
+
+**Pack delivery (decided 23-10-2026).** Packs are static JSON files served beside the app and fetched at run time. They are not bundled into the build. Replacing a file and pressing Reload data is enough to change a rule; no rebuild is needed, and adding an airport is a new folder plus one line in `app.json`. Three safeguards are part of the design from the start:
+1. **No stale packs.** Each pack is requested with a version or content hash in its address, so a browser cache cannot serve an old copy.
+2. **No app and pack mismatch.** `app.json` and every pack carry a `schemaVersion`. If a pack's version is not one the app supports, the pack is refused with a clear message and the previous valid pack stays in use.
+3. **Pack changes follow the document process (owner decision, 23-10-2026).** A change under `refdata/` is handled like a document change; no extra review tier, field-by-field source check or hash manifest is required. The security review recommended treating pack changes as High-tier (docs/TRACKER.md YR-18). The owner chose not to, and accepts the risk that an unreviewed edit could alter a limit. The strict schema bounds (a number range on every limit, unknown keys refused) remain the control against nonsense values.
+Phase 1 runs with a local web server (`vite` or `vite preview`), not by opening files from disk, because browsers block `fetch()` on `file://`. Relative paths keep the app usable at any folder or subdomain.
+
+**First load.** If no valid pack exists yet, the app shows a full-screen error with the validation message and draws nothing else.
+
+**Switching airports.** The previous airport's settings, current mode and audit trail stay under its ICAO and are not touched or merged. The new airport starts with its own stored state, or its pack defaults if it has none. Cached weather and traffic are discarded, because they belong to the old airport's station and area.
+
+**Editing a pack while the app is open.** In phase 1 a pack is read when the app loads or when the controller chooses Reload data. A changed pack goes through the same validation, and a rejected pack leaves the previous valid one in use, with a visible error.
+
+### 4a. Seam for a future server
+Phase 1 has no server. We design for one and do not build it: a server for 24/7 recording and shared history can be added later without changing the engine.
+
+The engine and the data sources sit behind three small interfaces, so a server can replace the browser parts later with no change to the engine or the screens:
+- `WeatherSource`, `TrafficSource`: today the weather source is a paste box (OD-28) and the traffic source fetches from the browser; later they read what a server has already fetched or fetch from a provider.
+- `Store`: today browser storage; later an HTTP API over a JSON file or database (settings, observations, traffic snapshots, recommendations, audit log).
+- `Scheduler`: today a timer in the open page; later a server job every 30 minutes.
+The engine takes plain data in and returns a plan, so it can run in the page or on a server unchanged. All stored records are plain JSON with a schema version, so they can be moved to a server as they are.
+
+### 4b. Hosting on the VATPAC site (future phase)
+**Phase 1 is local only:** the owner runs the app in a browser on their own PC (a dev server or the built files opened locally). Nothing is published. The rest of this section records what is known for the later phase, so the build stays compatible; no work on it is scheduled.
+
+Hosting is specific to the VATSIM division. The VATPAC site serves Australia and the Pacific; another division would host the build elsewhere, with its own theme and notice. This is a hosting matter and does not touch the engine.
+
+Phasing: first the owner alone, then a few controllers, then the public on the VATPAC site, matching the other tools there.
+
+The build output is a folder of static files (HTML, JavaScript, CSS) with relative paths, so it can sit at any path or subdomain without a server. The VATPAC tools page shows a dark navy theme with a blue accent, a "Flight simulation only" notice that users must accept, and a top menu; the app should match that theme, show the same notice (it must never be used for real-world navigation or flight planning), and link back to the site. **Open:** how tools are submitted or published on vatpac.org (own subdomain, a path under the site, or a link to an external host), who maintains the site, and whether it allows calls to data.vatsim.net from the page (and, once weather is fetched automatically, to the chosen weather provider). Item YR-3 finds this out when the publication phase starts; no deploy step is written until then.
+
+## 5. Reference data (the refdata files)
+One folder per airport, `refdata/airports/<ICAO>/`. The files and their fields are defined once, in section 5a, and the worked example is refdata/airports/YSSY. All files are plain JSON, validated on load against a schema shared by every pack. Where two sources for the same rule differ, the owner decides and the decision is recorded in the pack. Changes made on screen (the current mode) are written to the audit trail (RD-6); changes to pack files are not (OD-23). A new METAR or TAF, or a change of current mode, triggers a fresh recommendation. Code contains **no** limits, thresholds, weights or orders.
+
+**Self-documenting values (RD-7).** Every tunable value is written as `{ "value", "description" }` (section 5a), with its meaning in a `description` field the code never reads. The loader removes `description` and any `_`-prefixed note before building the `AirportPack`, so these fields cannot influence the engine. The validator fails a pack where a tunable has no `description`. The traffic bands, change penalties and every other tunable are in refdata/airports/YSSY/settings.json in this shape; display labels map light, medium and busy to LOW, MEDIUM and HIGH on screen.
+
+### 5a. Pack schema (kept deliberately simple)
+A pack is a folder of five plain JSON files. The validator (section 4c) checks them; the YSSY and TEST packs are the worked examples.
+
+**Values.** Every tunable is written as `{ "value": 5, "description": "..." }` (RD-7). The unit is part of the field name (`...Kt`, `...Minutes`, `...Pct`). The loader checks the pack, strips the descriptions for the screen, and hands the engine plain numbers. Records carry an optional `source` and `status` (`verified` or `provisional`) for information (OD-10).
+
+**Version.** Every file carries `schemaVersion`. A pack the app does not support is refused with a message naming file and field, and the previous valid pack stays in use.
+
+| File | Contents |
+|---|---|
+| `airport.json` | `icao`, `name`, `latitude`, `longitude`, `timeZone` (an IANA name), `weatherStation`, the traffic geometry (`trafficAreaNm`, `groundMaxSpeedKt`, `groundAltitudeMarginFt`, `arrivalSpeedFloorKt`) and the screen wording. |
+| `runways.json` | A list of runway ends: `name` and `headingDegrees`. Optional threshold position for the diagram. |
+| `modes.json` | A list of modes: `id`, `description`, `enabled`, `arrivals` and `departures` (lists of runway-end names), `maxCrosswindKt`, and optionally `capacity` (total movements per hour; empty means no limit). |
+| `operating_plan.json` | A list of time bands. Each band has `start` and `end` (local time, `HH:MM`, may cross midnight) and a list of rows `{ "mode", "penalty", "allowed" }`. |
+| `settings.json` | The tunables of section 5 (limits, penalties, thresholds, windows). |
+
+**One structure for the operating plan.** A time band lists the modes with a preference penalty each. A row with `"allowed": false` forbids that mode in the band (for example a curfew band that allows only one mode); that is a hard rule and makes the cell UNSUITABLE with the cause `PLAN`. A mode with no row in a band is allowed and takes `defaultPreferencePenalty`. There is no separate eligibility structure. The bands must cover the 24 hours with no gap or overlap. A slot belongs to a band by the local wall time of its start, using the pack's time zone.
+
+**Settings inventory.** The names, units, defaults and meanings of every tunable are in refdata/airports/YSSY/settings.json, which is the worked example (each value carries its `description`). Defaults there were proposed on 23-10-2026 and are provisional simulation assumptions. The tunables are: `tailwindDryKt`, `tailwindWetKt`, `defaultCrosswindKt`, `limitToleranceKt`, `calmWindKt`, `nearLimitMarginKt`, `wetRunwayProbabilityPct`, `dryingTimeMinutes`, `precipitationCodes`, `metarValidityMinutes`, `forecastWindowMinutes`, `demandHorizonMinutes`, `assumedDepartureWindowMinutes`, `assumedGroundSpeedKt`, `trafficBands`, `preferenceDefaultPenalty`, `marginalPenalty`, `changePenaltyLight`, `changePenaltyMedium`, `changePenaltyBusy`, `unknownDemandChangePenalty`, `noModePenalty`, `changeoverPreparationMinutes`, `metarStaleMinutes`, `tafStaleMinutes`, `vatsimStaleMinutes`, `weatherPollMinutes`, `vatsimPollSeconds`, `auditMaxEntries`, `currentModeStaleMinutes`. Other files add their own: `maxCrosswindKt` and `capacity` on each mode, and the preference penalty on each operating-plan row.
+
+**Checks the validator makes** (each message names the file and field): an enabled mode names at least one runway end (empty lists are allowed only for a disabled mode, such as the Sydney Mode 4); every runway a mode names exists; every mode a band names exists; ids and runway names are unique; the bands cover the day with no gap or overlap; every tunable has a `value` and a `description`; no unknown keys; the limits on file size and nesting from the security review apply.
+
+A cross-airport file `refdata/app.json` lists the available packs and the default; nothing else is shared between airports. The UI offers an airport selector only when more than one pack is listed.
+
+## 6. Engine
+Stages: The engine receives one validated `AirportPack` and uses no other source of airport facts (section 4c).
+
+**A. Slots.** Build 30-minute slots aligned to the clock (:00 and :30) across the window. Slot 1 is the slot that contains now. There are no extra slots at TAF change times: a forecast group applies to the slot that contains its start time, so every slot is exactly 30 minutes and per-slot penalties and traffic bands stay comparable. Each slot holds the prevailing wind and weather, the TEMPO/PROB/BECMG overlays, a wet-risk flag, and demand (observed now, estimated ahead, or `unknown`).
+
+**B. Eligibility matrix.** For each mode and slot, evaluate every hard rule below and keep every reason; the cell's status is the worst result, and the primary cause is the first failing rule in this order:
+1. mode enabled in the pack (there are no runway closures, OD-19);
+2. time-of-day and operating-plan restrictions, read from the pack's rule records in the airport's local time (for example a curfew band);
+3. tailwind on every runway the mode uses, at the stronger of mean wind and gust, against the dry or wet limit; zero rounding before the test;
+4. crosswind on every runway the mode uses, at the stronger of mean wind and gust, against **that mode's own `maxCrosswindKt`** (fallback: the settings default); the cell reason names the mode's limit;
+5. capacity: known demand, scaled to the slot length, against the mode's capacity (only when a capacity is set and demand is known). Visibility and ceiling are not checked (OD-19).
+Result per cell: SUITABLE, MARGINAL, UNSUITABLE or UNKNOWN. MARGINAL means it passes but relies on an uncertain input: a TEMPO or PROB group that would fail it, a WET POSSIBLE runway state where only the dry case passes, a METAR and TAF that disagree in the near-term overlap, or a tailwind or crosswind above zero and within `nearLimitMarginKt` (default 3) of its limit (WC-13). UNKNOWN means data is missing. Each cell stores its reasons and the figures behind them, which is what the timeline shows on hover.
+
+**Runway state.** DRY, WET or WET POSSIBLE. It is derived only from the METAR and TAF; the app never receives a runway condition from the controller (OD-14). WET POSSIBLE evaluates both cases; a mode that passes only the dry case is MARGINAL, never SUITABLE.
+
+**Forecast runway state per slot.** Pack values, all provisional simulation assumptions: `wetRunwayProbabilityPct` (default 40), `dryingTimeMinutes` (default 60), and the list of precipitation codes that count. Rules, applied slot by slot from now:
+1. Slot 1 is WET if the latest METAR reports precipitation now or recent precipitation (an RE group); otherwise DRY. Stored earlier METARs are not used. The screen states this assumption.
+2. Prevailing precipitation (the TAF base group, FM, or BECMG from its start time) makes the slot WET.
+3. A PROB group that is not on a TEMPO or INTER, with precipitation and a probability at or above `wetRunwayProbabilityPct`, makes the slot WET. Below it, the slot is WET POSSIBLE.
+4. TEMPO or INTER precipitation, with or without a PROB, makes the slot WET POSSIBLE whatever the threshold.
+5. WET POSSIBLE is evaluated as both wet and dry; a mode that fails only the wet case is MARGINAL. It does not start the drying clock.
+6. After the last WET slot of each wet spell, the runway stays WET for `dryingTimeMinutes`, counted from the end of that slot, then is DRY.
+
+**Slot weather source.** The latest METAR governs forecast slots that start within `metarValidityMinutes` of its observation (pack value, default 60, provisional). After that the TAF governs. Inside the METAR window the METAR decides each cell's status and the runway state, and a TAF that would make a mode worse for that slot makes the cell MARGINAL with the TAF reason (owner decision, 23-10-2026). With no usable METAR the TAF governs from slot 1. BECMG is treated as an ordinary change at its start time (owner decision, 23-10-2026).
+
+**Report entry and selection (OD-28).** The user pastes the METAR and the TAF into two text boxes and presses Apply. The report's station must match the pack's weather station, or it is refused. A SPECI counts as a METAR. A new TAF issue, amendment or correction replaces the previous TAF; a cancelled or nil TAF counts as no TAF; a TAF whose validity has ended counts as no TAF. If there is no TAF, slots beyond the METAR window are UNKNOWN. If there is no METAR, or it is older than `metarValidityMinutes`, slot 1 takes its weather from the TAF and its runway state is DRY (WC-12). Times without a month are resolved from the clock: the day in the report is taken as the most recent date at or before now that matches, or for a TAF validity, the date nearest its issue time. The age shown is the age of the observation time in the report, so a pasted old report is visibly stale. A stale METAR is accepted and flagged, never refused (OD-30). Pasted reports are held in memory only and are not stored: every visit starts with empty boxes. If only one report is entered the app works with it (WX-9) and a banner names the missing one.
+
+**Capacity.** Each mode has a maximum capacity in the pack, in total movements (arrivals plus departures) per hour, scaled to the slot length; `null` means no limit. Known demand above capacity makes the mode UNSUITABLE in that slot (hard limit, owner decision 23-10-2026). Known demand is the known arrivals plus the known departures. Departures are known only for the next slot, and missing departures count as zero, so later slots are checked against arrivals alone, a lower bound (owner decision, 23-10-2026). A slot where nothing is known skips the check and is marked uncertain, not UNSUITABLE. Accepted risk: a heavy arrival count alone can make a mode UNSUITABLE in later slots.
+
+**C. Survival.** For each mode from now: continuous viable duration (stops at the first UNSUITABLE slot; UNKNOWN slots are counted and marked uncertain, not treated as failures), first MARGINAL slot, first UNSUITABLE slot, its cause, and the best replacement at that time.
+
+**D. Sequence optimiser.** The optimiser chooses the sequence of modes across the forecast window with the lowest total penalty. A penalty is a score for something we want to avoid; lower is better. Hard rules are never penalties: a cell that is UNSUITABLE is forbidden, so the plan can never enter it.
+
+*State and method.* Dynamic programming over (slot, mode). The window is the forecast window only; there is no look-ahead past its end and no terminal penalty (owner decision, 23-10-2026). The starting mode is the operator's current mode if one is entered (OD-21): a first slot in any other mode is charged a change penalty. If no current mode is set, there is no starting mode and the first slot may be any allowed mode. A "no suitable mode" state is used only in slots where every mode is UNSUITABLE, at `noModePenalty` per slot; entering or leaving it costs no change penalty, so a plan can always be produced.
+
+*Penalties.* All weights are pack values, whole numbers, each with a `description` (RD-7). The total for a plan is the sum, over slots, of:
+1. **Preference penalty.** Each ranked row of the operating plan carries its own number (owner decision, 23-10-2026), for example 0, 2, 5, 12. The row for the slot's time band gives the mode's penalty, so you set how close or far apart the choices are by editing data.
+2. **Marginal penalty.** A fixed penalty for each MARGINAL slot.
+3. **Change penalty.** Charged when a slot's mode differs from the previous slot's. It depends on the traffic level of that slot: light, medium or busy (pack values, for example 1, 5, 25). Where traffic is not known for a slot, a single flat `unknownDemandChangePenalty` is used and the plan gives no pre-emptive advice there (owner decision, 23-10-2026; see Traffic).
+
+*Tie-breaks.* Equal totals are resolved by the lower total preference penalty, then by the mode that appears first in `modes.json` (the engine never uses a mode number or name, AG-4). The same input always gives the same plan.
+
+*Worked example (made-up numbers).* Eight slots. Mode 12 has preference 0 and is allowed in slots 1 to 4 only; Mode 10 has preference 2 and is allowed throughout. A change costs 5 in medium traffic and 25 in busy traffic. No current mode is set. With medium traffic in every slot the best plan is Mode 12 for four slots, then Mode 10: 0 + 5 + 4 x 2 = 13, against 16 for Mode 10 throughout. Now make slot 5 busy and the others medium. Waiting for Mode 12 to end would put the change in slot 5: 0 + 25 + 8 = 33. Staying in Mode 10 all the way costs 16. The best plan is to change one slot early, at slot 4 while traffic is medium: slots 1 to 3 in Mode 12 (0), the change (5), slots 4 to 8 in Mode 10 (5 x 2 = 10), total 15. That is the lowest, and it is an early change (OP-7). If the current mode is Mode 10, add the change cost for leaving Mode 10 in slot 1 to any plan that starts in Mode 12. This example becomes a test with fixed weights on the TEST pack.
+
+**Current mode (OD-21).** The operator picks the current mode from a pull-down menu of the pack's enabled modes, with Not set as the first entry. The choice is stored in browser storage under the airport and shown with the time it was set. It turns amber with "set more than 2 hours ago" once it is older than `currentModeStaleMinutes` (pack value, default 120), so a forgotten setting is visible (OD-30). On load it is checked against the pack: if it names a mode that is no longer enabled, it is cleared with a message. The app never changes it. A current mode that is UNSUITABLE now is shown as such, with a banner naming the replacement. The change penalty that discourages leaving the current mode is the ordinary change penalty (section D), so it grows with traffic.
+
+**On-screen settings (OD-27).** The user can change only the current mode and the forecast window on screen. Every other setting is shown read-only and is changed by editing the pack files and pressing Reload data. Configuration on screen, with stored overrides over the pack defaults, is a later iteration.
+
+**E. Changeover planning.** Changeovers are read from the chosen sequence, not searched separately. The change slot is wherever the optimiser placed it, which already weighs traffic. The planner then adds: the trigger (the first slot where the mode before the change would fail), the preparation start (the change time minus `changeoverPreparationMinutes`), traffic at the change, and the replacement mode with how long it survives. EARLY MODE CHANGE RECOMMENDED is shown only when the mode being left becomes UNSUITABLE later in the window, the chosen plan changes before that, and its total penalty is lower than the best plan that waits for the forced change. The engine finds that second plan by running the optimiser again with changes forbidden before the failure slot. The banner is not shown for a change made only for preference, or when traffic at the change slot is unknown. The banner states the two times and the traffic at each; the difference in score is never shown to the user.
+
+**F. Stability.** The plan is recomputed every 30 minutes and on a new METAR, a TAF amendment, a settings change or a manual refresh. Each recalculation is the best plan for the current data and the current mode, if set; the app keeps no memory of earlier recommendations (OD-20). The newest plan is always shown, with its cells and explanation computed together. Repeated changes within one plan are limited by the change penalties.
+
+**Explanations** are generated from the stored cell reasons and costs by template, so the text always matches the numbers. If no mode is eligible the screen shows "NO SUITABLE STANDARD MODE IDENTIFIED". Missing METAR, TAF or VATSIM data shows what is unknown and makes no claim that depends on it.
+
+## 7. Weather and traffic detail
+**Wind maths.** Headwind = speed x cos(dir - heading); tailwind = max(0, -headwind); crosswind = speed x sin(dir - heading). Runway headings come from the pack's `runways.json`; the engine accepts any number of runway ends. Wind direction and runway heading are taken as the same reference (OD-11); there is no conversion. Variable wind: VRB at or below `calmWindKt` counts as calm (no tailwind, no crosswind). VRB above it makes every mode MARGINAL with the cause VRB, unless the full speed breaks a limit on every runway the mode uses, when that mode is UNSUITABLE (OD-27). A direction range (for example 160V220) is tested at the worst direction in the range. Tailwind and crosswind use the stronger of the mean wind and the gust, and crosswind is the absolute value of speed times sin(direction minus heading). A component is compared as `component <= limit + limitToleranceKt` (WC-11), where `calmWindKt` and `limitToleranceKt` are pack values.
+
+**TAF.** FM starts a new prevailing period. BECMG is treated as an ordinary change at its start time. TEMPO and INTER are overlays valid for their window and never replace the prevailing state. PROB30 and PROB40 are overlays flagged by probability. All times are UTC internally; display can switch to Sydney local time with daylight saving.
+
+**Demand model (owner decisions, 23-10-2026).** Each aircraft in the VATSIM feed is counted once. Aircraft without a flight plan are ignored.
+- **Departures.** Origin is the pack's airport and the aircraft is on the ground at the airport: within `trafficAreaNm` of it, groundspeed under `groundMaxSpeedKt`, altitude within `groundAltitudeMarginFt` of the airport elevation (`elevationFt`). Every such aircraft counts as departing in the next slot, meaning slot 1. Departure demand beyond the next slot is unknown.
+- **Arrivals.** Destination is the pack's airport. An airborne aircraft is timed from straight-line distance divided by groundspeed (not below `arrivalSpeedFloorKt`). An aircraft on the ground elsewhere (outside `trafficAreaNm` of the airport, groundspeed under `groundMaxSpeedKt`) with a flight plan to the pack's airport is assumed to take off within the next `assumedDepartureWindowMinutes` (pack value, default 30), with departures spread evenly across that window: with N such aircraft, sorted by distance from the airport and then by feed order, the k-th takes off at now plus the window times k divided by N. Its arrival is its take-off time plus straight-line distance divided by `assumedGroundSpeedKt` (pack value, default 400, provisional). Each aircraft counts in the slot containing its arrival time. Filed times are not used. Aircraft bound for the airport from anywhere are counted; the demand horizon decides which fall inside the window.
+- **Slot level.** For each 30-minute slot the arrival and departure counts are compared with the pack's light, medium and busy bands, and the slot takes the higher level.
+- **Horizon.** Demand is estimated as far ahead as these rules support, up to `demandHorizonMinutes`. Beyond that it is unknown: the capacity check is skipped, the flat `unknownDemandChangePenalty` applies, and the cell is marked uncertain.
+- **Risk accepted.** Counting every aircraft on the ground as departing now overstates demand when many sit at gates, and capacity is a hard limit, so a long idle queue can make a mode UNSUITABLE for capacity until aircraft leave.
+- **Personal data.** Only position, altitude, groundspeed, origin and destination are read. Names, member numbers and callsigns are dropped when the feed is parsed and never stored or shown.
+
+**Open point: other countries.** The METAR and TAF parser starts from Australian report conventions. Other countries differ (for example inHg altimeter settings and statute-mile visibility). When a second country is in view, its report fixtures are added and the parser is extended generically, never by a branch on country (requirement AG-13).
+
+## 8. Dashboard
+Panels A to D and F (Panels E and G were removed, OD-20). The runway diagram, weather runway table and timeline rows are generated from the pack's runway and mode lists, and all airport wording comes from `airport.json`. Layout order: weather text (the pasted METAR and TAF) under the freshness chips, recommendation (A), the survival timeline (B) directly below it, then weather components (C), traffic (D) and the runway diagram (F). The timeline has modes as rows and 30-minute slots as columns, scrolls horizontally, marks now, the recommended sequence and planned changes, and has a background band over every row for busy periods. Green is never drawn for a cell that fails a tailwind limit, because colour comes straight from the matrix.
+
+## 9. Testing and verification
+Vitest, run with `npm test`; plus `tsc --noEmit` and ESLint. Every engine scenario runs against both the YSSY pack and the fictional TEST pack (section 4c). Added crosswind cases: 19.9 kt eligible and 20.1 kt ineligible at a 20 kt limit; a mode with a different `maxCrosswindKt` judged on its own value; editing the limit in data changes the result with no code change. Pack-validation tests cover bad cross-references, gaps in time bands and a missing field. The engine tests cover the scenarios in REQUIREMENTS.md section 11, including: stable weather; forecast shift in two hours; busy-period change avoidance; dry 4.9 and 5.1 kt; wet 0.1 kt and headwind; wet-possible runway; TEMPO showers; BECMG; preference against resilience; capacity; repeated changes within one plan; no eligible mode; missing data. Parser tests use real saved METAR/TAF strings kept as small fixtures. Each fix names a test that fails if the fix is reverted. The owner's live check is the final gate: run against real METAR, TAF and VATSIM data and judge whether the advice is sensible.
+
+**Success criteria:** all scenarios pass on both packs; the literal check finds no airport fact in `src/`; adding a third pack needs no code change; every number on screen traces to a refdata value or a feed value; changing a refdata value changes the plan with no code change; the timeline and recommendation agree because they share one engine output.
+
+## 10. Plan (tracker rows are in TRACKER.md)
+Branches are batched (working agreement section 3), at most 3 in flight.
+1. **Refdata and engine core** (Medium): pack schema and loader with cross-reference validation, YSSY and TEST packs, wind maths, eligibility with per-mode crosswind, survival, optimiser, the literal-check script, tests.
+2. **Weather and traffic ingestion** (Medium): METAR/TAF parsers with fixtures, VATSIM model, feed test for browser access.
+3. **Dashboard** (Medium): panels and timeline.
+4. **Hardening and docs** (Low): settings UI, audit trail, README, assumptions and limitations.
+
+## 11. Risks
+- Estimating arrival and departure demand from VATSIM is rough; shown as estimates with uncertainty.
+- All agent roles share a model family; the owner's live check is the safeguard.
+- Phase 1 takes the METAR and TAF by hand (OD-28), so no weather provider or proxy is involved. If the traffic feed ever blocks browser requests, a small proxy covers it.
+- Pack files are not reviewed beyond the document process (owner decision, 23-10-2026). A mistaken or malicious edit within the schema's allowed range could change a limit without a second person seeing it. Revisit this if more than one person edits packs or a pack is published.
+- Over-fitting the schema to YSSY. Mitigated by the TEST pack, shaped differently on purpose, and by AG-12. A real second airport may still expose gaps, so expect a schema revision then.
+- The generic rule vocabulary becoming too abstract to edit by hand. Mitigated by validation messages that name the file and field, and by the YSSY pack as the worked example.
+
+## 12. Security and audit (adopted 23-10-2026)
+The security requirements are SEC-1 to SEC-7 in REQUIREMENTS.md section 18; the reasoning is in docs/reviews/2026-10-23-security-review.md. How they are met:
+- **Notice (SEC-1).** The notice text is a constant in the application. `airport.json` may carry one extra line, shown beneath it.
+- **Plain text only (SEC-2).** Every screen component receives data as strings and renders them as text nodes. A lint rule bans the HTML-insertion APIs and runs in CI.
+- **Input checks (SEC-3).** All external input passes the schema validator (section 4c) before the engine sees it. The validator rejects unknown fields, enforces file and response size caps, depth limits and number ranges, and refuses the keys `__proto__`, `constructor` and `prototype`. Parsed data is copied into plain objects. A failed check refuses the input and keeps the previous valid data.
+- **Hosting (SEC-4).** The build must run with no inline script, so the content-security policy can forbid it. The header values and the CI test belong to the publication phase (tracker YR-13).
+- **Dependencies (SEC-5).** The lockfile, `--ignore-scripts` and the audit step are set up with the project skeleton (tracker YR-4).
+- **Personal data (SEC-6).** The VATSIM parser keeps only position, altitude, groundspeed, origin and destination; no name, member number or callsign field exists in its types.
+
+**Audit trail (RD-6).** An entry has: `time` (UTC), `airport`, `path` (which setting or "currentMode"), `old`, `new`. The store keeps up to a set number of entries per airport (a pack value, default 500), dropping the oldest first. It is shown at the foot of the settings drawer, can be exported as a JSON file, and is labelled "local record, not tamper-proof". It is validated on load like all stored data (SEC-3); a corrupt log is discarded with a message. The audit trail is not evidence: it can be cleared or edited by the user. Repository history is the record of pack changes.
+
+**Uncertainty line (replaces confidence, OD-25).** Panel A shows one plain line: the number of slots on the recommended path that are MARGINAL because of an uncertain input or have unknown weather or demand ("Based on 2 uncertain slots"), or "No uncertain inputs". A stale or failed source shows its own banner (UI_DESIGN section 7). There is no HIGH, MEDIUM or LOW.

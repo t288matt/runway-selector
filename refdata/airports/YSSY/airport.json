@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "description": "Sydney Kingsford Smith Airport. PROVISIONAL DRAFT 23-10-2026: values not yet checked against an official source.",
+  "icao": "YSSY",
+  "name": "Sydney",
+  "latitude": -33.9461,
+  "longitude": 151.1772,
+  "elevationFt": 21,
+  "timeZone": "Australia/Sydney",
+  "weatherStation": "YSSY",
+  "trafficAreaNm": 5,
+  "groundMaxSpeedKt": 40,
+  "groundAltitudeMarginFt": 100,
+  "arrivalSpeedFloorKt": 150,
+  "labels": { "extraNotice": "Rules and capacities shown are provisional simulation assumptions." }
+}
