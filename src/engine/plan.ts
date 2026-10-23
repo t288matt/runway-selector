@@ -20,6 +20,8 @@ export function makeLocalMinuteReader(timeZone: string): (utcMs: number) => numb
   };
 }
 
+// A slot belongs to a band by the local wall time of its START (DESIGN section 5a). In zones with
+// 45-minute offsets a 30-minute slot can straddle two bands; it is judged by its start, by design.
 /** Returns a function from a slot start (UTC ms) to the band that applies, or null if none covers it. */
 export function makeBandFinder(pack: AirportPack): (startMs: number) => PlanBand | null {
   const localMinute = makeLocalMinuteReader(pack.airport.timeZone);
