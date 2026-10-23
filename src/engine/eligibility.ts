@@ -5,7 +5,7 @@
 import type { AirportPack, Mode, PlanBand } from '../refdata/types';
 import type { SlotWeather, TrafficSlot, WeatherOverlay, WeatherSlot, WindObservation } from './inputs';
 import type { Cell, FigureValue, Reason, RunwayFigures, RunwayState, Status } from './types';
-import { isUsableWind, nearLimit, runwayWind, withinLimit } from './wind';
+import { isFullCircle, isUsableWind, nearLimit, runwayWind, withinLimit } from './wind';
 
 const MS_PER_HOUR = 3_600_000;
 
@@ -67,7 +67,12 @@ export function assessWind(
   let hasFail = false;
   let wetOnlyFail = false;
 
-  const winds = used.map((u) => ({ u, w: runwayWind(wind, u.headingDegrees, s.calmWindKt) }));
+  // A full-circle direction range (000V360) has no usable direction: treat it as VRB.
+  const judged: WindObservation =
+    wind.kind === 'steady' && wind.variableRangeDegrees !== null && isFullCircle(wind.variableRangeDegrees[0], wind.variableRangeDegrees[1])
+      ? { kind: 'variable', speedKt: wind.speedKt, gustKt: wind.gustKt }
+      : wind;
+  const winds = used.map((u) => ({ u, w: runwayWind(judged, u.headingDegrees, s.calmWindKt) }));
   for (const { u, w } of winds) {
     runways.push({
       runway: u.name,
@@ -92,9 +97,10 @@ export function assessWind(
   const variable = winds.length > 0 && winds.every(({ w }) => w.variableAboveCalm);
   if (variable) {
     // Variable wind above calm (WC-11, OD-27): MARGINAL, unless the full speed breaks a
-    // limit on every runway the mode uses. The deciding tailwind limit is the dry one,
-    // or the wet one when the runway is WET; WET_POSSIBLE decides on the dry case.
-    const decisive = state === 'WET' ? twWet : twDry;
+    // limit on every runway the mode uses. Owner decision 23-10-2026: variable wind is
+    // ignored for wet-runway decisions, so the deciding tailwind limit is ALWAYS the dry
+    // one (tailwindDryKt), whatever the runway state; the wet limit is never applied to it.
+    const decisive = twDry;
     const speed = winds[0]?.w.speedKt ?? 0;
     const breaks = winds.map(({ w }) => ({
       tail: !withinLimit(w.tailwindKt, decisive, tol),
