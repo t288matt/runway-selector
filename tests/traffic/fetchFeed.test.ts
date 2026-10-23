@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { FEED_MAX_BYTES, VATSIM_FEED_URL } from '../../src/traffic/config';
-import { fetchFeed, isStale, type FeedFetch } from '../../src/traffic/fetchFeed';
+import { fetchFeed, formatDuration, isStale, type FeedFetch } from '../../src/traffic/fetchFeed';
 import { YSSY_PACK, loadPackFrom } from '../helpers/packs';
 
 const fixture = readFileSync(join(import.meta.dirname, '..', 'fixtures', 'traffic', 'synthetic-feed.json'), 'utf8');
@@ -70,6 +70,26 @@ describe('fetchFeed failures return an error object (the caller keeps its previo
         init?.signal?.addEventListener('abort', () => reject(init.signal?.reason));
       });
     const r = await run(hang, { timeoutMs: 20 });
+    expect(r).toMatchObject({ ok: false, error: { kind: 'timeout' } });
+  });
+
+  it('a sub-second timeout is worded in milliseconds, not 0 seconds', async () => {
+    const hang: FeedFetch = (_url, init) =>
+      new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () => reject(init.signal?.reason));
+      });
+    const r = await run(hang, { timeoutMs: 20 });
+    const message = r.ok ? '' : r.error.message;
+    expect(message).toContain('20 ms');
+    expect(message).not.toContain('0 seconds');
+    expect(formatDuration(20000)).toBe('20 seconds');
+    expect(formatDuration(1500)).toBe('1.5 seconds');
+    expect(formatDuration(1000)).toBe('1 second');
+  });
+
+  it('a body that never ends is cut at the timeout', async () => {
+    const endless = new ReadableStream<Uint8Array>({ pull: () => new Promise(() => undefined) });
+    const r = await run(() => Promise.resolve(new Response(endless)), { timeoutMs: 30 });
     expect(r).toMatchObject({ ok: false, error: { kind: 'timeout' } });
   });
 

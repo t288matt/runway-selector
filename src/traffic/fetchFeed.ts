@@ -35,7 +35,14 @@ export type FetchFeedResult =
 
 class Oversize extends Error {}
 
-async function readLimited(res: Response, maxBytes: number): Promise<string> {
+async function readLimited(res: Response, maxBytes: number, signal: AbortSignal): Promise<string> {
+  // Reading the body stops at the timeout even if the stream never ends.
+  const aborted = new Promise<never>((_resolve, reject) => {
+    const stop = (): void => reject(signal.reason ?? new Error('aborted'));
+    if (signal.aborted) stop();
+    else signal.addEventListener('abort', stop, { once: true });
+  });
+  aborted.catch(() => undefined);
   const declared = Number(res.headers.get('content-length'));
   if (Number.isFinite(declared) && declared > maxBytes) throw new Oversize();
   const chunks: Uint8Array[] = [];
@@ -43,7 +50,14 @@ async function readLimited(res: Response, maxBytes: number): Promise<string> {
   if (res.body) {
     const reader = res.body.getReader();
     for (;;) {
-      const { done, value } = await reader.read();
+      let result: ReadableStreamReadResult<Uint8Array>;
+      try {
+        result = await Promise.race([reader.read(), aborted]);
+      } catch (e) {
+        await reader.cancel().catch(() => undefined);
+        throw e;
+      }
+      const { done, value } = result;
       if (done) break;
       total += value.byteLength;
       if (total > maxBytes) {
@@ -53,7 +67,7 @@ async function readLimited(res: Response, maxBytes: number): Promise<string> {
       chunks.push(value);
     }
   } else {
-    const all = new Uint8Array(await res.arrayBuffer());
+    const all = new Uint8Array(await Promise.race([res.arrayBuffer(), aborted]));
     if (all.byteLength > maxBytes) throw new Oversize();
     total = all.byteLength;
     chunks.push(all);
@@ -65,6 +79,13 @@ async function readLimited(res: Response, maxBytes: number): Promise<string> {
     at += c.byteLength;
   }
   return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+}
+
+/** 250 -> "250 ms"; 20000 -> "20 seconds"; 1500 -> "1.5 seconds". */
+export function formatDuration(ms: number): string {
+  if (ms < 1000) return `${Math.round(ms)} ms`;
+  const s = Math.round(ms / 100) / 10;
+  return `${s} ${s === 1 ? 'second' : 'seconds'}`;
 }
 
 const fail = (kind: FeedErrorKind, message: string): FetchFeedResult => ({ ok: false, error: { kind, message } });
@@ -84,11 +105,11 @@ export async function fetchFeed(options: FetchFeedOptions): Promise<FetchFeedRes
   try {
     const res = await options.fetch(url, { cache: 'no-store', credentials: 'omit', signal });
     if (!res.ok) return fail('http', `Traffic data could not be fetched: HTTP ${res.status}`);
-    text = await readLimited(res, FEED_MAX_BYTES);
+    text = await readLimited(res, FEED_MAX_BYTES, signal);
   } catch (e) {
     if (e instanceof Oversize) return fail('oversize', `Traffic data is larger than the ${FEED_MAX_BYTES} byte limit`);
     if (signal.aborted || (e instanceof Error && (e.name === 'TimeoutError' || e.name === 'AbortError'))) {
-      return fail('timeout', `Traffic data did not arrive within ${Math.round(timeoutMs / 1000)} seconds`);
+      return fail('timeout', `Traffic data did not arrive within ${formatDuration(timeoutMs)}`);
     }
     return fail('network', `Traffic data could not be read: ${e instanceof Error ? e.message : 'unknown error'}`);
   }
