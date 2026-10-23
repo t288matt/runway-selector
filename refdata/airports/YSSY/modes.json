@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "description": "Standard modes from the 2015 Airservices table (provisional). Order in this file is the final tie-break. Capacity is empty because no official figures were found (SY-7). Runway uses marked long-haul only in the source are listed like any other use; the engine ignores the aircraft class (OD-19).",
+  "status": "provisional",
+  "modes": [
+    { "id": "1",        "description": "Curfew mode", "enabled": true, "arrivals": ["34L"], "departures": ["16R"], "maxCrosswindKt": 20, "capacity": null },
+    { "id": "SODPROPS", "description": "Simultaneous opposite direction parallel runway operations; disabled until confirmed", "enabled": false, "arrivals": ["34L"], "departures": ["16L", "16R"], "maxCrosswindKt": 20, "capacity": null },
+    { "id": "4",        "description": "No runway data found; disabled", "enabled": false, "arrivals": [], "departures": [], "maxCrosswindKt": 20, "capacity": null },
+    { "id": "5",        "description": "Arrivals 25 and 16R, departures 16L and 16R", "enabled": true, "arrivals": ["25", "16R"], "departures": ["16L", "16R"], "maxCrosswindKt": 20, "capacity": null },
+    { "id": "7",        "description": "Arrivals 34L and 34R, departures 25 and 34L", "enabled": true, "arrivals": ["34L", "34R"], "departures": ["25", "34L"], "maxCrosswindKt": 20, "capacity": null },
+    { "id": "8",        "description": "Arrivals 34L and 34R, departures 25, 34R and 34L", "enabled": true, "arrivals": ["34L", "34R"], "departures": ["25", "34R", "34L"], "maxCrosswindKt": 20, "capacity": null },
+    { "id": "9",        "description": "Arrivals and departures 34L and 34R", "enabled": true, "arrivals": ["34L", "34R"], "departures": ["34L", "34R"], "maxCrosswindKt": 20, "capacity": null },
+    { "id": "10",       "description": "Arrivals and departures 16L and 16R", "enabled": true, "arrivals": ["16L", "16R"], "departures": ["16L", "16R"], "maxCrosswindKt": 20, "capacity": null },
+    { "id": "12",       "description": "Arrivals and departures 07", "enabled": true, "arrivals": ["07"], "departures": ["07"], "maxCrosswindKt": 20, "capacity": null },
+    { "id": "13",       "description": "Arrivals and departures 25", "enabled": true, "arrivals": ["25"], "departures": ["25"], "maxCrosswindKt": 20, "capacity": null },
+    { "id": "14A",      "description": "Arrivals 07 and 16R, departures 16L and 16R", "enabled": true, "arrivals": ["07", "16R"], "departures": ["16L", "16R"], "maxCrosswindKt": 20, "capacity": null }
+  ]
+}

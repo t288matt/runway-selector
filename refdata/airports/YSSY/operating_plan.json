@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "description": "PROVISIONAL PLACEHOLDER (23-10-2026). The 2015 Airservices table lists the modes and their runways but gives no preference order, so every mode has the same preference by day; the order of the modes is NOT a ranking. By night (the curfew period) Mode 1 is preferred and the other modes carry a higher penalty rather than being forbidden, so a wet night with no usable curfew mode still gives an answer. Replace with the current operating plan (LTOP) when it is supplied.",
+  "status": "provisional",
+  "bands": [
+    { "id": "day", "start": "06:00", "end": "23:00", "rows": [
+      { "mode": "1", "allowed": false, "penalty": 0 }
+    ] },
+    { "id": "night", "start": "23:00", "end": "06:00", "rows": [
+      { "mode": "1",   "allowed": true, "penalty": 0 },
+      { "mode": "5",   "allowed": true, "penalty": 20 },
+      { "mode": "7",   "allowed": true, "penalty": 20 },
+      { "mode": "8",   "allowed": true, "penalty": 20 },
+      { "mode": "9",   "allowed": true, "penalty": 20 },
+      { "mode": "10",  "allowed": true, "penalty": 20 },
+      { "mode": "12",  "allowed": true, "penalty": 20 },
+      { "mode": "13",  "allowed": true, "penalty": 20 },
+      { "mode": "14A", "allowed": true, "penalty": 20 }
+    ] }
+  ]
+}

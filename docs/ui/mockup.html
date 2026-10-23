@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Runway Mode Planner mockup</title>
+<style>
+:root{
+  --bg:#0b1426; --panel:#111d36; --panel2:#16254a; --line:#223356;
+  --text:#e6ecf7; --muted:#9db0cf; --accent:#3b82f6; --accent-text:#6aa6ff;
+  --ok:#1b7f46; --warn:#c98a00; --bad:#c0392b; --unk:#66728a;
+  --ok-text:#5fd68a; --warn-text:#ffc94d; --bad-text:#ff8a80;
+  --busy:#e8a33a; --wet:#5bb8e8;
+  --r:6px; --cell:56px; --rowh:36px; --labw:176px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Arial,sans-serif}
+.wrap{max-width:1440px;margin:0 auto;padding:12px 16px 32px}
+.top{display:flex;align-items:center;gap:12px;padding:8px 0;flex-wrap:wrap}
+.top h1{font-size:18px;margin:0;font-weight:650}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-size:12px}
+.tag.illus{border-color:var(--warn);color:var(--warn-text)}
+.sp{flex:1}
+.btn{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:var(--r);padding:5px 12px;font:inherit;cursor:pointer}
+select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:var(--r);padding:4px 8px;font:inherit}
+.notice{background:#1a2442;border:1px solid var(--line);border-left:4px solid var(--accent);padding:6px 12px;border-radius:var(--r);font-size:13px;color:var(--muted)}
+.fresh{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0 12px;font-size:12px;color:var(--muted)}
+.fresh span b{color:var(--text);font-weight:600}
+.wxtop{margin:0 0 12px}
+.wxtop .mono{margin-top:6px}
+.wxtop .mono b{color:var(--accent-text);margin-right:8px}
+.wxbox{display:grid;grid-template-columns:70px 1fr auto;gap:8px;align-items:start;margin-top:6px}
+.wxbox label{color:var(--accent-text);font-weight:600;padding-top:6px}
+.wxbox textarea{width:100%;background:#0d1730;color:#c9d6ee;border:1px solid var(--line);border-radius:4px;padding:6px 8px;font:12px/1.4 Consolas,Menlo,monospace;resize:vertical;min-height:34px}
+.wxbox .age{font-size:11px;color:var(--muted);margin-top:3px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok-text);margin-right:5px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:12px}
+.panel h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:600}
+.panel h2 i{font-style:normal;color:var(--accent-text);margin-right:6px}
+/* A */
+.A{display:grid;grid-template-columns:240px 1fr 1fr;gap:20px;border-left:4px solid var(--accent)}
+.modebig{font-size:44px;font-weight:700;line-height:1}
+.modebig small{display:block;font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.06em;margin-bottom:4px}
+.rwy{margin-top:8px;font-size:13px;color:var(--muted)}
+.rwy b{color:var(--text)}
+.cur{margin-top:10px;font-size:13px;color:var(--muted)}
+.cur label{display:block;margin-bottom:3px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13px;align-content:start}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+.big{font-size:18px;font-weight:650}
+.banner{grid-column:1/-1;display:flex;gap:12px;align-items:flex-start;background:#2a2410;border:1px solid var(--warn);border-radius:var(--r);padding:8px 12px}
+.banner b{color:var(--warn-text);white-space:nowrap}
+.banner.red{background:#2d1512;border-color:var(--bad)} .banner.red b{color:var(--bad-text)}
+.banner.note{background:#16213f;border-color:var(--line)} .banner.note b{color:var(--muted)}
+.why{grid-column:1/-1;border-top:1px solid var(--line);padding-top:8px;color:var(--text)}
+.nomode{grid-column:2/-1;border:2px solid var(--bad);border-radius:8px;padding:10px 14px;color:var(--bad-text)}
+.chip{display:inline-block;padding:1px 7px;border-radius:4px;font-size:12px;font-weight:600;border:1px solid}
+.chip.ok{color:var(--ok-text);border-color:var(--ok)} .chip.warn{color:var(--warn-text);border-color:var(--warn)} .chip.bad{color:var(--bad-text);border-color:var(--bad)} .chip.unk{color:var(--muted);border-color:var(--unk)}
+/* B timeline */
+.B{padding:12px 0 12px 16px}
+.B h2{padding-right:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.B h2 .sp{flex:1}
+.bsum{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding-right:16px;margin-bottom:10px}
+.bsum div{background:var(--panel2);border-radius:var(--r);padding:6px 10px}
+.bsum span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.bsum b{font-size:15px}
+.scroller{overflow-x:auto;padding-right:16px;position:relative}
+.inner{position:relative}
+.row{display:flex;height:var(--rowh);align-items:stretch}
+.lab{position:sticky;left:0;z-index:5;width:var(--labw);flex:none;background:var(--panel);display:flex;flex-direction:column;justify-content:center;align-items:flex-start;line-height:1.15;white-space:nowrap;overflow:hidden;padding:0 8px;font-weight:600;border-right:1px solid var(--line)}
+.lab small{font-weight:400;color:var(--muted);font-size:11px}
+.rt{font-size:10px;padding:0 5px;border-radius:3px;font-weight:700;letter-spacing:.04em}
+.rt.rec{background:var(--accent);color:#fff} .rt.act{border:1px solid var(--text);color:var(--text)}
+.row.isrec .lab{box-shadow:inset 3px 0 0 var(--accent)}
+.row.isact .lab{box-shadow:inset 0 -2px 0 var(--text)}
+.cell{width:calc(var(--cell) - 2px);flex:none;margin:2px 1px;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;cursor:pointer;position:relative;line-height:1}
+.cell small{font-size:9px;font-weight:600;opacity:.95;margin-top:1px}
+.cell:focus-visible,.cell:hover{outline:2px solid #fff;outline-offset:1px;z-index:6}
+.cell.S{background:var(--ok)}
+.cell.M{color:#0b1426;background:repeating-linear-gradient(135deg,var(--warn) 0 6px,#e0a413 6px 9px)}
+.cell.U{background:repeating-linear-gradient(45deg,var(--bad) 0 5px,#8f2a20 5px 7px),var(--bad)}
+.cell.Q{background:radial-gradient(#9aa5bb 1px,transparent 1.5px) 0 0/6px 6px,var(--unk)}
+.cell.rec{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent-text)}
+.cell.unc::after{content:"";position:absolute;right:0;top:0;border-style:solid;border-width:0 9px 9px 0;border-color:transparent #fff transparent transparent}
+.hdr .lab{font-weight:500;color:var(--muted);font-size:11px}
+.hdr .h{width:var(--cell);flex:none;text-align:center;font-size:11px;color:var(--muted);align-self:center}
+.hdr .h.hr{color:var(--text);font-weight:650}
+.hdr.tall{height:26px}
+.ic{width:var(--cell);flex:none;text-align:center;font-size:10px;align-self:center;color:var(--muted);white-space:nowrap}
+.traf .t{width:calc(var(--cell) - 2px);flex:none;margin:3px 1px;text-align:center;font-size:10px;font-weight:700;border-radius:3px;line-height:16px;height:18px;align-self:center}
+.t.L{background:#1c2a4d;color:var(--muted)} .t.Mm{background:#2b3a66;color:var(--text)} .t.H{background:#5a3d10;color:var(--warn-text);border:1px solid var(--busy)} .t.X{background:transparent;color:var(--muted);border:1px dashed var(--unk)}
+.ov{position:absolute;pointer-events:none}
+.busyband{border-left:1px dashed var(--busy);border-right:1px dashed var(--busy);background:rgba(232,163,58,.09);z-index:1}
+.wetband{background:rgba(91,184,232,.10);border-left:1px dotted var(--wet);border-right:1px dotted var(--wet);z-index:1}
+.now{width:2px;background:#fff;z-index:7}
+.now::before{content:"NOW 22:12Z";position:absolute;top:-2px;left:3px;font-size:10px;font-weight:700;background:#fff;color:#0b1426;padding:0 4px;border-radius:2px;white-space:nowrap}
+.chg{width:0;border-left:2px dashed var(--accent-text);z-index:7}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);padding:10px 16px 0 0}
+.legend .cell{display:inline-flex;width:22px !important;height:16px;margin:0 4px 0 0;vertical-align:middle;font-size:11px;cursor:default}
+.legend span{display:inline-flex;align-items:center}
+.reason{margin:10px 16px 0 0;padding-top:8px;border-top:1px solid var(--line)}
+#tip{position:fixed;z-index:50;display:none;max-width:360px;background:#0e1830;border:1px solid var(--accent);border-radius:8px;padding:10px 12px;font-size:12px;box-shadow:0 6px 24px rgba(0,0,0,.5);pointer-events:none}
+#tip h3{margin:0 0 4px;font-size:13px}
+#tip table{border-collapse:collapse;margin:4px 0;width:100%}
+#tip td,#tip th{padding:1px 6px 1px 0;text-align:left;font-weight:400;color:var(--muted)}
+#tip td b{color:var(--text)}
+/* lower grid */
+.grid3{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:12px}
+.mono{font-family:Consolas,Menlo,monospace;font-size:12px;background:#0d1730;border-radius:4px;padding:6px 8px;color:#c9d6ee;word-break:break-word}
+table.t2{width:100%;border-collapse:collapse;font-size:12px}
+table.t2 th{color:var(--muted);font-weight:500;text-align:left;border-bottom:1px solid var(--line);padding:3px 6px 3px 0}
+table.t2 td{padding:3px 6px 3px 0;border-bottom:1px solid #1a2a4c}
+.small{font-size:12px;color:var(--muted)}
+/* settings drawer */
+#drawer{position:fixed;top:0;right:0;bottom:0;width:380px;max-width:100%;background:var(--panel);border-left:1px solid var(--line);z-index:60;padding:16px;overflow:auto;display:none;box-shadow:-8px 0 24px rgba(0,0,0,.4)}
+#drawer h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+#drawer .sim{color:var(--warn-text);font-size:11px}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--accent);padding:8px 14px;border-radius:8px;display:none;z-index:70;font-size:13px}
+@media (max-width:1100px){.A,.grid3,.bsum{grid-template-columns:1fr 1fr}.A .banner,.A .why,.A .nomode{grid-column:1/-1}}
+@media (max-width:700px){.A,.grid3,.bsum{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1 id="title"></h1>
+    <span class="tag illus">Illustrative, not live data</span>
+    <span class="sp"></span>
+    <span class="tag">Times UTC, local time beside</span>
+    <button class="btn" id="refresh">Refresh</button>
+    <button class="btn" id="openSettings">Settings</button>
+  </div>
+  <div class="notice" id="notice"></div>
+  <div class="fresh" id="fresh"></div>
+  <div class="wxtop" id="wx" aria-label="Raw METAR and TAF"></div>
+
+  <!-- A -->
+  <section class="panel A" id="pA" aria-label="Panel A: current recommendation"></section>
+
+  <!-- B -->
+  <section class="panel B" aria-label="Panel B: mode survival timeline">
+    <h2><i>B</i>Mode survival timeline <span id="range"></span><span class="sp"></span>
+      <label class="small" for="win">Window</label>
+      <select id="win"><option value="8">4 hours</option><option value="12">6 hours</option><option value="20" selected>Full TAF</option></select></h2>
+    <div class="bsum" id="bsum"></div>
+    <div class="scroller" tabindex="0" aria-label="Timeline, scrolls horizontally">
+      <div class="inner" id="tl"></div>
+    </div>
+    <div class="legend">
+      <span><b class="cell S">&#10003;</b>Suitable</span>
+      <span><b class="cell M">~</b>Marginal or uncertain</span>
+      <span><b class="cell U">&#10005;</b>Unsuitable</span>
+      <span><b class="cell Q">?</b>Unknown</span>
+      <span><b class="cell S rec" style="margin-right:8px"></b>Recommended path</span>
+      <span>Dashed blue line: planned change</span>
+      <span>Amber band: HIGH traffic</span>
+      <span>Blue band: wet possible</span>
+      <span>White corner: depends on an uncertain input</span>
+    </div>
+    <div class="reason" id="reason"></div>
+  </section>
+
+  <div class="grid3">
+    <section class="panel" id="pC" aria-label="Panel C: weather"></section>
+    <section class="panel" id="pD" aria-label="Panel D: VATSIM traffic"></section>
+    <section class="panel" aria-label="Panel F: runway diagram"><h2><i>F</i>Runway diagram</h2><div id="diagram"></div></section>
+  </div>
+  <div class="small">Mockup, rebuilt 23-10-2026 from REQUIREMENTS.md and DESIGN.md. Fake data for layout review only. Panels E and G are removed (OD-20); their letters are not reused. Airport wording, runways, modes, ranking and bands come from the sample pack object at the top of the script.</div>
+</div>
+<aside id="drawer" aria-label="Settings"></aside>
+<div id="tip" role="tooltip"></div>
+<div id="toast"></div>
+
+<script>
+(function(){
+/* ---------- Sample pack (stands in for the five JSON files; first airport: Sydney) ---------- */
+var PACK={
+  airport:{icao:'YSSY',name:'Sydney',timeZone:'Australia/Sydney',station:'YSSY',extraNotice:'Rules and capacities shown are provisional simulation assumptions.'},
+  runways:{'16L':160,'16R':160,'34L':340,'34R':340,'07':70,'25':250},
+  modes:[
+    {id:'12', rw:['07'],            note:'07 arr and dep',   cap:60,  pref:5},
+    {id:'10', rw:['16L','16R'],     note:'16L/16R',          cap:64,  pref:0},
+    {id:'14A',rw:['07','16L','16R'],note:'arr 07, dep 16',   cap:56,  pref:3},
+    {id:'5',  rw:['25','16L','16R'],note:'arr 25, dep 16',   cap:56,  pref:2},
+    {id:'7',  rw:['25','34L','34R'],note:'25, 34L/34R',      cap:64,  pref:8},
+    {id:'8',  rw:['25','34L','34R'],note:'25, 34L/34R',      cap:70,  pref:9},
+    {id:'9',  rw:['34L','34R'],     note:'34L/34R',          cap:64,  pref:7},
+    {id:'13', rw:['25'],            note:'25 arr and dep',   cap:30,  pref:10},
+    {id:'1',  rw:['16R','34L'],     note:'curfew mode',      cap:null,pref:0,forbid:true}
+  ],
+  settings:{tailDryKt:5,tailWetKt:0,xwKt:20,tolKt:0.05,calmKt:3,marginKt:3,xwMarginKt:3,
+    bands:{light:[0,5],medium:[6,11],busy:[12,null]},
+    chg:{L:1,Mm:5,H:25},chgUnknown:5,marginalPenalty:3,
+    demandHorizonSlots:8,wetPct:40,dryMin:60,metarWindowMin:60}
+};
+var S=PACK.settings, TOL=S.tolKt;
+var N_ALL=20, T0=22*60;              /* 22-10-2026 22:00Z, 30-minute slots */
+var N=20;
+var NOWMIN=22*60+12;
+/* ---------- Illustrative inputs ---------- */
+var WA={d:140,s:12,g:16}, WB={d:340,s:14,g:16}, WT={d:320,s:16,g:24};
+var ARR=[9,7,9,10,11,12,16,17], DEP=[5,6,8,9,9,10,11,12];   /* per 30 minutes, known to the demand horizon */
+function hhmm(m){m=((m%1440)+1440)%1440;return ('0'+Math.floor(m/60)).slice(-2)+':'+('0'+(m%60)).slice(-2)+'Z';}
+var LOCALFMT=new Intl.DateTimeFormat('en-GB',{timeZone:PACK.airport.timeZone,hour:'2-digit',minute:'2-digit',hour12:false});
+function local(m){var base=Date.UTC(2026,9,22,0,0)+m*60000;return LOCALFMT.format(new Date(base));}
+function band(n){var b=S.bands;return n>=b.busy[0]?'H':(n>=b.medium[0]?'Mm':'L');}
+var TNAME={L:'LOW',Mm:'MEDIUM',H:'HIGH'};
+function slotInfo(i){
+  var t=T0+i*30,known=i<S.demandHorizonSlots&&i<ARR.length,lv=null,dem=null;
+  if(known){var a=band(ARR[i]),d=i===0?band(DEP[i]):'L';lv=(a==='H'||d==='H')?'H':((a==='Mm'||d==='Mm')?'Mm':'L');dem=(ARR[i]+(i===0?DEP[i]:0))*2;}
+  return {i:i,t:t,w:(i<6?WA:WB),tempo:(i===14||i===15)?WT:null,wetPoss:(i===14||i===15),taf:i<19,known:known,lv:lv,dem:dem};
+}
+var SLOTS=[];for(var q=0;q<N_ALL;q++)SLOTS.push(slotInfo(q));
+/* ---------- Engine (small copy of the documented rules) ---------- */
+function comps(w,rw){var a=(w.d-PACK.runways[rw])*Math.PI/180,sp=w.g,hw=sp*Math.cos(a),tw=Math.max(0,-hw),xw=Math.abs(sp*Math.sin(a));
+  if(sp<=S.calmKt){tw=0;xw=0;}
+  return {hw:Math.max(0,hw),tw:tw,xw:xw};}
+function worst(w,m){var t=0,x=0,tr='',xr='';m.rw.forEach(function(r){var c=comps(w,r);if(c.tw>t){t=c.tw;tr=r;}if(c.xw>x){x=c.xw;xr=r;}});return {tw:t,tr:tr,xw:x,xr:xr};}
+function judge(w,m,lim){var k=worst(w,m);
+  if(k.tw>lim+TOL)return {s:'U',c:'TW',why:'Tailwind '+k.tw.toFixed(1)+' kt on '+k.tr+' exceeds the limit of '+lim.toFixed(1)+' kt'};
+  if(k.xw>S.xwKt+TOL)return {s:'U',c:'XW',why:'Crosswind '+k.xw.toFixed(1)+' kt on '+k.xr+' exceeds this mode\'s limit of '+S.xwKt+' kt'};
+  if(k.tw>TOL&&k.tw>=lim-S.marginKt)return {s:'M',c:'TW',why:'Tailwind '+k.tw.toFixed(1)+' kt on '+k.tr+' is within '+S.marginKt+' kt of the '+lim.toFixed(1)+' kt limit'};
+  if(k.xw>=S.xwKt-S.xwMarginKt)return {s:'M',c:'XW',why:'Crosswind '+k.xw.toFixed(1)+' kt on '+k.xr+' is within '+S.xwMarginKt+' kt of the limit'};
+  return {s:'S',c:'',why:'Within wind limits (tailwind '+k.tw.toFixed(1)+' kt, crosswind '+k.xw.toFixed(1)+' kt)'};}
+var STXT={S:'suitable',M:'marginal',U:'unsuitable',Q:'unknown'};
+function evalCell(m,sl){
+  var base={sl:sl,w:sl.w,unc:false,note:''};
+  function done(o){o.sl=sl;o.w=sl.w;o.unc=o.unc||false;o.note=o.note||'';return o;}
+  if(m.forbid)return done({s:'U',c:'PLAN',why:'Operating plan: Mode '+m.id+' is not allowed in this time band'});
+  if(!sl.taf)return done({s:'Q',c:'',why:'No TAF coverage after 07:30Z. Weather unknown.',w:null});
+  var r=judge(sl.w,m,S.tailDryKt);
+  if(r.s!=='U'&&sl.wetPoss){var rw=judge(sl.w,m,S.tailWetKt);
+    if(rw.s==='U'){r={s:'M',c:'WET?',why:'Passes if the runway is dry. If it is wet: '+rw.why,unc:true};}}
+  if(r.s!=='U'&&sl.tempo){var tj=judge(sl.tempo,m,S.tailDryKt);
+    if(tj.s==='U'){r={s:'M',c:'TEMPO',why:'Prevailing wind passes. TEMPO 320/16G24 would break the limit: '+tj.why,unc:true};}}
+  if(m.cap!=null){
+    if(sl.known){if(sl.dem>m.cap)r={s:'U',c:'CAP',why:'Demand '+sl.dem+' movements/hr exceeds the capacity of '+m.cap+' for Mode '+m.id};}
+    else if(r.s!=='U'){r.unc=true;r.note='Capacity not checked: demand unknown beyond the horizon';}}
+  return done(r);}
+var CELL={};PACK.modes.forEach(function(m){CELL[m.id]=SLOTS.map(function(sl){return evalCell(m,sl);});});
+/* ---------- Optimiser: lowest total penalty, hard cells forbidden ---------- */
+var INF=1e9;
+function chgPen(i){var sl=SLOTS[i];return sl.known?S.chg[sl.lv]:S.chgUnknown;}
+function plan(n,start,minChange){
+  var M=PACK.modes,K=M.length,dp=[],bk=[];
+  for(var i=0;i<n;i++){dp.push([]);bk.push([]);
+    for(var k=0;k<=K;k++){
+      var cost,mm=k<K?M[k]:null;
+      if(mm){var c=CELL[mm.id][i];cost=c.s==='U'?INF:mm.pref+(c.s==='M'?S.marginalPenalty:0)+k*1e-6;}else cost=1000;
+      var best=INF,from=-1;
+      if(i===0){
+        var ch=(start&&mm&&mm.id!==start)?chgPen(0):0;
+        if(start&&mm&&mm.id!==start&&0<minChange)ch=INF;
+        best=ch;from=-1;
+      }else{
+        for(var j=0;j<=K;j++){if(dp[i-1][j]>=INF)continue;
+          var pm=j<K?M[j]:null,ch2=(pm&&mm&&pm.id!==mm.id)?chgPen(i):0;
+          if(ch2>0&&i<minChange)continue;
+          var tot=dp[i-1][j]+ch2;if(tot<best){best=tot;from=j;}}
+      }
+      dp[i][k]=(best>=INF||cost>=INF)?INF:best+cost;bk[i][k]=from;
+    }}
+  var bi=-1,bv=INF;for(var k2=0;k2<=K;k2++){if(dp[n-1][k2]<bv){bv=dp[n-1][k2];bi=k2;}}
+  if(bi<0)return {path:null,total:INF};
+  var path=[];for(var x=n-1;x>=0;x--){path[x]=bi<K?M[bi].id:null;bi=bk[x][bi];}
+  return {path:path,total:bv};}
+/* ---------- State ---------- */
+var CURRENT='10',AUDIT=[];
+function compute(){
+  var P=plan(N,CURRENT,0),res={P:P,early:null,change:null};
+  if(!P.path)return res;
+  var c=-1;for(var i=0;i<N;i++){var prev=i===0?CURRENT:P.path[i-1];if(prev&&P.path[i]!==prev&&P.path[i]){ if(i>0||CURRENT){c=i;break;} }}
+  if(c<0){for(var i2=1;i2<N;i2++){if(P.path[i2]!==P.path[i2-1]){c=i2;break;}}}
+  if(c>=0){var p=c===0?CURRENT:P.path[c-1],f=-1;
+    if(p)for(var s=c;s<N;s++){if(CELL[p][s].s==='U'){f=s;break;}}
+    res.change={c:c,from:p,to:P.path[c],fail:f};
+    if(f>c&&SLOTS[c].known){var F=plan(N,CURRENT,f);if(F.path&&F.total<INF&&F.total>P.total+1e-3)res.early={benefit:F.total-P.total,forcedAt:f};}}
+  return res;}
+/* ---------- Rendering ---------- */
+function el(t,c,h){var e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;}
+function lvChip(lv){if(!lv)return '<span class="chip unk">UNKNOWN</span>';var k={L:'ok',Mm:'warn',H:'bad'}[lv];if(lv==='Mm')k='warn';if(lv==='H')k='warn';if(lv==='L')k='ok';return '<span class="chip '+k+'">'+TNAME[lv]+'</span>';}
+var ICON={S:'✓',M:'~',U:'✕',Q:'?'};
+function render(){
+  var R=compute(),P=R.P,path=P.path;
+  document.getElementById('title').textContent=PACK.airport.name+' ('+PACK.airport.icao+') Runway Mode Planner';
+  document.getElementById('notice').innerHTML='Flight simulation only. Never for real-world navigation, flight planning or operations. '+PACK.airport.extraNotice;
+  document.getElementById('fresh').innerHTML=
+    '<span><i class="dot"></i>METAR <b>22:00Z</b> ('+local(22*60)+' local, 12 min old)</span>'+
+    '<span><i class="dot"></i>TAF <b>21:30Z</b> to 07:30Z</span>'+
+    '<span><i class="dot"></i>VATSIM <b>22:11:40Z</b> (32 s old)</span>'+
+    '<span>Last plan <b>22:00Z</b>, next <b>22:30Z</b></span>'+
+    '<span>Runway state <b>DRY</b> (from METAR: no rain)</span>';
+  var wxEl=document.getElementById('wx');
+  if(!wxEl.dataset.built){wxEl.dataset.built='1';wxEl.innerHTML='<div class="small">Paste the latest METAR and TAF, then press Apply (phase 1: weather is entered by hand).</div>'+'<div class="wxbox"><label for="wxm">METAR</label><div><textarea id="wxm" rows="2" spellcheck="false"></textarea><div class="age" id="agem"></div></div><button class="btn" id="applyM">Apply</button></div>'+'<div class="wxbox"><label for="wxt">TAF</label><div><textarea id="wxt" rows="3" spellcheck="false"></textarea><div class="age" id="aget"></div></div><button class="btn" id="applyT">Apply</button></div>';
+    document.getElementById('wxm').value=PACK.airport.station+' 222200Z 14012G16KT 9999 FEW030 SCT045 21/12 Q1016';
+    document.getElementById('wxt').value=PACK.airport.station+' 212130Z 2122/2307 14012G16KT 9999 SCT040 FM230100 34014G16KT TEMPO 2305/2306 32016G24KT 5000 SHRA';
+    document.getElementById('applyM').onclick=document.getElementById('applyT').onclick=function(){toast('Mockup: the pasted text is not re-decoded here');};}
+  document.getElementById('agem').textContent='Observed 22:00Z, 12 min old (from the report, station '+PACK.airport.station+' matches)';
+  document.getElementById('aget').textContent='Issued 21:30Z, valid 22:00Z to 07:30Z';
+  /* Panel A */
+  var A=document.getElementById('pA');A.innerHTML='';
+  var opts='<option value="">Not set</option>'+PACK.modes.map(function(m){return '<option value="'+m.id+'"'+(m.id===CURRENT?' selected':'')+'>Mode '+m.id+'</option>';}).join('');
+  var left=el('div','','<h2><i>A</i>Recommended now</h2>');
+  if(path&&path[0]){var rm=PACK.modes.filter(function(m){return m.id===path[0];})[0];
+    left.innerHTML+='<div class="modebig"><small>MODE</small>'+path[0]+'</div><div class="rwy">Runways <b>'+rm.rw.join(', ')+'</b></div>';}
+  else left.innerHTML+='<div class="modebig"><small>MODE</small>—</div>';
+  left.innerHTML+='<div class="cur"><label for="curSel">Current mode (you choose)</label><select id="curSel">'+opts+'</select><div class="small" style="margin-top:3px">'+(CURRENT?'Set at 22:05Z':'Not set: no starting mode')+'</div></div>';
+  A.appendChild(left);
+  if(!path||!path[0]){
+    A.appendChild(el('div','nomode','<b>NO SUITABLE STANDARD MODE IDENTIFIED</b><br>'+PACK.modes.map(function(m){var c=CELL[m.id][0];return 'Mode '+m.id+': '+c.why;}).join('<br>')));
+    document.getElementById('pA').querySelector('#curSel').onchange=onCur;
+  }else{
+    var m0=PACK.modes.filter(function(m){return m.id===path[0];})[0],c0=CELL[m0.id][0];
+    var lasts=-1;for(var s=0;s<N;s++){if(CELL[m0.id][s].s==='U'){lasts=s;break;}}
+    var ch=R.change;
+    var mid=el('dl','kv',
+      '<dt>Lasts</dt><dd class="big">'+(lasts<0?'To end of window ('+hhmm(T0+N*30)+')':'To '+hhmm(T0+lasts*30))+'</dd>'+
+      '<dt>Next change</dt><dd class="big">'+(ch?(ch.from||'Not set')+' to '+ch.to+' at '+hhmm(T0+ch.c*30):'No change planned')+'</dd>'+
+      '<dt>Weather</dt><dd><span class="chip '+(c0.s==='S'?'ok':'warn')+'">'+ICON[c0.s]+' '+STXT[c0.s].toUpperCase()+'</span> '+c0.why+'</dd>'+
+      '<dt>Traffic</dt><dd>'+lvChip(SLOTS[0].lv)+' now'+(SLOTS[N-1].lv&&SLOTS[N-1].lv!==SLOTS[0].lv?', '+lvChip(SLOTS[N-1].lv)+' by '+hhmm(T0+(N-1)*30):'')+'</dd>');
+    var anyM=false,anyQ=false;path.forEach(function(id,i){if(id){var s=CELL[id][i];if(s.s==='M'||s.unc)anyM=true;if(s.s==='Q')anyQ=true;}});
+    var nUnc=0;path.forEach(function(id,i){if(id){var cc2=CELL[id][i];if(cc2.s==='M'||cc2.s==='Q'||cc2.unc)nUnc++;}});
+    var right=el('dl','kv',
+      '<dt>Plan rank</dt><dd>'+rankOf(m0)+' of '+PACK.modes.filter(function(x){return !x.forbid;}).length+' (provisional)</dd>'+
+      '<dt>Uncertainty</dt><dd>'+(nUnc?'Based on '+nUnc+' uncertain slot'+(nUnc>1?'s':''):'No uncertain inputs')+'</dd>'+
+      '<dt>Runway state</dt><dd>DRY (METAR: no rain). Wet possible 05:00Z to 06:00Z</dd>'+
+      '<dt>Capacity</dt><dd>'+(m0.cap!=null?m0.cap+' movements/hr (placeholder)':'None set')+'; demand '+(SLOTS[0].dem||'unknown')+'</dd>');
+    A.appendChild(mid);A.appendChild(right);
+    if(CURRENT&&CELL[CURRENT][0].s==='U'){
+      A.appendChild(el('div','banner red','<b>CURRENT MODE FAILING NOW</b><span>Mode '+CURRENT+' is unsuitable now: '+CELL[CURRENT][0].why+'. Change to Mode '+path[0]+'.</span>'));
+    }else if(R.early){
+      var cc=R.change;
+      A.appendChild(el('div','banner','<b>EARLY MODE CHANGE RECOMMENDED</b><span>Mode '+cc.from+' fails at '+hhmm(T0+cc.fail*30)+' ('+(SLOTS[cc.fail].known?TNAME[SLOTS[cc.fail].lv]+' traffic':'traffic unknown')+'). Change to Mode '+cc.to+' at '+hhmm(T0+cc.c*30)+' while traffic is '+(SLOTS[cc.c].known?TNAME[SLOTS[cc.c].lv]:'unknown')+'. Waiting would mean a forced change at '+hhmm(T0+cc.fail*30)+' when traffic is '+(SLOTS[cc.fail].known?TNAME[SLOTS[cc.fail].lv]:'unknown')+'.</span>'));
+    }else if(CURRENT&&CURRENT!==path[0]){
+      A.appendChild(el('div','banner note','<b>NOTE</b><span>Recommended differs from current. See B.</span>'));
+    }
+    var why=el('div','why','<b>Why Mode '+path[0]+':</b> '+whyText(R));A.appendChild(why);
+    var sel=A.querySelector('#curSel');sel.onchange=onCur;
+  }
+  /* Panel B */
+  document.getElementById('range').textContent=' 22-10-2026 22:00Z to '+hhmm(T0+N*30)+', local '+local(T0)+' to '+local(T0+N*30);
+  buildBsum(R);buildTimeline(R);
+  document.getElementById('reason').innerHTML=reasonText(R);
+  buildC();buildD();buildDiagram(path&&path[0]);buildDrawer();
+}
+function rankOf(m){return PACK.modes.filter(function(x){return !x.forbid&&x.pref<m.pref;}).length+1;}
+function whyText(R){var P=R.P.path,cur=CURRENT,t='';
+  var first=P[0],okUntil=-1;for(var s=0;s<N;s++){if(CELL[first][s].s==='U'){okUntil=s;break;}}
+  t='it keeps to the preferred modes as long as the weather and traffic allow, with the fewest and least disruptive changes. ';
+  if(R.change)t+='The plan moves from Mode '+(R.change.from||'the start')+' to Mode '+R.change.to+' at '+hhmm(T0+R.change.c*30)+'. ';
+  if(R.early)t+='Waiting for the forced change at '+hhmm(T0+R.early.forcedAt*30)+' would put the change in busier traffic. ';
+  if(!cur)t+='No current mode is set, so the first slot is chosen without regard to what is in use now.';
+  return t;}
+function reasonText(R){var P=R.P.path;if(!P||!P[0])return '<b>No mode</b> is suitable. See the cause for each mode above.';
+  var last=P[P.length-1];
+  return '<b>Mode '+P[0]+' is recommended now.</b> '+(R.change?'The plan changes to Mode '+R.change.to+' at '+hhmm(T0+R.change.c*30)+(SLOTS[R.change.c].known?' in '+TNAME[SLOTS[R.change.c].lv]+' traffic':'')+'. ':'')+
+    'Mode '+last+' is the mode at the end of the window. Traffic beyond '+hhmm(T0+S.demandHorizonSlots*30)+' is unknown, so no pre-emptive advice is given after that.';}
+function buildBsum(R){var P=R.P.path,b=document.getElementById('bsum');b.innerHTML='';
+  var firstNon=-1;if(P&&P[0]){for(var i=0;i<N;i++){var c=CELL[P[i]||P[0]][i];if(P[i]&&c.s!=='S'){firstNon=i;break;}}}
+  var t1=P&&P[0]?'Mode '+P[0]:'None';
+  var t2=P&&P[0]?('To '+hhmm(T0+N*30)+', '+P.filter(function(id,i){return id&&CELL[id][i].s==='M';}).length+' marginal slots'):'-';
+  var t3=firstNon>=0?hhmm(T0+firstNon*30)+' '+CELL[P[firstNon]][firstNon].c:'None in window';
+  var t4=R.change?(SLOTS[R.change.c].known?TNAME[SLOTS[R.change.c].lv]:'Unknown')+' ('+hhmm(T0+R.change.c*30)+')':'No change';
+  [['Recommended',t1],['Survives',t2],['Next constraint',t3],['Traffic at changeover',t4]].forEach(function(x){b.appendChild(el('div','','<span>'+x[0]+'</span><b>'+x[1]+'</b>'));});}
+function buildTimeline(R){
+  var tl=document.getElementById('tl');tl.innerHTML='';
+  var W=176,C=56,P=R.P.path;
+  tl.style.width=(W+N*C)+'px';
+  var r1=el('div','row hdr tall');r1.appendChild(el('div','lab','<small>Time (UTC)</small>'));
+  for(var i=0;i<N;i++){var t=T0+i*30;r1.appendChild(el('div','h'+(t%60===0?' hr':''),hhmm(t).replace('Z','')));}
+  tl.appendChild(r1);
+  var r2=el('div','row hdr tall');r2.appendChild(el('div','lab','<small>Weather events</small>'));
+  for(i=0;i<N;i++){var s='';if(i===6)s='wind to 340';else if(i===14)s='TEMPO &#9730;';else if(i===15)s='wet possible';else if(i===19)s='no TAF';
+    if(R.change&&i===R.change.c)s=(s?s+' ':'')+'CHANGE';
+    r2.appendChild(el('div','ic',s));}
+  tl.appendChild(r2);
+  var r3=el('div','row hdr traf');r3.appendChild(el('div','lab','<small>Traffic class</small>'));
+  for(i=0;i<N;i++){var sl=SLOTS[i];r3.appendChild(el('div','t '+(sl.known?sl.lv:'X'),sl.known?(sl.lv==='H'?'H HIGH':TNAME[sl.lv][0]):'?'));}
+  tl.appendChild(r3);
+  var recId=P&&P[0];
+  var rows=PACK.modes.slice().sort(function(a,b){
+    function rank(m){return m.id===recId?0:(m.id===CURRENT?1:2);}
+    return rank(a)-rank(b)||a.pref-b.pref;});
+  rows.forEach(function(m){
+    var row=el('div','row'+(m.id===recId?' isrec':'')+(m.id===CURRENT?' isact':''));
+    row.appendChild(el('div','lab','<span>Mode '+m.id+(m.id===recId?' <span class="rt rec">REC</span>':'')+(m.id===CURRENT?' <span class="rt act">CURRENT</span>':'')+'</span><small>'+m.note+'</small>'));
+    for(var i=0;i<N;i++){
+      var e=CELL[m.id][i],c=el('div','cell '+e.s,ICON[e.s]+(e.c&&e.s!=='S'?'<small>'+e.c+'</small>':''));
+      if(e.unc)c.className+=' unc';
+      if(P&&P[i]===m.id)c.className+=' rec';
+      c.tabIndex=(i===0&&m.id===rows[0].id)?0:-1;
+      c.setAttribute('role','button');
+      c.setAttribute('aria-label','Mode '+m.id+', '+hhmm(T0+i*30)+', '+STXT[e.s]+(e.c?', cause '+e.c:''));
+      c.dataset.m=m.id;c.dataset.i=i;c._e=e;c._m=m;row.appendChild(c);}
+    tl.appendChild(row);});
+  var H=26+26+36+rows.length*36;
+  function ov(cls,left,w,top,h){var o=el('div','ov '+cls);o.style.left=left+'px';o.style.top=top+'px';if(w!=null)o.style.width=w+'px';o.style.height=h+'px';tl.appendChild(o);}
+  var runStart=-1;for(i=0;i<=N;i++){var hi=i<N&&SLOTS[i].known&&SLOTS[i].lv==='H';
+    if(hi&&runStart<0)runStart=i;if(!hi&&runStart>=0){ov('busyband',W+runStart*C,(i-runStart)*C,52,H-52);runStart=-1;}}
+  runStart=-1;for(i=0;i<=N;i++){var wp=i<N&&SLOTS[i].wetPoss;
+    if(wp&&runStart<0)runStart=i;if(!wp&&runStart>=0){ov('wetband',W+runStart*C,(i-runStart)*C,26,H-26);runStart=-1;}}
+  ov('now',W+(12/30)*C,2,0,H);
+  if(R.change)ov('chg',W+R.change.c*C,0,26,H-26);
+  tl.style.height=(H+4)+'px';
+  /* tooltip */
+  var tip=document.getElementById('tip');
+  function show(c){var e=c._e,m=c._m,sl=e.sl,i=sl.i;
+    var h='<h3>Mode '+m.id+' &nbsp; '+hhmm(sl.t)+' to '+hhmm(sl.t+30)+' ('+local(sl.t)+' local) &nbsp; '+ICON[e.s]+' '+STXT[e.s].toUpperCase()+'</h3><div>'+e.why+'</div>';
+    if(e.w){h+='<table><tr><th>Runway</th><th>Tail</th><th>Cross</th></tr>';
+      m.rw.forEach(function(r){var k=comps(e.w,r);h+='<tr><td>'+r+'</td><td><b>'+k.tw.toFixed(1)+'</b></td><td><b>'+k.xw.toFixed(1)+'</b></td></tr>';});
+      h+='</table><div>Wind '+e.w.d+'/'+e.w.s+'G'+e.w.g+' (gust used). '+(i<2?'METAR governs to '+hhmm(22*60+S.metarWindowMin)+'. ':'')+'Runway state: '+(sl.wetPoss?'WET POSSIBLE (both cases evaluated)':'DRY (derived from METAR and TAF)')+'.</div>';}
+    h+='<div>Traffic: '+(sl.known?TNAME[sl.lv]+', demand '+sl.dem+'/hr'+(sl.i>0?' (arrivals only; departures are not estimated beyond the next slot)':'')+', capacity '+(m.cap==null?'none set':m.cap+'/hr'):'unknown beyond the demand horizon')+'.</div>';
+    h+='<div>Operating plan: '+(m.forbid?'not allowed in this band':'allowed, rank '+rankOf(m)+' of '+PACK.modes.filter(function(x){return !x.forbid;}).length+' (provisional)')+'.</div>';
+    if(sl.tempo)h+='<div>Forecast: TEMPO 05:00Z-06:00Z SHRA</div>';
+    if(e.note)h+='<div>'+e.note+'</div>';
+    tip.innerHTML=h;tip.style.display='block';
+    var r=c.getBoundingClientRect(),x=Math.min(r.left,innerWidth-380),y=r.bottom+8;if(y+240>innerHeight)y=Math.max(8,r.top-250);
+    tip.style.left=Math.max(8,x)+'px';tip.style.top=y+'px';}
+  tl.onmouseover=function(ev){var c=ev.target.closest('.cell');if(c&&c._e)show(c);};
+  tl.onmouseout=function(){tip.style.display='none';};
+  tl.onfocusin=function(ev){var c=ev.target.closest('.cell');if(c&&c._e)show(c);};
+  tl.onfocusout=function(){tip.style.display='none';};
+  tl.onkeydown=function(ev){var c=ev.target.closest('.cell');if(!c||!c._e)return;
+    var ids=rows.map(function(m){return m.id;}),mi=ids.indexOf(c.dataset.m),i=+c.dataset.i,d={ArrowRight:[0,1],ArrowLeft:[0,-1],ArrowDown:[1,0],ArrowUp:[-1,0],Home:[0,-i],End:[0,N-1-i]}[ev.key];
+    if(!d)return;ev.preventDefault();var nm=Math.max(0,Math.min(ids.length-1,mi+d[0])),ni=Math.max(0,Math.min(N-1,i+d[1]));
+    var t=tl.querySelector('.cell[data-m="'+ids[nm]+'"][data-i="'+ni+'"]');if(t){t.tabIndex=0;c.tabIndex=-1;t.focus();t.scrollIntoView({block:'nearest',inline:'nearest'});}};
+}
+function buildC(){var ends=Object.keys(PACK.runways);
+  var rows=ends.map(function(r){var k=comps(WA,r),bad=k.tw>S.tailDryKt+TOL,badx=k.xw>S.xwKt+TOL;
+    return '<tr><td>'+r+'</td><td>'+k.hw.toFixed(1)+'</td><td>'+k.tw.toFixed(1)+'</td><td>'+k.xw.toFixed(1)+'</td><td>'+(bad?'<span class="chip bad">&#10005; TW</span>':(badx?'<span class="chip bad">&#10005; XW</span>':'<span class="chip ok">&#10003;</span>'))+'</td></tr>';}).join('');
+  document.getElementById('pC').innerHTML='<h2><i>C</i>Weather</h2>'+
+    '<table class="t2" style="margin-top:8px"><tr><th>Runway end</th><th>Head</th><th>Tail</th><th>Cross</th><th></th></tr>'+rows+'</table>'+
+    '<div class="small">Gust values (the stronger of mean and gust), kt, one decimal. Limits: tailwind dry '+S.tailDryKt.toFixed(1)+', wet '+S.tailWetKt.toFixed(1)+'; crosswind '+S.xwKt+' per mode (simulation settings). Runway state is derived from METAR and TAF only.</div>';}
+function buildD(){var cols=[0,1,2,3],head=cols.map(function(i){return '<th>'+(i===0?'Now':'+'+(i*30)+' min')+'</th>';}).join('');
+  function row(l,arr,mul){return '<tr><td>'+l+'</td>'+cols.map(function(i){return '<td>'+(arr[i]*mul)+'</td>';}).join('')+'</tr>';}
+  function depRow(){return '<tr><td>Departures</td>'+cols.map(function(i){return '<td>'+(i===0?DEP[0]:'<span class="small">not est.</span>')+'</td>';}).join('')+'</tr>';}
+  document.getElementById('pD').innerHTML='<h2><i>D</i>VATSIM traffic</h2>'+
+    '<table class="t2"><tr><th>Per 30 min</th>'+head+'</tr>'+row('Arrivals',ARR,1)+depRow()+
+    '<tr><td>Movements per hour</td>'+cols.map(function(i){return '<td>'+(i===0?((ARR[0]+DEP[0])*2):'\u2265 '+(ARR[i]*2))+'</td>';}).join('')+'</tr></table>'+
+    '<div style="margin-top:8px">Class '+lvChip(SLOTS[0].lv)+' &rarr; '+lvChip(SLOTS[7].lv)+' by '+hhmm(T0+7*30)+'</div>'+
+    '<div class="small" style="margin-top:6px">Arrivals: airborne by distance and speed; aircraft on the ground at other airports with a flight plan here are assumed to take off over the next 30 minutes. Departures: every aircraft on the ground here counts in the next slot only. Beyond '+hhmm(T0+S.demandHorizonSlots*30)+' demand is unknown. Connected aircraft are not movements. Bands are provisional placeholders.</div>';}
+function buildDiagram(modeId){
+  var m=PACK.modes.filter(function(x){return x.id===modeId;})[0],used=m?m.rw:[];
+  var pos={'16L':[130,30,150,170],'16R':[152,30,172,170],'34L':[130,30,150,170],'34R':[152,30,172,170],'07':[60,130,250,90],'25':[60,130,250,90]};
+  var drawn={},svg='<svg viewBox="0 0 300 200" width="100%" role="img" aria-label="Runway diagram generated from the pack: '+Object.keys(PACK.runways).join(', ')+'. Wind 140 degrees at 12 knots gusting 16. '+(modeId?'Mode '+modeId+' uses '+used.join(', ')+'.':'No mode recommended.')+'"><rect width="300" height="200" fill="#0d1730" rx="6"/>';
+  [['16L','34R'],['16R','34L'],['07','25']].forEach(function(pr){
+    var inUse=used.indexOf(pr[0])>=0||used.indexOf(pr[1])>=0,p=pos[pr[0]];
+    svg+='<line x1="'+p[0]+'" y1="'+p[1]+'" x2="'+p[2]+'" y2="'+p[3]+'" stroke="'+(inUse?'#3b82f6':'#6b7a99')+'" stroke-width="'+(pr[0]==='07'?9:7)+'"/>';});
+  svg+='<text x="256" y="90" fill="#e6ecf7" font-size="12">07</text><text x="38" y="136" fill="#9db0cf" font-size="12">25</text><text x="108" y="26" fill="#9db0cf" font-size="11">34L</text><text x="118" y="188" fill="#9db0cf" font-size="11">16R</text>';
+  svg+='<g stroke="#ffc94d" stroke-width="3" fill="#ffc94d"><line x1="40" y1="30" x2="75" y2="62"/><polygon points="80,67 66,62 74,54" stroke="none"/></g><text x="14" y="22" fill="#ffc94d" font-size="12">140 / 12G16</text>';
+  svg+='<text x="150" y="196" fill="#e6ecf7" font-size="11">Blue: runways used by '+(modeId?'Mode '+modeId:'no mode')+'</text></svg>';
+  document.getElementById('diagram').innerHTML=svg;}
+function buildDrawer(){var d=document.getElementById('drawer');
+  d.innerHTML='<div style="display:flex;align-items:center"><b>Settings</b><span class="sp"></span><button class="btn" id="closeSettings">Close</button></div>'+
+  '<div class="small">On screen you can change only the current mode and the window. Everything below is read-only and is edited in the pack files, then Reload data.</div><h3>Limits <span class="sim">Simulation setting</span></h3><table class="t2"><tr><td>Tailwind, dry runway</td><td>'+S.tailDryKt.toFixed(1)+' kt</td></tr><tr><td>Tailwind, wet runway</td><td>'+S.tailWetKt.toFixed(1)+' kt</td></tr><tr><td>Maximum crosswind, each mode</td><td>'+S.xwKt+' kt</td></tr><tr><td>Calm wind / tolerance</td><td>'+S.calmKt+' kt / '+S.tolKt+' kt</td></tr></table>'+
+  '<h3>Runway wetness <span class="sim">Simulation setting</span></h3><table class="t2"><tr><td>Wet if PROB at or above</td><td>'+S.wetPct+' %</td></tr><tr><td>Drying time</td><td>'+S.dryMin+' min</td></tr></table>'+
+  '<h3>Airport and data</h3><div class="small">Airport selector appears only when more than one pack is listed.</div><button class="btn" id="reload" style="margin-top:6px">Reload data</button>'+
+  '<h3>Audit trail <span class="small">local record, not tamper-proof</span></h3>'+
+  (AUDIT.length?'<table class="t2"><tr><th>Time</th><th>Setting</th><th>Old</th><th>New</th></tr>'+AUDIT.map(function(a){return '<tr><td>'+a.t+'</td><td>'+a.p+'</td><td>'+a.o+'</td><td>'+a.n+'</td></tr>';}).join('')+'</table>':'<div class="small">No changes yet. Change the current mode to see an entry.</div>')+
+  '<div class="small" style="margin-top:6px">Exportable as a file.</div>';
+  d.querySelector('#closeSettings').onclick=function(){d.style.display='none';};
+  d.querySelector('#reload').onclick=function(){toast('Pack reloaded and validated (mockup)');};}
+function toast(t){var e=document.getElementById('toast');e.textContent=t;e.style.display='block';setTimeout(function(){e.style.display='none';},2200);}
+function onCur(ev){var v=ev.target.value||null,o=CURRENT||'Not set';
+  AUDIT.unshift({t:hhmm(NOWMIN),p:'currentMode',o:o,n:v||'Not set'});CURRENT=v;render();}
+document.getElementById('win').onchange=function(ev){N=+ev.target.value;render();};
+document.getElementById('openSettings').onclick=function(){buildDrawer();document.getElementById('drawer').style.display='block';};
+document.getElementById('refresh').onclick=function(){render();toast('Recalculated (mockup)');};
+render();
+})();
+</script>
+</body>
+</html>
