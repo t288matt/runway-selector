@@ -45,9 +45,26 @@ export interface PlanChange {
   readonly trafficLevel: TrafficLevel | null;
 }
 
+/**
+ * A run of NO_MODE slots. startSlot and endSlot are inclusive window slot numbers. `afterMode` is the mode
+ * in force before the gap (null at the start of the window); `beforeMode` is the mode that follows it
+ * (null when the gap runs to the end of the window).
+ */
+export interface PlanGap {
+  readonly startSlot: number;
+  readonly endSlot: number;
+  readonly startMs: number;
+  /** The end of the last NO_MODE slot. */
+  readonly endMs: number;
+  readonly afterMode: string | null;
+  readonly beforeMode: string | null;
+}
+
 export interface Plan {
   readonly slots: readonly PlanSlot[];
   readonly changes: readonly PlanChange[];
+  /** Runs of slots with no suitable mode. A change across a gap is not listed in `changes`. */
+  readonly gaps: readonly PlanGap[];
   /** The starting mode that was used (the current mode, if it is known and enabled), else null. */
   readonly startModeId: string | null;
   /** INTERNAL. Total of preference, marginal, change and no-mode scores. Never shown to users. */
@@ -206,6 +223,7 @@ function emptyPlan(startModeId: string | null): Plan {
   return {
     slots: [],
     changes: [],
+    gaps: [],
     startModeId,
     totalScore: 0,
     preferenceScore: 0,
@@ -253,6 +271,23 @@ function buildPlan(
     previousModeId = mode.id;
   });
 
+  const gaps: PlanGap[] = [];
+  slots.forEach((slot, t) => {
+    if (slot.modeId !== NO_MODE) return;
+    const previous = slots[t - 1];
+    const last = gaps[gaps.length - 1];
+    const endMs = result.slots[t]?.endMs ?? slot.startMs;
+    if (previous !== undefined && previous.modeId === NO_MODE && last !== undefined) {
+      gaps[gaps.length - 1] = { ...last, endSlot: t, endMs };
+      return;
+    }
+    gaps.push({ startSlot: t, endSlot: t, startMs: slot.startMs, endMs, afterMode: previous?.modeId ?? null, beforeMode: null });
+  });
+  for (let g = 0; g < gaps.length; g += 1) {
+    const gap = gaps[g];
+    if (gap !== undefined) gaps[g] = { ...gap, beforeMode: slots[gap.endSlot + 1]?.modeId ?? null };
+  }
+
   const first = slots[0];
   const weatherUnknown = isWeatherUnknownNow(pack, result);
   let recommendedModeId: string | null = null;
@@ -264,6 +299,7 @@ function buildPlan(
   return {
     slots,
     changes,
+    gaps,
     startModeId: startIndex < 0 ? null : (pack.modes[startIndex]?.id ?? null),
     totalScore: totals.total,
     preferenceScore: totals.pref,
@@ -275,16 +311,18 @@ function buildPlan(
 }
 
 /**
- * The weather for slot 0 is unknown (OP-13): no enabled mode is SUITABLE or MARGINAL there and at least one is UNKNOWN.
- * A mode forbidden by the plan is UNSUITABLE, not UNKNOWN, so it does not hide the missing weather.
+ * The weather for slot 0 is unknown (OP-13): every enabled mode's slot-0 cell reports that no wind is available.
+ * This is read from the NO_WIND reason, which is kept even when a plan rule also forbids the mode, so a curfew
+ * that forbids some modes does not hide missing weather. With known weather and every mode UNSUITABLE the answer
+ * is NO_SUITABLE_MODE instead.
  */
 export function isWeatherUnknownNow(pack: AirportPack, result: EngineResult): boolean {
-  let unknown = false;
+  let enabled = 0;
   for (let m = 0; m < pack.modes.length; m += 1) {
     if (pack.modes[m]?.enabled !== true) continue;
-    const status = result.cells[m]?.[0]?.status;
-    if (status === 'SUITABLE' || status === 'MARGINAL') return false;
-    if (status === 'UNKNOWN') unknown = true;
+    enabled += 1;
+    const cell = result.cells[m]?.[0];
+    if (cell === undefined || !cell.reasons.some((r) => r.code === 'NO_WIND')) return false;
   }
-  return unknown;
+  return enabled > 0;
 }

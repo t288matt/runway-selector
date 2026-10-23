@@ -11,6 +11,7 @@ import { survivalOf } from './survival';
 import type { EngineResult, Reason, ReasonCode, Survival } from './types';
 
 const MS_PER_MINUTE = 60_000;
+const LEVEL_RANK: Readonly<Record<TrafficLevel, number>> = { light: 0, medium: 1, busy: 2 };
 
 export interface ChangeTrigger {
   /** First slot, at or after the change, in which the mode being left is UNSUITABLE. */
@@ -86,19 +87,24 @@ export function planChangeovers(pack: AirportPack, input: EngineInput, result: E
 
     let early: EarlyChange | null = null;
     if (trigger !== null && trigger.slotIndex > change.slotIndex && change.trafficLevel !== null) {
-      // Where this stint in the mode being left began: after the previous change, else the start of the window.
-      const stintStart = n === 0 ? 0 : (plan.changes[n - 1]?.slotIndex ?? 0) + 1;
-      const waiting = optimiseConstrained(pack, input, result, { forbidChangeFrom: stintStart, forbidChangeBefore: trigger.slotIndex });
-      if (waiting !== null && plan.totalScore < waiting.totalScore) {
-        early = {
-          changeSlot: change.slotIndex,
-          changeStartMs: change.startMs,
-          trafficAtChange: change.trafficLevel,
-          forcedSlot: trigger.slotIndex,
-          forcedStartMs: trigger.startMs,
-          trafficAtForced: plan.slots[trigger.slotIndex]?.trafficLevel ?? null,
-          internal: { planScore: plan.totalScore, waitingScore: waiting.totalScore },
-        };
+      // The banner exists only to avoid a WORSE forced change (OD-25, OP-7): traffic at the forced slot must be
+      // strictly busier than at the early change, and both must be known.
+      const forcedLevel = plan.slots[trigger.slotIndex]?.trafficLevel ?? null;
+      if (forcedLevel !== null && LEVEL_RANK[forcedLevel] > LEVEL_RANK[change.trafficLevel]) {
+        // Where this stint in the mode being left began: after the previous change, else the start of the window.
+        const stintStart = n === 0 ? 0 : (plan.changes[n - 1]?.slotIndex ?? 0) + 1;
+        const waiting = optimiseConstrained(pack, input, result, { forbidChangeFrom: stintStart, forbidChangeBefore: trigger.slotIndex });
+        if (waiting !== null && plan.totalScore < waiting.totalScore) {
+          early = {
+            changeSlot: change.slotIndex,
+            changeStartMs: change.startMs,
+            trafficAtChange: change.trafficLevel,
+            forcedSlot: trigger.slotIndex,
+            forcedStartMs: trigger.startMs,
+            trafficAtForced: plan.slots[trigger.slotIndex]?.trafficLevel ?? null,
+            internal: { planScore: plan.totalScore, waitingScore: waiting.totalScore },
+          };
+        }
       }
     }
 
