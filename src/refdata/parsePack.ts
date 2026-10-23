@@ -5,7 +5,7 @@
 // No fetch, no clock, no storage: it runs under Node and in the page.
 import * as v from 'valibot';
 import { crossCheck } from './crossCheck';
-import { checkDepth, checkSize, findForbiddenKeys, stripNoteKeys } from './guards';
+import { checkDepth, checkSize, findDuplicateKeys, findForbiddenKeys, stripNoteKeys } from './guards';
 import type { PackIssue } from './issues';
 import { PackValidationError, pathToString } from './issues';
 import { parseClock } from './planTime';
@@ -30,7 +30,7 @@ export type PackFileName = (typeof PACK_FILE_NAMES)[number];
 export type RawPackText = Readonly<Record<PackFileName, string>>;
 
 /** Raw text -> JSON value, after the size cap, the depth cap and the forbidden-key check. */
-function readJson(file: string, text: unknown, maxBytes: number, issues: PackIssue[]): unknown {
+function readJson(file: string, text: unknown, maxBytes: number, issues: PackIssue[], keepAt: readonly string[] = []): unknown {
   if (typeof text !== 'string') {
     issues.push({ file, path: '', message: 'The file is missing' });
     return undefined;
@@ -52,12 +52,12 @@ function readJson(file: string, text: unknown, maxBytes: number, issues: PackIss
     issues.push({ file, path: '', message: `Not valid JSON: ${e instanceof Error ? e.message : 'parse error'}` });
     return undefined;
   }
-  const bad = findForbiddenKeys(file, value);
+  const bad = [...findForbiddenKeys(file, value), ...findDuplicateKeys(file, text)];
   if (bad.length > 0) {
     issues.push(...bad);
     return undefined;
   }
-  return stripNoteKeys(value);
+  return stripNoteKeys(value, keepAt);
 }
 
 function schemaIssues(file: string, issues: readonly v.BaseIssue<unknown>[]): PackIssue[] {
@@ -112,7 +112,7 @@ export function parsePack(raw: Readonly<Record<string, string>>): AirportPack {
     }
   }
   const json: Record<PackFileName, unknown> = {
-    'airport.json': readJson('airport.json', raw['airport.json'], BOUNDS.cap.packFileBytes, issues),
+    'airport.json': readJson('airport.json', raw['airport.json'], BOUNDS.cap.packFileBytes, issues, ['labels']),
     'runways.json': readJson('runways.json', raw['runways.json'], BOUNDS.cap.packFileBytes, issues),
     'modes.json': readJson('modes.json', raw['modes.json'], BOUNDS.cap.packFileBytes, issues),
     'operating_plan.json': readJson('operating_plan.json', raw['operating_plan.json'], BOUNDS.cap.packFileBytes, issues),
@@ -172,6 +172,7 @@ export function parsePack(raw: Readonly<Record<string, string>>): AirportPack {
     })),
     plan: operatingPlan.bands.map((b) => ({
       id: b.id,
+      allDay: b.allDay ?? false,
       startMinute: parseClock(b.start),
       endMinute: parseClock(b.end),
       rows: b.rows.map((row) => ({ mode: row.mode, allowed: row.allowed, penalty: row.penalty, ...prov(row) })),

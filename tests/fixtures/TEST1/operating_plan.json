@@ -1,10 +1,11 @@
 {
   "schemaVersion": 1,
-  "description": "One band covering the whole day (start equals end).",
+  "description": "One band covering the whole day (allDay, start equals end).",
   "status": "provisional",
   "bands": [
     {
       "id": "allday",
+      "allDay": true,
       "start": "00:00",
       "end": "00:00",
       "rows": []

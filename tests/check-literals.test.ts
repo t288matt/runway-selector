@@ -51,6 +51,15 @@ describe('check-no-airport-literals', () => {
     expect(r.stderr).toContain('SODPROPS');
   });
 
+  it('does not report a fact used as a method call, but still reports a real literal', () => {
+    plant('ok.ts', 'export const a = (re: RegExp, s: string) => re.YSSY(s) && obj?.SODPROPS(1);\n');
+    expect(run(tmp).status).toBe(0);
+    plant('bad.ts', 'export const b = obj.YSSY;\n');
+    expect(run(tmp).status).toBe(1);
+    plant('bad.ts', 'export const c = YSSY(1);\n');
+    expect(run(tmp).status).toBe(1);
+  });
+
   it('ignores facts inside comments', () => {
     plant('ok.ts', '// 16L and YSSY\n/* SODPROPS\n 34R */\nexport const x = 1; // 16R\n');
     expect(run(tmp).status).toBe(0);

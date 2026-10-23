@@ -62,11 +62,13 @@ export interface PlanRow extends Provenance {
 
 /**
  * A time band in the airport's local time. Minutes of the local day, 0 to
- * 1439. The end is exclusive. When endMinute <= startMinute the band crosses
- * midnight (equal means the whole day, which is then the only band).
+ * 1439. The end is exclusive. When endMinute < startMinute the band crosses
+ * midnight. A whole-day band is written with allDay true (start equals end) and
+ * is then the only band.
  */
 export interface PlanBand extends Provenance {
   readonly id: string;
+  readonly allDay: boolean;
   readonly startMinute: number;
   readonly endMinute: number;
   /** A mode with no row in a band is allowed and takes settings.preferenceDefaultPenalty. */

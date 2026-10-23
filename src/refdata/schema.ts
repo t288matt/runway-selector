@@ -48,7 +48,8 @@ export const BOUNDS = {
     changeoverPreparationMinutes: { min: 0, max: 120 },
     staleMinutes: { min: 1, max: 2880 },
     weatherPollMinutes: { min: 1, max: 120 },
-    vatsimPollSeconds: { min: 5, max: 3600 },
+    // No enforced minimum (OD/UP-2): 1 is the smallest positive whole number of seconds.
+    vatsimPollSeconds: { min: 1, max: 3600 },
     auditMaxEntries: { min: 10, max: 5000 },
   },
   /** Size, length, count and depth caps. */
@@ -108,8 +109,13 @@ const isKnownZone = (zone: string): boolean => {
   }
 };
 
+/** The shape of an airport code and of an airport folder id. */
+export const AIRPORT_ID = /^[A-Z0-9]{3,8}$/;
 const runwayName = v.pipe(v.string('Expected text'), v.regex(/^[A-Za-z0-9]{1,8}$/, 'A runway name is 1 to 8 letters or digits'));
-const modeId = v.pipe(v.string('Expected text'), v.regex(/^[A-Za-z0-9_-]{1,16}$/, 'An id is 1 to 16 letters, digits, "_" or "-"'));
+const modeId = v.pipe(
+  v.string('Expected text'),
+  v.regex(/^[A-Za-z0-9][A-Za-z0-9_-]{0,15}$/, 'An id is 1 to 16 letters, digits, "_" or "-", starting with a letter or digit (a leading "_" marks a note)'),
+);
 export const HHMM = /^([01][0-9]|2[0-3]):[0-5][0-9]$/;
 const clock = v.pipe(v.string('Expected a time as HH:MM'), v.regex(HHMM, 'Expected a time as HH:MM (00:00 to 23:59)'));
 
@@ -117,7 +123,7 @@ const clock = v.pipe(v.string('Expected a time as HH:MM'), v.regex(HHMM, 'Expect
 export const AirportFileSchema = v.strictObject({
   schemaVersion: version,
   ...meta,
-  icao: v.pipe(v.string('Expected text'), v.regex(/^[A-Z0-9]{3,8}$/, 'An airport code is 3 to 8 capital letters or digits')),
+  icao: v.pipe(v.string('Expected text'), v.regex(AIRPORT_ID, 'An airport code is 3 to 8 capital letters or digits')),
   name: text(C.nameChars),
   latitude: num(R.latitudeDeg),
   longitude: num(R.longitudeDeg),
@@ -135,7 +141,7 @@ export const AirportFileSchema = v.strictObject({
   arrivalSpeedFloorKt: num(R.arrivalSpeedFloorKt),
   labels: v.optional(
     v.pipe(
-      v.record(v.pipe(v.string(), v.regex(/^[A-Za-z0-9_]{1,40}$/, 'A label key is 1 to 40 letters, digits or "_"')), text(C.labelValueChars)),
+      v.record(v.pipe(v.string(), v.regex(/^[A-Za-z][A-Za-z0-9_]{0,39}$/, 'A label key is 1 to 40 letters, digits or "_", starting with a letter (keys starting with "_" are notes and are not allowed here)')), text(C.labelValueChars)),
       v.check((o) => Object.keys(o).length <= C.maxLabels, `At most ${C.maxLabels} labels`),
     ),
   ),
@@ -182,6 +188,8 @@ const PlanBandSchema = v.strictObject({
   id: modeId,
   start: clock,
   end: clock,
+  /** true marks a whole-day band; then start and end must be equal. */
+  allDay: v.optional(v.boolean('Expected true or false')),
   rows: v.pipe(v.array(PlanRowSchema), v.maxLength(C.maxRowsPerBand)),
   ...meta,
 });
@@ -260,11 +268,11 @@ export const AppFileSchema = v.strictObject({
   schemaVersion: version,
   description: v.optional(note),
   airports: v.pipe(
-    v.array(v.pipe(v.string('Expected text'), v.regex(/^[A-Za-z0-9]{3,8}$/, 'An airport id is 3 to 8 letters or digits'))),
+    v.array(v.pipe(v.string('Expected text'), v.regex(AIRPORT_ID, 'An airport id is 3 to 8 capital letters or digits'))),
     v.minLength(1, 'At least one airport is required'),
     v.maxLength(C.maxAirports),
   ),
-  default: v.pipe(v.string('Expected text'), v.regex(/^[A-Za-z0-9]{3,8}$/, 'An airport id is 3 to 8 letters or digits')),
+  default: v.pipe(v.string('Expected text'), v.regex(AIRPORT_ID, 'An airport id is 3 to 8 capital letters or digits')),
 });
 
 export type AirportFile = v.InferOutput<typeof AirportFileSchema>;
