@@ -20,7 +20,6 @@ Sources used:
 | metar-nzaa-cloud-slashes | METAR | NZAA | New Zealand | https://aviationweather.gov/data/cache/metars.cache.csv.gz | 23-10-2026 | No licence file. |
 | metar-rjcc-vrb | METAR | RJCC | Japan | https://aviationweather.gov/data/cache/metars.cache.csv.gz | 23-10-2026 | No licence file. |
 | metar-cybw-speci-snow | METAR | CYBW | Canada | https://aviationweather.gov/data/cache/metars.cache.csv.gz | 23-10-2026 | No licence file. |
-| metar-faor-cavok | METAR | FAOR | South Africa | https://aviationweather.gov/data/cache/metars.cache.csv.gz | 23-10-2026 | No licence file. |
 | metar-kues-speci-fog | METAR | KUES | USA | https://aviationweather.gov/data/cache/metars.cache.csv.gz | 23-10-2026 | No licence file. |
 | metar-espa-cor | METAR | ESPA | Sweden | https://aviationweather.gov/data/cache/metars.cache.csv.gz | 23-10-2026 | No licence file. |
 | taf-khlg-fm-mid-slot | TAF | KHLG | USA | https://aviationweather.gov/data/cache/tafs.cache.xml.gz | 23-10-2026 | No licence file. |
@@ -51,6 +50,7 @@ Sources used:
 | taf-oitl-prob-no-period | TAF | OITL | Iran | https://aviationweather.gov/data/cache/tafs.cache.xml.gz | 23-10-2026 | No licence file. |
 | taf-oing-typo-cloud | TAF | OING | Iran | https://aviationweather.gov/data/cache/tafs.cache.xml.gz | 23-10-2026 | No licence file. |
 | taf-klan-vv-tempo | TAF | KLAN | USA | https://aviationweather.gov/data/cache/tafs.cache.xml.gz | 23-10-2026 | No licence file. |
+| taf-encn-becmg-rain | TAF | ENCN | Norway | https://aviationweather.gov/data/cache/tafs.cache.xml.gz | 23-10-2026 | No licence file. |
 | taf-sccy-tempo-vrb | TAF | SCCY | Chile | https://aviationweather.gov/data/cache/tafs.cache.xml.gz | 23-10-2026 | No licence file. |
 | taf-czbf-day30-amd-nautical | TAF | CZBF | Canada | https://github.com/aeharding/metar-taf-parser/blob/main/tests/parser/parser.test.ts | 23-10-2026 | MIT (copyright the metar-taf-parser authors). |
 | taf-kmsn-month-rollover-hour24 | TAF | KMSN | USA | https://github.com/aeharding/metar-taf-parser/blob/main/tests/forecast/forecast.test.ts | 23-10-2026 | MIT (copyright the metar-taf-parser authors). |
@@ -61,4 +61,4 @@ Sources used:
 | taf-kngu-no-issue-time | TAF | KNGU | USA | https://aviationweather.gov/data/cache/tafs.cache.xml.gz | 23-10-2026 | No licence file. |
 | metar-dgsi-free-text | METAR | DGSI | Ghana | https://aviationweather.gov/data/cache/metars.cache.csv.gz | 23-10-2026 | No licence file. |
 
-50 fixtures (20 METAR, 30 TAF).
+50 fixtures (19 METAR, 31 TAF).

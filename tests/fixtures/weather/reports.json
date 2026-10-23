@@ -188,24 +188,6 @@
     ]
   },
   {
-    "id": "metar-faor-cavok",
-    "kind": "METAR",
-    "station": "FAOR",
-    "country": "South Africa",
-    "raw": "METAR FAOR 231400Z 19010KT CAVOK 28/02 Q1025 NOSIG",
-    "nowUtc": "2026-10-23T14:10:00Z",
-    "source": {
-      "name": "NOAA/NWS Aviation Weather Center, all current METARs (CSV cache)",
-      "url": "https://aviationweather.gov/data/cache/metars.cache.csv.gz",
-      "retrieved": "23-10-2026",
-      "licence": "No licence file. US Government (NWS) public data service used under its published API guidelines; report text originates from the national met services (WMO exchange)."
-    },
-    "tags": [
-      "cavok",
-      "nosig"
-    ]
-  },
-  {
     "id": "metar-kues-speci-fog",
     "kind": "METAR",
     "station": "KUES",
@@ -772,6 +754,24 @@
       "tempo",
       "fm",
       "fraction-visibility"
+    ]
+  },
+  {
+    "id": "taf-encn-becmg-rain",
+    "kind": "TAF",
+    "station": "ENCN",
+    "country": "Norway",
+    "raw": "TAF ENCN 231100Z 2312/2321 06008KT 9999 SCT020 BECMG 2319/2321 RA BKN012",
+    "nowUtc": "2026-10-23T14:10:00Z",
+    "source": {
+      "name": "NOAA/NWS Aviation Weather Center, all current TAFs (XML cache)",
+      "url": "https://aviationweather.gov/data/cache/tafs.cache.xml.gz",
+      "retrieved": "23-10-2026",
+      "licence": "No licence file. US Government (NWS) public data service used under its published API guidelines; report text originates from the national met services (WMO exchange)."
+    },
+    "tags": [
+      "becmg",
+      "becmg-introduces-precipitation"
     ]
   },
   {

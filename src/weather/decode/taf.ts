@@ -98,10 +98,13 @@ export function decodeTaf(raw: string, ctx: DecodeContext): DecodeResult<Decoded
     return { kind: 'error', message: `The TAF validity period ${pad(v.startDay)}${pad(v.startHour)}/${pad(v.endDay)}${pad(v.endHour)} is longer than 36 hours.` };
   }
 
+  const scan = scanGroup(skipHeader(tokenise(lib.initialRaw)), { taf: true });
+  if (scan.counts.wind > 0 && lib.wind === undefined) {
+    return { kind: 'error', message: `The TAF could not be read: the wind group ${scan.counts.windTokens.join(', ')} in the base group was not understood. A report whose wind cannot be read is not used.` };
+  }
   const baseConv = convertConditions(lib, 'TAF base group');
   if (!baseConv.ok) return { kind: 'error', message: `The TAF could not be read: ${baseConv.message}` };
 
-  const scan = scanGroup(skipHeader(tokenise(lib.initialRaw)), { taf: true });
   const warnings: DecodeWarning[] = [];
   warnings.push(...groupWarnings(scan, { hasWind: lib.wind !== undefined, hasVisibility: lib.visibility !== undefined, clouds: lib.clouds.length, weather: lib.weatherConditions.length }, 'TAF base group'));
   const reportedTokens = new Set<string>(scan.unknown);
@@ -114,6 +117,9 @@ export function decodeTaf(raw: string, ctx: DecodeContext): DecodeResult<Decoded
     for (const u of gScan.unknown) reportedTokens.add(u);
     warnings.push(...groupWarnings(gScan, { hasWind: t.wind !== undefined, hasVisibility: t.visibility !== undefined, clouds: t.clouds.length, weather: t.weatherConditions.length }, label));
 
+    if (gScan.counts.wind > 0 && t.wind === undefined) {
+      return { kind: 'error', message: `The TAF could not be read: the wind group ${gScan.counts.windTokens.join(', ')} in ${label} was not understood. A report whose wind cannot be read is not used.` };
+    }
     const conv = convertConditions(t, label);
     if (!conv.ok) return { kind: 'error', message: `The TAF could not be read: ${conv.message}` };
 
