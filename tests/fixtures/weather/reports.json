@@ -775,6 +775,62 @@
     ]
   },
   {
+    "id": "metar-sbfi-vicinity-showers-ts",
+    "kind": "METAR",
+    "station": "SBFI",
+    "country": "Brazil",
+    "raw": "METAR SBFI 231400Z 09010KT 9999 VCSH VCTS BKN030 FEW040CB OVC080 23/19 Q1015",
+    "nowUtc": "2026-10-23T14:10:00Z",
+    "source": {
+      "name": "NOAA/NWS Aviation Weather Center, all current METARs (CSV cache)",
+      "url": "https://aviationweather.gov/data/cache/metars.cache.csv.gz",
+      "retrieved": "23-10-2026",
+      "licence": "No licence file. US Government (NWS) public data service used under its published API guidelines; report text originates from the national met services (WMO exchange)."
+    },
+    "tags": [
+      "vicinity",
+      "vcsh",
+      "vcts"
+    ]
+  },
+  {
+    "id": "taf-mygf-base-vcsh",
+    "kind": "TAF",
+    "station": "MYGF",
+    "country": "Bahamas",
+    "raw": "TAF MYGF 231100Z 2312/2412 05012KT 9999 VCSH SCT018 BKN040",
+    "nowUtc": "2026-10-23T14:10:00Z",
+    "source": {
+      "name": "NOAA/NWS Aviation Weather Center, all current TAFs (XML cache)",
+      "url": "https://aviationweather.gov/data/cache/tafs.cache.xml.gz",
+      "retrieved": "23-10-2026",
+      "licence": "No licence file. US Government (NWS) public data service used under its published API guidelines; report text originates from the national met services (WMO exchange)."
+    },
+    "tags": [
+      "vicinity",
+      "vcsh"
+    ]
+  },
+  {
+    "id": "taf-skbo-tempo-vcsh",
+    "kind": "TAF",
+    "station": "SKBO",
+    "country": "Colombia",
+    "raw": "TAF SKBO 231055Z 2312/2412 06003KT 9999 SCT020 BKN050 TEMPO 2317/2320 18008KT TEMPO 2320/2323 9999 VCSH SCT025TCU TX21/2319Z TN12/2410Z",
+    "nowUtc": "2026-10-23T14:10:00Z",
+    "source": {
+      "name": "NOAA/NWS Aviation Weather Center, all current TAFs (XML cache)",
+      "url": "https://aviationweather.gov/data/cache/tafs.cache.xml.gz",
+      "retrieved": "23-10-2026",
+      "licence": "No licence file. US Government (NWS) public data service used under its published API guidelines; report text originates from the national met services (WMO exchange)."
+    },
+    "tags": [
+      "vicinity",
+      "vcsh",
+      "tempo"
+    ]
+  },
+  {
     "id": "taf-sccy-tempo-vrb",
     "kind": "TAF",
     "station": "SCCY",

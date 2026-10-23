@@ -51,6 +51,9 @@ Sources used:
 | taf-oing-typo-cloud | TAF | OING | Iran | https://aviationweather.gov/data/cache/tafs.cache.xml.gz | 23-10-2026 | No licence file. |
 | taf-klan-vv-tempo | TAF | KLAN | USA | https://aviationweather.gov/data/cache/tafs.cache.xml.gz | 23-10-2026 | No licence file. |
 | taf-encn-becmg-rain | TAF | ENCN | Norway | https://aviationweather.gov/data/cache/tafs.cache.xml.gz | 23-10-2026 | No licence file. |
+| metar-sbfi-vicinity-showers-ts | METAR | SBFI | Brazil | https://aviationweather.gov/data/cache/metars.cache.csv.gz | 23-10-2026 | No licence file. |
+| taf-mygf-base-vcsh | TAF | MYGF | Bahamas | https://aviationweather.gov/data/cache/tafs.cache.xml.gz | 23-10-2026 | No licence file. |
+| taf-skbo-tempo-vcsh | TAF | SKBO | Colombia | https://aviationweather.gov/data/cache/tafs.cache.xml.gz | 23-10-2026 | No licence file. |
 | taf-sccy-tempo-vrb | TAF | SCCY | Chile | https://aviationweather.gov/data/cache/tafs.cache.xml.gz | 23-10-2026 | No licence file. |
 | taf-czbf-day30-amd-nautical | TAF | CZBF | Canada | https://github.com/aeharding/metar-taf-parser/blob/main/tests/parser/parser.test.ts | 23-10-2026 | MIT (copyright the metar-taf-parser authors). |
 | taf-kmsn-month-rollover-hour24 | TAF | KMSN | USA | https://github.com/aeharding/metar-taf-parser/blob/main/tests/forecast/forecast.test.ts | 23-10-2026 | MIT (copyright the metar-taf-parser authors). |
@@ -61,4 +64,4 @@ Sources used:
 | taf-kngu-no-issue-time | TAF | KNGU | USA | https://aviationweather.gov/data/cache/tafs.cache.xml.gz | 23-10-2026 | No licence file. |
 | metar-dgsi-free-text | METAR | DGSI | Ghana | https://aviationweather.gov/data/cache/metars.cache.csv.gz | 23-10-2026 | No licence file. |
 
-50 fixtures (19 METAR, 31 TAF).
+53 fixtures (20 METAR, 33 TAF).
