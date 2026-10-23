@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "description": "Four modes with a different id convention; one has its own crosswind limit; one is disabled.",
+  "status": "provisional",
+  "modes": [
+    {
+      "id": "TST_EAST",
+      "description": "East flow",
+      "enabled": true,
+      "arrivals": [
+        "9"
+      ],
+      "departures": [
+        "9"
+      ],
+      "maxCrosswindKt": 15,
+      "capacity": 20
+    },
+    {
+      "id": "TST_WEST",
+      "description": "West flow; no crosswind limit of its own, so the pack default applies",
+      "enabled": true,
+      "arrivals": [
+        "27"
+      ],
+      "departures": [
+        "27"
+      ]
+    },
+    {
+      "id": "TST_SPLIT",
+      "description": "Arrivals 18, departures 9 and 18",
+      "enabled": true,
+      "arrivals": [
+        "18"
+      ],
+      "departures": [
+        "9",
+        "18"
+      ],
+      "maxCrosswindKt": 12,
+      "capacity": null
+    },
+    {
+      "id": "TST_OFF",
+      "description": "Disabled; no runways named",
+      "enabled": false,
+      "arrivals": [],
+      "departures": []
+    }
+  ]
+}
