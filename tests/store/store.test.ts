@@ -8,6 +8,7 @@ import {
   appendAudit,
   clearAudit,
   clearCurrentMode,
+  confirmCurrentMode,
   createBrowserStore,
   createMemoryStore,
   exportAudit,
@@ -332,6 +333,42 @@ describeForEachPack('facade: recording changes', (pack) => {
     expect(loadCurrentMode(store, pack).record?.modeId).toBe(modeA);
     expect(loadCurrentMode(store, other).record).toBeNull();
     expect(loadWindowChoice(store, icao, WINDOWS).choice).toBe('6h');
+  });
+});
+
+describeForEachPack('confirming the current mode', (pack) => {
+  const icao = pack.airport.icao;
+  const [modeA] = twoModes(pack);
+  const limitMs = pack.settings.currentModeStaleMinutes * 60_000;
+  const later = NOW + limitMs + 1;
+
+  it('renews the time so a stale mode is no longer stale, with the mode and the audit trail unchanged', () => {
+    const store = createMemoryStore();
+    recordCurrentMode(store, pack, NOW, modeA);
+    expect(isCurrentModeStale(loadCurrentMode(store, pack).record, later, pack)).toBe(true);
+    const r = confirmCurrentMode(store, pack, later);
+    expect(r).toMatchObject({ changed: false, entry: null, record: { modeId: modeA, setAtMs: later } });
+    const stored = loadCurrentMode(store, pack).record;
+    expect(stored).toEqual({ schemaVersion: 1, modeId: modeA, setAtMs: later });
+    expect(isCurrentModeStale(stored, later, pack)).toBe(false);
+    expect(loadAudit(store, icao, pack.settings.auditMaxEntries).entries).toHaveLength(1);
+  });
+
+  it('writes nothing when no mode is stored or it is Not set', () => {
+    const store = createMemoryStore();
+    expect(confirmCurrentMode(store, pack, NOW).record).toBeNull();
+    expect(store.getItem(storageKey(icao, 'currentMode'))).toBeNull();
+    saveCurrentMode(store, icao, null, NOW);
+    expect(confirmCurrentMode(store, pack, later).record?.setAtMs).toBe(NOW);
+  });
+
+  it('touches only its own airport', () => {
+    const store = createMemoryStore();
+    const other = { ...pack, airport: { ...pack.airport, icao: otherIcao(pack) } } as AirportPack;
+    recordCurrentMode(store, pack, NOW, modeA);
+    recordCurrentMode(store, other, NOW, modeA);
+    confirmCurrentMode(store, pack, later);
+    expect(loadCurrentMode(store, other).record?.setAtMs).toBe(NOW);
   });
 });
 
