@@ -6,7 +6,7 @@
 import type { PackIssue } from './issues';
 import { PackValidationError, formatIssue } from './issues';
 import { PACK_FILE_NAMES, parseAppConfig, parsePack, type PackFileName } from './parsePack';
-import { BOUNDS, type AppFile } from './schema';
+import { AIRPORT_ID, BOUNDS, type AppFile } from './schema';
 import type { AirportPack } from './types';
 
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
@@ -83,6 +83,9 @@ async function fetchText(fetchFn: FetchLike, url: string, file: string, maxBytes
 export async function loadPack(fetchFn: FetchLike, options: LoadOptions): Promise<LoadResult> {
   if (BUST_SHAPE.exec(options.cacheBust) === null) {
     return failure([{ file: 'app.json', path: '', message: 'The cache-bust token must be 1 to 64 letters, digits, ".", "_" or "-"' }]);
+  }
+  if (options.airportId !== undefined && !AIRPORT_ID.exec(options.airportId)) {
+    return failure([{ file: 'app.json', path: 'airports', message: `Airport id "${options.airportId}" must be 3 to 8 capital letters or digits` }]);
   }
   const base = (options.baseUrl ?? DEFAULT_BASE).replace(/\/+$/, '');
   const query = `?v=${options.cacheBust}`;

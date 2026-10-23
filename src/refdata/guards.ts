@@ -53,13 +53,48 @@ export function findForbiddenKeys(file: string, value: unknown): PackIssue[] {
   return found;
 }
 
-/** A copy without `_`-prefixed note keys at any depth (RD-7). Run AFTER findForbiddenKeys. */
-export function stripNoteKeys(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(stripNoteKeys);
+/** Keys that appear twice in one JSON object (JSON.parse would silently keep the last). Run on raw text that already parsed. */
+export function findDuplicateKeys(file: string, text: string): PackIssue[] {
+  const found: PackIssue[] = [];
+  const stack: { object: boolean; keys: Set<string>; expectKey: boolean }[] = [];
+  for (let i = 0; i < text.length; i += 1) {
+    const c = text[i];
+    if (c === '"') {
+      let j = i + 1;
+      while (j < text.length && text[j] !== '"') j += text[j] === '\\' ? 2 : 1;
+      const top = stack[stack.length - 1];
+      if (top?.object && top.expectKey) {
+        const key = JSON.parse(text.slice(i, j + 1)) as string;
+        if (top.keys.has(key)) found.push({ file, path: key, message: `The key "${key}" appears twice in the same object` });
+        top.keys.add(key);
+        top.expectKey = false;
+      }
+      i = j;
+    } else if (c === '{' || c === '[') {
+      stack.push({ object: c === '{', keys: new Set(), expectKey: c === '{' });
+    } else if (c === '}' || c === ']') {
+      stack.pop();
+    } else if (c === ',') {
+      const top = stack[stack.length - 1];
+      if (top?.object) top.expectKey = true;
+    }
+  }
+  return found;
+}
+
+/**
+ * A copy without `_`-prefixed note keys at any depth (RD-7), and with -0 made 0.
+ * Objects at the dotted paths in `keepAt` are copied whole: their keys are data, not notes.
+ * Run AFTER findForbiddenKeys.
+ */
+export function stripNoteKeys(value: unknown, keepAt: readonly string[] = [], here = ''): unknown {
+  if (Array.isArray(value)) return value.map((item, i) => stripNoteKeys(item, keepAt, `${here}[${i}]`));
+  if (typeof value === 'number') return Object.is(value, -0) ? 0 : value;
   if (value !== null && typeof value === 'object') {
+    const keep = keepAt.includes(here);
     const out: Record<string, unknown> = {};
     for (const [key, item] of Object.entries(value)) {
-      if (!key.startsWith('_')) out[key] = stripNoteKeys(item);
+      if (keep || !key.startsWith('_')) out[key] = stripNoteKeys(item, keepAt, here === '' ? key : `${here}.${key}`);
     }
     return out;
   }

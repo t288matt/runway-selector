@@ -179,7 +179,7 @@ describe('app.json', () => {
     expect(() => parseAppConfig(JSON.stringify({ schemaVersion: 9, airports: ['YSSY'], default: 'YSSY' }))).toThrow(/app\.json: schemaVersion/);
     expect(() => parseAppConfig(JSON.stringify({ schemaVersion: 1, airports: ['YSSY'], default: 'YSSY', extra: 1 }))).toThrow(/app\.json: extra/);
     expect(() => parseAppConfig(JSON.stringify({ schemaVersion: 1, airports: ['YSSY'], default: 'OTHER' }))).toThrow(/app\.json: default/);
-    expect(() => parseAppConfig(JSON.stringify({ schemaVersion: 1, airports: ['YSSY', 'yssy'], default: 'YSSY' }))).toThrow(/Duplicate/);
+    expect(() => parseAppConfig(JSON.stringify({ schemaVersion: 1, airports: ['YSSY', 'YSSY'], default: 'YSSY' }))).toThrow(/Duplicate/);
     expect(() => parseAppConfig('{"schemaVersion":1,"airports":["YSSY"],"default":"YSSY","__proto__":{}}')).toThrow(/__proto__/);
     expect(() => parseAppConfig('not json')).toThrow(/app\.json/);
   });

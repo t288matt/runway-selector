@@ -184,7 +184,7 @@ describe('the fictional packs differ from YSSY in shape', () => {
     expect(single.runways).toHaveLength(2);
     expect(single.modes).toHaveLength(2);
     expect(single.plan).toHaveLength(1);
-    expect(single.plan[0]).toMatchObject({ startMinute: 0, endMinute: 0 });
+    expect(single.plan[0]).toMatchObject({ allDay: true, startMinute: 0, endMinute: 0 });
   });
 });
 
@@ -349,7 +349,7 @@ describe('refused packs name the file and the field', () => {
   it('a whole-day band alongside another band overlaps', () => {
     expectRefused(
       bad((f) => {
-        f['operating_plan.json'].bands.push({ id: 'all', start: '00:00', end: '00:00', rows: [] });
+        f['operating_plan.json'].bands.push({ id: 'all', allDay: true, start: '00:00', end: '00:00', rows: [] });
       }),
       'operating_plan.json',
       'bands',
@@ -419,16 +419,23 @@ describe('refused packs name the file and the field', () => {
         f['modes.json'].modes[3].enabled = true;
       }),
       'modes.json',
-      'modes[3].arrivals',
+      'modes[3]',
       'disabled',
     );
     expectRefused(
       bad((f) => {
+        f['modes.json'].modes[0].arrivals = [];
         f['modes.json'].modes[0].departures = [];
       }),
       'modes.json',
-      'modes[0].departures',
+      'modes[0]',
     );
+  });
+
+  it('an enabled mode needs at least one runway end across both lists, not both lists', () => {
+    const files = readJson(TEST_PACK);
+    files['modes.json'].modes[0].departures = [];
+    expect(parsePack(toRaw(files)).modes[0]?.departures).toEqual([]);
   });
 
   it('traffic bands that are not light < medium < busy and contiguous', () => {

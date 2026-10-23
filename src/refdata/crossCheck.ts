@@ -43,9 +43,9 @@ export function crossCheck(f: ParsedFiles): PackIssue[] {
         if (seen.has(name)) add('modes.json', `modes[${i}].${list}[${j}]`, `Mode "${m.id}" lists runway end "${name}" twice`);
         seen.add(name);
       });
-      if (m.enabled && m[list].length === 0) {
-        add('modes.json', `modes[${i}].${list}`, `Mode "${m.id}" is enabled but names no ${list} runway end (empty lists are allowed only for a disabled mode)`);
-      }
+    }
+    if (m.enabled && m.arrivals.length + m.departures.length === 0) {
+      add('modes.json', `modes[${i}]`, `Mode "${m.id}" is enabled but names no runway end in arrivals or departures (empty lists are allowed only for a disabled mode)`);
     }
   });
   const modeExact = new Set(f.modes.modes.map((m) => m.id));
@@ -53,6 +53,12 @@ export function crossCheck(f: ParsedFiles): PackIssue[] {
   // Operating plan: ids, rows, coverage.
   const bandIds = new Set<string>();
   f.operatingPlan.bands.forEach((b, i) => {
+    if (b.start === b.end && b.allDay !== true) {
+      add('operating_plan.json', `bands[${i}].end`, `Band "${b.id}" has the same start and end; write "allDay": true for a whole-day band, otherwise give it a different end`);
+    }
+    if (b.allDay === true && b.start !== b.end) {
+      add('operating_plan.json', `bands[${i}].allDay`, `Band "${b.id}" is allDay but its start and end differ; they must be equal`);
+    }
     if (bandIds.has(key(b.id))) add('operating_plan.json', `bands[${i}].id`, `Duplicate band id "${b.id}"`);
     bandIds.add(key(b.id));
     const rowModes = new Set<string>();
