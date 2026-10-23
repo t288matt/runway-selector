@@ -17,7 +17,9 @@ export type Trend = 'rising' | 'steady' | 'falling';
 export interface DemandSummary {
   /**
    * True when the pack gives no airport elevation. The "on the ground at the
-   * airport" test then skips its altitude check (distance and groundspeed only).
+   * airport" test then skips its altitude check (distance and groundspeed only),
+   * so a slow aircraft overhead is counted as a departure. The dashboard MUST
+   * show this as a visible warning next to the departure count.
    */
   readonly elevationMissing: boolean;
   /** Connected departures: aircraft on the ground at the airport with a plan from it. */
@@ -34,8 +36,10 @@ export interface DemandSummary {
   readonly levels: readonly (TrafficLevel | null)[];
   /**
    * Arrivals in the first half of the known slots compared with the second half
-   * (the middle slot of an odd number is left out). Departures are left out
-   * because they are known for slot 1 only. null with fewer than two known slots.
+   * (the middle slot of an odd number is left out). Slot 1 is left out: it holds
+   * only the minutes from now to its end, so it would always look low and bias
+   * the trend towards rising. Departures are left out because they are known for
+   * slot 1 only. null with fewer than two remaining known slots.
    */
   readonly trend: Trend | null;
 }
@@ -128,7 +132,8 @@ export function buildTrafficSlots(input: DemandInput): DemandResult {
     departures: i === 0 ? departures : null,
   }));
 
-  const knownArrivals = slots.flatMap((s) => (s.arrivals === null ? [] : [s.arrivals]));
+  // The partial first slot is left out of the trend (see DemandSummary.trend).
+  const knownArrivals = slots.slice(1).flatMap((s) => (s.arrivals === null ? [] : [s.arrivals]));
   const half = Math.floor(knownArrivals.length / 2);
   const sum = (xs: readonly number[]): number => xs.reduce((a, b) => a + b, 0);
   let trend: Trend | null = null;

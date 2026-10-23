@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest';
 import { buildTrafficSlots } from '../../src/traffic/demand';
 import type { Aircraft } from '../../src/traffic/parseFeed';
 import type { AirportPack } from '../../src/refdata';
-import { YSSY_PACK, describeForEachPack, loadPackFrom, PACKS } from '../helpers/packs';
-import { MIN, NOW, SLOT_STARTS, aircraft, counts, inbound, parked, slotOf, waiting } from './helpers';
+import { TEST1_PACK, YSSY_PACK, describeForEachPack, loadPackFrom, PACKS } from '../helpers/packs';
+import { MIN, NOW, SLOT_STARTS, T0, aircraft, counts, inbound, parked, slotOf, waiting } from './helpers';
 
 const build = (pack: AirportPack, list: readonly Aircraft[]) => buildTrafficSlots({ pack, nowMs: NOW, aircraft: list, slotStartsMs: SLOT_STARTS });
 const total = (r: ReturnType<typeof build>) => r.slots.reduce((n, s) => n + (s.arrivals ?? 0), 0);
@@ -262,15 +262,36 @@ describeForEachPack('demand model', (pack) => {
     });
 
     it('trend: falling when the first half has more', () => {
-      const early = Array.from({ length: 3 }, () => inbound(pack, 100, 300)); // 20 minutes out: slot 0
+      const early = Array.from({ length: 3 }, () => inbound(pack, 200, 300)); // 40 minutes out: T0+50, slot 1
       expect(build(pack, early).summary.trend).toBe('falling');
     });
 
     it('trend: steady when the halves match, and unknown with fewer than two known slots', () => {
-      expect(build(pack, [inbound(pack, 100, 300), inbound(pack, 1000, 300)]).summary.trend).toBe('steady');
+      expect(build(pack, [inbound(pack, 200, 300), inbound(pack, 1000, 300)]).summary.trend).toBe('steady');
       const shortest = { ...pack, settings: { ...pack.settings, demandHorizonMinutes: 30 } };
       expect(build(shortest, [inbound(pack, 10, 300)]).summary.trend).toBeNull();
     });
+  });
+
+  it('trend leaves out the partial first slot: now at :29 with steady demand is steady, not rising', () => {
+    const now = T0 + 29 * MIN;
+    // One arrival in the middle of each of slots 1 to 7. Slot 0 holds one minute only, so it is empty.
+    const list = [1, 2, 3, 4, 5, 6, 7].map((k) => inbound(pack, ((k * 30 + 15 - 29) / 60) * 300));
+    const r = buildTrafficSlots({ pack, nowMs: now, aircraft: list, slotStartsMs: SLOT_STARTS });
+    expect(counts(r.slots).slice(0, 8)).toEqual([0, 1, 1, 1, 1, 1, 1, 1]);
+    expect(r.summary.trend).toBe('steady');
+  });
+
+  it('a horizon that ends exactly on a slot end keeps that slot known and the next one null', () => {
+    // now is T0+10, so a 50 minute horizon ends at T0+60, the end of slot 1.
+    const exact = { ...pack, settings: { ...pack.settings, demandHorizonMinutes: 50 } };
+    expect(counts(build(exact, []).slots).slice(0, 3)).toEqual([0, 0, null]);
+  });
+
+  it('elevationMissing is in the summary and set only when the pack has no elevation', () => {
+    expect(build(pack, []).summary.elevationMissing).toBe(pack.airport.elevationFt === null || pack.airport.elevationFt === undefined);
+    expect(build(loadPackFrom(TEST1_PACK), []).summary.elevationMissing).toBe(true);
+    expect(build(loadPackFrom(YSSY_PACK), []).summary.elevationMissing).toBe(false);
   });
 
   it('is pure: the same input gives the same output and the input is untouched', () => {
