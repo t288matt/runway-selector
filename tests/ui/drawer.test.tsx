@@ -64,6 +64,15 @@ describe('limitText formats the pack value, not a literal 2 hours', () => {
   });
 });
 
+describe('the stale words come from the pack value', () => {
+  it.each([[90, 'set more than 90 minutes ago'], [180, 'set more than 3 hours ago'], [120, 'set more than 2 hours ago']])('currentModeStaleMinutes %i', (minutes, words) => {
+    const pack = packWith(YSSY_PACK, { settings: { currentModeStaleMinutes: minutes } });
+    const record = { schemaVersion: 1 as const, modeId: enabledIds(pack)[0] ?? null, setAtMs: NOW };
+    expect(currentModeStatus(record, NOW + (minutes + 1) * MIN, pack).staleWords).toBe(words);
+    expect(currentModeStatus(record, NOW + minutes * MIN, pack).staleWords).toBeNull();
+  });
+});
+
 describe.each(PACKS.map((p) => [p.name, p] as const))('current mode and window are kept [%s]', (_name, ref) => {
   const pack = packWith(ref);
   const [a, b] = enabledIds(pack) as [string, string];
