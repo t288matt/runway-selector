@@ -38,7 +38,10 @@ export interface BuildWeatherSlotsResult {
 }
 
 function hasPrecipitation(weather: readonly DecodedWeatherCondition[], codes: ReadonlySet<string>): boolean {
-  return weather.some((c) => c.codes.some((code) => codes.has(code)));
+  // Only precipitation at the station counts (owner decision, 23-10-2026): a
+  // group qualified VC (in the vicinity, e.g. VCSH, VCTS) never does. The codes
+  // that count still come from the pack list.
+  return weather.some((c) => c.intensity !== 'VC' && c.codes.some((code) => codes.has(code)));
 }
 
 const NO_FLAGS: PrecipitationFlags = { prevailing: false, probable: null, temporary: false, recent: false };
