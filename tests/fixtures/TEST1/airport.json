@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "description": "Fictional single-runway airport used only by the tests.",
+  "status": "provisional",
+  "icao": "TEST1",
+  "name": "Soloport",
+  "latitude": 27.7,
+  "longitude": 85.3,
+  "timeZone": "Asia/Kathmandu",
+  "weatherStation": "TSTX",
+  "trafficAreaNm": 5,
+  "groundMaxSpeedKt": 40,
+  "groundAltitudeMarginFt": 100,
+  "arrivalSpeedFloorKt": 120
+}

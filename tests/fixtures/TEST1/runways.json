@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "description": "One runway, two ends.",
+  "status": "provisional",
+  "runways": [
+    {
+      "name": "3",
+      "headingDegrees": 30
+    },
+    {
+      "name": "21",
+      "headingDegrees": 210
+    }
+  ]
+}

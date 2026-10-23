@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "description": "Fictional airport used only by the tests. Not a real place.",
+  "status": "provisional",
+  "icao": "TEST",
+  "name": "Testfield",
+  "latitude": 47.5,
+  "longitude": -52.7,
+  "elevationFt": 140,
+  "timeZone": "America/St_Johns",
+  "weatherStation": "TSTW",
+  "trafficAreaNm": 8,
+  "groundMaxSpeedKt": 35,
+  "groundAltitudeMarginFt": 150,
+  "arrivalSpeedFloorKt": 120,
+  "labels": {
+    "extraNotice": "Fictional airport for software tests."
+  }
+}

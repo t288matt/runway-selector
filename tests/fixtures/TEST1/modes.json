@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "description": "Two modes, one per direction.",
+  "status": "provisional",
+  "modes": [
+    {
+      "id": "ONLY_A",
+      "enabled": true,
+      "arrivals": [
+        "3"
+      ],
+      "departures": [
+        "3"
+      ],
+      "maxCrosswindKt": 25
+    },
+    {
+      "id": "ONLY_B",
+      "enabled": true,
+      "arrivals": [
+        "21"
+      ],
+      "departures": [
+        "21"
+      ],
+      "maxCrosswindKt": 25
+    }
+  ]
+}

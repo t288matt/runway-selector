@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "description": "Two runways (four ends) with numeric-only names.",
+  "status": "provisional",
+  "runways": [
+    {
+      "name": "9",
+      "headingDegrees": 90
+    },
+    {
+      "name": "27",
+      "headingDegrees": 270
+    },
+    {
+      "name": "18",
+      "headingDegrees": 180,
+      "threshold": {
+        "latitude": 47.51,
+        "longitude": -52.7
+      }
+    },
+    {
+      "name": "36",
+      "headingDegrees": 360
+    }
+  ]
+}

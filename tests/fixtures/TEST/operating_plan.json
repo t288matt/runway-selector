@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "description": "Two bands; the late band crosses midnight.",
+  "status": "provisional",
+  "bands": [
+    {
+      "id": "early",
+      "start": "06:30",
+      "end": "22:30",
+      "rows": [
+        {
+          "mode": "TST_EAST",
+          "allowed": true,
+          "penalty": 2
+        },
+        {
+          "mode": "TST_SPLIT",
+          "allowed": true,
+          "penalty": 10
+        }
+      ]
+    },
+    {
+      "id": "late",
+      "start": "22:30",
+      "end": "06:30",
+      "rows": [
+        {
+          "mode": "TST_WEST",
+          "allowed": true,
+          "penalty": 0
+        },
+        {
+          "mode": "TST_EAST",
+          "allowed": false,
+          "penalty": 0
+        }
+      ]
+    }
+  ]
+}
