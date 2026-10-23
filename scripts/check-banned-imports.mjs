@@ -3,7 +3,15 @@
 // subpath of it) appears as a string literal in source outside
 // src/weather/decode/, which catches require(), dynamic import() and
 // re-exports (DESIGN section 4: only the decode adapter may import it).
-// Comments are ignored. Usage: node scripts/check-banned-imports.mjs [--root <dir>]
+// Comments are ignored.
+//
+// LIMITS (by design): this is a static text check. It cannot see a module name
+// that is split (['metar-', 'taf-parser'].join('')), written with escape sequences (a hex escape for one letter),
+// built from an interpolated template, or read from elsewhere. Inline <script>
+// blocks in HTML are not scanned, and only .ts/.tsx/.js/.jsx/.mjs/.cjs/.mts/.cts
+// files under src/ are. The oxlint rule covers ES imports; review covers the rest.
+//
+// Usage: node scripts/check-banned-imports.mjs [--root <dir>]
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
