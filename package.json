@@ -16,6 +16,7 @@
     "test": "vitest run && npm run check-literals"
   },
   "dependencies": {
+    "metar-taf-parser": "9.1.3",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "valibot": "1.5.0"
