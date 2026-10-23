@@ -53,6 +53,9 @@ export function decodeMetar(raw: string, ctx: DecodeContext): DecodeResult<Decod
     return { kind: 'error', message: `The METAR could not be read (the decoder said "${reason}").${where} The previous report, if any, stays in use.` };
   }
 
+  if (scan.counts.wind > 0 && lib.wind === undefined) {
+    return { kind: 'error', message: `The METAR could not be read: the wind group ${scan.counts.windTokens.join(', ')} was not understood. A report whose wind cannot be read is not used.` };
+  }
   const converted = convertConditions(lib, 'METAR');
   if (!converted.ok) return { kind: 'error', message: `The METAR could not be read: ${converted.message}` };
   const { conditions } = converted.value;

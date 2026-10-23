@@ -48,6 +48,8 @@ export function tokenise(text: string): string[] {
 export interface GroupCounts {
   /** Wind groups with a speed (including VRB). */
   readonly wind: number;
+  /** Those wind groups as written. */
+  readonly windTokens: readonly string[];
   /** Visibility groups (metres, statute miles). */
   readonly visibility: number;
   /** FEW/SCT/BKN/OVC groups with a height. */
@@ -80,6 +82,7 @@ export interface ScanOptions {
  */
 export function scanGroup(tokens: readonly string[], opts: ScanOptions): GroupScan {
   let wind = 0;
+  const windTokens: string[] = [];
   let visibility = 0;
   let clouds = 0;
   let weather = 0;
@@ -96,8 +99,14 @@ export function scanGroup(tokens: readonly string[], opts: ScanOptions): GroupSc
       if (t === 'TEMPO' || t === 'BECMG') trendFollows = true;
       break;
     }
-    if (WIND.test(t)) {
+    if (t === 'WND' && WIND_RANGE.test(tokens[i + 1] ?? '')) {
+      // US military "WND 110V190" direction range: the library does not return it.
+      unknown.push(`WND ${tokens[i + 1] as string}`);
+      unknownAt.push(i);
+      i++;
+    } else if (WIND.test(t)) {
       wind++;
+      windTokens.push(t);
     } else if (WIND_NOT_REPORTED.test(t)) {
       windNotReported = true;
     } else if (WIND_RANGE.test(t) || VIS_DIRECTIONAL.test(t)) {
@@ -142,7 +151,7 @@ export function scanGroup(tokens: readonly string[], opts: ScanOptions): GroupSc
     a = b + 1;
   }
   const kept = unknown.filter((_, k) => !isRemark.has(unknownAt[k] as number));
-  return { counts: { wind, visibility, clouds, weather }, unknown: kept, unknownClouds, windNotReported, trendFollows };
+  return { counts: { wind, windTokens, visibility, clouds, weather }, unknown: kept, unknownClouds, windNotReported, trendFollows };
 }
 
 export interface LibraryCounts {
