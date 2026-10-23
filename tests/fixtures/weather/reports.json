@@ -4,6 +4,7 @@
     "kind": "METAR",
     "station": "YSSY",
     "country": "Australia",
+    "provenance": "awc-live",
     "raw": "METAR YSSY 231400Z AUTO 02010KT 9999 // FEW012 20/17 Q1016",
     "nowUtc": "2026-10-23T14:25:00Z",
     "source": {
@@ -23,6 +24,7 @@
     "kind": "METAR",
     "station": "KJFK",
     "country": "USA",
+    "provenance": "awc-live",
     "raw": "METAR KJFK 231351Z 05014KT 10SM FEW040 12/01 A3036 RMK AO2 SLP282 T01220006",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -42,6 +44,7 @@
     "kind": "METAR",
     "station": "EGLL",
     "country": "United Kingdom",
+    "provenance": "awc-live",
     "raw": "METAR EGLL 231350Z AUTO 29023G34KT 9999 BKN017/// OVC021/// //////CB 10/07 Q0997",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -62,6 +65,7 @@
     "kind": "METAR",
     "station": "UIBB",
     "country": "Russia",
+    "provenance": "awc-live",
     "raw": "METAR UIBB 231400Z AUTO 28003MPS 250V310 9999 // ///037/// M03/M05 Q1014 RMK QFE718/0957",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -81,6 +85,7 @@
     "kind": "METAR",
     "station": "SKBU",
     "country": "Colombia",
+    "provenance": "awc-live",
     "raw": "METAR SKBU 231400Z VRB02KT 5000 -DZ BKN020 25/25 Q1012 RETS RERA",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -100,6 +105,7 @@
     "kind": "METAR",
     "station": "ZHHH",
     "country": "China",
+    "provenance": "awc-live",
     "raw": "METAR ZHHH 231400Z 02002MPS CAVOK 16/14 Q1016 NOSIG",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -119,6 +125,7 @@
     "kind": "METAR",
     "station": "WAQQ",
     "country": "Indonesia",
+    "provenance": "awc-live",
     "raw": "METAR WAQQ 231400Z AUTO 00000KT 26/26 Q1010",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -138,6 +145,7 @@
     "kind": "METAR",
     "station": "NZAA",
     "country": "New Zealand",
+    "provenance": "awc-live",
     "raw": "METAR NZAA 231400Z AUTO 11005KT 9999 OVC012/// 13/12 Q1027",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -156,6 +164,7 @@
     "kind": "METAR",
     "station": "RJCC",
     "country": "Japan",
+    "provenance": "awc-live",
     "raw": "METAR RJCC 231400Z VRB02KT 9999 FEW020 05/04 Q1024",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -173,6 +182,7 @@
     "kind": "METAR",
     "station": "CYBW",
     "country": "Canada",
+    "provenance": "awc-live",
     "raw": "SPECI CYBW 231408Z AUTO 34021G31KT 6SM -SN SCT014 OVC034 01/M00 A2994 RMK ICE INTMT SLP173",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -192,6 +202,7 @@
     "kind": "METAR",
     "station": "KUES",
     "country": "USA",
+    "provenance": "awc-live",
     "raw": "SPECI KUES 231405Z 00000KT 1/4SM FG OVC001 10/10 A3034",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -211,6 +222,7 @@
     "kind": "METAR",
     "station": "ESPA",
     "country": "Sweden",
+    "provenance": "awc-live",
     "raw": "METAR ESPA 231350Z COR 11004KT 9999 OVC006 07/07 Q1018",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -228,6 +240,7 @@
     "kind": "TAF",
     "station": "KHLG",
     "country": "USA",
+    "provenance": "awc-live",
     "raw": "TAF KHLG 231120Z 2312/2412 00000KT 4SM BR SKC TEMPO 2312/2313 1SM BR FM231315 VRB03KT P6SM SKC FM231500 07004KT P6SM SCT035 FM240000 VRB03KT P6SM SKC",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -247,6 +260,7 @@
     "kind": "METAR",
     "station": "EDDH",
     "country": "Germany",
+    "provenance": "awc-live",
     "raw": "METAR EDDH 231350Z AUTO 13012KT CAVOK 12/09 Q1004 TEMPO RA",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -265,6 +279,7 @@
     "kind": "METAR",
     "station": "KDLH",
     "country": "USA",
+    "provenance": "awc-live",
     "raw": "METAR KDLH 231355Z 11008KT 1/16SM R09/0500V0600FT -DZ FG VV001 07/07 A3020 RMK AO2 TWR VIS 1/8 SLP239 P0000 T00720072",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -285,6 +300,7 @@
     "kind": "METAR",
     "station": "LOAN",
     "country": "Austria",
+    "provenance": "awc-live",
     "raw": "METAR LOAN 231300Z 18018G32KT CAVOK ///// Q////",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -304,6 +320,7 @@
     "kind": "METAR",
     "station": "HKEL",
     "country": "Kenya",
+    "provenance": "awc-live",
     "raw": "METAR HKEL 231330Z 05003KT 9999 FEW020CB BKN022 18/14 Q1022 RESHRA",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -322,6 +339,7 @@
     "kind": "METAR",
     "station": "USDD",
     "country": "Russia",
+    "provenance": "awc-live",
     "raw": "SPECI USDD 231403Z 32004G10MPS 260V010 9999 FEW033CB 04/01 Q1022 R22/190060 NOSIG",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -343,6 +361,7 @@
     "kind": "METAR",
     "station": "SVMC",
     "country": "Venezuela",
+    "provenance": "upstream-test-suite",
     "raw": "SVMC 211703Z AUTO NIL",
     "nowUtc": "2026-10-21T17:30:00Z",
     "source": {
@@ -360,6 +379,7 @@
     "kind": "TAF",
     "station": "YSSY",
     "country": "Australia",
+    "provenance": "awc-live",
     "raw": "TAF YSSY 231108Z 2312/2418 04010KT 9999 SCT012 \n  FM231600 34007KT 9999 SCT010 \n  FM232200 03014KT 9999 FEW020 \n  FM240300 04020KT CAVOK \n  FM240900 01010KT CAVOK \n  FM241400 34007KT 9999 FEW008 \n  TEMPO 2312/2319 9999 BKN010",
     "nowUtc": "2026-10-23T14:25:00Z",
     "source": {
@@ -381,6 +401,7 @@
     "kind": "TAF",
     "station": "YMML",
     "country": "Australia",
+    "provenance": "awc-live",
     "raw": "TAF AMD YMML 231122Z 2312/2418 18012KT CAVOK \n  FM231400 18010KT 9999 SCT005 \n  FM231600 18008KT 9999 -SHRA SCT005 BKN008 \n  BECMG 2323/2400 18008KT 9999 -SHRA SCT010 \n  BECMG 2410/2412 36010KT 9999 -SHRA NSC \n  TEMPO 2314/2321 9999 BKN005 INTER 2404/2409 5000 SHRA SCT015 FEW070TCU \n  PROB30 INTER 2404/2409 5000 TSRA SCT015 SCT070CB",
     "nowUtc": "2026-10-23T14:25:00Z",
     "source": {
@@ -405,6 +426,7 @@
     "kind": "TAF",
     "station": "KJFK",
     "country": "USA",
+    "provenance": "awc-live",
     "raw": "TAF KJFK 231126Z 2312/2418 01010KT P6SM SKC FM231500 03010KT P6SM SKC FM232300 03007KT P6SM FEW250 FM241400 35004KT P6SM FEW200",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -423,6 +445,7 @@
     "kind": "TAF",
     "station": "LIMC",
     "country": "Italy",
+    "provenance": "awc-live",
     "raw": "TAF LIMC 231100Z 2312/2418 02006KT 9999 SCT030 PROB40 TEMPO 2312/2316 RA",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -440,6 +463,7 @@
     "kind": "TAF",
     "station": "EDHI",
     "country": "Germany",
+    "provenance": "awc-live",
     "raw": "TAF EDHI 231100Z 2312/2321 14010KT 9999 BKN035 PROB30 TEMPO 2312/2316 RA",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -457,6 +481,7 @@
     "kind": "TAF",
     "station": "YPCC",
     "country": "Cocos Islands (Australia)",
+    "provenance": "awc-live",
     "raw": "TAF YPCC 231116Z 2312/2412 13014KT 9999 SCT018 INTER 2312/2412 3000 SHRA BKN010",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -474,6 +499,7 @@
     "kind": "TAF",
     "station": "NVSS",
     "country": "Vanuatu",
+    "provenance": "awc-live",
     "raw": "TAF NVSS 231100Z 2312/2412 11006KT 9999 SCT020 PROB40 INTER 2312/2318 9000 SHRA BKN018",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -491,6 +517,7 @@
     "kind": "TAF",
     "station": "ESSV",
     "country": "Sweden",
+    "provenance": "awc-live",
     "raw": "TAF ESSV 231130Z 2312/2321 20005KT 9999 BKN020 PROB40 2312/2321 BKN014",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -508,6 +535,7 @@
     "kind": "TAF",
     "station": "ESSL",
     "country": "Sweden",
+    "provenance": "awc-live",
     "raw": "TAF ESSL 231130Z 2312/2317 17006KT 9999 SCT015 BKN025 PROB40 2312/2315 SHRA BKN020TCU",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -527,6 +555,7 @@
     "kind": "TAF",
     "station": "FBSK",
     "country": "Botswana",
+    "provenance": "awc-live",
     "raw": "TAF FBSK 231000Z 2312/2418 VRB03KT CAVOK BECMG 2322/2324 08009KT",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -546,6 +575,7 @@
     "kind": "TAF",
     "station": "UAUU",
     "country": "Kazakhstan",
+    "provenance": "awc-live",
     "raw": "TAF UAUU 231100Z 2312/2321 VRB01MPS CAVOK",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -565,6 +595,7 @@
     "kind": "TAF",
     "station": "URWA",
     "country": "Russia",
+    "provenance": "awc-live",
     "raw": "TAF URWA 231101Z 2312/2321 10006G12MPS CAVOK",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -583,6 +614,7 @@
     "kind": "TAF",
     "station": "YBBN",
     "country": "Australia",
+    "provenance": "awc-live",
     "raw": "TAF AMD YBBN 231133Z 2312/2418 35008KT 9999 -SHRA SCT010 BKN020 FM232300 03014KT 9999 -SHRA SCT012 BKN022 FM240600 36012KT 8000 -RA SCT010 BKN020 FM241000 35008KT 8000 -RA SCT008 BKN016 TEMPO 2312/2418 01015G25KT 3000 SHRA BKN008 SCT020TCU PROB30 TEMPO 2323/2403 01020G30KT 1000 +TSRA BKN005 SCT020CB",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -604,6 +636,7 @@
     "kind": "TAF",
     "station": "MMMX",
     "country": "Mexico",
+    "provenance": "awc-live",
     "raw": "TAF COR MMMX 231353Z 2312/2412 09007KT P6SM BKN220 TX22/2321Z TN09/2312Z FM232000 04012KT P6SM SCT020 BKN100 FM240000 03005KT P6SM SCT020 TEMPO 2408/2412 4SM HZ",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -623,6 +656,7 @@
     "kind": "TAF",
     "station": "KAFF",
     "country": "USA",
+    "provenance": "awc-live",
     "raw": "TAF KAFF 231109Z 2311/2417 15009KT 9999 FEW080 SCT120 520102 530309 QNH2997INS WND 110V190 BECMG 2315/2316 15014KT 9999 FEW120 520009 QNH2997INS BECMG 2317/2318 18012G20KT 9999 FEW120 520009 QNH2996INS WND 140V210 TEMPO 2318/2324 18015G25KT BECMG 2323/2324 24011KT 9999 VCSH BKN090 QNH3000INS BECMG 2403/2404 33009KT 9999 NSW FEW120 QNH3006INS BECMG 2412/2413 36012G20KT 9999 BKN055 610559 QNH3022INS TX23/2321Z TN06/2410Z",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -644,6 +678,7 @@
     "kind": "TAF",
     "station": "DNGO",
     "country": "Nigeria",
+    "provenance": "awc-live",
     "raw": "TAF DNGO 231100Z 2312/2418 22007KT 3000 HZ NSC BECMG2312/2314 5000 TEMPO 2314/2319 7000 NSW",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -663,6 +698,7 @@
     "kind": "TAF",
     "station": "EGKK",
     "country": "United Kingdom",
+    "provenance": "awc-live",
     "raw": "TAF EGKK 231059Z 2312/2418 29012KT 9999 SCT015 BECMG 2312/2315 29022G38KT TEMPO 2312/2319 6000 RA BKN009 PROB40 TEMPO 2312/2315 3000 +RA RADZ BECMG 2322/2324 27018G28KT BECMG 2400/2403 27010KT BECMG 2410/2413 19014KT TEMPO 2410/2418 6000 RA PROB30 TEMPO 2411/2418 3000 +RA BKN012 BECMG 2412/2415 20020G35KT",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -684,6 +720,7 @@
     "kind": "TAF",
     "station": "CWWU",
     "country": "Canada",
+    "provenance": "awc-live",
     "raw": "TAF CWWU 231200Z 2312/2412 04012G28KT 4SM RA BR OVC012 TEMPO 2312/2318 11/2SM RA BR OVC008 FM231800 04025G40KT P6SM SCT015 BKN030 OVC060 TEMPO 2318/2401 4SM ?SHRA BR BKN015 OVC030 FM240100 04022G35KT P6SM BKN020 OVC060 FM240900 04018G30KT P6SM BKN030 OVC060 RMK NXT FCST BY 231800Z",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -705,6 +742,7 @@
     "kind": "TAF",
     "station": "OITL",
     "country": "Iran",
+    "provenance": "awc-live",
     "raw": "TAF OITL 231400Z 2315/2324 09006KT 4000 BR BKN020 BKN080 TEMPO 2315/2320 1500 TSRA BR BKN010 SCT025CB OVC090 PROB40 0500 FG OVC005 TEMPO 2318/2324 0500 FG OVC005",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -723,6 +761,7 @@
     "kind": "TAF",
     "station": "OING",
     "country": "Iran",
+    "provenance": "awc-live",
     "raw": "TAF OING 231400Z 2315/2324 27006KT 6000 SCT025 SCT080 TEMPO 2315/2320 3000 TSRA BR SCT20CB SCT025 BKN090",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -741,6 +780,7 @@
     "kind": "TAF",
     "station": "KLAN",
     "country": "USA",
+    "provenance": "awc-live",
     "raw": "TAF KLAN 231402Z 2314/2412 09003KT 3/4SM BR VV003 TEMPO 2314/2315 1/4SM FG VV002 FM231500 11003KT 5SM BR SCT012 FM231530 12004KT P6SM SKC",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -761,6 +801,7 @@
     "kind": "TAF",
     "station": "ENCN",
     "country": "Norway",
+    "provenance": "awc-live",
     "raw": "TAF ENCN 231100Z 2312/2321 06008KT 9999 SCT020 BECMG 2319/2321 RA BKN012",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -779,6 +820,7 @@
     "kind": "METAR",
     "station": "SBFI",
     "country": "Brazil",
+    "provenance": "awc-live",
     "raw": "METAR SBFI 231400Z 09010KT 9999 VCSH VCTS BKN030 FEW040CB OVC080 23/19 Q1015",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -798,6 +840,7 @@
     "kind": "TAF",
     "station": "MYGF",
     "country": "Bahamas",
+    "provenance": "awc-live",
     "raw": "TAF MYGF 231100Z 2312/2412 05012KT 9999 VCSH SCT018 BKN040",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -816,6 +859,7 @@
     "kind": "TAF",
     "station": "SKBO",
     "country": "Colombia",
+    "provenance": "awc-live",
     "raw": "TAF SKBO 231055Z 2312/2412 06003KT 9999 SCT020 BKN050 TEMPO 2317/2320 18008KT TEMPO 2320/2323 9999 VCSH SCT025TCU TX21/2319Z TN12/2410Z",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -835,6 +879,7 @@
     "kind": "TAF",
     "station": "SCCY",
     "country": "Chile",
+    "provenance": "awc-live",
     "raw": "TAF SCCY 231029Z 2312/2324 11004KT 9999 BKN040 TN09/2312Z TX16/2320Z TEMPO 2312/2316 VRB02KT -SHRA BKN025",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -854,6 +899,7 @@
     "kind": "TAF",
     "station": "CZBF",
     "country": "Canada",
+    "provenance": "upstream-test-suite",
     "raw": "TAF AMD CZBF 300939Z 3010/3022 VRB03KT 6SM -SN OVC015 TEMPO 3010/3012 11/2SM -SN OVC009 \nFM301200 10008KT 2SM -SN OVC010 TEMPO 3012/3022 3/4SM -SN VV007 RMK FCST BASED ON AUTO OBS. NXT FCST BY 301400Z",
     "nowUtc": "2026-11-01T01:00:00Z",
     "source": {
@@ -876,6 +922,7 @@
     "kind": "TAF",
     "station": "KMSN",
     "country": "USA",
+    "provenance": "upstream-test-suite",
     "raw": "TAF KMSN 302325Z 0100/0124",
     "nowUtc": "2026-11-01T00:10:00Z",
     "source": {
@@ -895,6 +942,7 @@
     "kind": "TAF",
     "station": "EHAM",
     "country": "Netherlands",
+    "provenance": "upstream-test-suite",
     "raw": "TAF TAF EHAM 311720Z 3118/0124 12012KT CAVOK\n        BECMG 3121/3124 17017KT\n        BECMG 0103/0106 21025G35KT",
     "nowUtc": "2026-11-01T00:30:00Z",
     "source": {
@@ -916,6 +964,7 @@
     "kind": "TAF",
     "station": "VTBD",
     "country": "Thailand",
+    "provenance": "upstream-test-suite",
     "raw": "TAF VTBD 281000Z 2812/2912 CNL=",
     "nowUtc": "2026-10-28T10:30:00Z",
     "source": {
@@ -933,6 +982,7 @@
     "kind": "TAF",
     "station": "FZIC",
     "country": "DR Congo",
+    "provenance": "awc-live",
     "raw": "TAF FZIC 231100Z 2312/2418 09008KT 8000 BKN036 FEW044CB BECMG 2315/2317 NSC FM 240000 00000KT 1500 BR SCT014 FM 240700 27008KT SCT014 BECMG 2410/2412 BKN030 FEW036CB",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -951,6 +1001,7 @@
     "kind": "TAF",
     "station": "MDPP",
     "country": "Dominican Republic",
+    "provenance": "awc-live",
     "raw": "TAF MDPP 231000Z 2312/2412 00000KT 9999 SCT018 PROB30 2312/2318 7000 -TSRA FEW014CB BKN016 BKN070 BECMG 2314/2316 09010KT0 TAF MDST 231000Z 2312/2412 12010KT 9999 SCT018 BKN300 PROB30 2320/2402 7000 -TSRA FEW015CB BKN016 OVC070 BECMG 2401/2403 00000KT TEMPO 2408/2412 3000 BR BKN010",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -969,6 +1020,7 @@
     "kind": "TAF",
     "station": "KNGU",
     "country": "USA",
+    "provenance": "awc-live",
     "raw": "TAF AMD KNGU 2308/2407 VRB06KT 9999 SKC QNH3011INS BECMG 2308/2310 02010G18KT 9999 FEW050 FEW250 QNH3013INS TEMPO 2312/2317 03015G25KT 9999 SCT040 BKN200 BECMG 2318/2320 04013G20KT 9999 SCT020 SCT200 QNH3022INS FM240300 07010G16KT 9999 SCT025 BKN200 QNH3034INS TX20/2318Z TN13/2309Z AMD 0801 FN00062",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {
@@ -987,6 +1039,7 @@
     "kind": "METAR",
     "station": "DGSI",
     "country": "Ghana",
+    "provenance": "awc-live",
     "raw": "METAR DGSI 2313 CHECK TEXT NEW ENDING ADDED HAABYFYX ",
     "nowUtc": "2026-10-23T14:10:00Z",
     "source": {

@@ -2,10 +2,10 @@
 import { parseTAF } from 'metar-taf-parser';
 import type { TAFTrend } from 'metar-taf-parser';
 import type { DecodeContext, DecodeResult, DecodeWarning, DecodedConditions, DecodedTaf, TafOverlayGroup, TafPeriod } from '../types';
-import { convertConditions } from './convert';
+import { convertConditions, repairSixteenth } from './convert';
 import { parseTafHeader, splitMixedFractions } from './header';
 import { cleanReportText } from './input';
-import { droppedGroupWarning, groupWarnings, scanGroup, tokenise, tokensMissingFromGroups } from './tokens';
+import { clip, droppedGroupWarning, groupWarnings, overlongToken, scanGroup, tokenise, tokensMissingFromGroups, windDisagreement } from './tokens';
 import { resolveNearest, resolveOnOrAfter, resolveRecent } from './time';
 
 const HOUR_MS = 3_600_000;
@@ -74,6 +74,10 @@ export function decodeTaf(raw: string, ctx: DecodeContext): DecodeResult<Decoded
   if (h.next === 'NIL') return { kind: 'none', reason: 'nil', station: h.station, warnings: [] };
   if (h.next === 'CNL') return { kind: 'none', reason: 'cancelled', station: h.station, warnings: [] };
 
+  const overlong = overlongToken(tokens);
+  if (overlong !== null) {
+    return { kind: 'error', message: `The TAF contains a group that is far too long to be real ("${clip(overlong)}", ${overlong.length} characters). Nothing was read.` };
+  }
   // Used only to name the offending groups if the library refuses the text.
   const wholeScan = scanGroup(skipHeader(tokens), { taf: true });
   let lib;
@@ -81,7 +85,7 @@ export function decodeTaf(raw: string, ctx: DecodeContext): DecodeResult<Decoded
     lib = parseTAF(text);
   } catch (e) {
     const reason = e instanceof Error ? e.message : 'unknown error';
-    const where = wholeScan.unknown.length > 0 ? ` Groups not recognised: ${wholeScan.unknown.slice(0, 6).join(', ')}.` : ' No single group could be pointed to; check the report is a complete TAF.';
+    const where = wholeScan.unknown.length > 0 ? ` Groups not recognised: ${wholeScan.unknown.slice(0, 6).map(clip).join(', ')}.` : ' No single group could be pointed to; check the report is a complete TAF.';
     return { kind: 'error', message: `The TAF could not be read (the decoder said "${reason}").${where} The previous report, if any, stays in use.` };
   }
   if (lib.nil === true) return { kind: 'none', reason: 'nil', station: h.station, warnings: [] };
@@ -100,13 +104,19 @@ export function decodeTaf(raw: string, ctx: DecodeContext): DecodeResult<Decoded
 
   const scan = scanGroup(skipHeader(tokenise(lib.initialRaw)), { taf: true });
   if (scan.counts.wind > 0 && lib.wind === undefined) {
-    return { kind: 'error', message: `The TAF could not be read: the wind group ${scan.counts.windTokens.join(', ')} in the base group was not understood. A report whose wind cannot be read is not used.` };
+    return { kind: 'error', message: `The TAF could not be read: the wind group ${scan.counts.windTokens.map(clip).join(', ')} in the base group was not understood. A report whose wind cannot be read is not used.` };
   }
-  const baseConv = convertConditions(lib, 'TAF base group');
-  if (!baseConv.ok) return { kind: 'error', message: `The TAF could not be read: ${baseConv.message}` };
+  const baseDisagree = windDisagreement(scan, lib.wind);
+  if (baseDisagree !== null) {
+    return { kind: 'error', message: `The TAF could not be read: ${baseDisagree} (base group). A report whose wind cannot be read is not used.` };
+  }
+  const baseConvRaw = convertConditions(lib, 'TAF base group');
+  if (!baseConvRaw.ok) return { kind: 'error', message: `The TAF could not be read: ${baseConvRaw.message}` };
+  const baseFix = repairSixteenth(baseConvRaw.value.conditions, scan.sixteenths);
+  const baseConv = { value: { conditions: baseFix.conditions } };
 
   const warnings: DecodeWarning[] = [];
-  warnings.push(...groupWarnings(scan, { hasWind: lib.wind !== undefined, hasVisibility: lib.visibility !== undefined, clouds: lib.clouds.length, weather: lib.weatherConditions.length }, 'TAF base group'));
+  warnings.push(...groupWarnings(scan, { hasWind: lib.wind !== undefined, hasVisibility: lib.visibility !== undefined || scan.sixteenths > 0, clouds: lib.clouds.length, weather: lib.weatherConditions.length }, 'TAF base group'));
   const reportedTokens = new Set<string>(scan.unknown);
 
   const groups: Parsed[] = [];
@@ -115,13 +125,20 @@ export function decodeTaf(raw: string, ctx: DecodeContext): DecodeResult<Decoded
     const gTokens = tokenise(t.raw);
     const gScan = scanGroup(gTokens, { taf: true });
     for (const u of gScan.unknown) reportedTokens.add(u);
-    warnings.push(...groupWarnings(gScan, { hasWind: t.wind !== undefined, hasVisibility: t.visibility !== undefined, clouds: t.clouds.length, weather: t.weatherConditions.length }, label));
+    warnings.push(...groupWarnings(gScan, { hasWind: t.wind !== undefined, hasVisibility: t.visibility !== undefined || gScan.sixteenths > 0, clouds: t.clouds.length, weather: t.weatherConditions.length }, label));
 
     if (gScan.counts.wind > 0 && t.wind === undefined) {
-      return { kind: 'error', message: `The TAF could not be read: the wind group ${gScan.counts.windTokens.join(', ')} in ${label} was not understood. A report whose wind cannot be read is not used.` };
+      return { kind: 'error', message: `The TAF could not be read: the wind group ${gScan.counts.windTokens.map(clip).join(', ')} in ${label} was not understood. A report whose wind cannot be read is not used.` };
     }
-    const conv = convertConditions(t, label);
-    if (!conv.ok) return { kind: 'error', message: `The TAF could not be read: ${conv.message}` };
+    const groupDisagree = windDisagreement(gScan, t.wind);
+    if (groupDisagree !== null) {
+      return { kind: 'error', message: `The TAF could not be read: ${groupDisagree} in ${label}. A report whose wind cannot be read is not used.` };
+    }
+    const convRaw = convertConditions(t, label);
+    if (!convRaw.ok) return { kind: 'error', message: `The TAF could not be read: ${convRaw.message}` };
+    const groupFix = repairSixteenth(convRaw.value.conditions, gScan.sixteenths);
+    const conv = { value: { conditions: groupFix.conditions, weatherGroupGiven: convRaw.value.weatherGroupGiven } };
+    if (groupFix.repaired) warnings.push({ code: 'visibility-repaired', message: `${label}: visibility 1/16SM could not be read by the decoder and is taken as 100 m.` });
 
     const tv = t.validity;
     const hasEnd = 'endDay' in tv && tv.endDay !== undefined;
@@ -137,7 +154,7 @@ export function decodeTaf(raw: string, ctx: DecodeContext): DecodeResult<Decoded
       endMs = startMs === null ? null : resolveOnOrAfter(e.endDay, e.endHour, 0, startMs, true);
     }
     if (startMs === null || endMs === null) {
-      return { kind: 'error', message: `The TAF group "${t.raw}" has a time that is not valid.` };
+      return { kind: 'error', message: `The TAF group "${clip(t.raw)}" has a time that is not valid.` };
     }
     if (startMs >= validToMs || endMs <= validFromMs) {
       warnings.push({ code: 'group-outside-validity', message: `${label} is outside the TAF validity period and was ignored.` });

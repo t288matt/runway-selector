@@ -46,6 +46,7 @@ export interface DecodeWarning {
     | 'metar-trend-ignored'
     | 'group-outside-validity'
     | 'time-in-future'
+    | 'visibility-repaired'
     | 'more-warnings';
   readonly message: string;
 }

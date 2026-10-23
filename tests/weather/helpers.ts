@@ -14,6 +14,7 @@ export interface Fixture {
   readonly kind: 'METAR' | 'TAF';
   readonly station: string;
   readonly country: string;
+  readonly provenance: 'awc-live' | 'upstream-test-suite' | 'synthetic';
   readonly raw: string;
   /** Synthetic clock for the test; the report text is real, the clock is not. */
   readonly nowUtc: string;

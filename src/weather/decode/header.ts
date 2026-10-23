@@ -2,6 +2,8 @@
 // before the library sees the text. This is where wrong-box pastes, several
 // reports in one box, NIL reports and the station check are caught.
 
+import { clip } from './tokens';
+
 const STATION = /^[A-Z][A-Z0-9]{3}$/;
 const TIME = /^(\d{2})(\d{2})(\d{2})Z?$/;
 const TIME_STRICT = /^\d{6}Z$/;
@@ -45,16 +47,16 @@ export function parseMetarHeader(tokens: readonly string[]): HeaderResult<MetarH
   }
   const station = tokens[i];
   if (station === undefined || !STATION.test(station)) {
-    return { ok: false, message: `The METAR must start with a four-character station code; found "${station ?? ''}".` };
+    return { ok: false, message: `The METAR must start with a four-character station code; found "${clip(station ?? '')}".` };
   }
   const timeToken = tokens[i + 1];
   const m = timeToken === undefined ? null : TIME.exec(timeToken);
   if (m === null) {
-    return { ok: false, message: `The METAR has no observation time group (such as 231400Z) after the station ${station}; found "${timeToken ?? ''}".` };
+    return { ok: false, message: `The METAR has no observation time group (such as 231400Z) after the station ${station}; found "${clip(timeToken ?? '')}".` };
   }
   const second = secondReportAt(tokens, i + 2);
   if (second !== null) {
-    return { ok: false, message: `Found more than one report in the METAR box (a second one starts at "${second}"). Paste one report.` };
+    return { ok: false, message: `Found more than one report in the METAR box (a second one starts at "${clip(second)}"). Paste one report.` };
   }
   if (tokens.slice(i + 2).some((t) => /^\d{4}\/\d{4}$/.test(t))) {
     return { ok: false, message: 'This looks like a TAF (it has a validity period such as 2312/2418), not a METAR. Paste it into the TAF box.' };
@@ -63,7 +65,7 @@ export function parseMetarHeader(tokens: readonly string[]): HeaderResult<MetarH
   const hour = Number(m[2]);
   const minute = Number(m[3]);
   if (day < 1 || day > 31 || hour > 23 || minute > 59) {
-    return { ok: false, message: `The observation time group ${timeToken as string} is not a valid day, hour and minute.` };
+    return { ok: false, message: `The observation time group ${clip(timeToken as string)} is not a valid day, hour and minute.` };
   }
   const bodyStart = i + 2;
   if (tokens[bodyStart] === 'COR') corrected = true;
@@ -98,22 +100,22 @@ export function parseTafHeader(tokens: readonly string[]): HeaderResult<TafHeade
   }
   const station = tokens[i];
   if (station === undefined || !STATION.test(station)) {
-    return { ok: false, message: `The TAF must start with a four-character station code; found "${station ?? ''}".` };
+    return { ok: false, message: `The TAF must start with a four-character station code; found "${clip(station ?? '')}".` };
   }
   const timeToken = tokens[i + 1];
   const m = timeToken !== undefined && TIME_STRICT.test(timeToken) ? TIME.exec(timeToken) : null;
   if (m === null) {
-    return { ok: false, message: `The TAF has no issue time group (such as 231100Z) after the station ${station}; found "${timeToken ?? ''}".` };
+    return { ok: false, message: `The TAF has no issue time group (such as 231100Z) after the station ${station}; found "${clip(timeToken ?? '')}".` };
   }
   const second = secondReportAt(tokens, i + 2);
   if (second !== null) {
-    return { ok: false, message: `Found more than one report in the TAF box (a second one starts at "${second}"). Paste one TAF.` };
+    return { ok: false, message: `Found more than one report in the TAF box (a second one starts at "${clip(second)}"). Paste one TAF.` };
   }
   const day = Number(m[1]);
   const hour = Number(m[2]);
   const minute = Number(m[3]);
   if (day < 1 || day > 31 || hour > 23 || minute > 59) {
-    return { ok: false, message: `The issue time group ${timeToken as string} is not a valid day, hour and minute.` };
+    return { ok: false, message: `The issue time group ${clip(timeToken as string)} is not a valid day, hour and minute.` };
   }
   const v = VALIDITY.exec(tokens[i + 2] ?? '');
   const validity = v === null ? null : { startDay: Number(v[1]), startHour: Number(v[2]), endDay: Number(v[3]), endHour: Number(v[4]) };
