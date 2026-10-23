@@ -12,8 +12,6 @@ const MS_PER_HOUR = 3_600_000;
 /** Mean Earth radius in nautical miles (a physical constant, not airport data). */
 const EARTH_RADIUS_NM = 3440.065;
 
-export type Trend = 'rising' | 'steady' | 'falling';
-
 export interface DemandSummary {
   /**
    * True when the pack gives no airport elevation. The "on the ground at the
@@ -34,14 +32,6 @@ export interface DemandSummary {
   readonly movementsPerSlot: readonly (number | null)[];
   /** Per slot: the traffic level (higher of arrivals and departures), or null when unknown. */
   readonly levels: readonly (TrafficLevel | null)[];
-  /**
-   * Arrivals in the first half of the known slots compared with the second half
-   * (the middle slot of an odd number is left out). Slot 1 is left out: it holds
-   * only the minutes from now to its end, so it would always look low and bias
-   * the trend towards rising. Departures are left out because they are known for
-   * slot 1 only. null with fewer than two remaining known slots.
-   */
-  readonly trend: Trend | null;
 }
 
 export interface DemandInput {
@@ -132,17 +122,6 @@ export function buildTrafficSlots(input: DemandInput): DemandResult {
     departures: i === 0 ? departures : null,
   }));
 
-  // The partial first slot is left out of the trend (see DemandSummary.trend).
-  const knownArrivals = slots.slice(1).flatMap((s) => (s.arrivals === null ? [] : [s.arrivals]));
-  const half = Math.floor(knownArrivals.length / 2);
-  const sum = (xs: readonly number[]): number => xs.reduce((a, b) => a + b, 0);
-  let trend: Trend | null = null;
-  if (half >= 1) {
-    const first = sum(knownArrivals.slice(0, half));
-    const second = sum(knownArrivals.slice(knownArrivals.length - half));
-    trend = second > first ? 'rising' : second < first ? 'falling' : 'steady';
-  }
-
   return {
     slots,
     summary: {
@@ -153,7 +132,6 @@ export function buildTrafficSlots(input: DemandInput): DemandResult {
       arrivalsBeyondHorizon,
       movementsPerSlot: slots.map((s) => (s.arrivals === null ? null : s.arrivals + (s.departures ?? 0))),
       levels: slots.map((s) => classifyLevel(pack, s.arrivals, s.departures)),
-      trend,
     },
   };
 }

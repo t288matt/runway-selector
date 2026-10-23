@@ -26,7 +26,7 @@ describeForEachPack('demand model', (pack) => {
       const r = build(pack, []);
       expect(counts(r.slots).slice(0, 8)).toEqual(Array(8).fill(0));
       expect(r.slots[0]?.departures).toBe(0);
-      expect(r.summary).toMatchObject({ connectedArrivals: 0, connectedDepartures: 0, trend: 'steady' });
+      expect(r.summary).toMatchObject({ connectedArrivals: 0, connectedDepartures: 0 });
     });
 
     it('no slots: no output', () => {
@@ -254,32 +254,14 @@ describeForEachPack('demand model', (pack) => {
       expect(r.summary.levels[1]).toBe('light');
       expect(r.summary.levels[9]).toBeNull();
     });
-
-    it('trend: rising when the second half of the known slots has more arrivals', () => {
-      const late = Array.from({ length: 3 }, () => inbound(pack, 1000, 300)); // 200 minutes out: slot 6
-      const r = build(pack, late);
-      expect(r.summary.trend).toBe('rising');
-    });
-
-    it('trend: falling when the first half has more', () => {
-      const early = Array.from({ length: 3 }, () => inbound(pack, 200, 300)); // 40 minutes out: T0+50, slot 1
-      expect(build(pack, early).summary.trend).toBe('falling');
-    });
-
-    it('trend: steady when the halves match, and unknown with fewer than two known slots', () => {
-      expect(build(pack, [inbound(pack, 200, 300), inbound(pack, 1000, 300)]).summary.trend).toBe('steady');
-      const shortest = { ...pack, settings: { ...pack.settings, demandHorizonMinutes: 30 } };
-      expect(build(shortest, [inbound(pack, 10, 300)]).summary.trend).toBeNull();
-    });
   });
 
-  it('trend leaves out the partial first slot: now at :29 with steady demand is steady, not rising', () => {
+  it('with now at :29 the nearly finished slot 0 is empty and later slots count their arrivals', () => {
     const now = T0 + 29 * MIN;
     // One arrival in the middle of each of slots 1 to 7. Slot 0 holds one minute only, so it is empty.
     const list = [1, 2, 3, 4, 5, 6, 7].map((k) => inbound(pack, ((k * 30 + 15 - 29) / 60) * 300));
     const r = buildTrafficSlots({ pack, nowMs: now, aircraft: list, slotStartsMs: SLOT_STARTS });
     expect(counts(r.slots).slice(0, 8)).toEqual([0, 1, 1, 1, 1, 1, 1, 1]);
-    expect(r.summary.trend).toBe('steady');
   });
 
   it('a horizon that ends exactly on a slot end keeps that slot known and the next one null', () => {
