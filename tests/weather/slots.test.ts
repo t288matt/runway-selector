@@ -3,7 +3,7 @@
 // Scenarios that use a pack value run once for each of the YSSY, TEST and TEST1
 // packs.
 import { describe, expect, it } from 'vitest';
-import { buildWeatherSlots, SLOT_MINUTES } from '../../src/weather';
+import { buildWeatherSlots, decodeTaf, SLOT_MINUTES } from '../../src/weather';
 import type { DecodedMetar, DecodedTaf, TafOverlayGroup } from '../../src/weather';
 import type { AirportPack } from '../../src/refdata';
 import { describeForEachPack, type PackRef } from '../helpers/packs';
@@ -437,5 +437,52 @@ describe('a few fixed-clock sanity values independent of the pack', () => {
   it('SLOT_MINUTES is 30', () => {
     expect(SLOT_MINUTES).toBe(30);
     expect(HOUR / SLOT).toBe(2);
+  });
+});
+
+// Owner decision 23-10-2026: weather in the vicinity (VC) never counts as precipitation.
+describeForEachPack('vicinity weather is not precipitation', (pack, ref) => {
+  const none = { prevailing: false, probable: null, temporary: false, recent: false };
+  const flags = (nowIso: string, ids: { metar?: string; taf?: string }, windowMinutes = 60) => {
+    const { nowMs, metar, taf } = reports(ref, nowIso, ids);
+    return build(pack, nowMs, metar, taf, windowMinutes).slots[0]!.weather;
+  };
+
+  it('METAR VCSH VCTS (real report) gives no flags', () => {
+    expect(flags('2026-10-23T14:10:00Z', { metar: 'metar-sbfi-vicinity-showers-ts' }).precipitation).toEqual(none);
+  });
+
+  it('TAF base group VCSH (real report) gives no flags', () => {
+    expect(flags('2026-10-23T14:10:00Z', { taf: 'taf-mygf-base-vcsh' }).precipitation).toEqual(none);
+  });
+
+  it('TEMPO VCSH (real report) gives no flags, and the overlay is not precipitation', () => {
+    const w = flags('2026-10-23T17:10:00Z', { taf: 'taf-skbo-tempo-vcsh' }, 360);
+    const { nowMs, taf } = reports(ref, '2026-10-23T17:10:00Z', { taf: 'taf-skbo-tempo-vcsh' });
+    const slot = build(pack, nowMs, null, taf, 360).slots.find((x) => x.startMs === utc('2026-10-23T20:00:00Z'))!;
+    void w;
+    expect(slot.weather.overlays).toMatchObject([{ kind: 'TEMPO', precipitation: false }]);
+    expect(slot.weather.precipitation).toEqual(none);
+  });
+
+  it('PROB30 TEMPO VCSH and a PROB30 VCTS give no flags (SYNTHETIC strings)', () => {
+    for (const body of ['PROB30 TEMPO 2312/2316 VCSH SCT020', 'PROB30 2312/2316 VCTS SCT020CB']) {
+      const text = `TAF YSSY 231108Z 2312/2418 04010KT 9999 SCT012 ${body}`;
+      const r = decodeTaf(text, { pack: packWith(ref, { weatherStation: 'YSSY' }), nowMs: utc('2026-10-23T12:10:00Z') });
+      expect(r.kind).toBe('ok');
+      if (r.kind !== 'ok') return;
+      const slot = build(pack, utc('2026-10-23T12:10:00Z'), null, r.report, 60).slots[0]!;
+      expect(slot.weather.overlays).toHaveLength(1);
+      expect(slot.weather.precipitation, body).toEqual(none);
+    }
+  });
+
+  it('real showers still count: -SHRA in an FM, SHRA in a PROB40 and a TEMPO SHRA', () => {
+    const codes = pack.settings.precipitationCodes as readonly string[];
+    const counts = codes.includes('SH') || codes.includes('RA');
+    const ymml = reports(ref, '2026-10-23T16:10:00Z', { taf: 'taf-ymml-multiline-amd-inter' });
+    expect(build(pack, ymml.nowMs, null, ymml.taf, 60).slots[0]!.weather.precipitation.prevailing).toBe(counts);
+    expect(flags('2026-10-23T12:10:00Z', { taf: 'taf-essl-prob40-showers' }).precipitation.probable).toBe(counts ? 40 : null);
+    expect(flags('2026-10-23T12:10:00Z', { taf: 'taf-ypcc-inter' }).precipitation.temporary).toBe(counts);
   });
 });

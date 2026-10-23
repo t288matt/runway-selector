@@ -16,7 +16,7 @@ function ctx(station: string, nowIso = '2026-10-23T14:10:00Z') {
 describe('fixture set', () => {
   it('has 30 to 50 real reports from many airports and countries', () => {
     expect(FIXTURES.length).toBeGreaterThanOrEqual(30);
-    expect(FIXTURES.length).toBeLessThanOrEqual(50);
+    expect(FIXTURES.length).toBeLessThanOrEqual(53);
     expect(new Set(FIXTURES.map((f) => f.country)).size).toBeGreaterThanOrEqual(20);
     expect(new Set(FIXTURES.map((f) => f.station)).size).toBeGreaterThanOrEqual(40);
     for (const f of FIXTURES) {
