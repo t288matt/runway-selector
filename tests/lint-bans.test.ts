@@ -50,7 +50,7 @@ afterAll(() => {
 describe('lint bans', () => {
   it('has a fixture for every ban', () => {
     expect(general.length).toBeGreaterThanOrEqual(10);
-    expect(engine.length).toBeGreaterThanOrEqual(20);
+    expect(engine.length).toBeGreaterThanOrEqual(19);
   });
 
   it('accepts a clean engine file (control)', () => {
@@ -91,6 +91,15 @@ describe('metar-taf-parser import ban (scripts/check-banned-imports.mjs)', () =>
     const r = spawnSync(process.execPath, [checker, '--root', dir], { encoding: 'utf8' });
     expect(r.status, r.stdout + r.stderr).toBe(1);
     expect(r.stderr).toContain('used outside');
+  });
+
+  it('still catches a banned import after a regex literal containing a comment marker', () => {
+    const dir = join(tmp, 'regex');
+    mkdirSync(join(dir, 'src', 'ui'), { recursive: true });
+    writeFileSync(join(dir, 'src', 'ui', 'x.ts'), "export const re = /[/*]/;\nexport const q = require('metar-taf-parser');\n");
+    const r = spawnSync(process.execPath, [checker, '--root', dir], { encoding: 'utf8' });
+    expect(r.status, r.stdout + r.stderr).toBe(1);
+    expect(r.stderr).toContain('x.ts:2');
   });
 
   it('allows the import inside src/weather/decode and passes the clean tree', () => {

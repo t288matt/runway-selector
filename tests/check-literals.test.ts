@@ -98,6 +98,29 @@ describe('check-no-airport-literals', () => {
     expect(run(tmp).status).toBe(1);
   });
 
+  it('still catches a literal after a regex literal containing a comment marker', () => {
+    plant('bad.ts', "export const re = /[/*]/;\nexport const r = '16L';\n/* later comment */");
+    const r = run(tmp);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain('16L');
+  });
+
+  it('still ignores a real comment after a regex literal', () => {
+    plant('ok.ts', "const re = /a\\/b/g; // 16L\nexport const x = re;\n");
+    expect(run(tmp).status).toBe(0);
+  });
+
+  it('ignores 3-digit hex colours', () => {
+    const fx = join(tmp, 'tests', 'fixtures', 'TEST');
+    mkdirSync(fx, { recursive: true });
+    writeFileSync(join(fx, 'airport.json'), JSON.stringify({ icao: 'ZZTT' }));
+    writeFileSync(join(fx, 'runways.json'), JSON.stringify({ runways: [{ name: '14A' }] }));
+    plant('ok.ts', "export const c = ['#14a', '#14A'];\n");
+    expect(run(tmp).status).toBe(0);
+    plant('bad.ts', "export const r = '14A';\n");
+    expect(run(tmp).status).toBe(1);
+  });
+
   it('refuses to pass when no pack exists', () => {
     rmSync(join(tmp, 'refdata'), { recursive: true });
     expect(run(tmp).status).toBe(2);

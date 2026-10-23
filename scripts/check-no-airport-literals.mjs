@@ -9,6 +9,9 @@
 // under src/ are scanned.
 //
 // LIMITS (by design):
+//  - Hyphenated names split into tokens, so a CSS class such as "text-yssy" is
+//    reported (a false positive that is acceptable). 3-digit hex colours such as
+//    #14a are ignored.
 //  - Evasion by building a value at run time (string concatenation, template
 //    pieces, character codes, reading it from elsewhere) CANNOT be detected by
 //    a static token check. It is caught only by review and by running the
@@ -17,8 +20,9 @@
 //    collide with ordinary code (0, 1, 25, "A"). That means numeric mode ids
 //    (for example "1", "5") and two-digit runway names (for example "07", "25")
 //    cannot be checked by this script. Reviewers must catch those.
-//  - Comment stripping is a simple scanner; a regex literal containing a quote
-//    or comment marker can confuse it. Such code does not belong in src/ anyway.
+//  - Comment stripping is a small scanner that tracks strings, template literals
+//    and regex literals (a regex after an identifier or ')' is read as division);
+//    template ${} nesting is not tracked. Unusual code can still confuse it.
 //
 // Usage: node scripts/check-no-airport-literals.mjs [--root <dir>]
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
@@ -73,7 +77,14 @@ export function findPacks(root) {
 
 const blank = (s) => s.replace(/[^\n]/g, ' ');
 
-/** Replace comments with spaces (newlines kept so line numbers stay right). */
+// A '/' after one of these characters or keywords starts a regex literal;
+// after anything else (identifier, number, ')' or ']') it is division.
+const REGEX_AFTER_CHARS = new Set(['', '(', ',', '=', ':', '[', '!', '&', '|', '?', '{', '}', ';', '+', '-', '*', '%', '<', '>', '~', '^']);
+const REGEX_AFTER_WORDS = new Set(['return', 'typeof', 'case', 'in', 'of', 'delete', 'void', 'throw', 'new', 'else', 'do', 'yield', 'await', 'instanceof']);
+
+/** Replace comments with spaces (newlines kept so line numbers stay right).
+ *  For code files it tracks strings, template literals and regex literals so a
+ *  comment marker inside them (for example /[/*]/) is not taken for a comment. */
 export function stripComments(text, ext) {
   const cssOnly = ext === '.css';
   const htmlOnly = MARKUP_EXTENSIONS.has(ext);
@@ -81,6 +92,30 @@ export function stripComments(text, ext) {
   let out = '';
   let i = 0;
   const n = text.length;
+  let prevChar = ''; // last significant (non-space, non-comment) character
+  let prevWord = ''; // identifier/keyword that ended just before, if any
+  let word = '';
+  const sig = (c) => {
+    if (/[A-Za-z0-9_$]/.test(c)) {
+      word += c;
+    } else if (!/\s/.test(c)) {
+      prevWord = '';
+      word = '';
+      prevChar = c;
+      return;
+    } else {
+      if (word) prevWord = word;
+      word = '';
+      return;
+    }
+    prevChar = c;
+    prevWord = '';
+  };
+  const regexAllowed = () => {
+    const w = word || prevWord;
+    if (w) return REGEX_AFTER_WORDS.has(w);
+    return REGEX_AFTER_CHARS.has(prevChar);
+  };
   while (i < n) {
     const c = text[i];
     const d = text[i + 1];
@@ -120,9 +155,28 @@ export function stripComments(text, ext) {
       }
       out += text.slice(i, j + 1);
       i = j + 1;
+      sig('"');
+      continue;
+    }
+    if (!cssOnly && c === '/' && regexAllowed()) {
+      // regex literal: copy verbatim up to the closing '/', honouring [...] classes
+      let j = i + 1;
+      let inClass = false;
+      while (j < n && text[j] !== '\n') {
+        const ch = text[j];
+        if (ch === '\\') j += 1;
+        else if (ch === '[') inClass = true;
+        else if (ch === ']') inClass = false;
+        else if (ch === '/' && !inClass) break;
+        j += 1;
+      }
+      out += text.slice(i, j + 1);
+      i = j + 1;
+      sig(')');
       continue;
     }
     out += c;
+    sig(c);
     i += 1;
   }
   return out;
@@ -154,7 +208,9 @@ export function check(root) {
   for (const file of files) {
     const code = stripComments(readFileSync(file, 'utf8'), extname(file).toLowerCase());
     code.split('\n').forEach((line, idx) => {
-      for (const m of line.matchAll(/[A-Za-z0-9_]+/g)) {
+      // 3-digit hex colours (#14a) are not facts: blank them before tokenising
+      const text = line.replace(/#[0-9A-Fa-f]{3}(?![A-Za-z0-9_])/g, "    ");
+      for (const m of text.matchAll(/[A-Za-z0-9_]+/g)) {
         for (const f of facts) {
           if (m[0].toLowerCase() === f.value.toLowerCase()) {
             violations.push({ file: rel(root, file), line: idx + 1, value: f.value, kind: f.kind, pack: rel(root, f.pack) });
