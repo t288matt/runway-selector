@@ -61,7 +61,9 @@ export function SettingsDrawer({ view, displayNowMs, bridge, onCurrentMode, onWi
   const headingRef = useRef<HTMLHeadingElement | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const closeRef = useRef(onClose);
-  closeRef.current = onClose;
+  useEffect(() => {
+    closeRef.current = onClose;
+  });
   useEffect(() => {
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     headingRef.current?.focus();
