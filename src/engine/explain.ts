@@ -155,6 +155,28 @@ function nextChangeLine(c: Changeover | undefined, nowMs: number): string {
   return `Next change: to ${c.change.toModeId} at ${when}, with ${traffic}, ahead of ${formatTime(trigger.startMs, nowMs)} when ${why}. ${prep}${after}`;
 }
 
+function gapLines(plan: Plan, nowMs: number): string[] {
+  return plan.gaps.map((g) => {
+    const head = `No suitable mode from ${formatTime(g.startMs, nowMs)} to ${formatTime(g.endMs, nowMs)}`;
+    return g.beforeMode === null
+      ? `${head}; no mode is expected to be suitable again within the forecast window.`
+      : `${head}; recommended again: ${g.beforeMode} from ${formatTime(g.endMs, nowMs)}.`;
+  });
+}
+
+/** The line for a change that starts in slot 0: said once, as "Change now". */
+function changeNowLine(c: Changeover, nowMs: number): string {
+  const traffic = trafficWords(c.trafficLevel);
+  const prep = 'Preparation should start now.';
+  const after = c.replacementSurvival === null ? '' : ` ${c.replacementModeId} is then expected to stay suitable ${c.replacementSurvival.endsInFailure ? `for ${formatDuration(c.replacementSurvival.viableMs)}` : 'for the rest of the forecast window'}.`;
+  const from = c.change.fromModeId;
+  let why: string;
+  if (c.trigger === null) why = `the operating plan prefers it, and ${from} stays suitable`;
+  else if (c.trigger.slotIndex === c.change.slotIndex) why = `${from} is no longer suitable${c.trigger.reason === null ? '' : `: ${lowerFirst(c.trigger.reason.text)}`}`;
+  else why = `${from} would no longer be suitable from ${formatTime(c.trigger.startMs, nowMs)}${c.trigger.reason === null ? '' : `: ${lowerFirst(c.trigger.reason.text)}`}`;
+  return `Change now to ${c.change.toModeId}, with ${traffic}, because ${why}. ${prep}${after}`;
+}
+
 /** Index and penalty of the operating plan's top immediate preference among the modes allowed in slot 0. */
 function topPreference(pack: AirportPack, result: EngineResult): { index: number; penalty: number } | null {
   let best: { index: number; penalty: number } | null = null;
@@ -265,7 +287,7 @@ export function explain(pack: AirportPack, input: EngineInput, result: EngineRes
     const noSuitableMode: NoSuitableMode | null = why === 'NO_SUITABLE_MODE' ? { title: NO_SUITABLE_TITLE, perMode: blockedModes(pack, result, nowMs) } : null;
     return {
       headline: noRecommendationHeadline(why),
-      lines: [],
+      lines: why === 'NO_SUITABLE_MODE' ? gapLines(plan, nowMs) : [],
       earlyChange: null,
       noSuitableMode,
       uncertaintyLine,
@@ -277,14 +299,19 @@ export function explain(pack: AirportPack, input: EngineInput, result: EngineRes
   const modeIndex = pack.modes.findIndex((m) => m.id === modeId);
   const cell = result.cells[modeIndex]?.[0];
   const lines: string[] = [];
+  const nowChange = changeovers[0]?.change.slotIndex === 0 ? changeovers[0] : undefined;
   if (cell !== undefined) lines.push(whyThisMode(pack, modeId, cell));
   lines.push(whyItLasts(modeId, result.survival[modeIndex], nowMs));
-  lines.push(nextChangeLine(changeovers[0], nowMs));
+  if (nowChange !== undefined) lines.push(changeNowLine(nowChange, nowMs));
+  const upcoming = nowChange === undefined ? changeovers[0] : changeovers[1];
+  const gaps = gapLines(plan, nowMs);
+  if (upcoming !== undefined || gaps.length === 0) lines.push(nextChangeLine(upcoming, nowMs));
+  lines.push(...gaps);
   const notTop = whyNotTop(pack, result, plan, modeId, nowMs);
   if (notTop !== null) lines.push(notTop);
 
   return {
-    headline: `Recommended mode now: ${modeId}.`,
+    headline: nowChange === undefined ? `Recommended mode now: ${modeId}.` : `Change now to ${modeId}.`,
     lines,
     earlyChange,
     noSuitableMode: null,
