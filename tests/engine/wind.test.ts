@@ -54,6 +54,13 @@ describe('direction range', () => {
     expect(w.tailwindKt).toBeCloseTo(10 * Math.cos(rad(50)), 9);
   });
 
+  it('a full-circle range covers every direction', () => {
+    const w = worstInRange(160, 0, 360, 20);
+    expect(w.tailwindKt).toBeCloseTo(20, 9);
+    expect(w.crosswindKt).toBeCloseTo(20, 9);
+    expect(worstInRange(160, 50, 50, 20).crosswindKt).toBeCloseTo(20, 9);
+  });
+
   it('works across north', () => {
     expect(inClockwiseRange(5, 350, 20)).toBe(true);
     expect(inClockwiseRange(180, 350, 20)).toBe(false);
