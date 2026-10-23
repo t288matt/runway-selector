@@ -273,3 +273,46 @@ describe('stopping and the clock', () => {
     r.ctrl.stop();
   });
 });
+
+describe('traffic arriving for a plan that has none', () => {
+  it('recalculates once on the first good poll after start, and not on the second', async () => {
+    const r = rig(EARLY);
+    const planned = r.ctrl.getState().view;
+    expect(planned.demand).toBeNull();
+    r.ctrl.start();
+    await r.advance(0);
+    const afterFirst = r.ctrl.getState().view;
+    expect(afterFirst.result).not.toBe(planned.result);
+    expect(afterFirst.demand).not.toBeNull();
+    await r.advance(POLL_MS);
+    expect(r.ctrl.getState().view.result).toBe(afterFirst.result);
+    r.ctrl.stop();
+  });
+
+  it('does not recalculate on a failed poll', async () => {
+    const r = rig(EARLY);
+    r.feed.fail = true;
+    const planned = r.ctrl.getState().view;
+    r.ctrl.start();
+    await r.advance(POLL_MS);
+    expect(r.ctrl.getState().view.result).toBe(planned.result);
+    r.ctrl.stop();
+  });
+
+  it('recalculates once on the first good poll after an outage longer than vatsimStaleMinutes', async () => {
+    const r = rig(EARLY);
+    r.ctrl.start();
+    await r.advance(0);
+    r.feed.fail = true;
+    await r.advance((pack.settings.vatsimStaleMinutes + 1) * 60_000);
+    const during = r.ctrl.getState().view;
+    r.feed.fail = false;
+    r.clock.now += 1000;
+    await r.advance(POLL_MS);
+    const back = r.ctrl.getState().view;
+    expect(back.result).not.toBe(during.result);
+    await r.advance(POLL_MS);
+    expect(r.ctrl.getState().view.result).toBe(back.result);
+    r.ctrl.stop();
+  });
+});

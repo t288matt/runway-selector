@@ -83,7 +83,14 @@ export function createController(deps: ControllerDeps): Controller {
       const result = await fetchFeed({ fetch: deps.fetch, now: deps.now });
       if (!running) return;
       const now = deps.now();
+      // The plan has no usable traffic when none had arrived or the last good fetch had expired (vatsimStaleMinutes):
+      // the first good fetch after that recalculates once, so the plan does not wait for the half-hour. Later polls do not (UP-1).
+      const hadUsable = feed.fetchedAtMs !== null && now - feed.fetchedAtMs <= pack.settings.vatsimStaleMinutes * 60_000;
       feed = applyFeedResult(feed, result, now);
+      if (result.ok && !hadUsable) {
+        recalculate(now);
+        return;
+      }
       // The traffic shown moves on; the plan inside the view is left exactly as calculated.
       publish({ view: { ...state.view, liveDemand: liveDemandFor(state.view, feed, now) }, feed, displayNowMs: now });
     } finally {
