@@ -204,11 +204,36 @@ describeEachPack('calm and variable wind', (pack) => {
     expect(new Set(failing.map((r) => r.runway))).toEqual(new Set(first.used.map((u) => u.name)));
   });
 
-  it('variable wind on a wet runway uses the wet tailwind limit for that decision', () => {
-    const speed = s.tailwindWetKt + s.limitToleranceKt + 0.05;
-    if (speed <= s.calmWindKt) return; // calm wins; the wet-limit break cannot be reached
+  it('variable wind on a wet runway is not judged against the wet tailwind limit: MARGINAL, cause VRB', () => {
+    const speed = s.calmWindKt + 0.5; // above calm, below the dry tailwind and crosswind limits
+    expect(speed).toBeLessThanOrEqual(Math.min(s.tailwindDryKt, first.mode.maxCrosswindKt));
     const c = runMode(pack, id, [{ ...WET, wind: vrb(speed) }]).cell(0);
-    expect(c.status).toBe('UNSUITABLE');
+    expect(c.runwayState).toBe('WET');
+    expect(c.status).toBe('MARGINAL');
+    expect(c.cause).toBe('VRB');
+    const gust = runMode(pack, id, [{ ...WET, wind: vrb(1, speed) }]).cell(0);
+    expect(gust.status).toBe('MARGINAL');
+  });
+
+  it('variable wind on a wet runway is UNSUITABLE only when the full speed breaks the DRY tailwind or the crosswind limit', () => {
+    const limit = Math.max(s.tailwindDryKt, first.mode.maxCrosswindKt);
+    const over = runMode(pack, id, [{ ...WET, wind: vrb(limit + s.limitToleranceKt + 0.05) }]).cell(0);
+    expect(over.status).toBe('UNSUITABLE');
+    expect(over.reasons.find((r) => r.severity === 'FAIL')?.limit).toBe(s.tailwindDryKt);
+    const justUnder = runMode(pack, id, [{ ...WET, wind: vrb(Math.min(s.tailwindDryKt, first.mode.maxCrosswindKt)) }]).cell(0);
+    expect(justUnder.status).not.toBe('UNSUITABLE');
+  });
+
+  it('a full-circle range is treated like variable wind on a wet runway; a steady tailwind of 0.1 kt over the wet limit is still UNSUITABLE', () => {
+    const speed = s.calmWindKt + 0.5;
+    const circle = runMode(pack, id, [{ ...WET, wind: steady(h, speed, null, [0, 360]) }]).cell(0);
+    expect(circle.status).toBe('MARGINAL');
+    expect(circle.cause).toBe('VRB');
+    const steadyTail = runMode(pack, id, [{ ...WET, wind: tailwindOn(h, s.tailwindWetKt + s.limitToleranceKt + 0.05, s.calmWindKt) }]).cell(0);
+    expect(steadyTail.status).toBe('UNSUITABLE');
+    expect(steadyTail.cause).toBe('TW');
+    const ranged = runMode(pack, id, [{ ...WET, wind: steady(h + 180, s.calmWindKt + 1, null, [h + 170, h + 190]) }]).cell(0);
+    expect(ranged.status).toBe(s.tailwindWetKt < s.calmWindKt + 1 ? 'UNSUITABLE' : ranged.status);
   });
 });
 
