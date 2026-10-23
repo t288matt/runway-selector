@@ -38,6 +38,16 @@ export function recordCurrentMode(store: Store, pack: AirportPack, nowMs: number
   return { changed: true, record, entry, message: before.message ?? log.message };
 }
 
+/** The operator confirms the stored mode is still current: the time is renewed, the mode is not changed, and no audit entry is made. */
+export function confirmCurrentMode(store: Store, pack: AirportPack, nowMs: number): CurrentModeChange {
+  const before = loadCurrentMode(store, pack);
+  if (before.record === null || before.record.modeId === null) {
+    return { changed: false, record: before.record, entry: null, message: before.message };
+  }
+  const record = saveCurrentMode(store, pack.airport.icao, before.record.modeId, nowMs);
+  return { changed: false, record, entry: null, message: before.message };
+}
+
 export interface WindowChange {
   readonly changed: boolean;
   /** The choice now in force. */
