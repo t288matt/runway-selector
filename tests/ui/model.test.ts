@@ -19,7 +19,7 @@ import {
   type FeedState,
 } from '../../src/ui/model/dashboard';
 import { moveFocus, modeRows, summaryTiles, timelineModel } from '../../src/ui/model/timeline';
-import { hhmmZ, hhmmZRel, utcAndLocal, ageText, durationText, safeHttpsLink, dir3 } from '../../src/ui/format';
+import { hhmmZ, hhmmZRel, localStamp, utcAndLocal, zoneOffsetLabel, ageText, durationText, safeHttpsLink, dir3 } from '../../src/ui/format';
 import { packOf, rigFor } from '../engine/planHelpers';
 import { viewOf } from './helpers';
 
@@ -185,7 +185,25 @@ describe('traffic words (display mapping only)', () => {
 describe('formatting', () => {
   it('shows UTC with the airport local time beside it', () => {
     const ms = Date.UTC(2026, 9, 23, 14, 0);
-    expect(utcAndLocal(ms, 'Australia/Sydney')).toBe('14:00Z (01:00 local)');
+    expect(utcAndLocal(ms, 'Australia/Sydney')).toBe('14:00Z (24-10 01:00 local)');
+    expect(utcAndLocal(Date.UTC(2026, 9, 23, 2, 0), 'Australia/Sydney')).toBe('02:00Z (13:00 local)');
+  });
+  it('shows the local date only when it differs from the UTC date, in whole, half and 45-minute zones', () => {
+    const late = Date.UTC(2026, 9, 23, 22, 0);
+    expect(localStamp(late, 'Australia/Sydney')).toBe('24-10 09:00');
+    expect(localStamp(late, 'Asia/Kathmandu')).toBe('24-10 03:45');
+    expect(localStamp(Date.UTC(2026, 9, 23, 10, 0), 'Asia/Kathmandu')).toBe('15:45');
+    expect(localStamp(Date.UTC(2026, 9, 23, 2, 0), 'America/St_Johns')).toBe('22-10 23:30');
+    expect(localStamp(Date.UTC(2026, 9, 23, 12, 0), 'America/St_Johns')).toBe('09:30');
+    expect(localStamp(late, 'Not/AZone')).toBe('22:00 UTC');
+  });
+  it('words the zone offset once, including part-hour zones', () => {
+    const ms = Date.UTC(2026, 9, 23, 12, 0);
+    expect(zoneOffsetLabel(ms, 'Australia/Sydney')).toBe('UTC+11');
+    expect(zoneOffsetLabel(ms, 'Asia/Kathmandu')).toBe('UTC+5:45');
+    expect(zoneOffsetLabel(ms, 'America/St_Johns')).toBe('UTC-2:30');
+    expect(zoneOffsetLabel(Date.UTC(2026, 0, 15, 12, 0), 'America/St_Johns')).toBe('UTC-3:30');
+    expect(zoneOffsetLabel(ms, 'UTC')).toBe('UTC');
   });
   it('marks a later UTC day', () => {
     const ms = Date.UTC(2026, 9, 24, 0, 30);

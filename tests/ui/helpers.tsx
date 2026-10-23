@@ -40,6 +40,7 @@ export function viewFromInput(pack: AirportPack, input: EngineInput): ViewData {
     taf: null,
     weather: { slots: input.weather, banners: [], metarAgeMinutes: null, tafAgeMinutes: null },
     demand,
+    liveDemand: demand,
     result,
     currentMode: result.plan.startModeId,
     windowChoice: 'full',

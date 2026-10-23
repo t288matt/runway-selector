@@ -79,7 +79,10 @@ export interface ViewData {
   readonly metar: DecodedMetar | null;
   readonly taf: DecodedTaf | null;
   readonly weather: BuildWeatherSlotsResult;
+  /** The traffic the plan was calculated with. */
   readonly demand: ReturnType<typeof buildTrafficSlots> | null;
+  /** The latest traffic, for Panel D. Moves with every poll; the plan does not (UP-1). */
+  readonly liveDemand: ReturnType<typeof buildTrafficSlots> | null;
   readonly result: PlanResult;
   /** The operator's current mode if it is an enabled mode of the pack, else null. */
   readonly currentMode: string | null;
@@ -93,7 +96,13 @@ export function calculate(input: CalcInput): ViewData {
   const demand = input.feed.aircraft === null ? null : buildTrafficSlots({ pack, nowMs, aircraft: input.feed.aircraft, slotStartsMs: starts });
   const currentMode = pack.modes.some((m) => m.enabled && m.id === input.currentMode) ? input.currentMode : null;
   const result = plan(pack, { nowMs, weather: weather.slots, traffic: demand?.slots ?? [], currentMode });
-  return { pack, calcNowMs: nowMs, metar: input.metar, taf: input.taf, weather, demand, result, currentMode, windowChoice: input.windowChoice };
+  return { pack, calcNowMs: nowMs, metar: input.metar, taf: input.taf, weather, demand, liveDemand: demand, result, currentMode, windowChoice: input.windowChoice };
+}
+
+/** The latest traffic on the slots the plan was calculated over (Panel D). Does not touch the plan. */
+export function liveDemandFor(view: ViewData, feed: FeedState, nowMs: number): ViewData['liveDemand'] {
+  if (feed.aircraft === null) return null;
+  return buildTrafficSlots({ pack: view.pack, nowMs, aircraft: feed.aircraft, slotStartsMs: view.weather.slots.map((s) => s.startMs) });
 }
 
 /** Full recalculation every 30 minutes, aligned to the clock half-hour (UP-1, OP-9). */
@@ -113,7 +122,7 @@ export interface Freshness {
 
 /** Age from the source's own time. Exactly at the limit is not stale (matches the traffic module). */
 export function freshness(nowMs: number, atMs: number, staleMinutes: number): Freshness {
-  return { ageMinutes: Math.floor((nowMs - atMs) / MS_MINUTE), stale: nowMs - atMs > staleMinutes * MS_MINUTE };
+  return { ageMinutes: Math.max(0, Math.floor((nowMs - atMs) / MS_MINUTE)), stale: nowMs - atMs > staleMinutes * MS_MINUTE };
 }
 
 export type Tone = 'ok' | 'warn' | 'bad' | 'unk';
