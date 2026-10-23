@@ -12,6 +12,13 @@ const MINUTE_MS = 60_000;
 const SLOT_MS = SLOT_MINUTES * MINUTE_MS;
 /** Most slots ever built (48 hours), so a wrong window cannot allocate without bound. */
 export const MAX_SLOTS = 96;
+/**
+ * Hours shown when there is no usable TAF and the window is the full TAF window
+ * (owner decision, 23-10-2026). It equals the longest window option; it is not
+ * an airport fact. Slots after the METAR window are NONE (shown UNKNOWN).
+ */
+export const NO_TAF_HOURS = 6;
+const NO_TAF_SLOTS = (NO_TAF_HOURS * 60) / SLOT_MINUTES;
 
 export interface WeatherBanner {
   readonly code: 'no-weather' | 'no-metar' | 'no-taf' | 'metar-stale' | 'taf-stale' | 'metar-outside-window' | 'taf-ended';
@@ -24,7 +31,7 @@ export interface BuildWeatherSlotsInput {
   readonly nowMs: number;
   readonly metar: DecodedMetar | null;
   readonly taf: DecodedTaf | null;
-  /** Minutes from the start of slot 0, or null for the full TAF validity (METAR window only when there is no TAF). */
+  /** Minutes from the start of slot 0, or null for the full TAF validity (NO_TAF_HOURS when there is no usable TAF). */
   readonly windowMinutes: number | null;
 }
 
@@ -88,16 +95,14 @@ function tafWeather(taf: DecodedTaf, startMs: number, endMs: number, codes: Read
   };
 }
 
-function slotCount(input: BuildWeatherSlotsInput, slot0Start: number, taf: DecodedTaf | null, metarWindowEndMs: number | null): number {
+function slotCount(input: BuildWeatherSlotsInput, slot0Start: number, taf: DecodedTaf | null): number {
   let n: number;
   if (input.windowMinutes !== null) {
     n = Number.isFinite(input.windowMinutes) ? Math.ceil(input.windowMinutes / SLOT_MINUTES) : 1;
   } else if (taf !== null) {
     n = Math.ceil((taf.validToMs - slot0Start) / SLOT_MS);
-  } else if (metarWindowEndMs !== null) {
-    n = Math.ceil((metarWindowEndMs - slot0Start) / SLOT_MS);
   } else {
-    n = 1;
+    n = NO_TAF_SLOTS;
   }
   return Math.min(MAX_SLOTS, Math.max(1, n));
 }
@@ -138,8 +143,7 @@ export function buildWeatherSlots(input: BuildWeatherSlotsInput): BuildWeatherSl
     banners.push({ code: 'metar-outside-window', message: `The METAR is older than its ${settings.metarValidityMinutes} minute window, so it decides no slot.` });
   }
 
-  const metarWindowEndMs = metar === null ? null : metar.observedAtMs + metarWindowMs;
-  const n = slotCount(input, slot0Start, taf, metarWindowEndMs);
+  const n = slotCount(input, slot0Start, taf);
 
   const slots: WeatherSlot[] = [];
   for (let i = 0; i < n; i++) {
