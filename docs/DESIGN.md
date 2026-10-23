@@ -36,7 +36,7 @@ Everything in this section is specific to Sydney and lives in the YSSY pack as d
 
 **Sydney pack design choices**
 - **Reference rules start from the 2015 Airservices table.** All of them are provisional until the owner supplies the current LTOP. If the 2015 table and the current LTOP differ, the owner decides.
-- **Mode 4 ships disabled and provisional.** No arrival or departure runways were found for it.
+- **Mode names follow runway use (24-10-2026, owner edit).** The pack ids are Curfew, SODPROPS, 25A16D, 34A25D, 34AD25, 34AD, 16AD, 07AD, 25AD and 07A16D (A = arrivals, D = departures). Mode 4 is removed. The table below is the 2015 source research and uses the old numbers; the pack's runway sets for 25A16D (old 5), 34A25D (old 7) and 07A16D (old 14A) were changed by the owner and are authoritative (see modes.json).
 - **Simulation limits.** Tailwind is 5 kt on a dry runway and 0 kt on a wet one. Crosswind is 20 kt for every mode. These are labelled simulation settings, not official limits.
 
 **Phase 1 reference research**
@@ -58,7 +58,7 @@ Best readable source: Airservices "Sydney Airport Operational Statistics", Septe
 
 (h) = long-haul jets only. Wind criteria in the 2015 report: 20 kt crosswind and 5 kt downwind, dry runways only.
 
-**Known gaps:** current LTOP text; Mode 4; official capacities (none found); an official wet-runway limit (0 kt is the owner's simulation rule); VATSIM rate limits (feed regenerates every 15 seconds, no limit published); exact runway headings.
+**Known gaps:** current LTOP text; official capacities (none found); an official wet-runway limit (0 kt is the owner's simulation rule); VATSIM rate limits (feed regenerates every 15 seconds, no limit published); exact runway headings.
 
 ## 4. Architecture
 ```
