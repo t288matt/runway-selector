@@ -1,0 +1,50 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "import"],
+  "categories": { "correctness": "error" },
+  "ignorePatterns": ["dist", "node_modules", "tests/lint-fixtures/**"],
+  "rules": {
+    "no-eval": "error",
+    "no-new-func": "error",
+    "no-implied-eval": "error",
+    "react/no-danger": "error",
+    "no-restricted-properties": [
+      "error",
+      { "property": "innerHTML", "message": "SEC-2: render text nodes only." },
+      { "property": "outerHTML", "message": "SEC-2: render text nodes only." },
+      { "property": "insertAdjacentHTML", "message": "SEC-2: render text nodes only." }
+    ],
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [{ "name": "metar-taf-parser", "message": "Import only inside src/weather/decode (DESIGN section 4)." }],
+        "patterns": [{ "group": ["metar-taf-parser/*"], "message": "Import only inside src/weather/decode (DESIGN section 4)." }]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["src/weather/decode/**"],
+      "rules": { "no-restricted-imports": "off" }
+    },
+    {
+      "files": ["src/engine/**"],
+      "rules": {
+        "no-restricted-globals": [
+          "error",
+          "window", "document", "localStorage", "sessionStorage", "fetch",
+          "Date", "navigator", "indexedDB", "setTimeout", "setInterval"
+        ],
+        "no-restricted-properties": [
+          "error",
+          { "property": "innerHTML", "message": "SEC-2: render text nodes only." },
+          { "property": "outerHTML", "message": "SEC-2: render text nodes only." },
+          { "property": "insertAdjacentHTML", "message": "SEC-2: render text nodes only." },
+          { "object": "Math", "property": "random", "message": "Engine purity: no randomness." },
+          { "object": "globalThis", "property": "Date", "message": "Engine purity: no clock." },
+          { "object": "globalThis", "property": "fetch", "message": "Engine purity: no network." }
+        ]
+      }
+    }
+  ]
+}
