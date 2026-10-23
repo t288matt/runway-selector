@@ -109,6 +109,7 @@ describe('limit comparison', () => {
 
   it('the near-limit margin never applies to a zero limit and ignores noise', () => {
     expect(nearLimit(0.04, 0, 3, 0.05)).toBe(false);
+    expect(nearLimit(0.1, 0, 3, 0.05)).toBe(false);
     expect(nearLimit(1e-15, 2, 3, 0.05)).toBe(false);
     expect(nearLimit(0.06, 2, 3, 0.05)).toBe(true);
     expect(nearLimit(2, 5, 3, 0.05)).toBe(true);
