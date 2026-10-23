@@ -11,10 +11,11 @@ import { calculate, defaultWindowFor, EMPTY_FEED, type ViewData } from '../../sr
 import { cellDetailModel, currentWind, panelDModel, runwayComponentRows } from '../../src/ui/model/panels';
 import { modeRows } from '../../src/ui/model/timeline';
 import { applyMetarText } from '../../src/ui/model/apply';
-import { PACKS, readJson, toRaw, TEST1_PACK } from '../helpers/packs';
+import { PACKS, readJson, toRaw, TEST_PACK, TEST1_PACK } from '../helpers/packs';
 import { baseFor, inputFor, quietTraffic, steady, tailwindOn } from '../engine/helpers';
 import { BASE, packOf, rigFor, same, type Wx } from '../engine/planHelpers';
 import { decodeMetarFixture, decodeTafFixture, fixture, nowOf, packWith } from '../weather/helpers';
+import { zoneOffsetLabel } from '../../src/ui/format';
 import { gridCellClasses, renderDashboard, textOf, viewFromInput, viewOf } from './helpers';
 
 const METAR_ID = 'metar-yssy-auto-nodata';
@@ -407,5 +408,35 @@ describe('the application states', () => {
       expect(text).toContain('No data. Cannot recommend a mode.');
       expect(html).toContain('Panel A');
     }
+  });
+});
+
+describe.each(PACKS.map((p) => [p.name, p] as const))('local times and the window note [%s]', (_n, ref) => {
+  const pack = packWith(ref, { weatherStation: fixture(METAR_ID).station });
+  const view = realView(pack, ref);
+  const text = textOf(renderDashboard(view));
+  const tz = pack.airport.timeZone;
+
+  it('states the zone offset once in the timeline header, from the pack time zone', () => {
+    const offset = zoneOffsetLabel(view.weather.slots[0]?.startMs ?? 0, tz);
+    expect(text).toContain(`local (${offset})`);
+    expect(text.match(/local \(UTC[^)]*\)/g)).toHaveLength(1);
+  });
+
+  it('says the plan looks ahead only as far as the chosen window', () => {
+    expect(text).toContain('The plan looks ahead only as far as the window you choose.');
+  });
+});
+
+describe('local dates and the zone offset in a half-hour and a 45-minute zone', () => {
+  it.each([
+    ['TEST1', TEST1_PACK, Date.UTC(2026, 9, 23, 20, 10), 'UTC+5:45', '24-10 01:45'],
+    ['TEST', TEST_PACK, Date.UTC(2026, 9, 23, 1, 10), 'UTC-2:30', '22-10 22:30'],
+  ] as const)('%s: the header gives the offset once and a dated local start', (_n, ref, nowMs, offset, start) => {
+    const pack = packWith(ref, { weatherStation: fixture(METAR_ID).station });
+    const view = calculate({ pack, nowMs, metar: null, taf: null, windowChoice: 'full', currentMode: null, feed: EMPTY_FEED });
+    const text = textOf(renderDashboard(view));
+    expect(text).toContain(`local (${offset}) ${start}`);
+    expect(text.match(/local \(UTC[^)]*\)/g)).toHaveLength(1);
   });
 });

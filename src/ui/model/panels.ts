@@ -3,7 +3,7 @@
 // the pack; the words penalty, cost, points and score never appear (plain-language
 // rule, UI_DESIGN section 13).
 import { runwayWind, trafficLevelsFor, withinLimit, type Cell, type TrafficLevel, type WindObservation } from '../../engine';
-import { dir3, durationText, hhmmZRel, kt1, localHhmm } from '../format';
+import { dir3, durationText, hhmmZRel, kt1, localStamp } from '../format';
 import { RUNWAY_STATE_WORDS, levelWord, type ViewData } from './dashboard';
 import { missingWeather, planRank } from './timeline';
 import { cellView, CAUSE_WORDS, STATUS_STYLE } from './status';
@@ -262,7 +262,7 @@ export interface PanelDModel {
 }
 
 export function panelDModel(view: ViewData): PanelDModel {
-  const slots = view.demand?.slots ?? [];
+  const slots = view.liveDemand?.slots ?? [];
   const weatherSlots = view.weather.slots;
   const count = Math.min(4, weatherSlots.length);
   const levels = trafficLevelsFor(view.pack, weatherSlots.map((s) => s.startMs), slots);
@@ -282,15 +282,15 @@ export function panelDModel(view: ViewData): PanelDModel {
     });
   }
   const unknownIndex = slots.findIndex((t) => t.arrivals === null);
-  const summary = view.demand?.summary ?? null;
+  const summary = view.liveDemand?.summary ?? null;
   return {
-    state: view.demand === null ? 'none' : 'ok',
+    state: view.liveDemand === null ? 'none' : 'ok',
     columns,
     connectedArrivals: summary?.connectedArrivals ?? null,
     connectedDepartures: summary?.connectedDepartures ?? null,
     groundElsewhere: summary?.groundElsewhere ?? null,
     elevationMissing: summary?.elevationMissing ?? false,
-    unknownFrom: view.demand !== null && unknownIndex >= 0 ? hhmmZRel(slots[unknownIndex]?.startMs ?? 0, view.calcNowMs) : null,
+    unknownFrom: view.liveDemand !== null && unknownIndex >= 0 ? hhmmZRel(slots[unknownIndex]?.startMs ?? 0, view.calcNowMs) : null,
     levelNow: levels[0] ?? null,
   };
 }
@@ -390,7 +390,7 @@ export function cellDetailModel(view: ViewData, modeIndex: number, slotIndex: nu
   const others = cell.reasons.map((r) => r.text).filter((t) => t !== primary);
   const code = cv.code;
   return {
-    title: `Mode ${mode.id}, ${hhmmZRel(slot.startMs, view.calcNowMs)} to ${hhmmZRel(slot.endMs, view.calcNowMs)} (${localHhmm(slot.startMs, tz)} to ${localHhmm(slot.endMs, tz)} local)`,
+    title: `Mode ${mode.id}, ${hhmmZRel(slot.startMs, view.calcNowMs)} to ${hhmmZRel(slot.endMs, view.calcNowMs)} (${localStamp(slot.startMs, tz)} to ${localStamp(slot.endMs, tz)} local)`,
     statusWord: cv.word.toUpperCase(),
     icon: cv.icon,
     className: cv.className,

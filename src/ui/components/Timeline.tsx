@@ -170,6 +170,7 @@ export function Timeline({ view, model, displayNowMs, onWindowChange, reason }: 
           ))}
         </select>
       </h2>
+      <p className="small window-note">The plan looks ahead only as far as the window you choose.</p>
 
       <div className="bsum">
         {tiles.map((t) => (
