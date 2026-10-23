@@ -1,0 +1,119 @@
+{
+  "general": {
+    "version": 3,
+    "reload": 1,
+    "update": "20261023100000",
+    "update_timestamp": "2026-10-23T10:00:00.1234567Z",
+    "connected_clients": 6,
+    "unique_users": 6
+  },
+  "pilots": [
+    {
+      "cid": 9990001,
+      "name": "CANARY-NAME-ONE Madeup",
+      "callsign": "CANARYCALL1",
+      "server": "CANARY-SERVER",
+      "pilot_rating": 0,
+      "military_rating": 0,
+      "latitude": -10.5,
+      "longitude": 20.25,
+      "altitude": 35000,
+      "groundspeed": 450,
+      "transponder": "1200",
+      "heading": 90,
+      "qnh_i_hg": 29.92,
+      "qnh_mb": 1013,
+      "flight_plan": {
+        "flight_rules": "I",
+        "aircraft": "ZZ99/L",
+        "aircraft_faa": "ZZ99/L",
+        "aircraft_short": "ZZ99",
+        "departure": "zzza",
+        "arrival": " ZZZB ",
+        "alternate": "",
+        "cruise_tas": "450",
+        "altitude": "35000",
+        "deptime": "0900",
+        "enroute_time": "0300",
+        "fuel_time": "0400",
+        "remarks": "CANARY-REMARKS PBN/A1 OPR/CANARY-OPERATOR",
+        "route": "CANARY-ROUTE DCT",
+        "revision_id": 1,
+        "assigned_transponder": "0000"
+      },
+      "logon_time": "2026-10-23T08:00:00.0000000Z",
+      "last_updated": "2026-10-23T09:59:59.0000000Z"
+    },
+    {
+      "cid": 9990002,
+      "name": "CANARY-NAME-TWO Madeup",
+      "callsign": "CANARYCALL2",
+      "server": "CANARY-SERVER",
+      "pilot_rating": 1,
+      "military_rating": 0,
+      "latitude": 0,
+      "longitude": 0,
+      "altitude": 12,
+      "groundspeed": 0,
+      "transponder": "2000",
+      "heading": 0,
+      "qnh_i_hg": 29.92,
+      "qnh_mb": 1013,
+      "flight_plan": {
+        "flight_rules": "V",
+        "aircraft": "ZZ98/L",
+        "departure": "ZZZB",
+        "arrival": "ZZZA",
+        "remarks": "CANARY-REMARKS-TWO",
+        "route": "DCT"
+      },
+      "logon_time": "2026-10-23T08:00:00.0000000Z",
+      "last_updated": "2026-10-23T09:59:59.0000000Z"
+    },
+    {
+      "cid": 9990003,
+      "name": "CANARY-NAME-THREE Madeup",
+      "callsign": "CANARYCALL3",
+      "server": "CANARY-SERVER",
+      "latitude": 5,
+      "longitude": 5,
+      "altitude": 100,
+      "groundspeed": 0,
+      "flight_plan": null,
+      "logon_time": "2026-10-23T08:00:00.0000000Z",
+      "last_updated": "2026-10-23T09:59:59.0000000Z"
+    },
+    {
+      "cid": 9990004,
+      "name": "CANARY-NAME-FOUR Madeup",
+      "callsign": "CANARYCALL4",
+      "server": "CANARY-SERVER",
+      "latitude": "not a number",
+      "longitude": 5,
+      "altitude": 100,
+      "groundspeed": 0,
+      "flight_plan": { "departure": "ZZZA", "arrival": "ZZZB" }
+    },
+    {
+      "cid": 9990005,
+      "name": "CANARY-NAME-FIVE Madeup",
+      "callsign": "CANARYCALL5",
+      "latitude": 1,
+      "longitude": 1,
+      "altitude": 500,
+      "groundspeed": 100,
+      "flight_plan": { "departure": "", "arrival": "ZZZA", "remarks": "CANARY-REMARKS-FIVE" },
+      "some_future_field": { "name": "CANARY-UNKNOWN-FIELD" }
+    }
+  ],
+  "controllers": [
+    { "cid": 9990006, "name": "CANARY-CONTROLLER Madeup", "callsign": "ZZZA_TWR", "frequency": "118.100" }
+  ],
+  "atis": [],
+  "servers": [],
+  "prefiles": [
+    { "cid": 9990007, "name": "CANARY-PREFILE Madeup", "callsign": "CANARYCALL7", "flight_plan": { "departure": "ZZZA", "arrival": "ZZZB" } }
+  ],
+  "facilities": [],
+  "ratings": []
+}
