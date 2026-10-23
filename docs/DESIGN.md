@@ -2,7 +2,6 @@
 
 Status: DRAFT for the owner's approval, 22-10-2026; amended 23-10-2026 for per-mode crosswind (OD-8) and airport-agnostic, fully refdata-driven code (OD-9). Nothing is built.
 Language: British English. Dates DD-MM-YYYY, times UTC. Plain words; no emoji.
-Process: [WORKING_AGREEMENT.md](WORKING_AGREEMENT.md), [TEAM_ROLES.md](TEAM_ROLES.md) and [TRACKER.md](TRACKER.md).
 
 ## 1. Purpose and intent
 A decision-support tool for VATSIM controllers working an airport, first Sydney (YSSY). It is built to serve other airports later without code changes (section 4c). It recommends a runway mode that is likely to stay suitable through the forecast, not just the best mode for the latest METAR. It also avoids mode changes during busy traffic. It is a simulation aid and has no real-world operational standing.
@@ -37,7 +36,7 @@ Everything in this section is specific to Sydney and lives in the YSSY pack as d
 
 **Sydney pack design choices**
 - **Reference rules start from the 2015 Airservices table.** All of them are provisional until the owner supplies the current LTOP. If the 2015 table and the current LTOP differ, the owner decides.
-- **Mode 4 ships disabled and provisional.** No arrival or departure runways were found for it. The manager proposes this; the owner is to confirm.
+- **Mode 4 ships disabled and provisional.** No arrival or departure runways were found for it.
 - **Simulation limits.** Tailwind is 5 kt on a dry runway and 0 kt on a wet one. Crosswind is 20 kt for every mode. These are labelled simulation settings, not official limits.
 
 **Phase 1 reference research**
@@ -104,8 +103,8 @@ Modules: weather ingestion, METAR parsing, TAF parsing, traffic processing, wind
 **Data sources:** the station and feed identifiers come from the pack. METAR and TAF are pasted by the user in phase 1 (see Weather source below); VATSIM `data.vatsim.net/v3/vatsim-data.json`, polled every 5 minutes by default (refdata value `vatsimPollSeconds`, default 300, editable; no enforced minimum). The feed itself regenerates every 15 seconds, so each snapshot is up to 5 minutes old; the traffic panel shows its age. Every source keeps its entry or fetch time, issue or observation time, and a stale flag.
 
 **Weather source (OD-28).** In phase 1 the user pastes the METAR and the TAF by hand. The weather source is an interface (`WeatherSource`, section 4a) with one implementation today, the paste box, which returns the raw text, the time it was entered and the report's own time group. Automatic fetching is a later phase: it will be another implementation of the same interface, with its provider, address, format and any proxy held in configuration, not in code. No provider is named in the engine, the parser or the screens.
-- **How reports are read (OD-29).** The library is the npm package named exactly `metar-taf-parser` (the TypeScript library by aeharding, repository github.com/aeharding/metar-taf-parser, version 9.1.3 when researched, MIT). It is not any of the similarly named packages (metar-parser, metar-decoder, taf-parser, aewx-metar-parser, metar) and not the sibling libraries by mivek in Python and Java, which are only sources of test fixtures. Before installing, the package name, publisher and repository are checked against these details, because look-alike package names are a supply-chain risk. It decodes the raw ICAO text from the paste box, pinned to an exact version and used only inside one adapter module (`weather/decode`). The adapter is ours: nothing else imports the library, so it can be replaced, or copied into the repository and patched, without touching the engine. The adapter does the things the library does not: it catches a NIL TAF (the library throws); it converts units to knots, metres and hectopascals (the library returns m/s, statute miles and inHg as tagged); it carries visibility and cloud forward through FM groups (the library's FM entries hold only their own fields); it decodes the recent-weather (RE) group; it warns when the library silently drops a group (for example a `///015` cloud group); and it builds the 30-minute slots with TEMPO and PROB handling. A regression set of real METARs and TAFs from many airports is part of the tests, and the tests rely on our own checks, not the library's. Research record: docs/reviews/2026-10-23-metar-taf-library-research.md.
-- **Provider selection is deferred** to the automation phase (tracker YR-17).
+- **How reports are read (OD-29).** The library is the npm package named exactly `metar-taf-parser` (the TypeScript library by aeharding, repository github.com/aeharding/metar-taf-parser, version 9.1.3 when researched, MIT). It is not any of the similarly named packages (metar-parser, metar-decoder, taf-parser, aewx-metar-parser, metar) and not the sibling libraries by mivek in Python and Java, which are only sources of test fixtures. Before installing, the package name, publisher and repository are checked against these details, because look-alike package names are a supply-chain risk. It decodes the raw ICAO text from the paste box, pinned to an exact version and used only inside one adapter module (`weather/decode`). The adapter is ours: nothing else imports the library, so it can be replaced, or copied into the repository and patched, without touching the engine. The adapter does the things the library does not: it catches a NIL TAF (the library throws); it converts units to knots, metres and hectopascals (the library returns m/s, statute miles and inHg as tagged); it carries visibility and cloud forward through FM groups (the library's FM entries hold only their own fields); it decodes the recent-weather (RE) group; it warns when the library silently drops a group (for example a `///015` cloud group); and it builds the 30-minute slots with TEMPO and PROB handling. A regression set of real METARs and TAFs from many airports is part of the tests, and the tests rely on our own checks, not the library's.
+- **Provider selection is deferred** to the automation phase.
 
 **Proxy.** Not needed in phase 1: nothing weather-related is fetched (OD-28). When weather fetching is added, a pass-through proxy is needed only if the chosen provider refuses requests from a browser page; the fetching implementation takes an optional base address so a proxy can be added without changing the engine. A proxy would be stateless, accept only fixed endpoints and station identifiers that match the pack, and hold no secrets in the browser bundle.
 
@@ -123,7 +122,6 @@ This is the governing design rule. Every other section is read through it.
 **How agnosticism is enforced, not just intended (AG-11):**
 1. A fictional `TEST` pack with a different shape: two runways, different names, a different mode set and numbering, a different time zone, different limits (for example tailwind 8 kt dry), and one mode with a different crosswind limit. The full scenario suite runs against both `YSSY` and `TEST`. Any hidden YSSY assumption fails on `TEST`.
 2. A script (`scripts/check-no-airport-literals`) runs in `npm test` and CI. It reads the ICAO codes, runway names and mode ids from every pack and fails if any appears in `src/` outside comments.
-3. A review question in the working agreement: does this change add an airport fact to code?
 
 **Why packs (rationale).**
 - A pack is plain data. It can be diffed, reviewed, validated by a schema and tested on its own, without reading any code.
@@ -143,7 +141,7 @@ This is the governing design rule. Every other section is read through it.
 **Pack delivery (decided 23-10-2026).** Packs are static JSON files served beside the app and fetched at run time. They are not bundled into the build. Replacing a file and pressing Reload data is enough to change a rule; no rebuild is needed, and adding an airport is a new folder plus one line in `app.json`. Three safeguards are part of the design from the start:
 1. **No stale packs.** Each pack is requested with a version or content hash in its address, so a browser cache cannot serve an old copy.
 2. **No app and pack mismatch.** `app.json` and every pack carry a `schemaVersion`. If a pack's version is not one the app supports, the pack is refused with a clear message and the previous valid pack stays in use.
-3. **Pack changes follow the document process (owner decision, 23-10-2026).** A change under `refdata/` is handled like a document change; no extra review tier, field-by-field source check or hash manifest is required. The security review recommended treating pack changes as High-tier (docs/TRACKER.md YR-18). The owner chose not to, and accepts the risk that an unreviewed edit could alter a limit. The strict schema bounds (a number range on every limit, unknown keys refused) remain the control against nonsense values.
+3. **No separate integrity control on packs (owner decision, 23-10-2026).** No hash manifest or field-by-field source check is required for a pack change; the schema's number ranges and unknown-field refusal are the only controls. The risk accepted is that an unreviewed edit could alter a limit. The strict schema bounds (a number range on every limit, unknown keys refused) remain the control against nonsense values.
 Phase 1 runs with a local web server (`vite` or `vite preview`), not by opening files from disk, because browsers block `fetch()` on `file://`. Relative paths keep the app usable at any folder or subdomain.
 
 **First load.** If no valid pack exists yet, the app shows a full-screen error with the validation message and draws nothing else.
@@ -168,7 +166,7 @@ Hosting is specific to the VATSIM division. The VATPAC site serves Australia and
 
 Phasing: first the owner alone, then a few controllers, then the public on the VATPAC site, matching the other tools there.
 
-The build output is a folder of static files (HTML, JavaScript, CSS) with relative paths, so it can sit at any path or subdomain without a server. The VATPAC tools page shows a dark navy theme with a blue accent, a "Flight simulation only" notice that users must accept, and a top menu; the app should match that theme, show the same notice (it must never be used for real-world navigation or flight planning), and link back to the site. **Open:** how tools are submitted or published on vatpac.org (own subdomain, a path under the site, or a link to an external host), who maintains the site, and whether it allows calls to data.vatsim.net from the page (and, once weather is fetched automatically, to the chosen weather provider). Item YR-3 finds this out when the publication phase starts; no deploy step is written until then.
+The build output is a folder of static files (HTML, JavaScript, CSS) with relative paths, so it can sit at any path or subdomain without a server. The VATPAC tools page shows a dark navy theme with a blue accent, a "Flight simulation only" notice that users must accept, and a top menu; the app should match that theme, show the same notice (it must never be used for real-world navigation or flight planning), and link back to the site. **Open:** how tools are submitted or published on vatpac.org (own subdomain, a path under the site, or a link to an external host), who maintains the site, and whether it allows calls to data.vatsim.net from the page (and, once weather is fetched automatically, to the chosen weather provider). These are found out when the publication phase starts; no deploy step is written until then.
 
 ## 5. Reference data (the refdata files)
 One folder per airport, `refdata/airports/<ICAO>/`. The files and their fields are defined once, in section 5a, and the worked example is refdata/airports/YSSY. All files are plain JSON, validated on load against a schema shared by every pack. Where two sources for the same rule differ, the owner decides and the decision is recorded in the pack. Changes made on screen (the current mode) are written to the audit trail (RD-6); changes to pack files are not (OD-23). A new METAR or TAF, or a change of current mode, triggers a fresh recommendation. Code contains **no** limits, thresholds, weights or orders.
@@ -275,28 +273,27 @@ Vitest, run with `npm test`; plus `tsc --noEmit` and ESLint. Every engine scenar
 
 **Success criteria:** all scenarios pass on both packs; the literal check finds no airport fact in `src/`; adding a third pack needs no code change; every number on screen traces to a refdata value or a feed value; changing a refdata value changes the plan with no code change; the timeline and recommendation agree because they share one engine output.
 
-## 10. Plan (tracker rows are in TRACKER.md)
-Branches are batched (working agreement section 3), at most 3 in flight.
-1. **Refdata and engine core** (Medium): pack schema and loader with cross-reference validation, YSSY and TEST packs, wind maths, eligibility with per-mode crosswind, survival, optimiser, the literal-check script, tests.
-2. **Weather and traffic ingestion** (Medium): METAR/TAF parsers with fixtures, VATSIM model, feed test for browser access.
-3. **Dashboard** (Medium): panels and timeline.
-4. **Hardening and docs** (Low): settings UI, audit trail, README, assumptions and limitations.
+## 10. Modules and build order
+The program is built in this order, each layer testable on its own:
+1. **Reference data and engine core:** pack schema and loader with cross-reference validation, the YSSY and TEST packs, wind maths, eligibility with per-mode crosswind, survival, the optimiser, and the literal-check script.
+2. **Weather and traffic:** the METAR and TAF decoding adapter with fixtures, the VATSIM demand model.
+3. **Dashboard:** weather entry, recommendation, the survival timeline and the other panels.
+4. **Settings and audit:** the current-mode and window controls, the settings drawer and the audit trail.
 
 ## 11. Risks
 - Estimating arrival and departure demand from VATSIM is rough; shown as estimates with uncertainty.
-- All agent roles share a model family; the owner's live check is the safeguard.
 - Phase 1 takes the METAR and TAF by hand (OD-28), so no weather provider or proxy is involved. If the traffic feed ever blocks browser requests, a small proxy covers it.
-- Pack files are not reviewed beyond the document process (owner decision, 23-10-2026). A mistaken or malicious edit within the schema's allowed range could change a limit without a second person seeing it. Revisit this if more than one person edits packs or a pack is published.
+- Pack files have no control beyond schema validation (owner decision, 23-10-2026). A mistaken or malicious edit within the schema's allowed range could change a limit without anyone noticing. Revisit this if more than one person edits packs or a pack is published.
 - Over-fitting the schema to YSSY. Mitigated by the TEST pack, shaped differently on purpose, and by AG-12. A real second airport may still expose gaps, so expect a schema revision then.
 - The generic rule vocabulary becoming too abstract to edit by hand. Mitigated by validation messages that name the file and field, and by the YSSY pack as the worked example.
 
 ## 12. Security and audit (adopted 23-10-2026)
-The security requirements are SEC-1 to SEC-7 in REQUIREMENTS.md section 18; the reasoning is in docs/reviews/2026-10-23-security-review.md. How they are met:
+The security requirements are SEC-1 to SEC-7 in REQUIREMENTS.md section 18; How they are met:
 - **Notice (SEC-1).** The notice text is a constant in the application. `airport.json` may carry one extra line, shown beneath it.
 - **Plain text only (SEC-2).** Every screen component receives data as strings and renders them as text nodes. A lint rule bans the HTML-insertion APIs and runs in CI.
 - **Input checks (SEC-3).** All external input passes the schema validator (section 4c) before the engine sees it. The validator rejects unknown fields, enforces file and response size caps, depth limits and number ranges, and refuses the keys `__proto__`, `constructor` and `prototype`. Parsed data is copied into plain objects. A failed check refuses the input and keeps the previous valid data.
-- **Hosting (SEC-4).** The build must run with no inline script, so the content-security policy can forbid it. The header values and the CI test belong to the publication phase (tracker YR-13).
-- **Dependencies (SEC-5).** The lockfile, `--ignore-scripts` and the audit step are set up with the project skeleton (tracker YR-4).
+- **Hosting (SEC-4).** The build must run with no inline script, so the content-security policy can forbid it. The header values and the CI test belong to the publication phase.
+- **Dependencies (SEC-5).** The lockfile, `--ignore-scripts` and the audit step are set up with the project skeleton.
 - **Personal data (SEC-6).** The VATSIM parser keeps only position, altitude, groundspeed, origin and destination; no name, member number or callsign field exists in its types.
 
 **Audit trail (RD-6).** An entry has: `time` (UTC), `airport`, `path` (which setting or "currentMode"), `old`, `new`. The store keeps up to a set number of entries per airport (a pack value, default 500), dropping the oldest first. It is shown at the foot of the settings drawer, can be exported as a JSON file, and is labelled "local record, not tamper-proof". It is validated on load like all stored data (SEC-3); a corrupt log is discarded with a message. The audit trail is not evidence: it can be cleared or edited by the user. Repository history is the record of pack changes.
