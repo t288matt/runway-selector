@@ -8,6 +8,9 @@ import { runwayConditions } from './runwayCondition';
 import { survivalOf } from './survival';
 import { isUsableWind } from './wind';
 import type { Cell, EngineResult, SlotInfo } from './types';
+import { planChangeovers, type Changeover } from './changeover';
+import { explain, type Explanation } from './explain';
+import { optimise, type Plan } from './optimiser';
 
 export function evaluate(pack: AirportPack, input: EngineInput): EngineResult {
   const conditions = runwayConditions(pack, input.weather);
@@ -53,7 +56,30 @@ export function evaluate(pack: AirportPack, input: EngineInput): EngineResult {
   return { slots, cells, survival };
 }
 
+/** Everything the UI needs from one calculation (DESIGN section 6). */
+export interface PlanResult {
+  readonly evaluation: EngineResult;
+  readonly plan: Plan;
+  readonly changeovers: readonly Changeover[];
+  readonly explanation: Explanation;
+}
+
+/** evaluate, then optimise, plan the changeovers and explain: one deterministic output. */
+export function plan(pack: AirportPack, input: EngineInput): PlanResult {
+  const evaluation = evaluate(pack, input);
+  const chosen = optimise(pack, input, evaluation);
+  const changeovers = planChangeovers(pack, input, evaluation, chosen);
+  const explanation = explain(pack, input, evaluation, chosen, changeovers);
+  return { evaluation, plan: chosen, changeovers, explanation };
+}
+
 export type * from './types';
 export type * from './inputs';
 export { runwayConditions } from './runwayCondition';
 export { effectiveSpeedKt, runwayWind, worstInRange, withinLimit, nearLimit } from './wind';
+export type * from './optimiser';
+export type * from './changeover';
+export type * from './explain';
+export { NO_MODE } from './optimiser';
+export { EARLY_CHANGE_TITLE, NO_SUITABLE_TITLE, explanationStrings } from './explain';
+export { classifyTraffic, levelOfCount, trafficLevelsFor } from './trafficLevel';
