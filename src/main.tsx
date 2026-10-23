@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { createBrowserStore } from './store';
 import { App } from './ui/App';
 import { systemClock } from './ui/clock';
 import './index.css';
@@ -9,7 +10,7 @@ if (container === null) {
   throw new Error('Root element not found');
 }
 // The browser's own fetch and clock are handed in here, the only place they are named.
-const deps = { fetch: (input: string, init?: RequestInit) => window.fetch(input, init), now: systemClock };
+const deps = { fetch: (input: string, init?: RequestInit) => window.fetch(input, init), now: systemClock, store: createBrowserStore() };
 createRoot(container).render(
   <StrictMode>
     <App deps={deps} />

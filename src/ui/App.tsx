@@ -8,7 +8,11 @@ import { Dashboard } from './components/Dashboard';
 import { NoticeBar } from './components/Frame';
 import { useDashboard, type AppDeps } from './useDashboard';
 
-export type PackState = { readonly status: 'loading' } | { readonly status: 'error'; readonly message: string } | { readonly status: 'ready'; readonly pack: AirportPack };
+export type PackState =
+  | { readonly status: 'loading' }
+  | { readonly status: 'error'; readonly message: string }
+  /** `airports` is the list in app.json; a refused airport switch leaves the pack in use and sets `airportError`. */
+  | { readonly status: 'ready'; readonly pack: AirportPack; readonly airports: readonly string[]; readonly airportError: string | null };
 
 export function PackError({ message }: { message: string }) {
   return (
@@ -32,7 +36,13 @@ export function Loading() {
   );
 }
 
-function Screen({ pack, deps }: { pack: AirportPack; deps: AppDeps }) {
+interface AirportSwitch {
+  readonly airports: readonly string[];
+  readonly airportError: string | null;
+  readonly onSwitch: (icao: string) => void;
+}
+
+function Screen({ pack, deps, airport }: { pack: AirportPack; deps: AppDeps; airport: AirportSwitch }) {
   const s = useDashboard(pack, deps);
   return (
     <Dashboard
@@ -47,6 +57,20 @@ function Screen({ pack, deps }: { pack: AirportPack; deps: AppDeps }) {
       onCurrentMode={s.setCurrentMode}
       onApplyMetar={s.applyMetar}
       onApplyTaf={s.applyTaf}
+      settings={{
+        currentModeRecord: s.currentModeRecord,
+        audit: s.audit,
+        reload: s.reload,
+        airports: airport.airports,
+        airportError: airport.airportError,
+        notices: s.notices,
+        onConfirmCurrent: s.confirmCurrentMode,
+        onReload: s.reloadPack,
+        onSwitchAirport: airport.onSwitch,
+        onClearAudit: s.clearAudit,
+        onExportAudit: s.exportAudit,
+        onDismissNotice: s.dismissNotice,
+      }}
     />
   );
 }
@@ -64,12 +88,12 @@ class Boundary extends Component<{ children: ReactNode }, { error: string | null
 }
 
 /** What the page shows for each load state. An invalid pack gives the error and nothing else. */
-export function AppBody({ state, deps }: { state: PackState; deps: AppDeps }) {
+export function AppBody({ state, deps, onSwitchAirport = () => undefined }: { state: PackState; deps: AppDeps; onSwitchAirport?: (icao: string) => void }) {
   if (state.status === 'loading') return <Loading />;
   if (state.status === 'error') return <PackError message={state.message} />;
   return (
-    <Boundary>
-      <Screen pack={state.pack} deps={deps} />
+    <Boundary key={state.pack.airport.icao}>
+      <Screen pack={state.pack} deps={deps} airport={{ airports: state.airports, airportError: state.airportError, onSwitch: onSwitchAirport }} />
     </Boundary>
   );
 }
@@ -79,11 +103,22 @@ export function App({ deps }: { deps: AppDeps }) {
   useEffect(() => {
     let live = true;
     void loadPack(deps.fetch, { baseUrl: deps.baseUrl ?? './refdata', cacheBust: cacheBustToken(deps.now()) }).then((r) => {
-      if (live) setState(r.ok ? { status: 'ready', pack: r.pack } : { status: 'error', message: r.message });
+      if (live) setState(r.ok ? { status: 'ready', pack: r.pack, airports: r.app.airports, airportError: null } : { status: 'error', message: r.message });
     });
     return () => {
       live = false;
     };
   }, [deps]);
-  return <AppBody state={state} deps={deps} />;
+  // Switching airport builds a new screen with its own controller: nothing of the old airport (weather, traffic,
+  // current mode) is carried over, and its stored state stays under its own code (AG-8). A refused switch keeps the current airport.
+  const switchAirport = (icao: string): void => {
+    if (state.status !== 'ready' || icao === state.pack.airport.icao) return;
+    void loadPack(deps.fetch, { baseUrl: deps.baseUrl ?? './refdata', cacheBust: cacheBustToken(deps.now()), airportId: icao }).then((r) => {
+      setState((prev) => {
+        if (prev.status !== 'ready') return prev;
+        return r.ok ? { status: 'ready', pack: r.pack, airports: r.app.airports, airportError: null } : { ...prev, airportError: r.message };
+      });
+    });
+  };
+  return <AppBody state={state} deps={deps} onSwitchAirport={switchAirport} />;
 }

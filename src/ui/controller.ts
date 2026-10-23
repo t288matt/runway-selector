@@ -6,13 +6,14 @@
 // METAR or TAF, on a current-mode change, on a window change and on Refresh.
 // A VATSIM poll updates the traffic shown (Panel D) and the freshness chip but
 // never the plan: the plan keeps the traffic it was calculated with.
-import type { AirportPack, FetchLike } from '../refdata';
+import { reloadPack, type AirportPack, type FetchLike } from '../refdata';
+import { clearAudit, confirmCurrentMode, exportAudit, loadAudit, loadCurrentMode, loadWindowChoice, recordCurrentMode, recordForecastWindow, type AuditEntry, type AuditExport, type CurrentModeRecord, type Store } from '../store';
 import { fetchFeed } from '../traffic/fetchFeed';
 import type { DecodedMetar, DecodedTaf } from '../weather';
-import type { Clock } from './clock';
+import { cacheBustToken, type Clock } from './clock';
 import type { ApplyOutcome } from './components/WeatherEntry';
 import { applyMetarText, applyTafText } from './model/apply';
-import { applyFeedResult, calculate, defaultWindowFor, EMPTY_FEED, liveDemandFor, needsRecalculation, type FeedState, type ViewData, type WindowChoice } from './model/dashboard';
+import { applyFeedResult, calculate, defaultWindowFor, EMPTY_FEED, liveDemandFor, needsRecalculation, WINDOW_OPTIONS, type FeedState, type ViewData, type WindowChoice } from './model/dashboard';
 
 /** The timer functions, injected. The handle is opaque. */
 export interface Timers {
@@ -25,6 +26,17 @@ export interface ControllerDeps {
   readonly fetch: FetchLike;
   readonly now: Clock;
   readonly timers: Timers;
+  /** Where the current mode, the window and the audit trail are kept (per airport, AG-8). */
+  readonly store: Store;
+  /** Where the pack is served from, for Reload data; defaults to ./refdata. */
+  readonly baseUrl?: string;
+}
+
+/** What Reload data last did (DESIGN section 4c, "Editing a pack while the app is open"). */
+export interface ReloadState {
+  readonly status: 'idle' | 'busy' | 'changed' | 'unchanged' | 'refused';
+  /** The precise message when refused, else a short result line; plain text. */
+  readonly message: string | null;
 }
 
 /** Tick for ages and the now marker, and the check for the 30-minute boundary. */
@@ -34,6 +46,13 @@ export interface ControllerState {
   readonly view: ViewData;
   readonly feed: FeedState;
   readonly displayNowMs: number;
+  /** The stored current mode (with its set time), or null. */
+  readonly currentModeRecord: CurrentModeRecord | null;
+  /** The audit trail, oldest first, as stored. */
+  readonly audit: readonly AuditEntry[];
+  /** Messages about stored values that were cleared or discarded; each is shown until dismissed. */
+  readonly notices: readonly string[];
+  readonly reload: ReloadState;
 }
 
 export interface Controller {
@@ -48,34 +67,72 @@ export interface Controller {
   readonly refresh: () => void;
   readonly setWindowChoice: (choice: WindowChoice) => void;
   readonly setCurrentMode: (id: string | null) => void;
+  /** The mode is still current: renew its set time. No audit entry, no recalculation. */
+  readonly confirmCurrentMode: () => void;
+  /** Re-read and re-validate the pack. A refused pack leaves the previous one in use. */
+  readonly reloadPack: () => Promise<void>;
+  readonly clearAudit: () => void;
+  /** The audit file text and name; the screen turns it into a download after a click. */
+  readonly exportAudit: () => AuditExport;
+  readonly dismissNotice: (index: number) => void;
   readonly applyMetar: (text: string) => ApplyOutcome;
   readonly applyTaf: (text: string) => ApplyOutcome;
 }
 
 export function createController(deps: ControllerDeps): Controller {
-  const { pack } = deps;
+  let pack = deps.pack;
+  const { store } = deps;
+  const windowIds = WINDOW_OPTIONS.map((o) => o.id);
   let metar: DecodedMetar | null = null;
   let taf: DecodedTaf | null = null;
-  let windowChoice: WindowChoice = defaultWindowFor(pack);
-  let currentMode: string | null = null;
   let feed: FeedState = EMPTY_FEED;
   let running = false;
+  let generation = 0;
   let pollInFlight: Promise<void> | null = null;
   let pollTimer: unknown = null;
   let tickTimer: unknown = null;
+  let notices: string[] = [];
+  let reload: ReloadState = { status: 'idle', message: null };
   const listeners = new Set<() => void>();
 
+  const notify = (message: string | null): void => {
+    if (message !== null && !notices.includes(message)) notices = [...notices, message];
+  };
+
+  // Stored state is read once, here (OD-30). A value that was cleared or discarded is reported once (SEC-3).
+  const storedMode = loadCurrentMode(store, pack);
+  notify(storedMode.message);
+  let record: CurrentModeRecord | null = storedMode.record;
+  const storedWindow = loadWindowChoice(store, pack.airport.icao, windowIds);
+  notify(storedWindow.message);
+  let windowChoice: WindowChoice = (storedWindow.choice as WindowChoice | null) ?? defaultWindowFor(pack);
+  const storedAudit = loadAudit(store, pack.airport.icao, pack.settings.auditMaxEntries);
+  notify(storedAudit.message);
+  let audit: readonly AuditEntry[] = storedAudit.entries;
+
+  const currentModeId = (): string | null => record?.modeId ?? null;
+
   const first = deps.now();
-  let state: ControllerState = { view: calculate({ pack, nowMs: first, metar, taf, windowChoice, currentMode, feed }), feed, displayNowMs: first };
+  const build = (view: ViewData, displayNowMs: number): ControllerState => ({ view, feed, displayNowMs, currentModeRecord: record, audit, notices, reload });
+  let state: ControllerState = build(calculate({ pack, nowMs: first, metar, taf, windowChoice, currentMode: currentModeId(), feed }), first);
 
   const publish = (next: ControllerState): void => {
     state = next;
     for (const l of [...listeners]) l();
   };
 
+  /** Publish the held view again with the current stored state (no recalculation). */
+  const republish = (): void => publish(build(state.view, state.displayNowMs));
+
   /** A full recalculation with everything held now, including the latest traffic. */
   const recalculate = (nowMs: number): void => {
-    publish({ view: calculate({ pack, nowMs, metar, taf, windowChoice, currentMode, feed }), feed, displayNowMs: nowMs });
+    publish(build(calculate({ pack, nowMs, metar, taf, windowChoice, currentMode: currentModeId(), feed }), nowMs));
+  };
+
+  const refreshAudit = (): void => {
+    const loaded = loadAudit(store, pack.airport.icao, pack.settings.auditMaxEntries);
+    audit = loaded.entries;
+    notify(loaded.message);
   };
 
   const runPoll = async (): Promise<void> => {
@@ -92,7 +149,7 @@ export function createController(deps: ControllerDeps): Controller {
         return;
       }
       // The traffic shown moves on; the plan inside the view is left exactly as calculated.
-      publish({ view: { ...state.view, liveDemand: liveDemandFor(state.view, feed, now) }, feed, displayNowMs: now });
+      publish(build({ ...state.view, liveDemand: liveDemandFor(state.view, feed, now) }, now));
     } finally {
       pollInFlight = null;
     }
@@ -106,7 +163,53 @@ export function createController(deps: ControllerDeps): Controller {
   const tick = (): void => {
     const now = deps.now();
     if (needsRecalculation(state.view.calcNowMs, now)) recalculate(now);
-    else publish({ ...state, displayNowMs: now });
+    else publish(build(state.view, now));
+  };
+
+  const startTimers = (): void => {
+    pollTimer = deps.timers.setInterval(poll, pack.settings.vatsimPollSeconds * 1000);
+    tickTimer = deps.timers.setInterval(tick, TICK_MS);
+  };
+  const stopTimers = (): void => {
+    if (pollTimer !== null) deps.timers.clearInterval(pollTimer);
+    if (tickTimer !== null) deps.timers.clearInterval(tickTimer);
+    pollTimer = null;
+    tickTimer = null;
+  };
+
+  const setReload = (next: ReloadState): void => {
+    reload = next;
+    republish();
+  };
+
+  const doReload = async (): Promise<void> => {
+    if (reload.status === 'busy') return;
+    const started = generation;
+    setReload({ status: 'busy', message: null });
+    const result = await reloadPack(deps.fetch, { baseUrl: deps.baseUrl ?? './refdata', cacheBust: cacheBustToken(deps.now()) }, pack);
+    if (started !== generation) return;
+    if (!result.ok) {
+      // The previous valid pack stays in use, with the precise message on screen.
+      setReload({ status: 'refused', message: result.message });
+      return;
+    }
+    if (JSON.stringify(result.pack) === JSON.stringify(pack)) {
+      setReload({ status: 'unchanged', message: 'The airport data was re-read and has not changed.' });
+      return;
+    }
+    const pollChanged = result.pack.settings.vatsimPollSeconds !== pack.settings.vatsimPollSeconds;
+    pack = result.pack;
+    // A stored current mode that the new pack no longer enables is cleared, with a message (DESIGN section 4c).
+    const reread = loadCurrentMode(store, pack);
+    record = reread.record;
+    notify(reread.message);
+    refreshAudit();
+    if (running && pollChanged) {
+      stopTimers();
+      startTimers();
+    }
+    reload = { status: 'changed', message: 'The airport data was re-read and has changed. The plan was recalculated.' };
+    recalculate(deps.now());
   };
 
   return {
@@ -121,15 +224,12 @@ export function createController(deps: ControllerDeps): Controller {
       if (running) return;
       running = true;
       poll();
-      pollTimer = deps.timers.setInterval(poll, pack.settings.vatsimPollSeconds * 1000);
-      tickTimer = deps.timers.setInterval(tick, TICK_MS);
+      startTimers();
     },
     stop: () => {
       running = false;
-      if (pollTimer !== null) deps.timers.clearInterval(pollTimer);
-      if (tickTimer !== null) deps.timers.clearInterval(tickTimer);
-      pollTimer = null;
-      tickTimer = null;
+      generation += 1;
+      stopTimers();
     },
     settled: async () => {
       await pollInFlight;
@@ -139,12 +239,38 @@ export function createController(deps: ControllerDeps): Controller {
       poll();
     },
     setWindowChoice: (choice) => {
-      windowChoice = choice;
-      recalculate(deps.now());
+      const now = deps.now();
+      const change = recordForecastWindow(store, pack, now, choice, windowIds, defaultWindowFor(pack));
+      notify(change.message);
+      windowChoice = change.choice as WindowChoice;
+      refreshAudit();
+      recalculate(now);
     },
     setCurrentMode: (id) => {
-      currentMode = id;
-      recalculate(deps.now());
+      const now = deps.now();
+      const change = recordCurrentMode(store, pack, now, id);
+      notify(change.message);
+      record = change.record;
+      refreshAudit();
+      if (change.changed) recalculate(now);
+      else republish();
+    },
+    confirmCurrentMode: () => {
+      const change = confirmCurrentMode(store, pack, deps.now());
+      notify(change.message);
+      record = change.record;
+      republish();
+    },
+    reloadPack: doReload,
+    clearAudit: () => {
+      clearAudit(store, pack.airport.icao);
+      audit = [];
+      republish();
+    },
+    exportAudit: () => exportAudit(audit, pack.airport.icao, deps.now()),
+    dismissNotice: (index) => {
+      notices = notices.filter((_n, i) => i !== index);
+      republish();
     },
     applyMetar: (text) => {
       const now = deps.now();
