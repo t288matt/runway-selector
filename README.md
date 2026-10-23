@@ -86,13 +86,15 @@ The values in a pack, including every limit and threshold, are edited in its fil
 
 - Your pasted METAR and TAF stay in the page. They are not stored or sent anywhere.
 - The only things stored in your browser are your current mode, the audit trail of changes you have made, and the settings you have chosen, all kept per airport.
-- The audit trail is a local record. You can export it, clear it or edit it, so it is not evidence of anything.
+- The audit trail is a local record, not tamper-proof. You can export it.
 - The page reads the VATSIM feed directly from your browser. It sends nothing of yours to any other service.
 
 ## Running it
 
+You need Node.js 24 or later. From the project folder, install the exact dependencies in the lock file and start the app:
+
 ```bash
-npm install
+npm ci --ignore-scripts
 npm run dev
 ```
 
