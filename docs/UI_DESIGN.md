@@ -130,15 +130,14 @@ Common to all panels: a letter badge and title; a small "provisional" mark where
 Section 6 describes it in full.
 
 ### Panel C: weather
-- Raw METAR and TAF in a monospace block, with observation and issue times and the source (pasted by you in phase 1). A toggle shows decoded text (wind, gust, variable range, visibility, weather, cloud, temperature, QNH). Both raw and decoded text are required by DB-8.
+- The raw METAR and TAF are shown at the top of the screen, in the weather entry boxes (OD-32), not in this panel.
 - Component table for every runway end in the airport pack: headwind, tailwind, crosswind, one decimal, using the stronger of mean wind and gust. Ends over a limit carry the cross icon and the cause code (TW or XW).
 - A footer states the limits in use and their label: "Simulation settings".
-- Forecast list: FM, BECMG, TEMPO, INTER and PROB groups as chips with their windows; clicking one highlights its slots in B.
 - States: METAR stale or missing shows "Unknown" in every figure that needs it.
 
 ### Panel D: VATSIM traffic
 - Table: for each of the first four 30-minute slots (now, +30, +60, +90 min), arrivals (airborne to the pack's airport), departures (on the ground) and movements per hour. Departures are estimated for the next slot only; later slots show "not est.". A line states "Connected aircraft are not movements."
-- Traffic class chip (LOW, MEDIUM, HIGH) with trend (rising, steady, falling) and a note that bands are provisional placeholders.
+- Traffic class chip (LOW, MEDIUM, HIGH) and a note that bands are provisional placeholders. No trend is shown (OD-32).
 - Beyond the demand horizon (default: the forecast window, REQUIREMENTS.md TR-7): "Demand unknown" is shown, never an invented figure.
 - States: feed stale shows the last values with the age in amber; feed failed shows "No traffic data" and the timeline falls back to unknown demand (capacity checks are skipped, shown by uncertainty corners).
 
@@ -168,8 +167,8 @@ Two text boxes, METAR and TAF, each with the raw text the user pasted and an App
 | Columns | One per 30-minute slot, 56 px pitch (cell 54 px wide). Slots are clock-aligned half-hours; there are no extra columns at TAF change times (OD-24). |
 | Row header | 176 px, sticky at the left. Line 1: "Mode 12" plus tags REC and CURRENT. Line 2: runways in small text. |
 | Column header | Three sticky-top strips: time (HH:MM, hour labels in bold), weather events (BECMG, TEMPO, wet risk, change marker, no TAF), traffic class chips (L, M, H HIGH). |
-| Default span | The full TAF validity by default (owner, 23-10-2026), with options of 2, 4 and 6 hours. When a shorter window is chosen, the rest of the TAF validity stays reachable by scrolling and a dotted vertical line marks "window ends". |
-| Window selector | Pull-down in the B header: Full TAF (default), 2 h, 4 h, 6 h. It sets the forecast window (OD-26); the timeline always shows the full TAF validity, dimming slots beyond the window. |
+| Default span | The full TAF validity by default (OD-31), with options of 4 hours and 6 hours. The timeline shows the slots of the chosen window, as the mockup does. |
+| Window selector | Pull-down in the B header: Full TAF (default), 4 h, 6 h (OD-31). It sets the forecast window (OD-26) and the slots the timeline shows, as in the mockup. |
 
 Slots beyond TAF validity are drawn as UNKNOWN (grey) with the reason "No TAF coverage". The last column never pretends to know the weather.
 
@@ -178,7 +177,7 @@ Each cell holds an icon, and below it a 9 px cause code only when status is not 
 | Status | Colour | Pattern | Icon | Cause codes |
 |---|---|---|---|---|
 | SUITABLE | green | solid | tick | none |
-| MARGINAL | amber | diagonal stripes | tilde | TW, XW, TEMPO, WET, PROB, WET?, VRB (variable wind above calm, OD-27) |
+| MARGINAL | amber | diagonal stripes | tilde | TW, XW, TEMPO, WET, PROB, WET?, VRB (variable wind above calm, OD-33) |
 | UNSUITABLE | red | dense crosshatch | cross | TW, XW, CAP, PLAN (operating plan) |
 | UNKNOWN | grey | dots | question mark | NO TAF, NO MET |
 The colour comes straight from the engine's matrix. The UI has no logic that can turn a cell green; it renders the status field only (DB-3, DESIGN section 8).
@@ -316,7 +315,7 @@ Minimum text size is 11 px, used only for time labels and secondary notes; the c
 | UD-4 | Recommended and current modes are separate on screen (tags, outline, underline). | UP-4 requires them to stay distinct; the operator enters the current mode and the tool never does (OD-21). |
 | UD-5 | Warnings are inline banners, not pop-ups or sounds. | A controller in a busy session must not lose focus to a dialog. |
 | UD-6 | Settings open in a drawer beside the dashboard. | A settings change triggers a new recommendation (DB-9); the effect is seen at once without leaving the page. |
-| UD-7 | The timeline always draws the full TAF validity, with the planning window marked, rather than redrawing when the window changes. | The scroll position and the controller's mental map stay stable. Slots beyond TAF validity are grey, not guessed. |
+| UD-7 | The timeline shows the slots of the chosen window (full TAF by default, OD-31), as the mockup does. | Slots beyond TAF validity are grey, not guessed. |
 | UD-8 | System fonts; React and Tailwind (TC-1); no web fonts or other UI libraries. | The build must be a static folder that works offline and on another site (OD-2, TC-4). |
 | UD-9 | Times are UTC with a "Z" everywhere. The airport's local time is shown beside UTC on the weather and traffic chips and in the timeline header, and in the hover. | WX-5 and owner answer Q7; avoids mistakes at the daylight-saving change. |
 | UD-10 | The notice is a permanent bar, not a one-off dialog. | The tool must never be mistaken for real-world guidance, including on screenshots shared by others. |
@@ -337,14 +336,14 @@ How the design can be checked once built (success criteria):
 | Q1 | Can you supply (or let us inspect) the vatpac.org tools stylesheet, so the tokens match exactly? | The invented navy and blue palette in section 8. |
 
 ## 13. Owner decisions (22-10-2026 and 23-10-2026)
-The layout in section 3 follows the mockup (`ui/mockup.html`) rebuilt on 23-10-2026. The mockup is illustration only. Where it differs from the requirements, this document follows the requirements, and the points below are for the owner to confirm.
+The layout in section 3 follows the mockup (`ui/mockup.html`) rebuilt on 23-10-2026. The mockup is illustration only. The owner decided (23-10-2026) that the mockup is followed where it differs from the requirements, and the requirements are amended to match (OD-31 to OD-33). The table below records those points.
 
 | Point | Mockup | Requirement or decision | Followed here |
 |---|---|---|---|
-| Window options | 4 hours, 6 hours, Full TAF (no 2 hours) | OD-26: 2, 4 and 6 hours are options | 2, 4 and 6 hours, plus Full TAF as the default |
-| Timeline when a window is chosen | Timeline cut to the chosen window | DB-3: the timeline shows the full TAF validity by default | Full TAF drawn, slots beyond the window dimmed (6.1, UD-7). Owner to confirm. |
-| Panel C raw text | Table only, no raw or decoded text | DB-8: raw and decoded METAR and TAF in Panel C | Raw and decoded text (section 5) |
-| Panel D trend | No trend shown | TR-3: a trend | Trend shown (section 5) |
+| Window options | 4 hours, 6 hours, Full TAF (no 2 hours) | OD-31: 4 hours, 6 hours and the full TAF, default the full TAF | Followed (OD-31) |
+| Timeline when a window is chosen | Timeline cut to the chosen window | DB-3 amended by OD-31: the chosen window is shown | Followed (section 6.1) |
+| Panel C raw text | Table only, no raw or decoded text | OD-32: raw text at the top; Panel C shows components against limits only | Followed (section 5) |
+| Panel D trend | No trend shown | OD-32: no trend | Followed (section 5) |
 
 ### Answers to the open questions (owner, 22-10-2026)
 | # | Answer | Effect |
