@@ -4,3 +4,8 @@ dist/
 *.log
 .env
 .env.*
+
+# Team process documents (local only)
+docs/TEAM_ROLES.md
+docs/TEAM_BRIEFS.md
+docs/WORKING_AGREEMENT.md
