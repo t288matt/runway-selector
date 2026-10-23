@@ -59,6 +59,17 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
     expect(r.changeovers[0]?.early?.internal.waitingScore).toBe(33);
   });
 
+  it('(ii) no early banner when waiting is no worse: a tie is not an improvement', () => {
+    const levels = [...med];
+    levels[4] = 'busy';
+    const tied = packOf(rig, { ...WORKED, medium: 6 });
+    const r = go(tied, rig, WX8, levels);
+    expect(r.plan.totalScore).toBe(16); // early change 6 + 10, equal to B throughout
+    expect(r.plan.changes[0]?.slotIndex).toBe(3);
+    expect(r.changeovers[0]?.early).toBeNull();
+    expect(r.explanation.earlyChange).toBeNull();
+  });
+
   it('(iii) current mode B: staying in B (16) beats 13 plus the cost of leaving B (18)', () => {
     const r = go(pack, rig, WX8, med, b);
     expect(modesOf(r)).toEqual(same(8, b));
