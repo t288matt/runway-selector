@@ -22,7 +22,7 @@ It advises only. It never changes anything, and the final decision is yours.
 1. **Paste the METAR** into the METAR box and press Apply. Paste the **TAF** into the TAF box and press Apply. Each box shows the age of the report, taken from the report's own time group. A report that cannot be read is refused with a message saying what is wrong, and the previous report stays in use. The boxes start empty each time you open the page.
 2. **Choose the current mode** from the pull-down menu in Panel A, if you want the advice to take it into account. The list has the airport's enabled modes and "Not set". The tool remembers your choice and shows when you set it. If it is older than two hours it turns amber, so a forgotten setting is visible.
 3. **Read the recommendation** in Panel A, then check the survival timeline below it.
-4. Choose the **window** above the timeline: the full TAF (the default), or 2, 4 or 6 hours.
+4. Choose the **window** above the timeline: the full TAF (the default), or 4 or 6 hours.
 
 If you enter only a METAR, the tool judges the first hour from it and marks later slots unknown. If you enter only a TAF, the TAF is used from the first slot. With neither, it shows no recommendation and says so.
 
@@ -58,8 +58,8 @@ Hover or focus a cell to see the time (UTC and local), the wind and the tailwind
 
 For every mode and every half-hour:
 
-- **Wind.** The tailwind and crosswind on every runway the mode uses are worked out from the stronger of the mean wind and the gust. A mode is unsuitable if any of them is over its limit. A wind within a few knots of a limit is marginal. Wind at or below the calm threshold counts as calm. Variable wind above that makes every mode marginal.
-- **Runway state.** DRY, WET, or WET POSSIBLE, worked out only from the METAR and TAF. Rain in the METAR makes the first slot wet. Rain in the TAF base group, or a PROB group that is not on a TEMPO and is at or above the airport's threshold, makes a slot wet. TEMPO or INTER rain, and lower-probability PROB rain, make it wet possible: the mode is judged both ways and is marginal if only the wet case fails. After rain ends, the runway stays wet for a drying time. The tool never asks you for the runway condition.
+- **Wind.** The tailwind and crosswind on every runway the mode uses are worked out from the stronger of the mean wind and the gust. A mode is unsuitable if any of them is over its limit. A wind within a few knots of a limit is marginal. Wind at or below the calm threshold counts as calm. Variable wind above that makes every mode marginal. It is unsuitable only if the full speed breaks the dry tailwind limit or the crosswind limit on every runway the mode uses; the wet tailwind limit does not apply to it.
+- **Runway state.** DRY, WET, or WET POSSIBLE, worked out only from the METAR and TAF. Rain in the METAR makes the first slot wet. Rain in the TAF base group, or a PROB group that is not on a TEMPO and is at or above the airport's threshold, makes a slot wet. TEMPO or INTER rain, and lower-probability PROB rain, make it wet possible: the mode is judged both ways and is marginal if only the wet case fails. After rain ends, the runway stays wet for a drying time. Weather in the vicinity (VC) never counts as rain. The tool never asks you for the runway condition.
 - **Operating plan.** The airport's operating plan can forbid a mode in some time bands, such as a curfew, and ranks the modes in each band. Rankings only choose between modes that are otherwise suitable.
 - **Capacity.** If a mode has a maximum capacity, a slot where known traffic is above it makes the mode unsuitable. Where traffic is unknown, the capacity check is skipped and the cell is marked uncertain.
 - **Forecast changes.** FM and BECMG apply from their start time. TEMPO and INTER and PROB groups are overlays: if the main forecast passes but the overlay would fail, the cell is marginal.
