@@ -251,7 +251,17 @@ function weatherPart(pack: AirportPack, mode: Mode, used: readonly UsedRunway[],
   const main = assessWind(pack, mode, used, sw.wind, state);
   const overlay: Reason[] = [];
   for (const o of sw.overlays) {
-    if (!isUsableWind(o.wind)) continue;
+    if (!isUsableWind(o.wind)) {
+      // The group gives no usable wind, so it cannot be judged: say so and mark the cell uncertain.
+      overlay.push({
+        code: 'OVERLAY',
+        severity: 'INFO',
+        figures: { overlayKind: o.kind, probabilityPct: o.probabilityPct, group: o.text, windKnown: false, uncertain: true },
+        limit: null,
+        text: `${overlayLabel(o)} group gives no usable wind, so it could not be checked against the limits`,
+      });
+      continue;
+    }
     // Rain inside the group means the runway is wet if the group happens.
     const a = assessWind(pack, mode, used, o.wind, o.precipitation ? 'WET' : state);
     if (!(a.hasFail || a.wetOnlyFail)) continue;
@@ -366,7 +376,7 @@ export function evaluateCell(ctx: CellContext): Cell {
     }
   }
 
-  if (reasons.some((r) => r.severity === 'MARGINAL' && r.figures.uncertain === true)) uncertain = true;
+  if (reasons.some((r) => (r.severity === 'MARGINAL' || r.severity === 'INFO') && r.figures.uncertain === true)) uncertain = true;
 
   const decisive =
     status === 'UNSUITABLE'

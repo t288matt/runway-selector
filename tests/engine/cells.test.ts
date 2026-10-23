@@ -322,13 +322,24 @@ describeEachPack('TEMPO, INTER and PROB overlays', (pack) => {
   });
 
   it('an overlay that passes, or gives no wind, changes nothing', () => {
-    expect(runMode(pack, id, [{ overlays: [overlay({ wind: null })] }]).cell(0).status).toBe('SUITABLE');
+    expect(runMode(pack, id, [{ overlays: [overlay({ wind: steady(0, 0) })] }]).cell(0).uncertain).toBe(false);
     expect(runMode(pack, id, [{ overlays: [overlay({ wind: steady(0, 0) })] }]).cell(0).status).toBe('SUITABLE');
   });
 
   it('an overlay never replaces the prevailing state: the prevailing wind that fails stays UNSUITABLE', () => {
     const c = runMode(pack, id, [{ wind: bad, overlays: [overlay({ wind: steady(0, 0) })] }]).cell(0);
     expect(c.status).toBe('UNSUITABLE');
+  });
+
+  it('an overlay with no wind or an unusable wind is never silently SUITABLE: an INFO reason and uncertain', () => {
+    for (const wind of [null, steady(Number.NaN, 10), steady(90, Number.NaN)]) {
+      const c = runMode(pack, id, [{ overlays: [overlay({ wind })] }]).cell(0);
+      expect(c.status).toBe('SUITABLE');
+      expect(c.uncertain).toBe(true);
+      const r = c.reasons.find((x) => x.code === 'OVERLAY');
+      expect(r?.severity).toBe('INFO');
+      expect(r?.figures.windKnown).toBe(false);
+    }
   });
 
   it('an overlay with rain is judged with a wet runway', () => {

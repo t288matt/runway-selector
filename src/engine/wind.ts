@@ -47,8 +47,14 @@ export function componentsAt(headingDegrees: number, directionDegrees: number, s
   return { headwindKt, tailwindKt: Math.max(0, -headwindKt), crosswindKt: Math.abs(speedKt * Math.sin(angle)) };
 }
 
+/** A range that spans 360 degrees (for example 000V360) or whose ends are equal covers every direction. */
+export function isFullCircle(from: number, to: number): boolean {
+  return (to - from) % 360 === 0;
+}
+
 /** Is `direction` inside the clockwise range from `from` to `to` (both ends included)? */
 export function inClockwiseRange(direction: number, from: number, to: number): boolean {
+  if (isFullCircle(from, to)) return true;
   const span = (((to - from) % 360) + 360) % 360;
   const offset = (((direction - from) % 360) + 360) % 360;
   return offset <= span;
@@ -68,8 +74,9 @@ export function worstInRange(
   speedKt: number,
 ): { readonly tailwindKt: number; readonly crosswindKt: number } {
   const candidates = [fromDegrees, toDegrees];
+  const full = isFullCircle(fromDegrees, toDegrees);
   for (const critical of [headingDegrees + 180, headingDegrees + 90, headingDegrees + 270]) {
-    if (inClockwiseRange(critical, fromDegrees, toDegrees)) candidates.push(critical);
+    if (full || inClockwiseRange(critical, fromDegrees, toDegrees)) candidates.push(critical);
   }
   let tailwindKt = 0;
   let crosswindKt = 0;
