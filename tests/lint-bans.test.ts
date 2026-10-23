@@ -24,7 +24,10 @@ function lint(relPath: string) {
   });
 }
 
-const general = readdirSync(fixtures).filter((f) => /\.tsx?$/.test(f));
+const all = readdirSync(fixtures).filter((f) => /\.tsx?$/.test(f));
+// script-* fixtures are caught by scripts/check-banned-imports.mjs, not oxlint
+const general = all.filter((f) => !f.startsWith('script-'));
+const scriptFixtures = all.filter((f) => f.startsWith('script-') || f.startsWith('no-metar'));
 const engine = readdirSync(join(fixtures, 'engine')).filter((f) => f.endsWith('.ts'));
 
 beforeAll(() => {
@@ -46,8 +49,8 @@ afterAll(() => {
 
 describe('lint bans', () => {
   it('has a fixture for every ban', () => {
-    expect(general.length).toBeGreaterThanOrEqual(8);
-    expect(engine.length).toBeGreaterThanOrEqual(11);
+    expect(general.length).toBeGreaterThanOrEqual(10);
+    expect(engine.length).toBeGreaterThanOrEqual(20);
   });
 
   it('accepts a clean engine file (control)', () => {
@@ -70,5 +73,35 @@ describe('lint bans', () => {
     cpSync(join(fixtures, 'no-metar-import.ts'), join(tmp, 'src', 'weather', 'decode', 'ok.ts'));
     const r = lint('src/weather/decode/ok.ts');
     expect(r.status, r.stdout + r.stderr).toBe(0);
+  });
+});
+
+describe('metar-taf-parser import ban (scripts/check-banned-imports.mjs)', () => {
+  const checker = join(root, 'scripts', 'check-banned-imports.mjs');
+  const run = () => spawnSync(process.execPath, [checker, '--root', tmp], { encoding: 'utf8' });
+
+  it('has fixtures for import, subpath, require and dynamic import', () => {
+    expect(scriptFixtures.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it.each(scriptFixtures)('fails: %s', (f) => {
+    const dir = join(tmp, 'case-' + f);
+    mkdirSync(join(dir, 'src', 'ui'), { recursive: true });
+    cpSync(join(fixtures, f), join(dir, 'src', 'ui', f));
+    const r = spawnSync(process.execPath, [checker, '--root', dir], { encoding: 'utf8' });
+    expect(r.status, r.stdout + r.stderr).toBe(1);
+    expect(r.stderr).toContain('used outside');
+  });
+
+  it('allows the import inside src/weather/decode and passes the clean tree', () => {
+    // tmp holds only fixtures copied under src/ui and src/engine, so use a fresh tree
+    const dir = join(tmp, 'allowed');
+    mkdirSync(join(dir, 'src', 'weather', 'decode'), { recursive: true });
+    cpSync(join(fixtures, 'script-metar-require.ts'), join(dir, 'src', 'weather', 'decode', 'ok.ts'));
+    const r = spawnSync(process.execPath, [checker, '--root', dir], { encoding: 'utf8' });
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    const bad = run();
+    expect(bad.status).toBe(1);
+    expect(bad.stderr).toContain('used outside');
   });
 });

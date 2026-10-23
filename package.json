@@ -10,8 +10,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "typecheck": "tsc --noEmit",
-    "lint": "oxlint -c .oxlintrc.json --deny-warnings src tests scripts vite.config.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
+    "lint": "oxlint -c .oxlintrc.json --deny-warnings src tests scripts vite.config.ts && node scripts/check-banned-imports.mjs",
     "check-literals": "node scripts/check-no-airport-literals.mjs",
     "test": "vitest run && npm run check-literals"
   },
