@@ -17,9 +17,9 @@ function hex4(code: number): string {
 /**
  * Validates and normalises pasted text: refuses over-long text and any
  * character outside printable ASCII except tab, line feed and carriage return;
- * returns upper-case text with a trailing "=" removed and runs of white space
- * folded to single spaces (line breaks kept as spaces: TAF line layout carries
- * no meaning).
+ * returns upper-case text with a trailing "=" and any "$" maintenance marks
+ * removed and runs of white space folded to single spaces (TAF line layout
+ * carries no meaning).
  */
 export function cleanReportText(raw: string, label: string): CleanText {
   if (typeof raw !== 'string') return { ok: false, message: `${label} is not text.` };
