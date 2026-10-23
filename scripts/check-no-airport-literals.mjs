@@ -12,6 +12,8 @@
 //  - Hyphenated names split into tokens, so a CSS class such as "text-yssy" is
 //    reported (a false positive that is acceptable). 3-digit hex colours such as
 //    #14a are ignored.
+//  - A token directly preceded by '.' and directly followed by '(' is a method call
+//    (for example re.test(x)) and is not reported.
 //  - Evasion by building a value at run time (string concatenation, template
 //    pieces, character codes, reading it from elsewhere) CANNOT be detected by
 //    a static token check. It is caught only by review and by running the
@@ -211,6 +213,8 @@ export function check(root) {
       // 3-digit hex colours (#14a) are not facts: blank them before tokenising
       const text = line.replace(/#[0-9A-Fa-f]{3}(?![A-Za-z0-9_])/g, "    ");
       for (const m of text.matchAll(/[A-Za-z0-9_]+/g)) {
+        // a method call such as re.name( is not a fact: the token is directly after '.' and before '('
+        if (text[m.index - 1] === '.' && text[m.index + m[0].length] === '(') continue;
         for (const f of facts) {
           if (m[0].toLowerCase() === f.value.toLowerCase()) {
             violations.push({ file: rel(root, file), line: idx + 1, value: f.value, kind: f.kind, pack: rel(root, f.pack) });
