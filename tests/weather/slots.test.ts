@@ -80,13 +80,25 @@ describeForEachPack('slot builder', (pack, ref) => {
       expect(r.slots.at(-1)!.endMs).toBe(utc('2026-10-24T18:00:00Z'));
     });
 
-    it('the full window with no TAF is the METAR window only', () => {
+    it('METAR only with the full window gives 12 slots: METAR-governed inside its window, NONE after', () => {
       const { nowMs, metar } = reports(ref, '2026-10-23T14:10:00Z', { metar: 'metar-yssy-auto-nodata' });
       const r = build(pack, nowMs, metar, null, null);
-      const windowEnd = utc('2026-10-23T14:00:00Z') + validityMs; // observation time + window
-      const expected = Math.max(1, Math.ceil((windowEnd - utc('2026-10-23T14:00:00Z')) / SLOT));
-      expect(r.slots).toHaveLength(expected);
-      expect(r.slots.every((x) => x.governedBy === 'METAR')).toBe(true);
+      expect(r.slots).toHaveLength(12);
+      expect(r.slots[0]!.startMs).toBe(utc('2026-10-23T14:00:00Z'));
+      const windowEnd = metar!.observedAtMs + validityMs;
+      for (const sl of r.slots) expect(sl.governedBy).toBe(sl.startMs < windowEnd ? 'METAR' : 'NONE');
+      expect(r.slots.some((x) => x.governedBy === 'METAR')).toBe(true);
+      expect(r.slots.at(-1)!.governedBy).toBe('NONE');
+    });
+
+    it('METAR only with a 4 hour window gives 8 slots', () => {
+      const { nowMs, metar } = reports(ref, '2026-10-23T14:10:00Z', { metar: 'metar-yssy-auto-nodata' });
+      expect(build(pack, nowMs, metar, null, 240).slots).toHaveLength(8);
+    });
+
+    it('with a TAF present the full window still runs to the TAF end, not 12 slots', () => {
+      const { nowMs, metar, taf } = reports(ref, '2026-10-23T14:10:00Z', { metar: 'metar-yssy-auto-nodata', taf: 'taf-yssy-multiline-fm-tempo' });
+      expect(build(pack, nowMs, metar, taf, null).slots).toHaveLength(56);
     });
 
     it('a window can be longer than the TAF; slots past its end are NONE', () => {
@@ -183,15 +195,15 @@ describeForEachPack('slot builder', (pack, ref) => {
       expect(r.slots).toHaveLength(8);
       expect(r.slots.every((x) => x.governedBy === 'NONE' && x.weather.wind === null)).toBe(true);
       expect(r.banners.map((b) => b.code)).toEqual(['no-weather']);
-      expect(build(pack, nowMs, null, null, null).slots).toHaveLength(1);
+      expect(build(pack, nowMs, null, null, null).slots).toHaveLength(12);
     });
 
     it('slot 0 is always present, even when the METAR window has already passed and there is no TAF', () => {
       const { nowMs, metar } = reports(ref, '2026-10-23T14:10:00Z', { metar: 'metar-yssy-auto-nodata' });
       const r = build(pack, utc('2026-10-23T18:10:00Z'), metar, null, null);
       void nowMs;
-      expect(r.slots).toHaveLength(1);
-      expect(r.slots[0]!.governedBy).toBe('NONE');
+      expect(r.slots).toHaveLength(12);
+      expect(r.slots.every((x) => x.governedBy === 'NONE')).toBe(true);
     });
   });
 
