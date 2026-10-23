@@ -2,12 +2,13 @@
 // freshness chips, weather entry, A, B, then C, D and F. Pure of effects: the
 // state and timers live in useDashboard.
 import { dataNotices, freshnessChips, type FeedState, type ViewData, type WindowChoice } from '../model/dashboard';
+import { currentModeStatus } from '../model/drawer';
 import { panelAModel } from '../model/panels';
 import { timelineModel } from '../model/timeline';
-import { Freshness, Header, NoticeBar, Notices } from './Frame';
+import { Freshness, Header, NoticeBar, Notices, StoreNotices } from './Frame';
 import { PanelC, PanelD, PanelF } from './LowerPanels';
 import { PanelA } from './PanelA';
-import { SettingsDrawer } from './SettingsDrawer';
+import { SettingsDrawer, type SettingsBridge } from './SettingsDrawer';
 import { Timeline } from './Timeline';
 import { WeatherEntry, type ApplyOutcome } from './WeatherEntry';
 
@@ -23,6 +24,7 @@ export interface DashboardProps {
   readonly onCurrentMode: (id: string | null) => void;
   readonly onApplyMetar: (text: string) => ApplyOutcome;
   readonly onApplyTaf: (text: string) => ApplyOutcome;
+  readonly settings: SettingsBridge;
 }
 
 export function liveTag(feed: FeedState): string {
@@ -48,15 +50,18 @@ export function Dashboard(p: DashboardProps) {
       <NoticeBar pack={view.pack} />
       <Freshness chips={chips} />
       <WeatherEntry pack={view.pack} metar={view.metar} taf={view.taf} displayNowMs={p.displayNowMs} onApplyMetar={p.onApplyMetar} onApplyTaf={p.onApplyTaf} />
+      <StoreNotices notices={p.settings.notices} onDismiss={p.settings.onDismissNotice} />
       <Notices notices={notices} />
-      <PanelA view={view} model={model} onCurrentMode={p.onCurrentMode} />
+      <PanelA view={view} model={model} onCurrentMode={p.onCurrentMode} status={currentModeStatus(p.settings.currentModeRecord, p.displayNowMs, view.pack)} onConfirmCurrent={p.settings.onConfirmCurrent} />
       <Timeline view={view} model={timeline} displayNowMs={p.displayNowMs} onWindowChange={p.onWindowChange} reason={reasonLine(view)} />
       <div className="grid3">
         <PanelC view={view} />
         <PanelD view={view} />
         <PanelF view={view} />
       </div>
-      {p.drawerOpen ? <SettingsDrawer pack={view.pack} onClose={() => p.onToggleDrawer(false)} /> : null}
+      {p.drawerOpen ? (
+        <SettingsDrawer view={view} displayNowMs={p.displayNowMs} bridge={p.settings} onCurrentMode={p.onCurrentMode} onWindowChange={p.onWindowChange} onClose={() => p.onToggleDrawer(false)} />
+      ) : null}
     </div>
   );
 }

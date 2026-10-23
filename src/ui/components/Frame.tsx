@@ -69,3 +69,18 @@ export function Notices({ notices }: { notices: readonly Notice[] }) {
     </div>
   );
 }
+
+/** Messages about stored values that were cleared or discarded (SEC-3). Plain text; each can be dismissed. */
+export function StoreNotices({ notices, onDismiss }: { notices: readonly string[]; onDismiss: (index: number) => void }) {
+  if (notices.length === 0) return null;
+  return (
+    <div className="notices" role="status">
+      {notices.map((n, i) => (
+        <p key={`${i}-${n}`} className="strip strip-warn">
+          {n}.{' '}
+          <button type="button" className="btn small-btn" onClick={() => onDismiss(i)}>Dismiss</button>
+        </p>
+      ))}
+    </div>
+  );
+}
