@@ -283,6 +283,18 @@ describe('the weather components and the hover detail come from the engine', () 
   });
 });
 
+describe('the cell detail operating-plan line', () => {
+  it('does not say "in time band all-day" for an all-day plan, and keeps the rank', () => {
+    const ref = PACKS[0];
+    if (ref === undefined) throw new Error('no pack');
+    const pack = packWith(ref, { weatherStation: fixture(METAR_ID).station });
+    const view = realView(pack, ref, true);
+    const detail = cellDetailModel(view, 0, 0);
+    expect(detail?.operatingPlan).toMatch(/^Allowed, rank \d+/);
+    expect(detail?.operatingPlan).not.toContain('time band');
+  });
+});
+
 describe('Panel D', () => {
   it('shows four slots, departures for the first only, unknown demand beyond the horizon, and no trend', () => {
     const ref = PACKS[0];
