@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "PROVISIONAL 24-10-2026. One band covers the whole day; no day/night split has been given. Order is the owner's preferred runway mode list, strict (no ties): 1 27AD34D; 2 16A27D; 3 09A16D; 4 34A27AD (LAHSO). 34A27AD-NOLAHSO (the non-LAHSO twin of 34A27AD, added 24-10-2026) is one of the equal-priority fallback modes with 27AD, 16AD and 34AD, at a placeholder penalty of 20 for the owner to confirm. The four single-runway fallback modes (27AD, 16AD, 34AD, 09AD) are lower priority than all of those; 27AD, 16AD and 34AD are equal priority, and 09AD is the single lowest priority of every mode (owner, 24-10-2026). The penalties are placeholders on the same design-example scale used for Sydney; lower is preferred. Replace with real figures when supplied.",
+  "description": "PROVISIONAL 24-10-2026. One band covers the whole day; no day/night split has been given. Order is the owner's preferred runway mode list, strict (no ties): 1 27AD34D; 2 16A27D; 3 09A16D; 4 34A27AD-LAHSO (LAHSO). 34A27AD (the non-LAHSO twin of 34A27AD-LAHSO, added 24-10-2026) is one of the equal-priority fallback modes with 27AD, 16AD and 34AD, at a placeholder penalty of 20 for the owner to confirm. The four single-runway fallback modes (27AD, 16AD, 34AD, 09AD) are lower priority than all of those; 27AD, 16AD and 34AD are equal priority, and 09AD is the single lowest priority of every mode (owner, 24-10-2026). The penalties are placeholders on the same design-example scale used for Sydney; lower is preferred. Replace with real figures when supplied.",
   "status": "verified",
   "bands": [
     {
@@ -12,9 +12,9 @@
         { "mode": "27AD34D", "allowed": true, "penalty": 0 },
         { "mode": "16A27D",  "allowed": true, "penalty": 2 },
         { "mode": "09A16D",  "allowed": true, "penalty": 5 },
-        { "mode": "34A27AD", "allowed": true, "penalty": 12 },
+        { "mode": "34A27AD-LAHSO", "allowed": true, "penalty": 12 },
         { "mode": "27AD",    "allowed": true, "penalty": 20 },
-        { "mode": "34A27AD-NOLAHSO", "allowed": true, "penalty": 20 },
+        { "mode": "34A27AD", "allowed": true, "penalty": 20 },
         { "mode": "16AD",    "allowed": true, "penalty": 20 },
         { "mode": "34AD",    "allowed": true, "penalty": 20 },
         { "mode": "09AD",    "allowed": true, "penalty": 30 }
