@@ -56,8 +56,8 @@ function trafficSentence(view: ViewData): string {
     }
   }
   if (later >= 0) return `${base}, ${levelWord(levels[later] ?? null)} by ${hhmmZRel(starts[later] ?? 0, view.calcNowMs)}`;
-  const firstUnknown = levels.findIndex((l) => l === null);
-  if (firstUnknown > 0) return `${base}; demand unknown from ${hhmmZRel(starts[firstUnknown] ?? 0, view.calcNowMs)}`;
+  // Demand that becomes unknown later in the window is not mentioned (owner, 24-10-2026, OD-45); when it is
+  // unknown in every slot, base is already UNKNOWN.
   return base;
 }
 
