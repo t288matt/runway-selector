@@ -65,6 +65,8 @@ A web application that recommends the runway operating mode for Sydney Kingsford
 | OD-54 | 24-10-2026 (owner, chat): the legend entry for the recommended outline reads "Recommended path"; the words "(the outline, whatever the cell's own colour)" are removed. The legend entry for the dashed line reads "Dashed blue line: planned change", without "(CHANGE)". |
 | OD-55 | 24-10-2026 (owner, chat): the timeline's horizontal scrollbar overlapped the bottom mode row. The grid now leaves room below the last row for the scrollbar. |
 | OD-56 | 24-10-2026 (owner, chat): the "More about <mode>" explanation lines in Panel A are collapsed behind an expandable arrow, closed by default. The heading reads "More about the recommendation" and is the clickable disclosure. A later fix (OD-56) corrected the arrow glyph, which had been mis-encoded and showed as the text "B8". |
+| OD-57 | 24-10-2026 (owner, chat): the Uncertainty line in Panel A names the period and the reason instead of a slot count (for example "14:00 UTC to 17:00 UTC: a chance of rain" instead of "4 slots depend on uncertain data"). Consecutive uncertain slots on the recommended plan with the same reason are joined into one period; several periods are separated by "; ". Amends DB-2.
+| OD-58 | 24-10-2026 (owner, chat): in Panel A, Runway state moves to sit directly under Traffic; the Traffic capacity line ("No limit set; N known movements this slot") is removed. Amends OD-57 and DB-2.
 | OD-9 | 23-10-2026: the app will later be used for other airports, so the code must be airport-agnostic and entirely reference-data driven. YSSY is the first dataset, not a special case. This is a key requirement and takes precedence over convenience in every design choice. |
 
 ## 3. Reference-data requirements

@@ -9,7 +9,7 @@ import type { EngineInput, TrafficLevel } from './inputs';
 import type { Changeover } from './changeover';
 import { preferencePenalty } from './optimiser';
 import type { NoRecommendation, Plan } from './optimiser';
-import type { Cell, EngineResult, ReasonCode, Survival } from './types';
+import type { Cell, EngineResult, ReasonCode, SlotInfo, Survival } from './types';
 
 export const EARLY_CHANGE_TITLE = 'EARLY MODE CHANGE RECOMMENDED';
 export const NO_SUITABLE_TITLE = 'NO SUITABLE STANDARD MODE IDENTIFIED';
@@ -97,9 +97,47 @@ function sentence(text: string): string {
   return text.endsWith('.') ? text : `${text}.`;
 }
 
-function uncertaintyLineFor(count: number): string {
-  if (count === 0) return 'No uncertain inputs';
-  return count === 1 ? '1 slot depends on uncertain data' : `${count} slots depend on uncertain data`;
+const SLOT_MS = 30 * MS_PER_MINUTE;
+
+/** Why a slot on the plan path is uncertain, shortest and most useful reason first (DB-2). */
+function uncertainReason(info: SlotInfo | undefined): string {
+  if (info === undefined) return 'uncertain data';
+  if (info.governedBy === 'NONE') return 'no forecast for this period';
+  if (info.runwayState === 'WET_POSSIBLE') return 'a chance of rain';
+  return 'wind not usable';
+}
+
+/**
+ * Says which periods are uncertain and why, instead of just a count (owner decision 24-10-2026, OD-57, amending
+ * DB-2). Consecutive uncertain slots on the plan path with the same reason are joined into one period; a change
+ * of reason, or a gap of certain slots, starts a new one.
+ */
+function uncertaintyLineFor(planSlots: readonly { readonly slotIndex: number; readonly startMs: number; readonly uncertain: boolean }[], slotInfo: readonly SlotInfo[], nowMs: number): string {
+  const periods: string[] = [];
+  let startMs: number | null = null;
+  let endMs = 0;
+  let reason = '';
+  const close = (): void => {
+    if (startMs === null) return;
+    periods.push(`${formatTime(startMs, nowMs)} to ${formatTime(endMs, nowMs)}: ${reason}`);
+    startMs = null;
+  };
+  for (const s of planSlots) {
+    if (!s.uncertain) {
+      close();
+      continue;
+    }
+    const r = uncertainReason(slotInfo[s.slotIndex]);
+    if (startMs === null || r !== reason) {
+      close();
+      startMs = s.startMs;
+      reason = r;
+    }
+    endMs = s.startMs + SLOT_MS;
+  }
+  close();
+  if (periods.length === 0) return 'No uncertain inputs';
+  return periods.join('; ');
 }
 
 function whyThisMode(pack: AirportPack, modeId: string, cell: Cell): string {
@@ -262,7 +300,7 @@ function noRecommendationHeadline(why: NoRecommendation): string {
 
 export function explain(pack: AirportPack, input: EngineInput, result: EngineResult, plan: Plan, changeovers: readonly Changeover[]): Explanation {
   const nowMs = input.nowMs;
-  const uncertaintyLine = uncertaintyLineFor(plan.uncertainSlots);
+  const uncertaintyLine = uncertaintyLineFor(plan.slots, result.slots, nowMs);
   const early = changeovers.find((c) => c.early !== null);
 
   const earlyChange: EarlyChangeBanner | null =
