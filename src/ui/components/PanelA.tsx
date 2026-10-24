@@ -52,12 +52,6 @@ export function PanelA({ view, model, onCurrentMode, status, onConfirmCurrent }:
             <dt>Ceiling</dt>
             <dd>{model.ceiling}</dd>
           </dl>
-          <dl className="kv">
-            <dt>Operating plan preference</dt>
-            <dd>{model.rank}</dd>
-            <dt>Uncertainty</dt>
-            <dd>{model.uncertainty}</dd>
-          </dl>
         </>
       ) : model.kind === 'no-suitable' && model.noSuitable !== null ? (
         <div className="nomode" role="alert">
