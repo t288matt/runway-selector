@@ -51,8 +51,8 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the screen from real repo
     if (extra !== null) expect(text).toContain(extra);
   });
 
-  it('keeps the fixed order: header, notice, chips, A, B, weather entry, C, D, F', () => {
-    const marks = ['<header', 'role="note"', 'aria-label="Data freshness"', 'Panel A', 'Panel B', 'aria-label="Raw METAR and TAF"', 'Panel C', 'Panel D', 'Panel F'].map((m) => html.indexOf(m));
+  it('keeps the fixed order: header, notice, chips, A, B, weather entry, D, F', () => {
+    const marks = ['<header', 'role="note"', 'aria-label="Data freshness"', 'Panel A', 'Panel B', 'aria-label="Raw METAR and TAF"', 'Panel D', 'Panel F'].map((m) => html.indexOf(m));
     expect(marks.every((i) => i >= 0)).toBe(true);
     expect([...marks].sort((a, b) => a - b)).toEqual(marks);
   });
@@ -71,13 +71,10 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the screen from real repo
     for (const r of drawn.rows) expect(text).toContain(r.modeId);
   });
 
-  it('shows every runway end of the pack in Panel C and in the diagram, for any number of runways', () => {
-    const c = html.slice(html.indexOf('Panel C'), html.indexOf('Panel D'));
+  it('shows every runway end of the pack in the diagram, for any number of runways, and has no weather components panel (OD-40)', () => {
     const f = html.slice(html.indexOf('Panel F'));
-    for (const r of pack.runways) {
-      expect(c).toContain(`<td>${r.name}</td>`);
-      expect(f).toContain(r.name);
-    }
+    expect(html).not.toContain('Panel C');
+    for (const r of pack.runways) expect(f).toContain(r.name);
     expect(f).toContain('<svg');
     expect(f).toContain('role="img"');
     expect(runwayComponentRows(view)).toHaveLength(pack.runways.length);
