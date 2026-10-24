@@ -254,7 +254,9 @@ export function timelineModel(view: ViewData, displayNowMs: number): TimelineMod
       events.push('low vis');
       titles.push(`Visibility below ${pack.settings.lowVisibilityMetres} m`);
     }
-    const overlays = s.governedBy === 'METAR' ? (s.tafView?.overlays ?? []) : s.weather.overlays;
+    // A METAR-governed slot shows only what the METAR itself says (owner, 24-10-2026): the
+    // TAF's TEMPO/PROB overlays play no part here, matching runwayCondition.ts.
+    const overlays = s.weather.overlays;
     const kinds = [...new Set(overlays.map((o) => o.kind))];
     for (const k of kinds) events.push(k);
     for (const o of overlays) titles.push(o.text);
