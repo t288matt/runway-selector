@@ -1,13 +1,14 @@
 {
   "schemaVersion": 1,
-  "description": "Runway ends. PROVISIONAL: headings are placeholders and must be checked against the official source for this airport. Wind direction and heading share one reference (OD-11), so enter headings in the reference the weather reports use.",
-  "status": "provisional",
+  "description": "Runway ends. Headings supplied by the owner, 23-10-2026, replacing the earlier placeholders. Wind direction and heading share one reference (OD-11), so headings are entered in the reference the weather reports use.",
+  "status": "verified",
+  "source": "owner, 23-10-2026",
   "runways": [
-    { "name": "16L", "headingDegrees": 160 },
-    { "name": "16R", "headingDegrees": 160 },
-    { "name": "34L", "headingDegrees": 340 },
-    { "name": "34R", "headingDegrees": 340 },
-    { "name": "07",  "headingDegrees": 70 },
-    { "name": "25",  "headingDegrees": 250 }
+    { "name": "16L", "headingDegrees": 155 },
+    { "name": "16R", "headingDegrees": 155 },
+    { "name": "34L", "headingDegrees": 335 },
+    { "name": "34R", "headingDegrees": 335 },
+    { "name": "07",  "headingDegrees": 62 },
+    { "name": "25",  "headingDegrees": 242 }
   ]
 }
