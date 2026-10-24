@@ -345,13 +345,23 @@ describe('keyboard movement in the grid (UI_DESIGN section 9)', () => {
 });
 
 describe('wind changes in the event strip', () => {
-  const steady = (directionDegrees: number, speedKt: number, gustKt: number | null = null) => ({ kind: 'steady' as const, directionDegrees, speedKt, gustKt, variableRangeDegrees: null });
+  const steady = (directionDegrees: number, speedKt: number, gustKt: number | null = null, variableRangeDegrees: readonly [number, number] | null = null) => ({
+    kind: 'steady' as const,
+    directionDegrees,
+    speedKt,
+    gustKt,
+    variableRangeDegrees,
+  });
   const variable = (speedKt: number) => ({ kind: 'variable' as const, speedKt, gustKt: null });
 
   it('shows direction, speed and gust', () => {
     expect(windText(steady(20, 12, 22))).toBe('020/12G22');
     expect(windText(steady(340, 5))).toBe('340/05');
     expect(windText(variable(4))).toBe('VRB/04');
+  });
+
+  it('a variable direction range replaces the mean direction, since the worst case across it drives the figures', () => {
+    expect(windText(steady(250, 13, 26, [200, 290]))).toBe('200V290/13G26');
   });
 
   it('labels a turn with the new wind and gives the old wind and the size of the turn in the hover text', () => {
