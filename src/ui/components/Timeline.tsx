@@ -265,9 +265,6 @@ export function Timeline({ view, model, displayNowMs, onWindowChange }: Timeline
             </div>
           ))}
 
-          {model.wetRuns.map(([a, b]) => (
-            <div key={`w${a}`} className="ov wetband" aria-hidden="true" style={{ left: LAYOUT.label + a * LAYOUT.column, width: (b - a + 1) * LAYOUT.column, top: LAYOUT.timeStrip, height: height - LAYOUT.timeStrip }} />
-          ))}
           {model.busyRuns.map(([a, b]) => (
             <div key={`b${a}`} className="ov busyband" aria-hidden="true" style={{ left: LAYOUT.label + a * LAYOUT.column, width: (b - a + 1) * LAYOUT.column, top: LAYOUT.timeStrip + LAYOUT.eventStrip, height: height - LAYOUT.timeStrip - LAYOUT.eventStrip }} />
           ))}
@@ -295,7 +292,6 @@ export function Timeline({ view, model, displayNowMs, onWindowChange }: Timeline
         <span><b className="cell rec" style={{ marginRight: 8, background: 'var(--panel2)', border: '1px solid var(--line)' }} aria-hidden="true" />Recommended path</span>
         <span>Dashed blue line: planned change</span>
         <span>Amber band: HIGH traffic</span>
-        <span>Blue band: wet risk</span>
         <span>White corner: depends on an uncertain input</span>
       </div>
 

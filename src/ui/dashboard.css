@@ -715,12 +715,6 @@ select {
   background: rgba(232, 163, 58, 0.09);
   z-index: 1;
 }
-.wetband {
-  background: rgba(91, 184, 232, 0.1);
-  border-left: 1px dotted var(--wet);
-  border-right: 1px dotted var(--wet);
-  z-index: 1;
-}
 .now {
   width: 2px;
   background: #fff;

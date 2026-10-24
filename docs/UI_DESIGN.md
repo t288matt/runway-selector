@@ -197,7 +197,7 @@ A white triangle in the top-right corner marks a cell whose status depends on an
 | Wind shift | In the event strip, at the start time of a BECMG or FM group, a label with the new wind as reported (for example "020/12G22"); the hover text gives the old wind, the new wind and the turn in degrees. Changes under 10 degrees and 5 knots are not shown (OD-43). "TS" and "low vis" events are also shown (OD-43). | BECMG is an ordinary change at its start time (OD-20), so nothing is drawn across a transition. |
 | Tailwind exceedance | Cause code TW in the cell; the hover shows the figure. Cells over the limit are never green. | |
 | Current mode | Row label tag CURRENT (outlined) and a 2 px white underline of the row label | Separate from the recommendation (UP-4). |
-| Wet-risk | A pale blue band with dotted edges across all rows in the wet-risk slots, and the word "wet risk" in the event strip | It does not recolour cells; the status already reflects the runway state. |
+| Wet-risk | The word "wet risk" in the event strip. The pale blue band across the rows is removed (owner, 24-10-2026, OD-62): the events strip already names it, so the band was redundant. | It does not recolour cells; the status already reflects the runway state. |
 | Uncertainty | White corner triangle (6.2); UNKNOWN cells are grey with dots | |
 
 Overlay layering from back to front: wet band, busy band, cells, recommended outline, now and changeover lines, labels. The sticky row labels sit above everything except the now label.

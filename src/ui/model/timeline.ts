@@ -124,7 +124,6 @@ export interface TimelineModel {
   readonly missing: MissingWeather;
   /** Runs [first, last] of consecutive HIGH-traffic slots. */
   readonly busyRuns: readonly (readonly [number, number])[];
-  readonly wetRuns: readonly (readonly [number, number])[];
   readonly changeSlots: readonly number[];
   readonly nowSlotFraction: number;
   readonly rangeText: string;
@@ -300,7 +299,6 @@ export function timelineModel(view: ViewData, displayNowMs: number): TimelineMod
     onPath,
     missing,
     busyRuns: runs(slots.map((s) => s.busy)),
-    wetRuns: runs(slots.map((s) => s.wet !== 'none')),
     changeSlots: changes.map((c) => c.change.slotIndex),
     nowSlotFraction: first === undefined ? 0 : (displayNowMs - first.startMs) / SLOT_MS,
     rangeText: first === undefined || last === undefined ? '' : `${hhmmZRel(first.startMs, view.calcNowMs)} to ${hhmmZRel(last.endMs, view.calcNowMs)}`,
