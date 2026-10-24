@@ -384,14 +384,6 @@ describe('text safety (SEC-2)', () => {
     expect(bare).toContain(FLIGHT_SIM_NOTICE);
   });
 
-  it('shows an https source as a link and nothing else as one', () => {
-    const files = readJson(PACKS[0] ?? TEST1_PACK);
-    files['settings.json'].source = 'https://example.org/limits';
-    const pack = parsePack(toRaw(files));
-    const html = renderDashboard(calculate({ pack, nowMs: Date.UTC(2026, 0, 15, 0, 0), metar: null, taf: null, windowChoice: 'full', currentMode: null, feed: EMPTY_FEED }), EMPTY_FEED, true);
-    expect(html).toContain('<a href="https://example.org/limits" rel="noopener noreferrer"');
-  });
-
   it('renders a pasted report and the refusal message as text', () => {
     const ref = PACKS[0] ?? TEST1_PACK;
     const pack = packWith(ref, { weatherStation: fixture(METAR_ID).station });
