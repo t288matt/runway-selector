@@ -60,6 +60,18 @@ function trafficSentence(view: ViewData): string {
   return base;
 }
 
+/**
+ * The raw text of the report actually governing the current slot (owner, 24-10-2026, OD-65): the METAR if it
+ * governs, the TAF if that governs instead, or null with no report. Replaces the derived "is suitable on the
+ * runways it uses ..." sentence that used to open the Weather row in Panel A.
+ */
+function currentReportText(view: ViewData): string | null {
+  const governedBy = view.weather.slots[0]?.governedBy;
+  if (governedBy === 'METAR') return view.metar?.raw ?? null;
+  if (governedBy === 'TAF') return view.taf?.raw ?? null;
+  return null;
+}
+
 function runwayStateSentence(view: ViewData): string {
   const slots = view.result.evaluation.slots;
   const first = slots[0];
@@ -144,7 +156,7 @@ export function panelAModel(view: ViewData): PanelAModel {
     arrivalsText: mode === undefined ? '' : mode.arrivals.join(', ') || 'none',
     departuresText: mode === undefined ? '' : mode.departures.join(', ') || 'none',
     nextChange,
-    weather: style === null ? null : { word: style.word.toUpperCase(), icon: style.icon, className: style.className, text: explanation.lines[0] ?? '' },
+    weather: style === null ? null : { word: style.word.toUpperCase(), icon: style.icon, className: style.className, text: currentReportText(view) ?? explanation.lines[0] ?? '' },
     traffic: trafficSentence(view),
     rank: rank === null ? '-' : `${rank} of ${enabledCount} (1 is most preferred)`,
     uncertainty: explanation.uncertaintyLine,
