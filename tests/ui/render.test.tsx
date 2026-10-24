@@ -291,7 +291,7 @@ describe('Panel D', () => {
     const view = realView(pack, ref, true);
     const m = panelDModel(view);
     expect(m.columns).toHaveLength(4);
-    expect(m.columns.map((c) => c.label)).toEqual(['Now', '+30 min', '+60 min', '+90 min']);
+    expect(m.columns.map((c) => c.label)).toEqual(['Next 30 mins', '+30 min', '+60 min', '+90 min']);
     expect(m.columns[0]?.departures).toBe('0');
     expect(m.columns.slice(1).every((c) => c.departures === 'not est.')).toBe(true);
     expect(m.unknownFrom).not.toBeNull();
