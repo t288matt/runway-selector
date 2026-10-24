@@ -7,7 +7,7 @@ import { currentModeStatus } from '../model/drawer';
 import { panelAModel } from '../model/panels';
 import { timelineModel } from '../model/timeline';
 import { Freshness, Header, NoticeBar, Notices, StoreNotices } from './Frame';
-import { PanelC, PanelD, PanelF } from './LowerPanels';
+import { PanelD, PanelF } from './LowerPanels';
 import { PanelA } from './PanelA';
 import { SettingsDrawer, type SettingsBridge } from './SettingsDrawer';
 import { Timeline } from './Timeline';
@@ -59,7 +59,6 @@ export function Dashboard(p: DashboardProps) {
       <Timeline view={view} model={timeline} displayNowMs={p.displayNowMs} onWindowChange={p.onWindowChange} reason={reasonLine(view)} />
       <WeatherEntry pack={view.pack} metar={view.metar} taf={view.taf} displayNowMs={p.displayNowMs} onApplyMetar={p.onApplyMetar} onApplyTaf={p.onApplyTaf} auto={p.autoWeather} onResumeAutomatic={p.onResumeAutomatic} />
       <div className="grid3">
-        <PanelC view={view} />
         <PanelD view={view} />
         <PanelF view={view} />
       </div>

@@ -1,54 +1,8 @@
-// Panels C (weather components), D (VATSIM traffic) and F (runway diagram)
-// (UI_DESIGN section 5, DB-8, OD-32). Text nodes only.
+// Panels D (VATSIM traffic) and F (runway diagram) (UI_DESIGN section 5, DB-8, OD-40).
+// Panel C (weather components) was removed by the owner; its letter is not reused. Text nodes only.
 import { levelTone, levelWord, type ViewData } from '../model/dashboard';
 import { buildDiagram, DIAGRAM, rolesOf } from '../model/diagram';
-import { currentWind, panelDModel, runwayComponentRows, windSentence } from '../model/panels';
-import { kt1 } from '../format';
-
-export function PanelC({ view }: { view: ViewData }) {
-  const rows = runwayComponentRows(view);
-  const s = view.pack.settings;
-  const state = view.result.evaluation.slots[0]?.runwayState ?? 'DRY';
-  return (
-    <section className="panel" aria-label="Panel C: weather">
-      <h2><i>C</i>Weather</h2>
-      <div className="small">{windSentence(currentWind(view))}</div>
-      <table className="t2">
-        <caption className="sr">Wind components on every runway end, in knots, against the limits</caption>
-        <thead>
-          <tr>
-            <th>Runway end</th>
-            <th>Head</th>
-            <th>Tail</th>
-            <th>Cross</th>
-            <th>Limits</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.name}>
-              <td>{r.name}</td>
-              <td>{r.headwind}</td>
-              <td>{r.tailwind}</td>
-              <td>{r.crosswind}</td>
-              <td>
-                {r.over === null ? (
-                  <span className={`chip ${r.known ? 'chip-suitable' : 'chip-unknown'}`}>{r.known ? '✓' : '?'}</span>
-                ) : (
-                  <span className="chip chip-unsuitable">{'✕'} {r.over}</span>
-                )}{' '}
-                <span className="small">T {kt1(r.tailLimit)}, X {kt1(r.crossLimit)}</span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="small">
-        Components in knots, one decimal, using the stronger of mean wind and gust. Limits: tailwind {kt1(s.tailwindDryKt)} dry, {kt1(s.tailwindWetKt)} wet (the {state === 'DRY' ? 'dry' : state === 'WET' ? 'wet' : 'tighter'} limit applies now); crosswind is the tightest limit of the modes using the end (default {kt1(s.defaultCrosswindKt)}). Simulation settings. The pasted reports are shown at the top of the screen.
-      </div>
-    </section>
-  );
-}
+import { currentWind, panelDModel, runwayComponentRows } from '../model/panels';
 
 export function PanelD({ view }: { view: ViewData }) {
   const m = panelDModel(view);

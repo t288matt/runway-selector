@@ -35,7 +35,7 @@ Rules that follow from this:
 4. Provisional and illustrative values are always labelled where they appear, never only in a footnote.
 
 ## 3. Screen layout
-The order is fixed at every width: header, notice, freshness chips, A, B, weather entry, then C, D and F (OD-38; the weather entry used to sit above A). B is always directly below A. Panel letters are not reused, so the panels are A, B, C, D and F.
+The order is fixed at every width: header, notice, freshness chips, A, B, weather entry, then D and F (OD-38, OD-40; the weather entry used to sit above A). B is always directly below A. Panel letters are not reused, so the panels are A, B, C, D and F.
 
 ### 3.1 Wide desktop (1280 px and above, designed at 1440)
 Content width capped at 1440 px, centred, 16 px gutters. C, D and F sit side by side.
@@ -131,7 +131,8 @@ Common to all panels: a letter badge and title; a small "provisional" mark where
 ### Panel B: survival timeline
 Section 6 describes it in full.
 
-### Panel C: weather
+### Panel C: weather (removed, OD-40)
+The owner removed this panel on 24-10-2026: it is not drawn, and its letter is not reused. The description below is kept as history only.
 - The raw METAR and TAF are shown at the top of the screen, in the weather entry boxes (OD-32), not in this panel.
 - Component table for every runway end in the airport pack: headwind, tailwind, crosswind, one decimal, using the stronger of mean wind and gust. Ends over a limit carry the cross icon and the cause code (TW or XW).
 - A footer states the limits in use and their label: "Simulation settings".
