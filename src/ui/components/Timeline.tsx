@@ -200,9 +200,18 @@ export function Timeline({ view, model, displayNowMs, onWindowChange }: Timeline
           </div>
           <div className="row hdr" role="row" style={{ height: LAYOUT.eventStrip }}>
             <div className="lab" role="rowheader"><small>Weather events</small></div>
-            {slots.map((s) => (
-              <div key={s.index} role="columnheader" className="ic" title={s.eventTitle}>{s.events.join(' ')}</div>
-            ))}
+            <div className="evs" style={{ width: n * LAYOUT.column }}>
+              <div className="evw" aria-label="Wind">
+                {model.windRuns.map((w) => (
+                  <div key={w.startSlot} className="wbar" title={w.title} style={{ left: w.startSlot * LAYOUT.column, width: (w.endSlot - w.startSlot + 1) * LAYOUT.column - 2 }}>{w.label}</div>
+                ))}
+              </div>
+              <div className="evm">
+                {slots.map((s) => (
+                  <div key={s.index} role="columnheader" className="ic" title={s.eventTitle}>{s.events.join(' ')}</div>
+                ))}
+              </div>
+            </div>
           </div>
           <div className="row hdr traf" role="row" style={{ height: LAYOUT.trafficStrip }}>
             <div className="lab" role="rowheader"><small>Traffic</small></div>
