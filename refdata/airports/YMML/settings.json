@@ -10,7 +10,7 @@
   "wetRunwayProbabilityPct":  { "value": 40,   "description": "A PROB group (not on a TEMPO or INTER) with rain at or above this makes a slot WET." },
   "dryingTimeMinutes":        { "value": 60,   "description": "After the last WET slot the runway stays WET this long, then DRY." },
   "precipitationCodes":       { "value": ["DZ", "RA", "SN", "SG", "PL", "GR", "GS", "SH", "TS", "UP"], "description": "Present-weather codes that count as precipitation." },
-  "metarValidityMinutes":     { "value": 60,   "description": "The latest METAR decides the status of slots starting within this many minutes of its observation; after that the TAF governs." },
+  "metarValidityMinutes":     { "value": 30,   "description": "The latest METAR decides the status of slots starting within this many minutes of its observation; after that the TAF governs. Set to 30 by the owner on 24-10-2026: a METAR is current for about half an hour, and the TAF is not consulted for a slot the METAR governs." },
   "lowVisibilityMetres":      { "value": 5000, "description": "Visibility below this many metres is shown as a low-visibility event in the timeline. Display only; it does not change any mode. Provisional (owner to confirm)." },
   "forecastWindowMinutes":    { "value": 360,  "description": "Default forecast window in minutes. Empty means the full TAF validity. Options on screen: 240, 360 and the full TAF (OD-31). Set to 360 (6 hours) by the owner on 24-10-2026 (OD-42)." },
   "demandHorizonMinutes":     { "value": 240,  "description": "Longest look-ahead for the traffic estimate; beyond it demand is unknown." },

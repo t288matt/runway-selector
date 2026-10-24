@@ -232,29 +232,29 @@ describe('E06 BECMG applies from its start time (WX-8, OD-20)', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
-describe('E07 METAR governs the first slots, TAF-worse is MARGINAL (WX-7, OD-25)', () => {
-  // METAR obs 03:00: 250/10. TAF: 250/10, FM 03:30 -> 070/10. Slots 03:00 and 03:30 start within 60 min of the observation -> METAR governs.
-  // Mode 25AD (hdg 250): METAR headwind 10 -> SUITABLE; at 03:30 the TAF view has tailwind 10 > 5.05 (UNSUITABLE, worse) -> the cell is MARGINAL with a TAF reason.
-  // From 04:30 (90 min after the observation) the TAF governs: 070/10 -> UNSUITABLE. 04:00 starts exactly 60 min after the observation (boundary, either answer).
-  // Mode 07AD (hdg 070): METAR tailwind 10 -> UNSUITABLE at 03:00 and 03:30 (a better TAF view cannot lift it); SUITABLE from 04:30.
+describe('E07 METAR governs its slot alone; the TAF is not consulted (owner, 24-10-2026, amending WX-7, OD-25)', () => {
+  // METAR obs 03:00: 250/10, metarValidityMinutes 30. TAF: 250/10, FM 03:30 -> 070/10.
+  // Slot 03:00 starts at the observation (age 0) -> METAR-governed. Slot 03:30 starts exactly at the 30-minute
+  // boundary, which is outside the window (metarWindowMs uses strict <), so the TAF governs it directly.
+  // Mode 25AD (hdg 250): METAR headwind 10 -> SUITABLE at 03:00, unaffected by the TAF's worse view there.
+  //   From 03:30 the TAF's own 070/10 governs directly: tailwind 10 > 5.05 -> UNSUITABLE (no TAF reason needed,
+  //   the TAF is simply the weather now).
+  // Mode 07AD (hdg 070): METAR tailwind 10 -> UNSUITABLE at 03:00 (its own worse TAF view does not apply here
+  //   either); SUITABLE from 03:30 once the TAF (a headwind on 07) governs.
   const r = go({ metar: metar(kt(250, 10)), taf: taf(`${kt(250, 10)} 9999 SCT020 FM230330 ${kt(70, 10)} 9999 SCT020`) });
-  it('slots 03:00 and 03:30 are METAR-governed; 04:30 is TAF-governed', () => {
+  it('slot 03:00 is METAR-governed; slot 03:30 (the 30-minute boundary) is already TAF-governed', () => {
     expect(r.out.evaluation.slots[0]!.governedBy).toBe('METAR');
-    expect(r.out.evaluation.slots[1]!.governedBy).toBe('METAR');
-    expect(r.out.evaluation.slots[at(r, '04:30')]!.governedBy).toBe('TAF');
+    expect(r.out.evaluation.slots[1]!.governedBy).toBe('TAF');
   });
-  it('mode 25AD: SUITABLE, then MARGINAL on the TAF warning, then UNSUITABLE once the TAF governs', () => {
-    expect(cell(r, '25AD', '03:00').status).toBe('SUITABLE');
-    const c = cell(r, '25AD', '03:30');
-    expect(c.status).toBe('MARGINAL');
-    expect(c.reasons.some((x) => x.code === 'TAF')).toBe(true);
-    expect(['MARGINAL', 'UNSUITABLE']).toContain(cell(r, '25AD', '04:00').status);
-    expect(cell(r, '25AD', '04:30').status).toBe('UNSUITABLE');
+  it('mode 25AD: SUITABLE under the METAR, UNSUITABLE once the TAF governs, with no TAF reason while the METAR governed', () => {
+    const first = cell(r, '25AD', '03:00');
+    expect(first.status).toBe('SUITABLE');
+    expect(first.reasons.some((x) => x.code === 'TAF')).toBe(false);
+    expect(cell(r, '25AD', '03:30').status).toBe('UNSUITABLE');
   });
   it('mode 07AD: UNSUITABLE under the METAR, SUITABLE once the TAF governs', () => {
     expect(cell(r, '07AD', '03:00').status).toBe('UNSUITABLE');
-    expect(cell(r, '07AD', '03:30').status).toBe('UNSUITABLE');
-    expect(cell(r, '07AD', '04:30').status).toBe('SUITABLE');
+    expect(cell(r, '07AD', '03:30').status).toBe('SUITABLE');
   });
 });
 
