@@ -30,6 +30,8 @@ export const BOUNDS = {
     headingDegrees: { min: 0, max: 360 },
     crosswindKt: { min: 0, max: 40 },
     capacityPerHour: { min: 1, max: 200 },
+    minimaCeilingFt: { min: 0, max: 15000 },
+    minimaVisibilityMetres: { min: 0, max: 10000 },
     tailwindKt: { min: 0, max: 15 },
     limitToleranceKt: { min: 0, max: 1 },
     calmWindKt: { min: 0, max: 10 },
@@ -171,6 +173,15 @@ export const RunwaysFileSchema = v.strictObject({
 
 // --------------------------------------------------------------- modes.json
 const runwayList = v.pipe(v.array(runwayName), v.maxLength(C.maxRunwaysPerMode));
+/** A mode's optional weather minima: every key optional, at least one required. */
+const MinimaSchema = v.pipe(
+  v.strictObject({
+    ceilingFt: v.optional(int(R.minimaCeilingFt)),
+    visibilityMetres: v.optional(int(R.minimaVisibilityMetres)),
+    requiresDrySurface: v.optional(v.boolean('Expected true or false')),
+  }),
+  v.check((m) => m.ceilingFt !== undefined || m.visibilityMetres !== undefined || m.requiresDrySurface !== undefined, 'minima must give at least one of ceilingFt, visibilityMetres or requiresDrySurface'),
+);
 const ModeSchema = v.strictObject({
   id: modeId,
   enabled: v.boolean('Expected true or false'),
@@ -178,6 +189,7 @@ const ModeSchema = v.strictObject({
   departures: runwayList,
   maxCrosswindKt: v.optional(num(R.crosswindKt)),
   capacity: v.optional(v.nullable(int(R.capacityPerHour))),
+  minima: v.optional(MinimaSchema),
   ...meta,
 });
 export const ModesFileSchema = v.strictObject({
