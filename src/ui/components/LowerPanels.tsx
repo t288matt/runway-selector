@@ -56,7 +56,6 @@ export function PanelD({ view }: { view: ViewData }) {
           {m.elevationMissing ? <p className="strip strip-warn">The pack gives no airport elevation, so aircraft are judged on the ground by distance and speed only. The departure count may include slow aircraft overhead.</p> : null}
         </>
       )}
-      <p className="small">Arrivals: airborne by distance and speed; aircraft on the ground elsewhere with a flight plan here are assumed to take off over the next 30 minutes. Departures: every aircraft on the ground here counts in the next slot only. Bands are provisional placeholders.</p>
     </section>
   );
 }
