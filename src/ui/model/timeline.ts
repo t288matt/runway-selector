@@ -261,7 +261,7 @@ export function timelineModel(view: ViewData, displayNowMs: number): TimelineMod
     for (const k of kinds) events.push(k);
     for (const o of overlays) titles.push(o.text);
     if (wet === 'possible') events.push('wet risk');
-    if (wet === 'wet') events.push('wet');
+    if (wet === 'wet') events.push('WET');
     if (s.governedBy === 'NONE') events.push(missing === 'NO MET' ? 'no weather' : 'no TAF');
     const change = changes.find((c) => c.change.slotIndex === i);
     if (change !== undefined) {
