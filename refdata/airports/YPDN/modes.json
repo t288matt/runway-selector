@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "description": "Preferred runway modes, owner-supplied 24-10-2026, in priority order (order in this file is the tie-break): 1 29AD36A; 2 29AD18A; 3 11AD36A; 4 11AD18A. Each uses both runways: 29AD36A lands on 29 and 36 and departs from 29; 29AD18A lands on 29 and 18 and departs from 29; 11AD36A lands on 11 and 36 and departs from 11; 11AD18A lands on 11 and 18 and departs from 11. No crosswind limit or capacity has been supplied for any mode; they fall back to the pack default and have no capacity limit.",
+  "status": "verified",
+  "modes": [
+    { "id": "29AD36A", "description": "Arrivals 29 and 36, departures 29", "enabled": true, "arrivals": ["29", "36"], "departures": ["29"] },
+    { "id": "29AD18A", "description": "Arrivals 29 and 18, departures 29", "enabled": true, "arrivals": ["29", "18"], "departures": ["29"] },
+    { "id": "11AD36A", "description": "Arrivals 11 and 36, departures 11", "enabled": true, "arrivals": ["11", "36"], "departures": ["11"] },
+    { "id": "11AD18A", "description": "Arrivals 11 and 18, departures 11", "enabled": true, "arrivals": ["11", "18"], "departures": ["11"] }
+  ]
+}
