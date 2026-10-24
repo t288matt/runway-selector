@@ -2,10 +2,21 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 permissions:
   contents: read
+
+# A push to an open pull request's branch fires both `push` and `pull_request`
+# for the same commit, so without this the two runs compete for the same
+# limited runner pool (seen 24-10-2026: duplicate runs, one stuck for
+# minutes). `push` is now main only, so a feature branch gets one run (from
+# `pull_request`); this group also cancels a superseded run if one is ever
+# triggered twice for the same ref.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:
