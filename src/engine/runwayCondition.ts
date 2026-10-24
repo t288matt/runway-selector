@@ -21,8 +21,9 @@
 //  - A METAR-governed slot's own tafView (the TAF's own view of the same
 //    slot) plays no part in the runway state while the METAR governs (owner,
 //    24-10-2026): a current METAR is not second-guessed by the forecast it
-//    sits inside. tafView is still used, unrelated to this, to show TEMPO and
-//    PROB overlay events in the timeline even when the METAR governs.
+//    sits inside. The timeline's weather events follow the same rule (owner,
+//    24-10-2026): a METAR-governed slot shows the METAR's own weather, not
+//    the TAF's TEMPO/PROB overlays.
 import type { AirportPack } from '../refdata/types';
 import type { SlotWeather, WeatherSlot } from './inputs';
 import type { RunwayState, RunwayStateCause } from './types';

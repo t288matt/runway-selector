@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "description": "All tunable values for this airport. Every value is a simulation assumption (provisional) unless a source is stated. Defaults proposed 23-10-2026.",
-  "tailwindDryKt":            { "value": 5,    "description": "Maximum tailwind on a dry runway. Owner simulation rule." },
-  "tailwindWetKt":            { "value": 0,    "description": "Maximum tailwind on a wet runway. Owner simulation rule." },
+  "tailwindDryKt":            { "value": 5,    "description": "Maximum tailwind on a dry runway." },
+  "tailwindWetKt":            { "value": 0,    "description": "Maximum tailwind on a wet runway." },
   "defaultCrosswindKt":       { "value": 20,   "description": "Crosswind limit used only for a mode with no maxCrosswindKt of its own." },
   "limitToleranceKt":         { "value": 0.05, "description": "A component passes if it is at most the limit plus this tolerance, so floating-point noise cannot fail a 0 kt limit." },
   "calmWindKt":               { "value": 3,    "description": "Wind (including variable wind) at or below this counts as calm: no tailwind and no crosswind." },

@@ -920,15 +920,6 @@ p.small {
   opacity: 0.5;
   cursor: default;
 }
-.drawer-field {
-  margin: 6px 0 10px;
-}
-.drawer-field label {
-  display: block;
-  margin-bottom: 3px;
-  font-size: 13px;
-  color: var(--muted);
-}
 .drawer-actions {
   display: flex;
   gap: 8px;
@@ -952,8 +943,7 @@ p.small {
   margin: 8px 0;
   font-size: 12px;
 }
-.plan-band ul,
-#drawer .prov {
+.plan-band ul {
   margin: 4px 0 0;
   padding-left: 18px;
   font-size: 12px;

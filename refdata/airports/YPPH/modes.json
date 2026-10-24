@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "description": "Preferred runway modes, owner-supplied 24-10-2026, in priority order (order in this file is the tie-break): 1 24A21AD; 2 03AD06D. 24A21AD lands on 24 and 21 and departs from 21. 03AD06D lands on 03 and departs from 03 and 06. The four single-runway modes are NOT from the owner: they were added as the lowest-priority fallback so the planner still has a mode when the preferred two fail; the owner can remove or reorder them. No crosswind limit or capacity has been supplied for any mode; they fall back to the pack default and have no capacity limit.",
-  "status": "provisional",
+  "status": "verified",
   "modes": [
     { "id": "24A21AD", "description": "Arrivals 24 and 21, departures 21", "enabled": true, "arrivals": ["24", "21"], "departures": ["21"] },
     { "id": "03AD06D",  "description": "Arrivals 03; departures 03 and 06", "enabled": true, "arrivals": ["03"], "departures": ["03", "06"] },

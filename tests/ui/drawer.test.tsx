@@ -194,13 +194,13 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('stale amber and Still cur
     expect(html).not.toContain('cur-stale');
   });
 
-  it('renders the amber state in Panel A and the drawer, with its words and the button', () => {
+  it('renders the amber state in Panel A, with its words and the button', () => {
     const view = calculate({ pack, nowMs: NOW, metar: null, taf: null, windowChoice: 'full', currentMode: a, feed: EMPTY_FEED });
     const later = NOW + limit + 5 * MIN;
     const html = renderDashboard(view, EMPTY_FEED, true, testBridge({ currentModeRecord: record }), later);
-    expect(html.match(/cur-status cur-stale/g)).toHaveLength(2);
+    expect(html.match(/cur-status cur-stale/g)).toHaveLength(1);
     expect(textOf(html)).toContain(`Possibly out of date: set more than ${limitText(pack.settings.currentModeStaleMinutes)} ago.`);
-    expect(html.match(/>Still current</g)).toHaveLength(2);
+    expect(html.match(/>Still current</g)).toHaveLength(1);
     const fresh = renderDashboard(view, EMPTY_FEED, true, testBridge({ currentModeRecord: record }), NOW + MIN);
     expect(fresh).not.toContain('cur-stale');
     expect(textOf(fresh)).toContain('set 10:00 UTC');
@@ -368,11 +368,9 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('drawer content [%s]', (_n
     expect(text).toContain('On screen you can change only the current mode and the window');
   });
 
-  it('shows the time zone (as pack metadata, not a parallel clock) and the pack status', () => {
+  it('shows the time zone (as pack metadata, not a parallel clock)', () => {
     expect(text).toContain(pack.airport.timeZone);
     expect(text).toMatch(/Now [A-Za-z ,.]+ 10:12Z/);
-    expect(model.provenance.map((p) => p.label)).toEqual(['Airport', 'Runways', 'Modes', 'Operating plan', 'Settings']);
-    expect(text).toContain(`Settings: ${pack.meta.settings.status ?? 'not stated'}.`);
   });
 
   it('uses no word for penalty, cost, points or score anywhere in the drawer', () => {
@@ -491,16 +489,12 @@ describe('drawer accessibility and text safety', () => {
     expect(html).toMatch(/<h2 id="drawer-title" tabindex="-1">Settings<\/h2>/);
     expect(html).toContain('>Close settings</button>');
     expect(html).toContain('>Reload data</button>');
-    expect(html).toContain('for="drawer-current-mode"');
-    expect(html).toContain('for="drawer-window"');
     expect(renderDashboard(view, EMPTY_FEED, false)).not.toContain('id="drawer"');
   });
 
-  it('renders hostile pack text, a refusal message and a source as text, never as elements or links', () => {
+  it('renders hostile pack text and a refusal message as text, never as elements or links', () => {
     const files = readJson(YSSY_PACK);
     files['settings.json'].tailwindDryKt.description = `${HOSTILE} <script>alert(1)</script>`;
-    files['settings.json'].source = 'javascript:alert(3)';
-    files['modes.json'].source = 'https://example.org/modes';
     const hostile = parsePack(toRaw(files));
     const v = calculate({ pack: hostile, nowMs: NOW, metar: null, taf: null, windowChoice: 'full', currentMode: null, feed: EMPTY_FEED });
     const html = renderDashboard(v, EMPTY_FEED, true, testBridge({ reload: { status: 'refused', message: `${HOSTILE}\nsettings.json: bad` }, airportError: HOSTILE, notices: [HOSTILE], airports: ['YSSY', 'TEST'] }));
@@ -508,9 +502,7 @@ describe('drawer accessibility and text safety', () => {
     expect(html).not.toContain('<script');
     expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;');
     expect(html).not.toContain('href="javascript');
-    expect(textOf(html)).toContain('Source: javascript:alert(3)');
-    expect(html).toContain('<a href="https://example.org/modes" rel="noopener noreferrer"');
-    expect(html.match(/<a href=/g)).toHaveLength(1);
+    expect(html.match(/<a href=/g)).toBeNull();
   });
 
   it('refuses hostile values in storage instead of showing them', () => {

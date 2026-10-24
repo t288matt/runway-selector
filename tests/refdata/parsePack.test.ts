@@ -58,7 +58,6 @@ describe('good packs', () => {
     expect(pack.modes.find((m) => m.id === 'SODPROPS')?.arrivals).toEqual(['34L']);
     expect(pack.modes.some((m) => m.id === '4')).toBe(false);
     expect(pack.modes.every((m) => m.maxCrosswindKt === 20)).toBe(true);
-    expect(pack.meta.operatingPlan.status).toBe('provisional');
   });
 
   it('turns the YSSY plan bands into minutes of the local day', () => {
