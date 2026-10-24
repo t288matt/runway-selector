@@ -258,12 +258,12 @@ export function panelDModel(view: ViewData): PanelDModel {
     const t = slots[i];
     const arrivals = t?.arrivals ?? null;
     const departures = t?.departures ?? null;
-    const label = i === 0 ? 'Now' : `+${i * 30} min`;
+    const label = i === 0 ? 'Next 30 mins' : `+${i * 30} min`;
     columns.push({
       label,
       arrivals: arrivals === null ? 'Unknown' : String(arrivals),
       departures: departures === null ? 'not est.' : String(departures),
-      movements: arrivals === null ? 'Unknown' : departures === null ? `≥ ${arrivals * 2}` : String((arrivals + departures) * 2),
+      movements: arrivals === null ? 'Unknown' : departures === null ? `${arrivals * 2} (arrivals only)` : String((arrivals + departures) * 2),
       level: levels[i] ?? null,
       known: arrivals !== null,
     });
@@ -360,7 +360,7 @@ export function cellDetailModel(view: ViewData, modeIndex: number, slotIndex: nu
   const planStatus = pack.meta.operatingPlan.status === 'provisional' ? ', provisional' : '';
   const operatingPlan = planFail
     ? `Not allowed in time band ${band ?? 'unknown'}${planStatus}`
-    : `Allowed${band === null ? '' : ` in time band ${band}`}${rank === null ? '' : `, rank ${rank}`}${planStatus}`;
+    : `Allowed${band === null || pack.plan.find((b) => b.id === band)?.allDay === true ? '' : ` in time band ${band}`}${rank === null ? '' : `, rank ${rank}`}${planStatus}`;
 
   const s = result.evaluation.survival[modeIndex];
   const parts: string[] = [];

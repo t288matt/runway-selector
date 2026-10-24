@@ -12,5 +12,5 @@
   "groundMaxSpeedKt": 40,
   "groundAltitudeMarginFt": 100,
   "arrivalSpeedFloorKt": 150,
-  "labels": { "extraNotice": "Rules and capacities shown are provisional simulation assumptions." }
+  "labels": {}
 }

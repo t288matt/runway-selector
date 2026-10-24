@@ -45,22 +45,23 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the screen from real repo
   const text = textOf(html);
 
   it('builds the title from the pack and shows the fixed notice and the pack line', () => {
-    expect(text).toContain(`${pack.airport.name} (${pack.airport.icao}) Runway Mode Planner`);
+    expect(text).toContain('Runway Mode Planner');
+    expect(text).not.toContain(`${pack.airport.name} (${pack.airport.icao})`);
     expect(html).toContain(FLIGHT_SIM_NOTICE);
     const extra = extraNoticeOf(pack);
     if (extra !== null) expect(text).toContain(extra);
   });
 
-  it('keeps the fixed order: header, notice, chips, A, B, weather entry, C, D, F', () => {
-    const marks = ['<header', 'role="note"', 'aria-label="Data freshness"', 'Panel A', 'Panel B', 'aria-label="Raw METAR and TAF"', 'Panel C', 'Panel D', 'Panel F'].map((m) => html.indexOf(m));
+  it('keeps the fixed order: header, chips, A, B, weather entry, D, F, notice', () => {
+    const marks = ['<header', 'aria-label="Data freshness"', 'Panel A', 'Panel B', 'aria-label="Raw METAR and TAF"', 'Panel D', 'Panel F', 'role="note"'].map((m) => html.indexOf(m));
     expect(marks.every((i) => i >= 0)).toBe(true);
     expect([...marks].sort((a, b) => a - b)).toEqual(marks);
   });
 
-  it('shows the pasted reports as plain text at the top, with the observation age from the report', () => {
+  it('shows the reports in use as plain text; the METAR age is in the freshness chip, not repeated under the report', () => {
     expect(html).toContain('data-testid="wx-metar-in-use"');
     expect(text).toContain(view.metar?.raw ?? 'missing');
-    expect(text).toContain('old. Taken from the time group in the report');
+    expect(text).not.toContain('Taken from the time group in the report');
   });
 
   it('draws one row per enabled mode and one cell per mode and slot', () => {
@@ -71,13 +72,10 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the screen from real repo
     for (const r of drawn.rows) expect(text).toContain(r.modeId);
   });
 
-  it('shows every runway end of the pack in Panel C and in the diagram, for any number of runways', () => {
-    const c = html.slice(html.indexOf('Panel C'), html.indexOf('Panel D'));
+  it('shows every runway end of the pack in the diagram, for any number of runways, and has no weather components panel (OD-40)', () => {
     const f = html.slice(html.indexOf('Panel F'));
-    for (const r of pack.runways) {
-      expect(c).toContain(`<td>${r.name}</td>`);
-      expect(f).toContain(r.name);
-    }
+    expect(html).not.toContain('Panel C');
+    for (const r of pack.runways) expect(f).toContain(r.name);
     expect(f).toContain('<svg');
     expect(f).toContain('role="img"');
     expect(runwayComponentRows(view)).toHaveLength(pack.runways.length);
@@ -285,6 +283,18 @@ describe('the weather components and the hover detail come from the engine', () 
   });
 });
 
+describe('the cell detail operating-plan line', () => {
+  it('does not say "in time band all-day" for an all-day plan, and keeps the rank', () => {
+    const ref = PACKS[0];
+    if (ref === undefined) throw new Error('no pack');
+    const pack = packWith(ref, { weatherStation: fixture(METAR_ID).station });
+    const view = realView(pack, ref, true);
+    const detail = cellDetailModel(view, 0, 0);
+    expect(detail?.operatingPlan).toMatch(/^Allowed, rank \d+/);
+    expect(detail?.operatingPlan).not.toContain('time band');
+  });
+});
+
 describe('Panel D', () => {
   it('shows four slots, departures for the first only, unknown demand beyond the horizon, and no trend', () => {
     const ref = PACKS[0];
@@ -293,13 +303,21 @@ describe('Panel D', () => {
     const view = realView(pack, ref, true);
     const m = panelDModel(view);
     expect(m.columns).toHaveLength(4);
-    expect(m.columns.map((c) => c.label)).toEqual(['Now', '+30 min', '+60 min', '+90 min']);
+    expect(m.columns.map((c) => c.label)).toEqual(['Next 30 mins', '+30 min', '+60 min', '+90 min']);
     expect(m.columns[0]?.departures).toBe('0');
     expect(m.columns.slice(1).every((c) => c.departures === 'not est.')).toBe(true);
     expect(m.unknownFrom).not.toBeNull();
+    // movements per hour: both known, doubled; arrivals known only, the arrivals figure labelled so, never a lower bound
+    for (const c of m.columns) {
+      expect(c.movements).not.toContain('\u2265');
+      if (c.arrivals === 'Unknown') expect(c.movements).toBe('Unknown');
+      else if (c.departures === 'not est.') expect(c.movements).toBe(`${Number(c.arrivals) * 2} (arrivals only)`);
+      else expect(c.movements).toBe(String((Number(c.arrivals) + Number(c.departures)) * 2));
+    }
     const text = textOf(renderDashboard(view, { aircraft: [], fetchedAtMs: view.calcNowMs, error: null, errorAtMs: null }));
     expect(text).toContain('Demand unknown from');
-    expect(text).toContain('Connected aircraft are not movements');
+    expect(text).toContain('on the ground here.');
+    expect(text).not.toContain('Connected aircraft are not movements');
     expect(text).not.toMatch(/\btrend\b/i);
   });
 
@@ -369,7 +387,7 @@ describe('text safety (SEC-2)', () => {
     const ref = PACKS[0] ?? TEST1_PACK;
     const pack = packWith(ref, { weatherStation: fixture(METAR_ID).station });
     const hostileMetar: DecodedMetar = { ...decodeMetarFixture(METAR_ID, ref), raw: HOSTILE };
-    const html = renderToStaticMarkup(<WeatherEntry pack={pack} metar={hostileMetar} taf={null} displayNowMs={nowOf(fixture(METAR_ID))} onApplyMetar={() => ({ ok: true, message: null, warnings: [] })} onApplyTaf={() => ({ ok: true, message: null, warnings: [] })} auto={NO_AUTO_WEATHER} onResumeAutomatic={() => undefined} />);
+    const html = renderToStaticMarkup(<WeatherEntry pack={pack} metar={hostileMetar} taf={null} onApplyMetar={() => ({ ok: true, message: null, warnings: [] })} onApplyTaf={() => ({ ok: true, message: null, warnings: [] })} auto={NO_AUTO_WEATHER} onResumeAutomatic={() => undefined} />);
     expect(html).not.toContain('<img');
     expect(html).toContain('&lt;img');
     // the real refusal of a hostile paste, rendered the way the screen renders it
@@ -429,8 +447,9 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('times are UTC only and th
     expect(text).not.toMatch(/\d{1,2}:\d{2}[^)]*\(?\s*local\)/i);
   });
 
-  it('says the plan looks ahead only as far as the chosen window', () => {
-    expect(text).toContain('The plan looks ahead only as far as the window you choose.');
+  it('no longer carries the window note (OD-41); the window choice itself is still on screen', () => {
+    expect(text).not.toContain('looks ahead only as far as the window');
+    expect(text).toContain('Window');
   });
 });
 

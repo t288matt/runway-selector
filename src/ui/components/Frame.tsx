@@ -18,8 +18,9 @@ export function extraNoticeOf(pack: AirportPack | null): string | null {
   return line === undefined || line === '' ? null : line;
 }
 
-export function appTitle(pack: AirportPack | null): string {
-  return pack === null ? 'Runway Mode Planner' : `${pack.airport.name} (${pack.airport.icao}) Runway Mode Planner`;
+/** The airport is named by the Airport box beside the title (OD-40), so the title does not repeat it. */
+export function appTitle(): string {
+  return 'Runway Mode Planner';
 }
 
 export function NoticeBar({ pack }: { pack: AirportPack | null }) {
@@ -91,10 +92,10 @@ export function AirportEntry({ icao, airports, error, onSwitch }: AirportEntryPr
   );
 }
 
-export function Header({ pack, liveTag, onRefresh, onSettings, busy, airport }: { pack: AirportPack | null; liveTag: string; onRefresh: () => void; onSettings: () => void; busy: boolean; airport?: AirportEntryProps }) {
+export function Header({ liveTag, onRefresh, onSettings, busy, airport }: { liveTag: string; onRefresh: () => void; onSettings: () => void; busy: boolean; airport?: AirportEntryProps }) {
   return (
     <header className="top">
-      <h1>{appTitle(pack)}</h1>
+      <h1>{appTitle()}</h1>
       <span className="tag">{liveTag}</span>
       <span className="sp" />
       {airport === undefined ? null : <AirportEntry key={airport.icao} {...airport} />}

@@ -35,15 +35,14 @@ Rules that follow from this:
 4. Provisional and illustrative values are always labelled where they appear, never only in a footnote.
 
 ## 3. Screen layout
-The order is fixed at every width: header, notice, freshness chips, A, B, weather entry, then C, D and F (OD-38; the weather entry used to sit above A). B is always directly below A. Panel letters are not reused, so the panels are A, B, C, D and F.
+The order is fixed at every width: header, freshness chips, A, B, weather entry, D and F, then the flight-simulation notice at the bottom (OD-38, OD-40, OD-41; the weather entry used to sit above A). B is always directly below A. Panel letters are not reused, so the panels are A, B, C, D and F.
 
 ### 3.1 Wide desktop (1280 px and above, designed at 1440)
 Content width capped at 1440 px, centred, 16 px gutters. C, D and F sit side by side.
 ```
 +----------------------------------------------------------------------------------------------------------+
-| <Airport> Runway Mode Planner   [Illustrative, not live data]   Times UTC + local   [Refresh] [Settings] |
+| Runway Mode Planner   [Illustrative, not live data]   Times UTC + local   [Refresh] [Settings] |
 | Flight simulation only. Never for real-world navigation, flight planning or operations.                  |
-| Rules and capacities shown are provisional simulation assumptions.                                       |
 | METAR 22:00Z (12 min) | TAF 21:30Z to 07:30Z | VATSIM 32 s | Plan 22:00Z, next 22:30Z | DRY              |
 +----------------------------------------------------------------------------------------------------------+
 | METAR [ paste box, 2 lines .......................................... ] [Apply]  12 min old              |
@@ -77,7 +76,7 @@ At 1440 px the timeline shows its slots with no scroll; at 1280 px the rest of t
 Same order. A uses two columns (mode block left, facts right; banner and why full width). B scrolls horizontally with the mode labels sticky. C and D sit side by side, then F takes the full width.
 ```
 +--------------------------------------------+
-| header, notice, chips (wrap)               |
+| header, chips (wrap)                       |
 | METAR and TAF boxes, Apply buttons         |
 +--------------------------------------------+
 | A  MODE 12  |  next change, weather |
@@ -98,7 +97,7 @@ Target: A and the first four timeline rows visible on a 1366 x 768 laptop withou
 Title (built from the pack), a data tag, a "Times UTC" label, Refresh button, Settings button. The tag reads "Live" with source times when data is live and "Illustrative, not live data" in the mockup. The tag is never absent.
 
 ### 4.2 Flight-simulation notice
-- Text: "Flight simulation only. Never for real-world navigation, flight planning or operations." A second short line: "Rules and capacities are provisional simulation assumptions."
+- Text: "Flight simulation only. Never for real-world navigation, flight planning or operations." The Sydney pack no longer adds a second line (owner, 24-10-2026, OD-40); a pack may still add one.
 - Always visible as a bar under the header; it is not dismissible in phase 1.
 - On the VATPAC site (future) the first visit shows the site's own acceptance step before the app loads; the bar stays after acceptance. Acceptance is stored in browser storage only, with the version of the wording.
 - Contrast and size match body text. It must not be styled so quietly that it is missed.
@@ -131,7 +130,8 @@ Common to all panels: a letter badge and title; a small "provisional" mark where
 ### Panel B: survival timeline
 Section 6 describes it in full.
 
-### Panel C: weather
+### Panel C: weather (removed, OD-40)
+The owner removed this panel on 24-10-2026: it is not drawn, and its letter is not reused. The description below is kept as history only.
 - The raw METAR and TAF are shown at the top of the screen, in the weather entry boxes (OD-32), not in this panel.
 - Component table for every runway end in the airport pack: headwind, tailwind, crosswind, one decimal, using the stronger of mean wind and gust. Ends over a limit carry the cross icon and the cause code (TW or XW).
 - A footer states the limits in use and their label: "Simulation settings".
@@ -139,7 +139,7 @@ Section 6 describes it in full.
 
 ### Panel D: VATSIM traffic
 - Table: for each of the first four 30-minute slots (now, +30, +60, +90 min), arrivals (airborne to the pack's airport), departures (on the ground) and movements per hour. Departures are estimated for the next slot only; later slots show "not est.". A line states "Connected aircraft are not movements."
-- Traffic class chip (LOW, MEDIUM, HIGH) and a note that bands are provisional placeholders. No trend is shown (OD-32).
+- Traffic class chip (LOW, MEDIUM, HIGH). The footnote explaining how arrivals and departures are counted, and the note that bands are provisional placeholders, were removed by the owner on 24-10-2026 (OD-41). No trend is shown (OD-32).
 - Beyond the demand horizon (default: the forecast window, REQUIREMENTS.md TR-7): "Demand unknown" is shown, never an invented figure.
 - States: feed stale shows the last values with the age in amber; feed failed shows "No traffic data" and the timeline falls back to unknown demand (capacity checks are skipped, shown by uncertainty corners).
 
@@ -302,7 +302,7 @@ Minimum text size is 11 px, used only for time labels and secondary notes; the c
 2. **Overlays have text too.** Busy bands carry "H HIGH" in the traffic strip; wet risk carries the words "wet risk"; the changeover carries "CHANGE"; the uncertainty corner is explained in the hover and listed in the legend.
 3. **Contrast.** Body text at least 4.5 : 1 (actual 7.6 to 14.1). Cell icons at least 4.5 : 1 on their cell. Cell fills at least 3 : 1 against the panel (graphics). Banners: coloured text on a darkened tint at 7 : 1 or more.
 4. **Keyboard use of the timeline.** The timeline is a grid with roving tabindex: one Tab stop enters it, the arrow keys move between cells (up and down between modes, left and right between slots), Home and End go to the first and last slot of the row, Page Up and Page Down jump 4 slots (2 hours), Enter or Space pins the detail panel, Escape closes it. Focus scrolls the cell into view and the detail opens on focus. A visible 2 px white focus ring is drawn above the recommended outline. N moves focus to the now column; C moves it to the planned changeover.
-5. **Screen readers.** Each cell has an accessible name such as "Mode 12, 00:30Z, marginal, cause capacity". The grid has an accessible caption and the summary tiles and reason line are real text above it. A "Table view" toggle shows the same data as a plain table (mode by slot, with the status word), which also serves as a print and copy view.
+5. **Screen readers.** Each cell has an accessible name such as "Mode 12, 00:30Z, marginal, cause capacity". The grid has an accessible caption and the summary tiles and reason line are real text above it. There is no separate table view (removed by the owner, 24-10-2026, OD-39: not required).
 6. **No motion dependence.** The now marker steps once a minute; there is no auto-scroll, no flashing and no animation needed to understand a state. Banners appear without animation. The page respects reduced-motion settings.
 7. **Targets and zoom.** Interactive controls at least 32 px high. The layout works at 200 per cent browser zoom by falling back to the laptop layout.
 8. **Language and time.** `lang="en-GB"`; all times carry the suffix Z or the stated zone.
