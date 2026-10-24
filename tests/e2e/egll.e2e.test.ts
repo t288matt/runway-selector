@@ -2,7 +2,8 @@
 //
 // Pack numbers (refdata/airports/EGLL, provisional 24-10-2026):
 //   headings (magnetic): 09 89, 27 269 (modelled as a single runway, no L/R suffix; Heathrow's second parallel runway is not in this pack).
-//   Limits carried over from the other packs: tailwind dry 5 / wet 0, tolerance 0.05, calm 3, near-limit margin 3, crosswind 20 (default),
+//   Limits carried over from the other packs: tailwind dry 5 / wet 0, tolerance 0.05, calm 3, near-limit margin 3.
+//   27AD and 09AD both have a 28 kt crosswind limit (owner, 24-10-2026), not the 20 kt pack default.
 //   marginal penalty 3, change penalties light 1 / medium 5 / busy 25 / unknown 5. No capacities.
 //   Preference penalty (owner's order, equal): 27AD 0, 09AD 0.
 // Component maths: headwind = S cos(D - H), tailwind = max(0, -headwind), crosswind = S |sin(D - H)|.
@@ -56,8 +57,8 @@ describe('L03 wind 000/10, pure crosswind: both modes are SUITABLE and the tie g
   });
 });
 
-describe('L04 wind 000/25: a crosswind across the one runway leaves no mode', () => {
-  const r = go(kt(0, 25));
+describe('L04 wind 000/30: a crosswind across the one runway, above the 28 kt limit, leaves no mode', () => {
+  const r = go(kt(0, 30));
   it('every mode is UNSUITABLE on crosswind and no mode is recommended', () => {
     for (const id of MODES) expect(cell(r, id, 0), id).toMatchObject({ status: 'UNSUITABLE', cause: 'XW' });
     expect(r.out.plan.recommendedModeId).toBeNull();

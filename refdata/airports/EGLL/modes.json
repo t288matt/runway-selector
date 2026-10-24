@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "description": "Preferred runway modes, owner-supplied 24-10-2026, equal priority (order in this file is the tie-break): 27AD, 09AD. No crosswind limit or capacity has been supplied for either mode; they fall back to the pack default and have no capacity limit.",
+  "description": "Preferred runway modes, owner-supplied 24-10-2026, equal priority (order in this file is the tie-break): 27AD, 09AD. Both have a 28 kt crosswind limit (owner, 24-10-2026). No capacity has been supplied for either mode.",
   "status": "verified",
   "modes": [
-    { "id": "27AD", "description": "Arrivals and departures 27", "enabled": true, "arrivals": ["27"], "departures": ["27"] },
-    { "id": "09AD", "description": "Arrivals and departures 09", "enabled": true, "arrivals": ["09"], "departures": ["09"] }
+    { "id": "27AD", "description": "Arrivals and departures 27", "enabled": true, "arrivals": ["27"], "departures": ["27"], "maxCrosswindKt": 28 },
+    { "id": "09AD", "description": "Arrivals and departures 09", "enabled": true, "arrivals": ["09"], "departures": ["09"], "maxCrosswindKt": 28 }
   ]
 }
