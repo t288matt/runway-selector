@@ -98,7 +98,7 @@ export function PanelA({ view, model, onCurrentMode, status, onConfirmCurrent }:
       {/* The first line is the Weather row above; it is not said twice. Collapsed by default (OD-56). */}
       {model.kind === 'recommended' && model.whyLines.length > 1 ? (
         <details className="why">
-          <summary>More about {model.modeId}</summary>
+          <summary>More about the recommendation</summary>
           {model.whyLines.slice(1).map((l, i) => (
             <p key={`${i}-${l}`} className={i === 0 ? 'why-first' : 'why-more'}>{l}</p>
           ))}
