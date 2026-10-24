@@ -62,7 +62,7 @@ A web application that recommends the runway operating mode for Sydney Kingsford
 | OD-51 | 24-10-2026 (owner, chat): the weather events strip has two lines. The top line shows the wind as a bar that runs across all the slots it holds (for example "340/07"), starting with the wind now; a new bar starts where the wind changes by 10 degrees or 5 knots or more from the wind the bar started with (OD-43), and there is no bar where the wind is not known. The bottom line holds the markers: CHANGE, TS, low vis, wet risk, TEMPO and the like. Amends OD-43. |
 | OD-52 | 24-10-2026 (owner, chat): the blue outline around the recommended path in the timeline is thicker, 4 px instead of 2 px. Amends the overlay table in UI_DESIGN section 6. |
 | OD-53 | 24-10-2026 (owner, chat): the planned change marker in the event strip no longer says "CHANGE"; it shows an arrow and the new mode (for example "→ 34A25D"). The dashed line and the hover text are unchanged. Amends OD-50 and UI_DESIGN section 6. |
-| OD-54 | 24-10-2026 (owner, chat): the legend entry for the recommended outline reads "Recommended path"; the words "(the outline, whatever the cell's own colour)" are removed. |
+| OD-54 | 24-10-2026 (owner, chat): the legend entry for the recommended outline reads "Recommended path"; the words "(the outline, whatever the cell's own colour)" are removed. The legend entry for the dashed line reads "Dashed blue line: planned change", without "(CHANGE)". |
 | OD-9 | 23-10-2026: the app will later be used for other airports, so the code must be airport-agnostic and entirely reference-data driven. YSSY is the first dataset, not a special case. This is a key requirement and takes precedence over convenience in every design choice. |
 
 ## 3. Reference-data requirements
