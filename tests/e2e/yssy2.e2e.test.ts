@@ -4,7 +4,7 @@
 // day penalty 5 for every mode but Mode Curfew, night penalty Mode Curfew = 0 and others = 20, change light 1 / medium 5 / busy 25).
 import { describe, expect, it } from 'vitest';
 import { YSSY_PACK } from '../helpers/packs';
-import { at, cell, chosen, hhmm, kt, run, type RunOptions } from './pipeline';
+import { at, cell, chosen, kt, run, type RunOptions } from './pipeline';
 
 const NOW = '2026-10-23T03:10:00Z';
 const metar = (wind: string, wx = '', obs = '230300Z') => ['METAR YSSY', obs, wind, '9999', wx, 'FEW020 20/10 Q1015'].filter((x) => x !== '').join(' ');
