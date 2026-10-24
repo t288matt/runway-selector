@@ -110,7 +110,7 @@ describeForEachPack('slot builder', (pack, ref) => {
   });
 
   describe('which report governs a slot (WX-7, WX-9)', () => {
-    it('METAR window then TAF: the slot starting exactly at observation + window is TAF-governed', () => {
+    it('METAR window then TAF: a slot is METAR-governed only if it starts before observation + window', () => {
       const { nowMs, metar, taf } = reports(ref, '2026-10-23T14:10:00Z', { metar: 'metar-yssy-auto-nodata', taf: 'taf-yssy-multiline-fm-tempo' });
       const r = build(pack, nowMs, metar, taf, 240);
       const boundary = metar!.observedAtMs + validityMs;
@@ -118,14 +118,20 @@ describeForEachPack('slot builder', (pack, ref) => {
         const expected = sl.startMs < boundary ? 'METAR' : 'TAF';
         expect(sl.governedBy, new Date(sl.startMs).toISOString()).toBe(expected);
       }
-      // With observation at 14:00 and a 60-minute window (all three packs) the boundary slot is 15:00.
+    });
+
+    it('with a 60 minute window and observation at 14:00, the slot starting exactly at 15:00 is TAF-governed and the one before is METAR', () => {
+      const p60 = packWith(ref, { settings: { metarValidityMinutes: 60 } });
+      const { nowMs, metar, taf } = reports(ref, '2026-10-23T14:10:00Z', { metar: 'metar-yssy-auto-nodata', taf: 'taf-yssy-multiline-fm-tempo' });
+      const r = build(p60, nowMs, metar, taf, 240);
+      const boundary = metar!.observedAtMs + 60 * MIN;
       expect(boundary % SLOT).toBe(0);
       const at = (ms: number) => r.slots.find((x) => x.startMs === ms)!;
       expect(at(boundary - SLOT).governedBy).toBe('METAR');
       expect(at(boundary).governedBy).toBe('TAF');
     });
 
-    it.each([0, 30, 45, 60, 90, 120])('the boundary rule holds for a METAR window of %i minutes', (minutes) => {
+    it.each([0, 30, 40, 45, 60, 90, 120])('the boundary rule holds for a METAR window of %i minutes', (minutes) => {
       const p = packWith(ref, { settings: { metarValidityMinutes: minutes } });
       const { nowMs, metar, taf } = reports(ref, '2026-10-23T14:10:00Z', { metar: 'metar-yssy-auto-nodata', taf: 'taf-yssy-multiline-fm-tempo' });
       const r = build(p, nowMs, metar, taf, 240);
@@ -276,7 +282,7 @@ describeForEachPack('slot builder', (pack, ref) => {
     });
 
     it('recent weather alone (RESHRA, no present weather) sets recent and not prevailing', () => {
-      // Observed 13:30Z; kept inside every pack's metarValidityMinutes (YSSY 30, TEST/TEST1 60) so the METAR governs.
+      // Observed 13:30Z; kept inside every pack's metarValidityMinutes (YSSY 40, TEST/TEST1 60) so the METAR governs.
       const { nowMs, metar } = reports(ref, '2026-10-23T13:55:00Z', { metar: 'metar-hkel-showers-re' });
       const p = build(pack, nowMs, metar, null, 30).slots[0]!.weather.precipitation;
       expect(p.prevailing).toBe(false);
