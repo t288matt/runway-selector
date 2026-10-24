@@ -49,7 +49,7 @@ export interface Explanation {
   readonly lines: readonly string[];
   readonly earlyChange: EarlyChangeBanner | null;
   readonly noSuitableMode: NoSuitableMode | null;
-  /** 'No uncertain inputs' or 'Based on N uncertain slots' (DB-2). */
+  /** 'No uncertain inputs' or 'N slots depend on uncertain data' (DB-2). */
   readonly uncertaintyLine: string;
   /** Rank of the recommended mode in the operating plan for slot 0 (1 is the top preference), or null. */
   readonly operatingPlanRank: number | null;
@@ -90,7 +90,7 @@ export function formatDuration(ms: number): string {
 }
 
 function trafficWords(level: TrafficLevel | null): string {
-  return level === null ? 'traffic is not known' : `${level} traffic`;
+  return level === null ? 'unknown traffic' : `${level} traffic`;
 }
 
 function sentence(text: string): string {
@@ -99,7 +99,7 @@ function sentence(text: string): string {
 
 function uncertaintyLineFor(count: number): string {
   if (count === 0) return 'No uncertain inputs';
-  return count === 1 ? 'Based on 1 uncertain slot' : `Based on ${count} uncertain slots`;
+  return count === 1 ? '1 slot depends on uncertain data' : `${count} slots depend on uncertain data`;
 }
 
 function whyThisMode(pack: AirportPack, modeId: string, cell: Cell): string {

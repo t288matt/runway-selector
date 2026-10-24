@@ -57,7 +57,7 @@ export function PanelA({ view, model, onCurrentMode, status, onConfirmCurrent }:
             <dd>{model.traffic}</dd>
           </dl>
           <dl className="kv">
-            <dt>Plan rank</dt>
+            <dt>Operating plan preference</dt>
             <dd>{model.rank}</dd>
             <dt>Uncertainty</dt>
             <dd>{model.uncertainty}</dd>
@@ -99,10 +99,11 @@ export function PanelA({ view, model, onCurrentMode, status, onConfirmCurrent }:
         </div>
       ))}
 
-      {model.kind === 'recommended' ? (
+      {/* The first line is the Weather row above; it is not said twice. */}
+      {model.kind === 'recommended' && model.whyLines.length > 1 ? (
         <div className="why">
-          <b>Why {model.modeId}:</b>
-          {model.whyLines.map((l, i) => (
+          <b>More about {model.modeId}:</b>
+          {model.whyLines.slice(1).map((l, i) => (
             <p key={`${i}-${l}`} className={i === 0 ? 'why-first' : 'why-more'}>{l}</p>
           ))}
         </div>

@@ -132,7 +132,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
     expect(r.plan.totalScore).toBe(0);
     expect(r.plan.uncertainSlots).toBe(2);
     expect(r.plan.uncertain).toBe(true);
-    expect(r.explanation.uncertaintyLine).toBe('Based on 2 uncertain slots');
+    expect(r.explanation.uncertaintyLine).toBe('2 slots depend on uncertain data');
     expect(r.plan.recommendedModeId).toBe(a);
   });
 
@@ -147,7 +147,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
 
   it('(vi) the uncertainty line says there are none when nothing is uncertain', () => {
     expect(go(pack, rig, same(4, 'ok'), same(4, 'medium')).explanation.uncertaintyLine).toBe('No uncertain inputs');
-    expect(go(pack, rig, ['none', 'ok'], same(2, 'medium')).explanation.uncertaintyLine).toBe('Based on 1 uncertain slot');
+    expect(go(pack, rig, ['none', 'ok'], same(2, 'medium')).explanation.uncertaintyLine).toBe('1 slot depends on uncertain data');
   });
 
   it('(vii) ties: lower total preference first, then the mode first in the pack', () => {
