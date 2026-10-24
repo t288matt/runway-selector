@@ -51,16 +51,14 @@ export function PanelA({ view, model, onCurrentMode, status, onConfirmCurrent }:
             </dd>
             <dt>Traffic</dt>
             <dd>{model.traffic}</dd>
+            <dt>Runway state</dt>
+            <dd>{model.runwayState}</dd>
           </dl>
           <dl className="kv">
             <dt>Operating plan preference</dt>
             <dd>{model.rank}</dd>
             <dt>Uncertainty</dt>
             <dd>{model.uncertainty}</dd>
-            <dt>Runway state</dt>
-            <dd>{model.runwayState}</dd>
-            <dt>Traffic capacity</dt>
-            <dd>{model.capacity}</dd>
           </dl>
         </>
       ) : model.kind === 'no-suitable' && model.noSuitable !== null ? (

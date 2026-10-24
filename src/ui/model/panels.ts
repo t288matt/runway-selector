@@ -33,7 +33,6 @@ export interface PanelAModel {
   readonly rank: string;
   readonly uncertainty: string;
   readonly runwayState: string;
-  readonly capacity: string;
   readonly banners: readonly BannerModel[];
   readonly whyLines: readonly string[];
   readonly noSuitable: { readonly title: string; readonly perMode: readonly BlockedModeModel[] } | null;
@@ -92,7 +91,6 @@ export function panelAModel(view: ViewData): PanelAModel {
     rank: '-',
     uncertainty: explanation.uncertaintyLine,
     runwayState: runwayStateSentence(view),
-    capacity: '-',
     banners: [] as BannerModel[],
     whyLines: explanation.lines,
     noSuitable: null,
@@ -151,7 +149,6 @@ export function panelAModel(view: ViewData): PanelAModel {
     rank: rank === null ? '-' : `${rank} of ${enabledCount} (1 is most preferred)`,
     uncertainty: explanation.uncertaintyLine,
     runwayState: runwayStateSentence(view),
-    capacity: mode === undefined ? '-' : `${mode.capacity === null ? 'No limit set' : `${mode.capacity} movements/hr`}${cell0 !== undefined && cell0.demand.knownDemand !== null ? `; ${cell0.demand.knownDemand} known movements this slot` : '; movements not known'}`,
     banners,
     whyLines: explanation.lines,
     noSuitable: null,

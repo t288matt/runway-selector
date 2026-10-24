@@ -132,7 +132,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
     expect(r.plan.totalScore).toBe(0);
     expect(r.plan.uncertainSlots).toBe(2);
     expect(r.plan.uncertain).toBe(true);
-    expect(r.explanation.uncertaintyLine).toBe('2 slots depend on uncertain data');
+    expect(r.explanation.uncertaintyLine).toBe('00:30 UTC to 01:30 UTC: no forecast for this period');
     expect(r.plan.recommendedModeId).toBe(a);
   });
 
@@ -145,9 +145,9 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
     expect(r.explanation.lines).toHaveLength(0);
   });
 
-  it('(vi) the uncertainty line says there are none when nothing is uncertain', () => {
+  it('(vi) the uncertainty line says there are none when nothing is uncertain, and names a period and why otherwise', () => {
     expect(go(pack, rig, same(4, 'ok'), same(4, 'medium')).explanation.uncertaintyLine).toBe('No uncertain inputs');
-    expect(go(pack, rig, ['none', 'ok'], same(2, 'medium')).explanation.uncertaintyLine).toBe('1 slot depends on uncertain data');
+    expect(go(pack, rig, ['none', 'ok'], same(2, 'medium')).explanation.uncertaintyLine).toBe('00:00 UTC to 00:30 UTC: no forecast for this period');
   });
 
   it('(vii) ties: lower total preference first, then the mode first in the pack', () => {
