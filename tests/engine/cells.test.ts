@@ -265,6 +265,16 @@ describeEachPack('METAR window and the TAF', (pack) => {
     expect(runMode(pack, id, [{ gov: 'METAR', wind: over, tafView: { wind: over } }]).cell(0).status).toBe('UNSUITABLE');
   });
 
+  it('the amber near-limit reasons say only the figure and the runway, with no limit or gap (owner, 24-10-2026)', () => {
+    const tail = runMode(pack, id, [{ gov: 'METAR', wind: tailwindOn(h, s.tailwindDryKt - 1, s.calmWindKt) }]).cell(0);
+    const cross = runMode(pack, id, [{ gov: 'METAR', wind: crosswindOn(h, mode.maxCrosswindKt - s.nearLimitMarginKt + 0.1) }]).cell(0);
+    const near = (c: typeof tail, code: 'TW' | 'XW') => c.reasons.filter((r) => r.code === code && r.severity === 'MARGINAL' && r.figures.near === true);
+    expect(near(tail, 'TW').length).toBeGreaterThan(0);
+    expect(near(cross, 'XW').length).toBeGreaterThan(0);
+    for (const r of near(tail, 'TW')) expect(r.text).toMatch(/^Tailwind \d+ kt on runway \S+$/);
+    for (const r of near(cross, 'XW')) expect(r.text).toMatch(/^Crosswind \d+ kt on runway \S+$/);
+  });
+
   it('with no TAF view the METAR decides alone', () => {
     expect(runMode(pack, id, [{ gov: 'METAR' }]).cell(0).status).toBe('SUITABLE');
   });
