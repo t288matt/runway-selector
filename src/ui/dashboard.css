@@ -705,11 +705,6 @@ select {
   display: inline-flex;
   align-items: center;
 }
-.reason {
-  margin: 10px 16px 0 0;
-  padding-top: 8px;
-  border-top: 1px solid var(--line);
-}
 .tip {
   position: fixed;
   z-index: 50;
