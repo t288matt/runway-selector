@@ -38,7 +38,7 @@ export function Header({ pack, liveTag, onRefresh, onSettings, busy }: { pack: A
       <span className="tag">{liveTag}</span>
       <span className="sp" />
       {busy ? <span className="tag" role="status">Recalculating</span> : null}
-      <span className="tag">Times UTC, local time beside</span>
+      <span className="tag">Times UTC</span>
       <button type="button" className="btn" onClick={onRefresh}>Refresh</button>
       <button type="button" className="btn" onClick={onSettings}>Settings</button>
     </header>

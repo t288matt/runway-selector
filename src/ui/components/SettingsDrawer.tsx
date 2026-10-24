@@ -202,7 +202,7 @@ export function SettingsDrawer({ view, displayNowMs, bridge, onCurrentMode, onWi
           <table className="t2">
             <thead>
               <tr>
-                <th scope="col">Time (UTC, local)</th>
+                <th scope="col">Time (UTC)</th>
                 <th scope="col">Changed</th>
                 <th scope="col">Old</th>
                 <th scope="col">New</th>

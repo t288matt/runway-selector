@@ -303,7 +303,7 @@ export function Timeline({ view, model, displayNowMs, onWindowChange, reason }: 
             </span>
           );
         })}
-        <span><b className="cell cs-suitable rec" style={{ marginRight: 8 }} aria-hidden="true" />Recommended path</span>
+        <span><b className="cell rec" style={{ marginRight: 8, background: 'var(--panel2)', border: '1px solid var(--line)' }} aria-hidden="true" />Recommended path (the outline, whatever the cell's own colour)</span>
         <span>Dashed blue line: planned change (CHANGE)</span>
         <span>Amber band: HIGH traffic</span>
         <span>Blue band: wet risk</span>

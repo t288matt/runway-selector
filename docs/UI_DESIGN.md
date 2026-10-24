@@ -95,7 +95,7 @@ Target: A and the first four timeline rows visible on a 1366 x 768 laptop withou
 
 ## 4. Persistent elements
 ### 4.1 Header strip
-Title (built from the pack), a data tag, a "Times UTC, local time beside" label, Refresh button, Settings button. The tag reads "Live" with source times when data is live and "Illustrative, not live data" in the mockup. The tag is never absent.
+Title (built from the pack), a data tag, a "Times UTC" label, Refresh button, Settings button. The tag reads "Live" with source times when data is live and "Illustrative, not live data" in the mockup. The tag is never absent.
 
 ### 4.2 Flight-simulation notice
 - Text: "Flight simulation only. Never for real-world navigation, flight planning or operations." A second short line: "Rules and capacities are provisional simulation assumptions."
@@ -155,7 +155,7 @@ A right-hand drawer, not a page, so the dashboard stays visible behind it. In ph
 5. **Airport and data:** an airport selector, shown only when more than one pack is listed in `app.json`; a "Reload data" button that re-reads and re-validates the pack (DESIGN.md section 4c); and the pack's validation error, if a reload was rejected, with the previous valid pack still in use.
 6. **Audit trail:** the list of setting and current-mode changes, labelled "local record, not tamper-proof", with an export.
 
-Each value shows its `description` from the pack as help text and its source status (provisional or verified). Changing the current mode takes effect at once, triggers a fresh recommendation, and writes to the audit trail (RD-6). The user never sees penalties, costs or scores (see the plain-language rule in section 13). The time display is fixed: UTC with local time beside it (section 13, Q7).
+Each value shows its `description` from the pack as help text and its source status (provisional or verified). Changing the current mode takes effect at once, triggers a fresh recommendation, and writes to the audit trail (RD-6). The user never sees penalties, costs or scores (see the plain-language rule in section 13). The time display is fixed: UTC only (OD-36).
 
 ### Weather entry (above Panel A)
 Two text boxes, METAR and TAF, each with the raw text the user pasted and an Apply button (OD-28). The boxes start empty on every visit, with "No weather entered" beside them; reports are not stored (OD-30). A METAR older than its window is accepted with an amber stale flag. If only one report is entered, a banner names the missing one. On Apply the text is checked (station, size, decodable) and, if valid, replaces the previous report and triggers a fresh recommendation. An invalid paste is refused with a message naming what could not be read, and the previous report stays. The observation age is shown beside each box, taken from the report's own time group, so an old pasted report is visibly stale. Where the weather would be fetched automatically in a later phase, the same two boxes show the fetched text read-only.
@@ -319,7 +319,7 @@ Minimum text size is 11 px, used only for time labels and secondary notes; the c
 | UD-6 | Settings open in a drawer beside the dashboard. | A settings change triggers a new recommendation (DB-9); the effect is seen at once without leaving the page. |
 | UD-7 | The timeline shows the slots of the chosen window (full TAF by default, OD-31), as the mockup does. | Slots beyond TAF validity are grey, not guessed. |
 | UD-8 | System fonts; React and Tailwind (TC-1); no web fonts or other UI libraries. | The build must be a static folder that works offline and on another site (OD-2, TC-4). |
-| UD-9 | Times are UTC with a "Z" everywhere. The airport's local time is shown beside UTC on the weather and traffic chips and in the timeline header, and in the hover. | WX-5 and owner answer Q7; avoids mistakes at the daylight-saving change. |
+| UD-9 | Times are UTC with a "Z" everywhere, with no local time shown. | WX-5, OD-36 (24-10-2026, superseding Q7): local time made the screen more complicated than it was worth, and daylight saving was itself a source of mistakes. |
 | UD-10 | The notice is a permanent bar, not a one-off dialog. | The tool must never be mistaken for real-world guidance, including on screenshots shared by others. |
 
 ## 11. Verification
@@ -356,6 +356,6 @@ The layout in section 3 follows the mockup (`ui/mockup.html`) rebuilt on 23-10-2
 | Q4 | Desktop and laptop only | The first build has no phone layout. |
 | Q5 | No training mode | No training-mode switch and no fixture data in the UI. Tests keep their own fixtures. |
 | Q6 | "There will always be a mode available; that is inherent in the mode design" | Never show a "least-bad" mode. The engine still keeps the message NO SUITABLE STANDARD MODE IDENTIFIED as a safety net, because REQUIREMENTS.md OP-11 and the required tests ask for it; it is expected never to appear. |
-| Q7 | Show both always | Every time on weather and traffic chips shows UTC and the airport's local time together. |
+| Q7 | Show both always | Superseded by OD-36 (24-10-2026): UTC only, no local time, anywhere on screen. |
 
 **Plain-language rule (owner, 23-10-2026).** End users never see the words "penalty", "cost" or "points", and never see the optimiser's scores or weights. The screen says "rank" for the operating-plan order, and explains a recommendation in plain sentences (which mode, when to change, what traffic then). Penalties are an internal engine detail and live only in the pack files and the design documents. The settings drawer has no penalty section.

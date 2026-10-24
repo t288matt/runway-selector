@@ -1,6 +1,8 @@
-// Plain-text formatting helpers for the screen. UTC first, the airport's local
-// time beside it (owner answer Q7). Every function returns a string; nothing
-// here produces markup (SEC-2).
+// Plain-text formatting helpers for the screen. UTC only (owner decision,
+// 24-10-2026, OD-36, superseding Q7: local time made the screen more
+// complicated than it was worth, and daylight saving was a source of
+// mistakes). Every function returns a string; nothing here produces markup
+// (SEC-2).
 const MS_MINUTE = 60_000;
 const MS_DAY = 86_400_000;
 
@@ -48,76 +50,14 @@ export function ddmm(ms: number): string {
   return `${pad2(d.getUTCDate())}-${pad2(d.getUTCMonth() + 1)}`;
 }
 
-const localFormats = new Map<string, Intl.DateTimeFormat>();
-
-/** The airport's local clock time, "HH:MM". Falls back to UTC if the zone is unknown to the browser. */
-export function localHhmm(ms: number, timeZone: string): string {
-  let f = localFormats.get(timeZone);
-  if (f === undefined) {
-    try {
-      f = new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
-    } catch {
-      return `${hhmm(ms)} UTC`;
-    }
-    localFormats.set(timeZone, f);
-  }
-  return f.format(new Date(ms));
-}
-
-interface LocalParts {
-  readonly day: number;
-  readonly month: number;
-  readonly hour: number;
-  readonly minute: number;
-  /** The local wall clock read as if it were UTC, to compare with the instant. */
-  readonly asUtcMs: number;
-}
-
-const partsFormats = new Map<string, Intl.DateTimeFormat | null>();
-
-function localParts(ms: number, timeZone: string): LocalParts | null {
-  let f = partsFormats.get(timeZone);
-  if (f === undefined) {
-    try {
-      f = new Intl.DateTimeFormat('en-GB', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
-    } catch {
-      f = null;
-    }
-    partsFormats.set(timeZone, f);
-  }
-  if (f === null) return null;
-  const parts = f.formatToParts(new Date(ms));
-  const get = (type: string): number => Number(parts.find((p) => p.type === type)?.value ?? 0);
-  const [year, month, day, hour, minute] = [get('year'), get('month'), get('day'), get('hour'), get('minute')];
-  return { day, month, hour, minute, asUtcMs: Date.UTC(year, month - 1, day, hour, minute) };
-}
-
 /**
- * The airport's local time, "HH:MM", with the local date ("DD-MM HH:MM") when
- * it differs from the UTC date, so a late-evening UTC time is never read as the same day.
+ * "22:30Z". OD-36: the screen shows UTC only now, so this is a thin alias for
+ * hhmmZ; it keeps its own name and (unused) timeZone parameter so call sites
+ * that pass the airport's zone need no change, and so a future reversal of
+ * OD-36 has one function to restore rather than every call site.
  */
-export function localStamp(ms: number, timeZone: string): string {
-  const p = localParts(ms, timeZone);
-  if (p === null) return `${hhmm(ms)} UTC`;
-  const time = `${pad2(p.hour)}:${pad2(p.minute)}`;
-  const u = new Date(ms);
-  return p.day === u.getUTCDate() && p.month === u.getUTCMonth() + 1 ? time : `${pad2(p.day)}-${pad2(p.month)} ${time}`;
-}
-
-/** The zone's offset from UTC at an instant: "UTC+11", "UTC-3:30", "UTC+5:45", or "UTC". */
-export function zoneOffsetLabel(ms: number, timeZone: string): string {
-  const p = localParts(ms, timeZone);
-  if (p === null) return 'UTC';
-  const minutes = Math.round((p.asUtcMs - Math.floor(ms / MS_MINUTE) * MS_MINUTE) / MS_MINUTE);
-  if (minutes === 0) return 'UTC';
-  const abs = Math.abs(minutes);
-  const rest = abs % 60;
-  return `UTC${minutes < 0 ? '-' : '+'}${Math.floor(abs / 60)}${rest === 0 ? '' : `:${pad2(rest)}`}`;
-}
-
-/** "22:30Z (09:30 local)", or "(24-10 09:30 local)" when the local date differs. */
-export function utcAndLocal(ms: number, timeZone: string): string {
-  return `${hhmmZ(ms)} (${localStamp(ms, timeZone)} local)`;
+export function utcAndLocal(ms: number, _timeZone: string): string {
+  return hhmmZ(ms);
 }
 
 /** 12 -> "12 min"; 135 -> "2 h 15 min"; negative values read as 0. */

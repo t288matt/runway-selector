@@ -3,7 +3,7 @@
 // is chosen here except through cellView (status.ts).
 import { trafficLevelsFor, type Cell, type TrafficLevel, type WindObservation } from '../../engine';
 import { preferencePenalty } from '../../engine/optimiser';
-import { dir3, ddmm, hhmm, hhmmZRel, kt1, localStamp, zoneOffsetLabel } from '../format';
+import { dir3, ddmm, hhmm, hhmmZ, hhmmZRel, kt1 } from '../format';
 import { SLOT_MS, levelWord, type ViewData } from './dashboard';
 import { cellView, type CellView, type MissingWeather } from './status';
 
@@ -144,7 +144,6 @@ export function missingWeather(view: ViewData): MissingWeather {
 export function timelineModel(view: ViewData, displayNowMs: number): TimelineModel {
   const { pack, result } = view;
   const slotsIn = view.weather.slots;
-  const tz = pack.airport.timeZone;
   const levels = trafficLevelsFor(pack, slotsIn.map((s) => s.startMs), view.demand?.slots ?? []);
   const changes = result.changeovers;
   const missing = missingWeather(view);
@@ -187,7 +186,7 @@ export function timelineModel(view: ViewData, displayNowMs: number): TimelineMod
       busy: levels[i] === 'busy',
       wet,
       events,
-      eventTitle: titles.length === 0 ? `${events.join(', ')} (local ${localStamp(s.startMs, tz)})` : titles.join('; '),
+      eventTitle: titles.length === 0 ? `${events.join(', ')} (${hhmmZ(s.startMs)})` : titles.join('; '),
       isChange: change !== undefined,
       noMode: gapSlots.has(i),
       noTaf: s.governedBy === 'NONE',
@@ -209,7 +208,7 @@ export function timelineModel(view: ViewData, displayNowMs: number): TimelineMod
     wetRuns: runs(slots.map((s) => s.wet !== 'none')),
     changeSlots: changes.map((c) => c.change.slotIndex),
     nowSlotFraction: first === undefined ? 0 : (displayNowMs - first.startMs) / SLOT_MS,
-    rangeText: first === undefined || last === undefined ? '' : `${hhmmZRel(first.startMs, view.calcNowMs)} to ${hhmmZRel(last.endMs, view.calcNowMs)}, local (${zoneOffsetLabel(first.startMs, tz)}) ${localStamp(first.startMs, tz)} to ${localStamp(last.endMs, tz)}`,
+    rangeText: first === undefined || last === undefined ? '' : `${hhmmZRel(first.startMs, view.calcNowMs)} to ${hhmmZRel(last.endMs, view.calcNowMs)}`,
   };
 }
 
