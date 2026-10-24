@@ -113,6 +113,14 @@
     "value": 1000,
     "description": "Score per slot in which no mode is allowed, so a plan can always be produced."
   },
+  "minimumStayMinutes": {
+    "value": 0,
+    "description": "Minimum stay in a mode; 0 switches the rule off in this fixture."
+  },
+  "shortStayPenalty": {
+    "value": 0,
+    "description": "Score for a stay shorter than the minimum."
+  },
   "changeoverPreparationMinutes": {
     "value": 15,
     "description": "Warning time shown before a planned change."

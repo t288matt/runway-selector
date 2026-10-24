@@ -170,45 +170,83 @@ export function optimiseConstrained(pack: AirportPack, input: EngineInput, resul
   }
 
   const stateCount = modeCount + 1;
-  // value[t][s]: best score of slots t to the end when slot t is in state s (own score of slot t included).
-  const value: Pair[][] = Array.from({ length: slotCount }, () => Array.from({ length: stateCount }, () => INF));
+
+  // Minimum stay (owner, 24-10-2026, OD-74). A run of slots in one mode shorter than minimumStayMinutes costs
+  // shortStayPenalty when it ends in a change to another mode. The run's length is counted in minutes and capped at
+  // the minimum, so the state is small. Slot 0 counts only the time left in it. The mode in use now, and the last
+  // run in the window, are never penalised; a move into or out of NO_MODE is forced by the cells and not penalised.
+  const stayCap = pack.settings.minimumStayMinutes;
+  const stayPenalty = stayCap > 0 ? pack.settings.shortStayPenalty : 0;
+  const slotMinutes = (t: number): number => {
+    const info = result.slots[t];
+    if (info === undefined) return 30;
+    const full = (info.endMs - info.startMs) / 60000;
+    return t === 0 ? Math.max(1, Math.min(full, Math.ceil((info.endMs - input.nowMs) / 60000))) : full;
+  };
+  const stayLevels: number[] = [];
+  for (const base of new Set([slotMinutes(0), slotMinutes(1), 30])) {
+    for (let m = base; ; m += 30) {
+      const c = Math.min(m, stayCap);
+      if (!stayLevels.includes(c)) stayLevels.push(c);
+      if (c >= stayCap) break;
+    }
+  }
+  if (!stayLevels.includes(stayCap)) stayLevels.push(stayCap);
+  const levelOf = (minutes: number): number => stayLevels.indexOf(Math.min(minutes, stayCap));
+  const levelCount = stayLevels.length;
+  const capLevel = levelOf(stayCap);
+  /** The run level after one more slot t in the same mode. */
+  const extend = (r: number, t: number): number => levelOf((stayLevels[r] ?? stayCap) + slotMinutes(t));
+  /** The cost of leaving state s, after a run at level r, for state n. */
+  const leave = (r: number, s: number, n: number): number => (s === n || s === noModeState || n === noModeState || r === capLevel ? 0 : stayPenalty);
+
+  // value[t][s][r]: best score of slots t to the end when slot t is in state s with its run at level r (own score of slot t included).
+  const value: Pair[][][] = Array.from({ length: slotCount }, () => Array.from({ length: stateCount }, () => Array.from({ length: levelCount }, () => INF)));
   for (let t = slotCount - 1; t >= 0; t -= 1) {
-    const row = value[t] ?? [];
     for (let s = 0; s < stateCount; s += 1) {
       const o = own(t, s);
       if (o.total === Number.POSITIVE_INFINITY) continue;
-      if (t === slotCount - 1) {
-        row[s] = o;
-        continue;
+      for (let r = 0; r < levelCount; r += 1) {
+        const row = value[t]?.[s];
+        if (row === undefined) continue;
+        if (t === slotCount - 1) {
+          row[r] = o;
+          continue;
+        }
+        let best = INF;
+        for (let n = 0; n < stateCount; n += 1) {
+          const nr = n === s ? extend(r, t + 1) : levelOf(slotMinutes(t + 1));
+          const cand = add(add(move(t + 1, s, n), { total: leave(r, s, n), pref: 0 }), value[t + 1]?.[n]?.[nr] ?? INF);
+          if (less(cand, best)) best = cand;
+        }
+        row[r] = best.total === Number.POSITIVE_INFINITY ? INF : add(o, best);
       }
-      let best = INF;
-      const next = value[t + 1] ?? [];
-      for (let n = 0; n < stateCount; n += 1) {
-        const cand = add(move(t + 1, s, n), next[n] ?? INF);
-        if (less(cand, best)) best = cand;
-      }
-      row[s] = best.total === Number.POSITIVE_INFINITY ? INF : add(o, best);
     }
   }
 
   // Forward pass: the lowest-index state among the equal best, so ties go to the mode first in the pack.
   const path: number[] = [];
   let prev = startIndex < 0 ? NONE : startIndex;
+  let prevLevel = capLevel;
   let totals: Pair = { total: 0, pref: 0 };
   for (let t = 0; t < slotCount; t += 1) {
     let bestState = -2;
+    let bestLevel = capLevel;
     let best = INF;
     for (let s = 0; s < stateCount; s += 1) {
-      const cand = add(move(t, prev, s), value[t]?.[s] ?? INF);
+      const r = s === prev ? (t === 0 ? capLevel : extend(prevLevel, t)) : levelOf(slotMinutes(t));
+      const cand = add(add(move(t, prev, s), { total: prev === NONE ? 0 : leave(prevLevel, prev, s), pref: 0 }), value[t]?.[s]?.[r] ?? INF);
       if (less(cand, best)) {
         best = cand;
         bestState = s;
+        bestLevel = r;
       }
     }
     if (bestState < 0) return null;
     if (t === 0) totals = best;
     path.push(bestState);
     prev = bestState;
+    prevLevel = bestLevel;
   }
   return buildPlan(pack, result, levels, path, startIndex, totals);
 }
