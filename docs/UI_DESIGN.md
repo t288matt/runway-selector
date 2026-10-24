@@ -139,7 +139,7 @@ The owner removed this panel on 24-10-2026: it is not drawn, and its letter is n
 
 ### Panel D: VATSIM traffic
 - Table: for each of the first four 30-minute slots (now, +30, +60, +90 min), arrivals (airborne to the pack's airport), departures (on the ground) and movements per hour. Departures are estimated for the next slot only; later slots show "not est.". A line states "Connected aircraft are not movements."
-- Traffic class chip (LOW, MEDIUM, HIGH) and a note that bands are provisional placeholders. No trend is shown (OD-32).
+- Traffic class chip (LOW, MEDIUM, HIGH). The footnote explaining how arrivals and departures are counted, and the note that bands are provisional placeholders, were removed by the owner on 24-10-2026 (OD-41). No trend is shown (OD-32).
 - Beyond the demand horizon (default: the forecast window, REQUIREMENTS.md TR-7): "Demand unknown" is shown, never an invented figure.
 - States: feed stale shows the last values with the age in amber; feed failed shows "No traffic data" and the timeline falls back to unknown demand (capacity checks are skipped, shown by uncertainty corners).
 
