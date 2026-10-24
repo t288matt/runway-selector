@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "airports": ["YSSY"],
+  "airports": ["YSSY", "YMML"],
   "default": "YSSY",
   "description": "Packs the app can load. The airport selector is shown only when more than one is listed."
 }
