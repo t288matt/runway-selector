@@ -3,11 +3,11 @@
   "description": "Fictional settings with values that differ from the Sydney pack.",
   "tailwindDryKt": {
     "value": 8,
-    "description": "Maximum tailwind on a dry runway. Owner simulation rule."
+    "description": "Maximum tailwind on a dry runway."
   },
   "tailwindWetKt": {
     "value": 2,
-    "description": "Maximum tailwind on a wet runway. Owner simulation rule."
+    "description": "Maximum tailwind on a wet runway."
   },
   "defaultCrosswindKt": {
     "value": 18,

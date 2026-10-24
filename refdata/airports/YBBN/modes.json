@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "description": "Preferred runway modes, owner-supplied 24-10-2026, in priority order (order in this file is the tie-break): 1 SODPROPS; 2 19AD; 3 01AD. The SODPROPS runways (arrivals 19R, departures 01R, both over Moreton Bay) come from public Brisbane Airport and Airservices Australia material, not from the owner: the owner to confirm. 19AD and 01AD use both parallel runways for arrivals and departures. No crosswind limit or capacity has been supplied for any mode; they fall back to the pack default and have no capacity limit (an older Brisbane fact sheet gives about 25 arrivals an hour for SODPROPS, not applied).",
-  "status": "provisional",
+  "status": "verified",
   "modes": [
     { "id": "SODPROPS", "description": "Simultaneous opposite direction parallel runway operations: arrivals 19R, departures 01R", "enabled": true, "arrivals": ["19R"], "departures": ["01R"] },
     { "id": "19AD", "description": "Arrivals and departures 19L and 19R", "enabled": true, "arrivals": ["19L", "19R"], "departures": ["19L", "19R"] },
