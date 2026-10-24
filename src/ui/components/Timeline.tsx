@@ -232,7 +232,7 @@ export function Timeline({ view, model, displayNowMs, onWindowChange }: Timeline
               <div className="lab" role="rowheader" title={r.title}>
                 <span>
                   {r.modeId}
-                  {r.isRecommended ? <span className="rt rec"> REC</span> : null}
+                  {r.isRecommended ? <span className="rt rec"> RECOMMENDED</span> : null}
                   {r.isCurrent ? <span className="rt act"> CURRENT</span> : null}
                 </span>
                 <small>{r.runwaysText}</small>
