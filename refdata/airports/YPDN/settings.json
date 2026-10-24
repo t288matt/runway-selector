@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "All tunable values for this airport. PROVISIONAL DRAFT 24-10-2026: every value is carried over unchanged from the Adelaide pack (itself from the YSSY pack) as a starting point, not yet reviewed for Darwin. Every value is a simulation assumption unless a source is stated.",
+  "description": "All tunable values for this airport. PROVISIONAL DRAFT 24-10-2026: every value is carried over unchanged from the Adelaide pack (itself from the Melbourne pack) as a starting point, not yet reviewed for Darwin. Every value is a simulation assumption unless a source is stated.",
   "tailwindDryKt":            { "value": 5,    "description": "Maximum tailwind on a dry runway." },
   "tailwindWetKt":            { "value": 0,    "description": "Maximum tailwind on a wet runway." },
   "defaultCrosswindKt":       { "value": 20,   "description": "Crosswind limit used only for a mode with no maxCrosswindKt of its own." },
