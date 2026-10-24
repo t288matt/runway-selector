@@ -584,8 +584,7 @@ select {
   background: var(--ok);
 }
 .cs-marginal {
-  color: #0b1426;
-  background: repeating-linear-gradient(135deg, var(--warn) 0 6px, #e0a413 6px 9px);
+  background: repeating-linear-gradient(135deg, var(--ok) 0 6px, var(--warn) 6px 12px);
 }
 .cs-unsuitable {
   background:
