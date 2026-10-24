@@ -1,7 +1,7 @@
 // One calculation for the whole screen (DESIGN section 4, 8): weather slots,
 // traffic slots and the engine's plan, from plain inputs. Pure: the clock is an
 // argument. Nothing here knows an airport; everything comes from the pack.
-import { plan, type PlanResult, type RunwayStateCause, type TrafficLevel } from '../../engine';
+import { plan, type PlanResult, type TrafficLevel } from '../../engine';
 import type { AirportPack } from '../../refdata';
 import { buildTrafficSlots } from '../../traffic/demand';
 import type { FetchFeedResult } from '../../traffic/fetchFeed';
@@ -128,24 +128,13 @@ export function freshness(nowMs: number, atMs: number, staleMinutes: number): Fr
 export type Tone = 'ok' | 'warn' | 'bad' | 'unk';
 
 export interface Chip {
-  readonly id: 'metar' | 'taf' | 'vatsim' | 'plan' | 'runway';
+  readonly id: 'metar' | 'taf' | 'vatsim' | 'plan';
   readonly label: string;
   readonly detail: string;
   readonly tone: Tone;
   /** A word beside the chip: Stale, Failed, Not entered. */
   readonly flag: string | null;
 }
-
-const CAUSE_WORDS: Readonly<Record<RunwayStateCause, string>> = {
-  NONE: 'no rain reported',
-  METAR_NOW: 'METAR reports rain',
-  METAR_RECENT: 'METAR reports recent rain',
-  FORECAST: 'rain forecast',
-  PROBABLE: 'rain probable in the forecast',
-  POSSIBLE_PROBABLE: 'rain possible in the forecast',
-  POSSIBLE_TEMPORARY: 'rain possible in the forecast',
-  DRYING: 'drying after rain',
-};
 
 export const RUNWAY_STATE_WORDS = { DRY: 'DRY', WET: 'WET', WET_POSSIBLE: 'WET POSSIBLE' } as const;
 
@@ -180,14 +169,9 @@ export function freshnessChips(view: ViewData, feed: FeedState, nowMs: number): 
     chips.push({ id: 'vatsim', label: 'VATSIM', detail: `${hhmmssZ(feed.fetchedAtMs)}, ${seconds < 120 ? `${seconds} s` : ageText(f.ageMinutes)} old`, tone: f.stale ? 'warn' : 'ok', flag: f.stale ? 'Stale' : null });
   }
 
-  chips.push({ id: 'plan', label: 'Plan', detail: `${hhmmZ(view.calcNowMs)}, next ${hhmmZ(nextPlanMs(view.calcNowMs))}`, tone: 'ok', flag: null });
-
-  const first = view.result.evaluation.slots[0];
-  if (first !== undefined && view.weather.slots[0]?.governedBy !== 'NONE') {
-    chips.push({ id: 'runway', label: 'Runway state', detail: `${RUNWAY_STATE_WORDS[first.runwayState]} (${CAUSE_WORDS[first.runwayStateCause]})`, tone: first.runwayState === 'DRY' ? 'ok' : 'warn', flag: null });
-  } else {
-    chips.push({ id: 'runway', label: 'Runway state', detail: 'Unknown', tone: 'unk', flag: null });
-  }
+  // Runway state is not repeated here: it is one line below in Panel A, and every
+  // timeline cell carries its own slot-by-slot runway-state detail on hover.
+  chips.push({ id: 'plan', label: 'Recalculates at', detail: `${hhmmZ(view.calcNowMs)}, next ${hhmmZ(nextPlanMs(view.calcNowMs))}`, tone: 'ok', flag: null });
   return chips;
 }
 

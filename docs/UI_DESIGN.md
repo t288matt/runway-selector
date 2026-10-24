@@ -104,7 +104,9 @@ Title (built from the pack), a data tag, a "Times UTC, local time beside" label,
 - Contrast and size match body text. It must not be styled so quietly that it is missed.
 
 ### 4.3 Freshness chips
-One chip each for METAR, TAF, VATSIM, last plan and next plan, plus runway condition. Each shows time and age. A chip changes to amber with a "Stale" word when it passes the refdata stale limit, and to red with "Failed" when the last fetch failed (section 7). The weather entry boxes (section 5) sit directly under the chips, above Panel A, and show the report text as pasted.
+One chip each for METAR, TAF, VATSIM and when the plan last and next recalculates. Each shows time and age. A chip changes to amber with a "Stale" word when it passes the refdata stale limit, and to red with "Failed" when the last fetch failed (section 7). The weather entry boxes (section 5) sit directly under the chips, above Panel A, and show the report text as pasted.
+
+Runway state is not a separate chip: owner decision, 24-10-2026, to stop the duplication of showing it in the header and again, one line below, in Panel A. It is now stated once, in Panel A, and every timeline cell still carries its own slot-by-slot runway-state detail on hover (DB-4).
 
 ## 5. Panel specifications
 Common to all panels: a letter badge and title; a small "provisional" mark wherever a value comes from a provisional rule or placeholder band; no scrolling inside a panel except tables of more than 8 rows.
