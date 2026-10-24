@@ -1,5 +1,5 @@
 // The dashboard layout in its fixed order (UI_DESIGN section 3): header, notice,
-// freshness chips, weather entry, A, B, then C, D and F. Pure of effects: the
+// freshness chips, A, B, weather entry, then C, D and F (OD-38). Pure of effects: the
 // state and timers live in useDashboard.
 import type { AutoReportState, WeatherKind } from '../controller';
 import { dataNotices, freshnessChips, type FeedState, type ViewData, type WindowChoice } from '../model/dashboard';
@@ -53,11 +53,11 @@ export function Dashboard(p: DashboardProps) {
       <Header pack={view.pack} liveTag={liveTag(p.feed, p.autoWeather)} busy={p.busy} onRefresh={p.onRefresh} onSettings={() => p.onToggleDrawer(true)} airport={{ icao: view.pack.airport.icao, airports: p.settings.airports, error: p.settings.airportError, onSwitch: p.settings.onSwitchAirport }} />
       <NoticeBar pack={view.pack} />
       <Freshness chips={chips} />
-      <WeatherEntry pack={view.pack} metar={view.metar} taf={view.taf} displayNowMs={p.displayNowMs} onApplyMetar={p.onApplyMetar} onApplyTaf={p.onApplyTaf} auto={p.autoWeather} onResumeAutomatic={p.onResumeAutomatic} />
       <StoreNotices notices={p.settings.notices} onDismiss={p.settings.onDismissNotice} />
       <Notices notices={notices} />
       <PanelA view={view} model={model} onCurrentMode={p.onCurrentMode} status={currentModeStatus(p.settings.currentModeRecord, p.displayNowMs, view.pack)} onConfirmCurrent={p.settings.onConfirmCurrent} />
       <Timeline view={view} model={timeline} displayNowMs={p.displayNowMs} onWindowChange={p.onWindowChange} reason={reasonLine(view)} />
+      <WeatherEntry pack={view.pack} metar={view.metar} taf={view.taf} displayNowMs={p.displayNowMs} onApplyMetar={p.onApplyMetar} onApplyTaf={p.onApplyTaf} auto={p.autoWeather} onResumeAutomatic={p.onResumeAutomatic} />
       <div className="grid3">
         <PanelC view={view} />
         <PanelD view={view} />

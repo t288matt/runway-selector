@@ -48,8 +48,8 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the screen from real repo
     if (extra !== null) expect(text).toContain(extra);
   });
 
-  it('keeps the fixed order: header, notice, chips, weather entry, A, B, C, D, F', () => {
-    const marks = ['<header', 'role="note"', 'aria-label="Data freshness"', 'aria-label="Raw METAR and TAF"', 'Panel A', 'Panel B', 'Panel C', 'Panel D', 'Panel F'].map((m) => html.indexOf(m));
+  it('keeps the fixed order: header, notice, chips, A, B, weather entry, C, D, F', () => {
+    const marks = ['<header', 'role="note"', 'aria-label="Data freshness"', 'Panel A', 'Panel B', 'aria-label="Raw METAR and TAF"', 'Panel C', 'Panel D', 'Panel F'].map((m) => html.indexOf(m));
     expect(marks.every((i) => i >= 0)).toBe(true);
     expect([...marks].sort((a, b) => a - b)).toEqual(marks);
   });

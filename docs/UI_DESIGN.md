@@ -35,7 +35,7 @@ Rules that follow from this:
 4. Provisional and illustrative values are always labelled where they appear, never only in a footnote.
 
 ## 3. Screen layout
-The order is fixed at every width: header, notice, freshness chips, weather entry, A, B, then C, D and F. B is always directly below A. Panel letters are not reused, so the panels are A, B, C, D and F.
+The order is fixed at every width: header, notice, freshness chips, A, B, weather entry, then C, D and F (OD-38; the weather entry used to sit above A). B is always directly below A. Panel letters are not reused, so the panels are A, B, C, D and F.
 
 ### 3.1 Wide desktop (1280 px and above, designed at 1440)
 Content width capped at 1440 px, centred, 16 px gutters. C, D and F sit side by side.
