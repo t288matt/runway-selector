@@ -53,7 +53,6 @@ function Screen({ pack, deps, airport }: { pack: AirportPack; deps: AppDeps; air
       displayNowMs={s.displayNowMs}
       busy={false}
       drawerOpen={s.drawerOpen}
-      onRefresh={s.refresh}
       onToggleDrawer={s.setDrawerOpen}
       onWindowChange={s.setWindowChoice}
       onCurrentMode={s.setCurrentMode}

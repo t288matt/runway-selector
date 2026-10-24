@@ -23,7 +23,6 @@ export interface AppDeps {
 export interface DashboardState extends ControllerState {
   readonly drawerOpen: boolean;
   readonly setDrawerOpen: (open: boolean) => void;
-  readonly refresh: () => void;
   readonly setWindowChoice: (choice: WindowChoice) => void;
   readonly setCurrentMode: (id: string | null) => void;
   readonly confirmCurrentMode: () => void;
@@ -57,7 +56,6 @@ export function useDashboard(pack: AirportPack, deps: AppDeps): DashboardState {
     ...state,
     drawerOpen,
     setDrawerOpen,
-    refresh: controller.refresh,
     setWindowChoice: controller.setWindowChoice,
     setCurrentMode: controller.setCurrentMode,
     confirmCurrentMode: controller.confirmCurrentMode,
