@@ -990,3 +990,22 @@ p.small {
   margin-top: 6px;
   color: var(--muted);
 }
+
+/* Touch targets: 44px on touch screens and narrow windows (the UX review). */
+@media (pointer: coarse), (max-width: 640px) {
+  .btn,
+  .small-btn,
+  select,
+  .airport-entry input {
+    min-height: 44px;
+  }
+  .btn,
+  .small-btn {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+  .wxbox .age,
+  .small {
+    font-size: 13px;
+  }
+}
