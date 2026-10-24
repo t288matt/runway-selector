@@ -1,5 +1,5 @@
-// The dashboard layout in its fixed order (UI_DESIGN section 3): header, notice,
-// freshness chips, A, B, weather entry, then C, D and F (OD-38). Pure of effects: the
+// The dashboard layout in its fixed order (UI_DESIGN section 3): header,
+// freshness chips, A, B, weather entry, D and F, then the flight-simulation notice (OD-38, OD-41). Pure of effects: the
 // state and timers live in useDashboard.
 import type { AutoReportState, WeatherKind } from '../controller';
 import { dataNotices, freshnessChips, type FeedState, type ViewData, type WindowChoice } from '../model/dashboard';
@@ -51,7 +51,6 @@ export function Dashboard(p: DashboardProps) {
   return (
     <div className="wrap">
       <Header liveTag={liveTag(p.feed, p.autoWeather)} busy={p.busy} onRefresh={p.onRefresh} onSettings={() => p.onToggleDrawer(true)} airport={{ icao: view.pack.airport.icao, airports: p.settings.airports, error: p.settings.airportError, onSwitch: p.settings.onSwitchAirport }} />
-      <NoticeBar pack={view.pack} />
       <Freshness chips={chips} />
       <StoreNotices notices={p.settings.notices} onDismiss={p.settings.onDismissNotice} />
       <Notices notices={notices} />
@@ -62,6 +61,7 @@ export function Dashboard(p: DashboardProps) {
         <PanelD view={view} />
         <PanelF view={view} />
       </div>
+      <NoticeBar pack={view.pack} />
       {p.drawerOpen ? (
         <SettingsDrawer view={view} displayNowMs={p.displayNowMs} bridge={p.settings} onCurrentMode={p.onCurrentMode} onWindowChange={p.onWindowChange} onClose={() => p.onToggleDrawer(false)} />
       ) : null}

@@ -30,8 +30,8 @@ export function Loading() {
       <header className="top">
         <h1>Runway Mode Planner</h1>
       </header>
-      <NoticeBar pack={null} />
       <p role="status" className="loading">Loading the airport pack and the VATSIM feed</p>
+      <NoticeBar pack={null} />
     </div>
   );
 }

@@ -52,8 +52,8 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the screen from real repo
     if (extra !== null) expect(text).toContain(extra);
   });
 
-  it('keeps the fixed order: header, notice, chips, A, B, weather entry, D, F', () => {
-    const marks = ['<header', 'role="note"', 'aria-label="Data freshness"', 'Panel A', 'Panel B', 'aria-label="Raw METAR and TAF"', 'Panel D', 'Panel F'].map((m) => html.indexOf(m));
+  it('keeps the fixed order: header, chips, A, B, weather entry, D, F, notice', () => {
+    const marks = ['<header', 'aria-label="Data freshness"', 'Panel A', 'Panel B', 'aria-label="Raw METAR and TAF"', 'Panel D', 'Panel F', 'role="note"'].map((m) => html.indexOf(m));
     expect(marks.every((i) => i >= 0)).toBe(true);
     expect([...marks].sort((a, b) => a - b)).toEqual(marks);
   });
@@ -427,8 +427,9 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('times are UTC only and th
     expect(text).not.toMatch(/\d{1,2}:\d{2}[^)]*\(?\s*local\)/i);
   });
 
-  it('says the plan looks ahead only as far as the chosen window', () => {
-    expect(text).toContain('The plan looks ahead only as far as the window you choose.');
+  it('no longer carries the window note (OD-41); the window choice itself is still on screen', () => {
+    expect(text).not.toContain('looks ahead only as far as the window');
+    expect(text).toContain('Window');
   });
 });
 
