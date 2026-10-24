@@ -364,6 +364,26 @@ select {
   border-top: 1px solid var(--line);
   padding-top: 8px;
 }
+.why summary {
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
+}
+.why summary::-webkit-details-marker {
+  display: none;
+}
+.why summary::before {
+  content: 'B8';
+  display: inline-block;
+  margin-right: 6px;
+  transition: transform 0.1s ease;
+}
+.why[open] summary::before {
+  transform: rotate(90deg);
+}
+.why p {
+  margin: 6px 0 2px;
+}
 .why p {
   margin: 2px 0;
 }
