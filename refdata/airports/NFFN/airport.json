@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "description": "Nadi International Airport, Fiji. PROVISIONAL DRAFT 24-10-2026: coordinates and elevation (59 ft) are from public aggregator sites, not checked against the Fiji AIP. Other simulation assumptions carry over from the Australian packs.",
+  "icao": "NFFN",
+  "name": "Nadi",
+  "latitude": -17.7563,
+  "longitude": 177.4437,
+  "elevationFt": 59,
+  "timeZone": "Pacific/Fiji",
+  "weatherStation": "NFFN",
+  "trafficAreaNm": 5,
+  "groundMaxSpeedKt": 40,
+  "groundAltitudeMarginFt": 100,
+  "arrivalSpeedFloorKt": 150,
+  "labels": {}
+}

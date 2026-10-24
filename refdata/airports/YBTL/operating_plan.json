@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "description": "Owner-supplied 24-10-2026. One band covers the whole day; no day/night split has been given. Priority order: 1 (equal) 0107AD, 1925AD; 2 (equal) 01AD, 19AD; 3 (equal) 07AD, 25AD. The penalties (0, 0, 2, 2, 5, 5) encode that order; lower is preferred.",
+  "status": "verified",
+  "bands": [
+    {
+      "id": "all-day",
+      "allDay": true,
+      "start": "00:00",
+      "end": "00:00",
+      "rows": [
+        { "mode": "0107AD", "allowed": true, "penalty": 0 },
+        { "mode": "1925AD", "allowed": true, "penalty": 0 },
+        { "mode": "01AD", "allowed": true, "penalty": 2 },
+        { "mode": "19AD", "allowed": true, "penalty": 2 },
+        { "mode": "07AD", "allowed": true, "penalty": 5 },
+        { "mode": "25AD", "allowed": true, "penalty": 5 }
+      ]
+    }
+  ]
+}

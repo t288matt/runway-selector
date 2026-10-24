@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "description": "Preferred runway modes, owner-supplied 24-10-2026, in priority order (order in this file is the tie-break): equal first 02A20D, 02A2027D and 0209A20D; then 02AD; then 20AD. 02A2027D departs on both 20 and 27; 0209A20D arrives on both 02 and 09. No crosswind limit or capacity has been supplied for any mode; they fall back to the pack default and have no capacity limit.",
+  "status": "verified",
+  "modes": [
+    { "id": "02A20D", "description": "Arrivals 02, departures 20", "enabled": true, "arrivals": ["02"], "departures": ["20"] },
+    { "id": "02A2027D", "description": "Arrivals 02, departures 20 and 27", "enabled": true, "arrivals": ["02"], "departures": ["20", "27"] },
+    { "id": "0209A20D", "description": "Arrivals 02 and 09, departures 20", "enabled": true, "arrivals": ["02", "09"], "departures": ["20"] },
+    { "id": "02AD", "description": "Arrivals and departures 02", "enabled": true, "arrivals": ["02"], "departures": ["02"] },
+    { "id": "20AD", "description": "Arrivals and departures 20", "enabled": true, "arrivals": ["20"], "departures": ["20"] }
+  ]
+}
