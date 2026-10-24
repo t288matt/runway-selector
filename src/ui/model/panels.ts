@@ -48,7 +48,7 @@ function trafficSentence(view: ViewData): string {
   const levels = trafficLevelsFor(view.pack, starts, view.demand?.slots ?? []);
   const rank = (l: TrafficLevel | null): number => (l === 'light' ? 0 : l === 'medium' ? 1 : l === 'busy' ? 2 : -1);
   const now = levels[0] ?? null;
-  const base = `${levelWord(now)} now`;
+  const base = levelWord(now);
   let later = -1;
   for (let i = 1; i < levels.length; i += 1) {
     if (rank(levels[i] ?? null) > rank(now)) {
