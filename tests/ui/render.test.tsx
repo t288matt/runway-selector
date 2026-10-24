@@ -202,6 +202,14 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('Panel A states [%s]', (_n
     expect(text).not.toContain('Recommended differs from current');
   });
 
+  it('does not draw the Operating plan preference or Uncertainty rows under the recommendation (OD-76)', () => {
+    const view = viewOf(pack, rig, same<Wx>(4, 'ok'), same(4, 'light'), rig.b);
+    const text = textOf(renderDashboard(view));
+    expect(text).not.toContain('Operating plan preference');
+    expect(text).not.toContain('Uncertainty');
+    expect(text).toContain('Runway state'); // the rows above them are still there
+  });
+
   it('shows the amber EARLY MODE CHANGE RECOMMENDED banner with the engine text', () => {
     const levels = [...med];
     levels[4] = 'busy';
