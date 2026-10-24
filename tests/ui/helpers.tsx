@@ -78,7 +78,6 @@ export function renderDashboard(view: ViewData, feed: FeedState = EMPTY_FEED, dr
       displayNowMs={displayNowMs}
       busy={false}
       drawerOpen={drawerOpen}
-      onRefresh={() => undefined}
       onToggleDrawer={() => undefined}
       onWindowChange={() => undefined}
       onCurrentMode={() => undefined}

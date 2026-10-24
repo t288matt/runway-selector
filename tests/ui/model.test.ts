@@ -263,7 +263,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('timeline rows and tiles [
     else if (first.runwayState !== 'DRY') expect(value).toBe('Now');
     else {
       const next = slots.findIndex((s, i) => i > 0 && s.runwayState !== 'DRY');
-      if (next < 0) expect(value).toBe('None in window');
+      if (next < 0) expect(value).toBe('Not in forecast');
       else expect(value).toBe(hhmmZRel(slots[next]?.startMs ?? 0, v.calcNowMs));
     }
   });
