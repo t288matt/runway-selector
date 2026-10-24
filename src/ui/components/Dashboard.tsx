@@ -19,7 +19,6 @@ export interface DashboardProps {
   readonly displayNowMs: number;
   readonly busy: boolean;
   readonly drawerOpen: boolean;
-  readonly onRefresh: () => void;
   readonly onToggleDrawer: (open: boolean) => void;
   readonly onWindowChange: (choice: WindowChoice) => void;
   readonly onCurrentMode: (id: string | null) => void;
@@ -45,7 +44,7 @@ export function Dashboard(p: DashboardProps) {
   const timeline = timelineModel(view, p.displayNowMs);
   return (
     <div className="wrap">
-      <Header liveTag={liveTag(p.feed, p.autoWeather)} busy={p.busy} onRefresh={p.onRefresh} onSettings={() => p.onToggleDrawer(true)} airport={{ icao: p.settings.pendingAirport ?? view.pack.airport.icao, airports: p.settings.airports, error: p.settings.airportError, onSwitch: p.settings.onSwitchAirport, loading: p.settings.pendingAirport != null }} />
+      <Header liveTag={liveTag(p.feed, p.autoWeather)} busy={p.busy} onSettings={() => p.onToggleDrawer(true)} airport={{ icao: p.settings.pendingAirport ?? view.pack.airport.icao, airports: p.settings.airports, error: p.settings.airportError, onSwitch: p.settings.onSwitchAirport, loading: p.settings.pendingAirport != null }} />
       <Freshness chips={chips} />
       <StoreNotices notices={p.settings.notices} onDismiss={p.settings.onDismissNotice} />
       <Notices notices={notices} />
