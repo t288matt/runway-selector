@@ -7,7 +7,7 @@ import { buildWeatherSlots, decodeMetar } from '../../src/weather';
 import { loadPackFrom } from '../helpers/packs';
 
 const pack = loadPackFrom({ name: 'YMML', dir: join(resolve(import.meta.dirname, '..', '..'), 'refdata', 'airports', 'YMML') });
-const MODE = '34A27AD';
+const MODE = '34A27AD-LAHSO';
 const nowMs = Date.UTC(2026, 0, 15, 2, 10);
 
 function cellFor(body: string, mode = MODE): Cell {
@@ -59,9 +59,9 @@ describe('YMML land-and-hold-short mode minima', () => {
 });
 
 describe('YMML non-LAHSO twin of the land-and-hold-short mode', () => {
-  const TWIN = '34A27AD-NOLAHSO';
+  const TWIN = '34A27AD';
   it('sits after 27AD and before 16AD in the pack', () => {
-    expect(pack.modes.map((m) => m.id)).toEqual(['27AD34D', '16A27D', '09A16D', '34A27AD', '09AD', '27AD', TWIN, '16AD', '34AD']);
+    expect(pack.modes.map((m) => m.id)).toEqual(['27AD34D', '16A27D', '09A16D', '34A27AD-LAHSO', '09AD', '27AD', TWIN, '16AD', '34AD']);
   });
   it('has the same runways and no minima', () => {
     const m = pack.modes.find((x) => x.id === TWIN)!;
