@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "description": "Preferred runway modes, owner-supplied 24-10-2026, in priority order (order in this file is the tie-break): 1 2312A23D; 2 0512A05D; 3 23AD; 4 05AD; 5 12AD; 6 30AD. The first two use both runways: 2312A23D lands on 23 and 12 and departs from 23; 0512A05D lands on 05 and 12 and departs from 05. No crosswind limit or capacity has been supplied for any mode; they fall back to the pack default and have no capacity limit.",
+  "status": "provisional",
+  "modes": [
+    { "id": "2312A23D", "description": "Arrivals 23 and 12, departures 23", "enabled": true, "arrivals": ["23", "12"], "departures": ["23"] },
+    { "id": "0512A05D", "description": "Arrivals 05 and 12, departures 05", "enabled": true, "arrivals": ["05", "12"], "departures": ["05"] },
+    { "id": "23AD", "description": "Arrivals and departures 23", "enabled": true, "arrivals": ["23"], "departures": ["23"] },
+    { "id": "05AD", "description": "Arrivals and departures 05", "enabled": true, "arrivals": ["05"], "departures": ["05"] },
+    { "id": "12AD", "description": "Arrivals and departures 12", "enabled": true, "arrivals": ["12"], "departures": ["12"] },
+    { "id": "30AD", "description": "Arrivals and departures 30", "enabled": true, "arrivals": ["30"], "departures": ["30"] }
+  ]
+}
