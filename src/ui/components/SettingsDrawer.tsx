@@ -20,6 +20,8 @@ export interface SettingsBridge {
   /** Airport ids listed in app.json, offered as suggestions in the header's airport box (OD-37). */
   readonly airports: readonly string[];
   readonly airportError: string | null;
+  /** The airport just chosen in the pull-down whose data is still loading, or null/absent (the screen shows the old airport until it arrives). */
+  readonly pendingAirport?: string | null;
   readonly notices: readonly string[];
   readonly onConfirmCurrent: () => void;
   readonly onReload: () => void;
