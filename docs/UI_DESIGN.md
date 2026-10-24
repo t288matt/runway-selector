@@ -41,9 +41,8 @@ The order is fixed at every width: header, notice, freshness chips, A, B, weathe
 Content width capped at 1440 px, centred, 16 px gutters. C, D and F sit side by side.
 ```
 +----------------------------------------------------------------------------------------------------------+
-| <Airport> Runway Mode Planner   [Illustrative, not live data]   Times UTC + local   [Refresh] [Settings] |
+| Runway Mode Planner   [Illustrative, not live data]   Times UTC + local   [Refresh] [Settings] |
 | Flight simulation only. Never for real-world navigation, flight planning or operations.                  |
-| Rules and capacities shown are provisional simulation assumptions.                                       |
 | METAR 22:00Z (12 min) | TAF 21:30Z to 07:30Z | VATSIM 32 s | Plan 22:00Z, next 22:30Z | DRY              |
 +----------------------------------------------------------------------------------------------------------+
 | METAR [ paste box, 2 lines .......................................... ] [Apply]  12 min old              |
@@ -98,7 +97,7 @@ Target: A and the first four timeline rows visible on a 1366 x 768 laptop withou
 Title (built from the pack), a data tag, a "Times UTC" label, Refresh button, Settings button. The tag reads "Live" with source times when data is live and "Illustrative, not live data" in the mockup. The tag is never absent.
 
 ### 4.2 Flight-simulation notice
-- Text: "Flight simulation only. Never for real-world navigation, flight planning or operations." A second short line: "Rules and capacities are provisional simulation assumptions."
+- Text: "Flight simulation only. Never for real-world navigation, flight planning or operations." The Sydney pack no longer adds a second line (owner, 24-10-2026, OD-40); a pack may still add one.
 - Always visible as a bar under the header; it is not dismissible in phase 1.
 - On the VATPAC site (future) the first visit shows the site's own acceptance step before the app loads; the bar stays after acceptance. Acceptance is stored in browser storage only, with the version of the wording.
 - Contrast and size match body text. It must not be styled so quietly that it is missed.

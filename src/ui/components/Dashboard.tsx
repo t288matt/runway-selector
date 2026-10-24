@@ -50,7 +50,7 @@ export function Dashboard(p: DashboardProps) {
   const timeline = timelineModel(view, p.displayNowMs);
   return (
     <div className="wrap">
-      <Header pack={view.pack} liveTag={liveTag(p.feed, p.autoWeather)} busy={p.busy} onRefresh={p.onRefresh} onSettings={() => p.onToggleDrawer(true)} airport={{ icao: view.pack.airport.icao, airports: p.settings.airports, error: p.settings.airportError, onSwitch: p.settings.onSwitchAirport }} />
+      <Header liveTag={liveTag(p.feed, p.autoWeather)} busy={p.busy} onRefresh={p.onRefresh} onSettings={() => p.onToggleDrawer(true)} airport={{ icao: view.pack.airport.icao, airports: p.settings.airports, error: p.settings.airportError, onSwitch: p.settings.onSwitchAirport }} />
       <NoticeBar pack={view.pack} />
       <Freshness chips={chips} />
       <StoreNotices notices={p.settings.notices} onDismiss={p.settings.onDismissNotice} />
