@@ -3,11 +3,11 @@
   "description": "Fictional settings for the single-runway airport.",
   "tailwindDryKt": {
     "value": 10,
-    "description": "Maximum tailwind on a dry runway. Owner simulation rule."
+    "description": "Maximum tailwind on a dry runway."
   },
   "tailwindWetKt": {
     "value": 3,
-    "description": "Maximum tailwind on a wet runway. Owner simulation rule."
+    "description": "Maximum tailwind on a wet runway."
   },
   "defaultCrosswindKt": {
     "value": 20,

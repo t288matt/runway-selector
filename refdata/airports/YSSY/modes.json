@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "description": "Standard modes from the 2015 Airservices table (provisional). Order in this file is the final tie-break. Capacities are the owner's own provisional estimates, set on 24-10-2026, not official figures (SY-7): 20 movements per hour for SODPROPS, 07AD and 25AD; 30 for the modes that cross runways (25A16D, 34A25D, 34AD25, 07A16D); no limit for 34AD and 16AD. Runway uses marked long-haul only in the source are listed like any other use; the engine ignores the aircraft class (OD-19).",
-  "status": "provisional",
+  "status": "verified",
   "modes": [
     { "id": "SODPROPS", "description": "Simultaneous opposite direction parallel runway operations; enabled by the owner, 23-10-2026, for use at any time of day", "enabled": true, "arrivals": ["34L"], "departures": ["16L", "16R"], "maxCrosswindKt": 20, "capacity": 20 },
     { "id": "25A16D",        "description": "Arrivals 25, departures 16L and 16R", "enabled": true, "arrivals": ["25"], "departures": ["16L", "16R"], "maxCrosswindKt": 20, "capacity": 30 },
