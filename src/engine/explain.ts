@@ -9,7 +9,7 @@ import type { EngineInput, TrafficLevel } from './inputs';
 import type { Changeover } from './changeover';
 import { preferencePenalty } from './optimiser';
 import type { NoRecommendation, Plan } from './optimiser';
-import type { Cell, EngineResult, ReasonCode, Survival } from './types';
+import type { Cell, EngineResult, ReasonCode, SlotInfo, Survival } from './types';
 
 export const EARLY_CHANGE_TITLE = 'EARLY MODE CHANGE RECOMMENDED';
 export const NO_SUITABLE_TITLE = 'NO SUITABLE STANDARD MODE IDENTIFIED';
@@ -97,9 +97,79 @@ function sentence(text: string): string {
   return text.endsWith('.') ? text : `${text}.`;
 }
 
-function uncertaintyLineFor(count: number): string {
-  if (count === 0) return 'No uncertain inputs';
-  return count === 1 ? '1 slot depends on uncertain data' : `${count} slots depend on uncertain data`;
+const SLOT_MS = 30 * MS_PER_MINUTE;
+
+/** Plain words for the reason code that actually made a cell uncertain (the figures.uncertain flag), not a guess from the slot alone. */
+const UNCERTAIN_REASON_WORDS: Partial<Record<ReasonCode, string>> = {
+  NO_DEMAND: 'traffic demand not known this far ahead',
+  NO_WIND: 'wind not usable',
+  OVERLAY: 'a temporary forecast group could change this',
+  TAF: 'the TAF forecast differs from the METAR',
+  TW: 'a chance of rain near the tailwind limit',
+  XW: 'a chance of rain near the crosswind limit',
+  VRB: 'the wind direction is variable',
+};
+
+/**
+ * Why a cell on the plan path is uncertain, in the same priority the engine itself used to set the flag
+ * (eligibility.ts): no usable wind at all is the most fundamental; then a reason with its own uncertain figure
+ * (a wet-case wind margin, a temporary forecast group, or a TAF/METAR mismatch); then demand not known, which
+ * only skips the capacity check and leaves everything else known.
+ */
+function uncertainReason(cell: Cell | undefined, info: SlotInfo | undefined): string {
+  // No weather for the slot at all is the most specific case: say so, rather than the narrower "wind not usable".
+  if (info?.governedBy === 'NONE') return 'no forecast for this period';
+  const reasons = cell?.reasons ?? [];
+  if (reasons.some((r) => r.code === 'NO_WIND')) return UNCERTAIN_REASON_WORDS.NO_WIND ?? 'wind not usable';
+  const flagged = reasons.find((r) => (r.severity === 'MARGINAL' || r.severity === 'INFO') && r.figures.uncertain === true);
+  if (flagged !== undefined) return UNCERTAIN_REASON_WORDS[flagged.code] ?? sentence(flagged.text).replace(/\.$/, '').toLowerCase();
+  if (reasons.some((r) => r.code === 'NO_DEMAND')) return UNCERTAIN_REASON_WORDS.NO_DEMAND ?? 'traffic demand not known this far ahead';
+  // No mode on the plan at this slot (a gap): fall back to what the slot itself says.
+  if (info === undefined) return 'uncertain data';
+  if (info.runwayState === 'WET_POSSIBLE') return 'a chance of rain';
+  return 'wind not usable';
+}
+
+/**
+ * Says which periods are uncertain and why, instead of just a count (owner decision 24-10-2026, OD-57, amending
+ * DB-2). The reason comes from the plan path's own cell at each slot, the same one the figures.uncertain flag was
+ * set from, so it never names a cause (such as wind) that was not actually the reason. Consecutive uncertain
+ * slots with the same reason are joined into one period; a change of reason, or a gap of certain slots, starts a
+ * new one.
+ */
+function uncertaintyLineFor(
+  pack: AirportPack,
+  planSlots: readonly { readonly slotIndex: number; readonly startMs: number; readonly modeId: string | null; readonly uncertain: boolean }[],
+  result: EngineResult,
+  nowMs: number,
+): string {
+  const periods: string[] = [];
+  let startMs: number | null = null;
+  let endMs = 0;
+  let reason = '';
+  const close = (): void => {
+    if (startMs === null) return;
+    periods.push(`${formatTime(startMs, nowMs)} to ${formatTime(endMs, nowMs)}: ${reason}`);
+    startMs = null;
+  };
+  for (const s of planSlots) {
+    if (!s.uncertain) {
+      close();
+      continue;
+    }
+    const modeIndex = s.modeId === null ? -1 : pack.modes.findIndex((m) => m.id === s.modeId);
+    const cell = modeIndex < 0 ? undefined : result.cells[modeIndex]?.[s.slotIndex];
+    const r = uncertainReason(cell, result.slots[s.slotIndex]);
+    if (startMs === null || r !== reason) {
+      close();
+      startMs = s.startMs;
+      reason = r;
+    }
+    endMs = s.startMs + SLOT_MS;
+  }
+  close();
+  if (periods.length === 0) return 'No uncertain inputs';
+  return periods.join('; ');
 }
 
 function whyThisMode(pack: AirportPack, modeId: string, cell: Cell): string {
@@ -262,7 +332,7 @@ function noRecommendationHeadline(why: NoRecommendation): string {
 
 export function explain(pack: AirportPack, input: EngineInput, result: EngineResult, plan: Plan, changeovers: readonly Changeover[]): Explanation {
   const nowMs = input.nowMs;
-  const uncertaintyLine = uncertaintyLineFor(plan.uncertainSlots);
+  const uncertaintyLine = uncertaintyLineFor(pack, plan.slots, result, nowMs);
   const early = changeovers.find((c) => c.early !== null);
 
   const earlyChange: EarlyChangeBanner | null =

@@ -129,7 +129,7 @@ export function SettingsDrawer({ view, displayNowMs, bridge, onCurrentMode, onWi
             <ul>
               {b.groups.map((g) => (
                 <li key={g.rank}>
-                  Rank {g.rank} ({g.word}): {g.modes.map((m) => `Mode ${m}`).join(', ')}
+                  Priority {g.rank} ({g.word}): {g.modes.map((m) => `Mode ${m}`).join(', ')}
                 </li>
               ))}
               {b.notAllowed.length === 0 ? null : <li>Not allowed: {b.notAllowed.map((m) => `Mode ${m}`).join(', ')}</li>}

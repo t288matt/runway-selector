@@ -167,7 +167,7 @@ export function drawerModel(pack: AirportPack, nowMs: number): DrawerModel {
     onScreenNote: ON_SCREEN_NOTE,
     sections: [limits, wetness, traffic, modes],
     plan: pack.plan.map((b) => planBandModel(pack, b)),
-    planNote: 'Rank 1 is the most preferred. Modes with the same rank are equally preferred. The recommendation also weighs weather and traffic.',
+    planNote: 'Priority 1 is the most preferred. Modes with the same priority are equally preferred. The recommendation also weighs weather and traffic.',
     zone: [
       { label: 'Time zone', value: tz, help: "The airport's own time zone. Used only to work out the operating plan's time bands; every time on screen is UTC (OD-36)." },
       { label: 'Now', value: utcAndLocal(nowMs, tz), help: 'Times on screen are UTC.' },

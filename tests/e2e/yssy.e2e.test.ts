@@ -456,7 +456,7 @@ describe('E14 the current mode becomes unsuitable: red banner data and the repla
 describe('E15 busy-traffic early change: banner only when the forced change is in strictly busier traffic (OP-6, OP-7)', () => {
   // METAR 160/12; FM 05:00 -> 340/12. Current mode 16AD (headwind, then tailwind 12 > 5.05 -> UNSUITABLE from slot 4).
   // Only 07AD and 25AD (crosswind-only) survive every slot; 34AD is unusable before the FM. Window 4 h: slots 0-3 before the shift, slot 4 is the forced slot.
-  // Arrivals decide the level: light <= 5, medium 6-11, busy >= 12. Change cost: light 1, medium 5, busy 25 (charged in the slot where the new mode starts).
+  // Arrivals decide the level: light <= 10, medium 11-20, busy >= 21. Change cost: light 1, medium 5, busy 25 (charged in the slot where the new mode starts).
   // Preference is 5 for every day mode, so only change costs differ.
   const wx = { metar: metar(kt(160, 12)), taf: taf(`${kt(160, 12)} 9999 SCT020 FM230500 ${kt(340, 12)} 9999 SCT020`), current: '16AD' };
   const traffic = (before: number | null, after: number | null) => [before, before, before, before, after, after, after, after];
@@ -474,18 +474,18 @@ describe('E15 busy-traffic early change: banner only when the forced change is i
     expect(r.out.plan.changes[0]!.slotIndex).toBeLessThan(4);
   });
   it('light before, medium at the forced slot: strictly busier, early cost 1 < waiting cost 5 -> banner', () => {
-    const r = go({ ...wx, arrivals: traffic(3, 8) });
+    const r = go({ ...wx, arrivals: traffic(3, 15) });
     const early = r.out.explanation.earlyChange;
     expect(early).not.toBeNull();
     expect(early!.trafficAtChange).toBe('light');
     expect(early!.trafficAtForced).toBe('medium');
   });
   it('medium everywhere: waiting costs the same as changing early, so no banner', () => {
-    const r = go({ ...wx, arrivals: traffic(8, 8) });
+    const r = go({ ...wx, arrivals: traffic(15, 15) });
     expect(r.out.explanation.earlyChange).toBeNull();
   });
   it('busy everywhere: no banner', () => {
-    const r = go({ ...wx, arrivals: traffic(14, 14) });
+    const r = go({ ...wx, arrivals: traffic(22, 22) });
     expect(r.out.explanation.earlyChange).toBeNull();
   });
   it.skip('medium before, light at the forced slot: waiting costs 1 < 5, so the plan waits for 05:00 and shows no banner' /* TODO YR-20b: recompute against the new priority order and SODPROPS enabled (23-10-2026) */, () => {

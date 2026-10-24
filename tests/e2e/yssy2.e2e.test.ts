@@ -94,9 +94,9 @@ describe('E20 METAR date resolution across a month end, and a METAR slightly ahe
 });
 
 describe('E21 traffic level takes the higher of arrivals and departures (TR-4, OD-24)', () => {
-  // YSSY bands: light 0-5, medium 6-11, busy 12+. Slot 0: 3 arrivals (light) and 14 departures (busy) -> busy. Slot 1 onward: 3 arrivals, departures unknown -> light.
+  // YSSY bands: light 0-10, medium 11-20, busy 21+. Slot 0: 3 arrivals (light) and 22 departures (busy) -> busy. Slot 1 onward: 3 arrivals, departures unknown -> light.
   it('slot level is busy where departures are busy', () => {
-    const r = go({ metar: metar(kt(250, 10)), taf: taf(kt(250, 10) + ' 9999 SCT020'), arrivals: Array(8).fill(3), departures: [14, null, null, null, null, null, null, null] });
+    const r = go({ metar: metar(kt(250, 10)), taf: taf(kt(250, 10) + ' 9999 SCT020'), arrivals: Array(8).fill(3), departures: [22, null, null, null, null, null, null, null] });
     expect(r.out.plan.slots.map((s) => s.trafficLevel)).toEqual(['busy', 'light', 'light', 'light', 'light', 'light', 'light', 'light']);
   });
 });

@@ -6,6 +6,7 @@ import { runwayWind, trafficLevelsFor, withinLimit, type Cell, type TrafficLevel
 import { dir3, durationText, hhmmZRel, kt1 } from '../format';
 import { RUNWAY_STATE_WORDS, levelWord, type ViewData } from './dashboard';
 import { missingWeather, planRank } from './timeline';
+import type { DecodedConditions } from '../../weather';
 import { cellView, CAUSE_WORDS, STATUS_STYLE } from './status';
 
 // ------------------------------------------------------------------ Panel A
@@ -33,7 +34,7 @@ export interface PanelAModel {
   readonly rank: string;
   readonly uncertainty: string;
   readonly runwayState: string;
-  readonly capacity: string;
+  readonly ceiling: string;
   readonly banners: readonly BannerModel[];
   readonly whyLines: readonly string[];
   readonly noSuitable: { readonly title: string; readonly perMode: readonly BlockedModeModel[] } | null;
@@ -59,6 +60,47 @@ function trafficSentence(view: ViewData): string {
   // Demand that becomes unknown later in the window is not mentioned (owner, 24-10-2026, OD-45); when it is
   // unknown in every slot, base is already UNKNOWN.
   return base;
+}
+
+/**
+ * The raw text of the report actually governing the current slot (owner, 24-10-2026, OD-65): the METAR if it
+ * governs, the TAF if that governs instead, or null with no report. Replaces the derived "is suitable on the
+ * runways it uses ..." sentence that used to open the Weather row in Panel A.
+ */
+function currentReportText(view: ViewData): string | null {
+  const governedBy = view.weather.slots[0]?.governedBy;
+  if (governedBy === 'METAR') return view.metar?.raw ?? null;
+  if (governedBy === 'TAF') return view.taf?.raw ?? null;
+  return null;
+}
+
+/**
+ * The decoded conditions (clouds, CAVOK, vertical visibility) of whichever report governs the current slot: the
+ * METAR, or the TAF's prevailing period at this time when the METAR does not govern. Mirrors the period choice
+ * in weather/slots.ts's tafWeather, so it names the same period that decides the slot's weather.
+ */
+function currentConditions(view: ViewData): DecodedConditions | null {
+  const governedBy = view.weather.slots[0]?.governedBy;
+  if (governedBy === 'METAR') return view.metar;
+  if (governedBy === 'TAF' && view.taf !== null) {
+    const endMs = view.weather.slots[0]?.endMs ?? view.calcNowMs;
+    let period = view.taf.periods[0];
+    for (const p of view.taf.periods) if (p.startMs < endMs) period = p;
+    return period ?? null;
+  }
+  return null;
+}
+
+const thousands = (n: number): string => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+/** Ceiling (owner, 24-10-2026, OD-66): the lowest BKN or OVC base, or the vertical visibility if lower or if no cloud base is reported. CAVOK and a clear sky both mean no ceiling. */
+function ceilingText(c: DecodedConditions | null): string {
+  if (c === null) return 'Unknown';
+  if (c.cavok) return 'CAVOK (no ceiling)';
+  const bases = c.clouds.filter((cl) => (cl.quantity === 'BKN' || cl.quantity === 'OVC') && cl.baseFt !== null).map((cl) => cl.baseFt as number);
+  const lowestCloud = bases.length === 0 ? null : Math.min(...bases);
+  const ceilingFt = c.verticalVisibilityFt !== null && (lowestCloud === null || c.verticalVisibilityFt < lowestCloud) ? c.verticalVisibilityFt : lowestCloud;
+  return ceilingFt === null ? 'No ceiling' : `${thousands(ceilingFt)} ft`;
 }
 
 function runwayStateSentence(view: ViewData): string {
@@ -92,7 +134,7 @@ export function panelAModel(view: ViewData): PanelAModel {
     rank: '-',
     uncertainty: explanation.uncertaintyLine,
     runwayState: runwayStateSentence(view),
-    capacity: '-',
+    ceiling: ceilingText(currentConditions(view)),
     banners: [] as BannerModel[],
     whyLines: explanation.lines,
     noSuitable: null,
@@ -146,12 +188,12 @@ export function panelAModel(view: ViewData): PanelAModel {
     arrivalsText: mode === undefined ? '' : mode.arrivals.join(', ') || 'none',
     departuresText: mode === undefined ? '' : mode.departures.join(', ') || 'none',
     nextChange,
-    weather: style === null ? null : { word: style.word.toUpperCase(), icon: style.icon, className: style.className, text: explanation.lines[0] ?? '' },
+    weather: style === null ? null : { word: style.word.toUpperCase(), icon: style.icon, className: style.className, text: currentReportText(view) ?? explanation.lines[0] ?? '' },
     traffic: trafficSentence(view),
-    rank: rank === null ? '-' : `${rank} of ${enabledCount} (1 is most preferred)`,
+    rank: rank === null ? '-' : `${recId} is priority ${rank} of ${enabledCount}`,
     uncertainty: explanation.uncertaintyLine,
     runwayState: runwayStateSentence(view),
-    capacity: mode === undefined ? '-' : `${mode.capacity === null ? 'No limit set' : `${mode.capacity} movements/hr`}${cell0 !== undefined && cell0.demand.knownDemand !== null ? `; ${cell0.demand.knownDemand} known movements this slot` : '; movements not known'}`,
+    ceiling: ceilingText(currentConditions(view)),
     banners,
     whyLines: explanation.lines,
     noSuitable: null,
@@ -262,7 +304,9 @@ export function panelDModel(view: ViewData): PanelDModel {
       label,
       arrivals: arrivals === null ? 'Unknown' : String(arrivals),
       departures: departures === null ? 'not est.' : String(departures),
-      movements: arrivals === null ? 'Unknown' : departures === null ? `${arrivals * 2} (arrivals only)` : String((arrivals + departures) * 2),
+      // The raw count for this 30-minute slot, never doubled to an hourly rate (owner, 24-10-2026, OD-63,
+      // amending OD-41 and OD-61, which still doubled the known case).
+      movements: arrivals === null ? 'Unknown' : departures === null ? `${arrivals} (arrivals only)` : String(arrivals + departures),
       level: levels[i] ?? null,
       known: arrivals !== null,
     });
@@ -356,7 +400,7 @@ export function cellDetailModel(view: ViewData, modeIndex: number, slotIndex: nu
   const rank = planRank(view, modeIndex, slotIndex);
   const operatingPlan = planFail
     ? `Not allowed in time band ${band ?? 'unknown'}`
-    : `Allowed${band === null || pack.plan.find((b) => b.id === band)?.allDay === true ? '' : ` in time band ${band}`}${rank === null ? '' : `, rank ${rank}`}`;
+    : `Allowed${band === null || pack.plan.find((b) => b.id === band)?.allDay === true ? '' : ` in time band ${band}`}${rank === null ? '' : `, priority ${rank}`}`;
 
   const s = result.evaluation.survival[modeIndex];
   const parts: string[] = [];
