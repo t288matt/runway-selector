@@ -9,8 +9,6 @@ import type { AirportPack } from '../../refdata';
 import type { DecodedMetar, DecodedTaf } from '../../weather';
 import { WEATHER_CREDIT } from '../../weather/config';
 import type { AutoReportState, WeatherKind } from '../controller';
-import { ageText, utcAndLocal } from '../format';
-import { freshness } from '../model/dashboard';
 
 export interface ApplyOutcome {
   readonly ok: boolean;
@@ -24,7 +22,6 @@ export interface WeatherEntryProps {
   readonly pack: AirportPack;
   readonly metar: DecodedMetar | null;
   readonly taf: DecodedTaf | null;
-  readonly displayNowMs: number;
   readonly onApplyMetar: (text: string) => ApplyOutcome;
   readonly onApplyTaf: (text: string) => ApplyOutcome;
   readonly auto: Readonly<Record<WeatherKind, AutoReportState>>;
@@ -64,7 +61,6 @@ export function ApplyNote({ outcome }: { outcome: ApplyOutcome }) {
 function SourceNote({ id, label, auto, onResume }: { id: string; label: string; auto: AutoReportState; onResume: () => void }) {
   return (
     <>
-      {auto.source === 'automatic' ? <div className="age" data-testid={`${id}-source`}>Fetched automatically.</div> : null}
       {auto.paused ? (
         <div className="age" data-testid={`${id}-source`}>
           Pasted by you; automatic {label} updates are paused.{' '}
@@ -90,8 +86,8 @@ function Box({ id, label, rows, note, inUse, auto, showPaste, onApply, onResume 
     <div className="wxbox">
       <label htmlFor={showPaste ? id : undefined}>{label}</label>
       <div>
-        {showPaste ? <textarea id={id} rows={rows} spellCheck={false} autoComplete="off" placeholder={`Paste your own ${label} here`} value={text} onChange={(e) => setText(e.target.value)} aria-describedby={`${id}-note`} /> : null}
-        <div className="age" id={`${id}-note`}>{note}</div>
+        {showPaste ? <textarea id={id} rows={rows} spellCheck={false} autoComplete="off" placeholder={`Paste your own ${label} here`} value={text} onChange={(e) => setText(e.target.value)} aria-describedby={note === '' ? undefined : `${id}-note`} /> : null}
+        {note === '' ? null : <div className="age" id={`${id}-note`}>{note}</div>}
         {inUse === null ? null : <div className="mono" data-testid={`${id}-in-use`}>{inUse}</div>}
         <SourceNote id={id} label={label} auto={auto} onResume={onResume} />
         {outcome === null ? null : <ApplyNote outcome={outcome} />}
@@ -101,20 +97,15 @@ function Box({ id, label, rows, note, inUse, auto, showPaste, onApply, onResume 
   );
 }
 
-export function WeatherEntry({ pack, metar, taf, displayNowMs, onApplyMetar, onApplyTaf, auto, onResumeAutomatic }: WeatherEntryProps) {
-  const tz = pack.airport.timeZone;
+export function WeatherEntry({ pack, metar, taf, onApplyMetar, onApplyTaf, auto, onResumeAutomatic }: WeatherEntryProps) {
   const nothing = metar === null && taf === null;
   const [showPaste, setShowPaste] = useState(false);
   let metarNote = `Station ${pack.airport.weatherStation}. No METAR entered.`;
-  if (metar !== null) {
-    const f = freshness(displayNowMs, metar.observedAtMs, pack.settings.metarStaleMinutes);
-    metarNote = `Observed ${utcAndLocal(metar.observedAtMs, tz)}, ${ageText(f.ageMinutes)} old${f.stale ? ' (stale)' : ''}. Taken from the time group in the report.`;
-  }
+  // The observation time and age are in the METAR freshness chip above, so a METAR in use needs no note here (OD-41).
+  if (metar !== null) metarNote = '';
   let tafNote = `Station ${pack.airport.weatherStation}. No TAF entered.`;
-  if (taf !== null) {
-    const f = freshness(displayNowMs, taf.issuedAtMs, pack.settings.tafStaleMinutes);
-    tafNote = `Issued ${utcAndLocal(taf.issuedAtMs, tz)}${f.stale ? ' (stale)' : ''}, valid ${utcAndLocal(taf.validFromMs, tz)} to ${utcAndLocal(taf.validToMs, tz)}.`;
-  }
+  // Issue and validity times are in the TAF freshness chip above (OD-41).
+  if (taf !== null) tafNote = '';
   return (
     <section className="wxtop" aria-label="Raw METAR and TAF">
       <div className="small">

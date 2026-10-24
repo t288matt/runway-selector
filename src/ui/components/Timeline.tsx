@@ -64,10 +64,9 @@ export interface TimelineProps {
   readonly model: TimelineModel;
   readonly displayNowMs: number;
   readonly onWindowChange: (choice: WindowChoice) => void;
-  readonly reason: string;
 }
 
-export function Timeline({ view, model, displayNowMs, onWindowChange, reason }: TimelineProps) {
+export function Timeline({ view, model, displayNowMs, onWindowChange }: TimelineProps) {
   const [showHidden, setShowHidden] = useState(false);
   const { rows, cells, onPath, hiddenCount } = visibleRows(model, showHidden);
   const { slots } = model;
@@ -290,7 +289,6 @@ export function Timeline({ view, model, displayNowMs, onWindowChange, reason }: 
         <span>Blue band: wet risk</span>
         <span>White corner: depends on an uncertain input</span>
       </div>
-      <p className="reason">{reason}</p>
 
       {detail === null || shown === null ? null : (
         <div id="cell-detail" role="tooltip" className="tip" style={{ left: Math.max(8, Math.min(shown.left, (typeof window === 'undefined' ? 1200 : window.innerWidth) - 380)), top: shown.bottom + 8 }}>

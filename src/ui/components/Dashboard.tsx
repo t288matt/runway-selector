@@ -37,11 +37,6 @@ export function liveTag(feed: FeedState, auto: Readonly<Record<WeatherKind, Auto
   return `Live traffic; ${weather}`;
 }
 
-export function reasonLine(view: ViewData): string {
-  const { explanation } = view.result;
-  return [explanation.headline, view.result.plan.recommendedModeId === null ? '' : (explanation.lines[1] ?? '')].filter((x) => x !== '').join(' ');
-}
-
 export function Dashboard(p: DashboardProps) {
   const { view } = p;
   const chips = freshnessChips(view, p.feed, p.displayNowMs);
@@ -55,8 +50,8 @@ export function Dashboard(p: DashboardProps) {
       <StoreNotices notices={p.settings.notices} onDismiss={p.settings.onDismissNotice} />
       <Notices notices={notices} />
       <PanelA view={view} model={model} onCurrentMode={p.onCurrentMode} status={currentModeStatus(p.settings.currentModeRecord, p.displayNowMs, view.pack)} onConfirmCurrent={p.settings.onConfirmCurrent} />
-      <Timeline view={view} model={timeline} displayNowMs={p.displayNowMs} onWindowChange={p.onWindowChange} reason={reasonLine(view)} />
-      <WeatherEntry pack={view.pack} metar={view.metar} taf={view.taf} displayNowMs={p.displayNowMs} onApplyMetar={p.onApplyMetar} onApplyTaf={p.onApplyTaf} auto={p.autoWeather} onResumeAutomatic={p.onResumeAutomatic} />
+      <Timeline view={view} model={timeline} displayNowMs={p.displayNowMs} onWindowChange={p.onWindowChange} />
+      <WeatherEntry pack={view.pack} metar={view.metar} taf={view.taf} onApplyMetar={p.onApplyMetar} onApplyTaf={p.onApplyTaf} auto={p.autoWeather} onResumeAutomatic={p.onResumeAutomatic} />
       <div className="grid3">
         <PanelD view={view} />
         <PanelF view={view} />

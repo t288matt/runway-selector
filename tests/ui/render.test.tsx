@@ -58,10 +58,10 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the screen from real repo
     expect([...marks].sort((a, b) => a - b)).toEqual(marks);
   });
 
-  it('shows the pasted reports as plain text at the top, with the observation age from the report', () => {
+  it('shows the reports in use as plain text; the METAR age is in the freshness chip, not repeated under the report', () => {
     expect(html).toContain('data-testid="wx-metar-in-use"');
     expect(text).toContain(view.metar?.raw ?? 'missing');
-    expect(text).toContain('old. Taken from the time group in the report');
+    expect(text).not.toContain('Taken from the time group in the report');
   });
 
   it('draws one row per enabled mode and one cell per mode and slot', () => {
@@ -367,7 +367,7 @@ describe('text safety (SEC-2)', () => {
     const ref = PACKS[0] ?? TEST1_PACK;
     const pack = packWith(ref, { weatherStation: fixture(METAR_ID).station });
     const hostileMetar: DecodedMetar = { ...decodeMetarFixture(METAR_ID, ref), raw: HOSTILE };
-    const html = renderToStaticMarkup(<WeatherEntry pack={pack} metar={hostileMetar} taf={null} displayNowMs={nowOf(fixture(METAR_ID))} onApplyMetar={() => ({ ok: true, message: null, warnings: [] })} onApplyTaf={() => ({ ok: true, message: null, warnings: [] })} auto={NO_AUTO_WEATHER} onResumeAutomatic={() => undefined} />);
+    const html = renderToStaticMarkup(<WeatherEntry pack={pack} metar={hostileMetar} taf={null} onApplyMetar={() => ({ ok: true, message: null, warnings: [] })} onApplyTaf={() => ({ ok: true, message: null, warnings: [] })} auto={NO_AUTO_WEATHER} onResumeAutomatic={() => undefined} />);
     expect(html).not.toContain('<img');
     expect(html).toContain('&lt;img');
     // the real refusal of a hostile paste, rendered the way the screen renders it
