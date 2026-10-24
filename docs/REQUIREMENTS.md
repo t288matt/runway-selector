@@ -138,7 +138,7 @@ A web application that recommends the runway operating mode for Sydney Kingsford
 | ID | Requirement |
 |---|---|
 | DB-1 | Professional, responsive dark theme in the style of the VATPAC tools pages; show the "flight simulation only" notice. |
-| DB-2 | Panel A, current recommendation: mode, arrival and departure runways, weather suitability, traffic class, runway state, operating-plan rank, expected survival, next change, an uncertainty line (for example "Based on 2 uncertain slots" or "No uncertain inputs"), explanation. There is no confidence level (OD-25). |
+| DB-2 | Panel A, current recommendation: mode, arrival and departure runways, weather suitability, traffic class, runway state, operating-plan rank, next change, an uncertainty line (for example "Based on 2 uncertain slots" or "No uncertain inputs"), explanation. There is no confidence level (OD-25). |
 | DB-3 | Panel B, survival timeline, large and directly below A. Rows are modes, columns are 30-minute slots; shows the full TAF validity by default, with options of 4 and 6 hours (OD-31); the timeline shows the slots of the chosen window and scrolls horizontally; highlights the recommended mode and shows the current mode separately. Colours: green suitable, amber marginal or uncertain, red unsuitable, grey unknown. Never green over a tailwind limit. |
 | DB-4 | Timeline cells show on hover or click: UTC time, wind, tailwind and crosswind per runway, dry or wet assumption, traffic class, operating-plan eligibility, status, reason, and any TEMPO, INTER, BECMG or probability condition. |
 | DB-5 | Timeline overlays: now marker, recommended sequence, planned changes, wind shifts, tailwind exceedances, wet-runway risk, uncertainty, and a background band for busy periods across all rows. |

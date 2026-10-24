@@ -27,7 +27,6 @@ export interface PanelAModel {
   readonly modeId: string | null;
   readonly arrivalsText: string;
   readonly departuresText: string;
-  readonly lasts: string;
   readonly nextChange: string;
   readonly weather: { readonly word: string; readonly icon: string; readonly className: string; readonly text: string } | null;
   readonly traffic: string;
@@ -88,7 +87,6 @@ export function panelAModel(view: ViewData): PanelAModel {
     modeId: null,
     arrivalsText: '',
     departuresText: '',
-    lasts: 'Unknown',
     nextChange: 'Unknown',
     weather: null,
     traffic: trafficSentence(view),
@@ -122,13 +120,7 @@ export function panelAModel(view: ViewData): PanelAModel {
   const modeIndex = pack.modes.findIndex((m) => m.id === recId);
   const mode = pack.modes[modeIndex];
   const cell0 = evaluation.cells[modeIndex]?.[0];
-  const survival = evaluation.survival[modeIndex];
 
-  let lasts = 'Unknown';
-  if (survival !== undefined && survival.viableUntilMs !== null) {
-    const left = durationText(survival.viableUntilMs - view.calcNowMs);
-    lasts = survival.endsInFailure ? `To ${hhmmZRel(survival.viableUntilMs, view.calcNowMs)} (${left})` : `To end of window ${hhmmZRel(survival.viableUntilMs, view.calcNowMs)} (${left})`;
-  }
   const upcoming = result.changeovers.find((c) => c.change.slotIndex > 0);
   const nextChange = upcoming === undefined ? 'No change planned' : `${upcoming.change.fromModeId} to ${upcoming.change.toModeId} at ${hhmmZRel(upcoming.change.startMs, view.calcNowMs)}`;
 
@@ -154,7 +146,6 @@ export function panelAModel(view: ViewData): PanelAModel {
     modeId: recId,
     arrivalsText: mode === undefined ? '' : mode.arrivals.join(', ') || 'none',
     departuresText: mode === undefined ? '' : mode.departures.join(', ') || 'none',
-    lasts,
     nextChange,
     weather: style === null ? null : { word: style.word.toUpperCase(), icon: style.icon, className: style.className, text: explanation.lines[0] ?? '' },
     traffic: trafficSentence(view),

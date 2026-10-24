@@ -14,7 +14,7 @@ The controller is busy talking to aircraft. The tool is a second-screen aid, gla
 
 | Task | How often | What the screen must give |
 |---|---|---|
-| T1 Check the mode is still right | every few minutes | Mode, how long it lasts, next change, why |
+| T1 Check the mode is still right | every few minutes | Mode, next change, why |
 | T2 Plan a changeover | a few times per session | When, to what, traffic at that time, preparation time |
 | T3 Understand a change in advice | when the plan moves | Which input changed, which cell turned red |
 | T4 Trust or challenge the advice | on doubt | Per-cell numbers, sources, data ages, provisional flags |
@@ -24,7 +24,7 @@ The controller is busy talking to aircraft. The tool is a second-screen aid, gla
 ## 2. Information hierarchy
 | Read time | Content | Where |
 |---|---|---|
-| 2 seconds | Recommended mode (large); whether it differs from the current mode; time it lasts; next change time; one status banner when action is needed | Panel A, top block |
+| 2 seconds | Recommended mode (large); whether it differs from the current mode; next change time; one status banner when action is needed | Panel A, top block |
 | 10 seconds | The timeline: which rows stay green, where red begins, where the busy bands fall; the one-line reason; data freshness chips | Panel B and the one-line "why" in A |
 | On demand | Cell detail (hover, click, keyboard); weather decode; traffic numbers; runway diagram; settings | Tooltips, panels C, D and F, settings drawer |
 
@@ -49,7 +49,7 @@ Content width capped at 1440 px, centred, 16 px gutters. C, D and F sit side by 
 | METAR [ paste box, 2 lines .......................................... ] [Apply]  12 min old              |
 | TAF   [ paste box, 3 lines .......................................... ] [Apply]  valid 07:30Z            |
 +----------------------------------------------------------------------------------------------------------+
-| A  RECOMMENDED NOW  | Lasts to 07:30Z (9 h 18 min)    | Plan rank 3 of 8 (provisional)                   |
+| A  RECOMMENDED NOW  | Next change 07:30Z              | Plan rank 3 of 8 (provisional)                   |
 | MODE 12             | Next change 10 to 12 at 00:00Z  | Uncertainty: based on 2 uncertain slots          |
 | Arr 07, Dep 07      | Weather SUITABLE                | Runway DRY; wet possible 05:00Z-06:00Z           |
 | Current [Mode 10 v] | Traffic LOW now, HIGH by 04:00Z | Capacity 60/hr (placeholder)                     |
@@ -80,7 +80,7 @@ Same order. A uses two columns (mode block left, facts right; banner and why ful
 | header, notice, chips (wrap)               |
 | METAR and TAF boxes, Apply buttons         |
 +--------------------------------------------+
-| A  MODE 12  |  lasts, next change, weather |
+| A  MODE 12  |  next change, weather |
 | banner and why (full width)                |
 +--------------------------------------------+
 | B  tiles 2 x 2                             |
@@ -112,7 +112,7 @@ Runway state is not a separate chip: owner decision, 24-10-2026, to stop the dup
 Common to all panels: a letter badge and title; a small "provisional" mark wherever a value comes from a provisional rule or placeholder band; no scrolling inside a panel except tables of more than 8 rows.
 
 ### Panel A: current recommendation
-**Content (DB-2).** Left block: label "MODE", the mode number at 44 px, arrival and departure runways, and the current mode with its pull-down menu (enabled modes, plus Not set). Middle: "Lasts" (time to first unsuitable slot, or "to end of forecast"), "Next change" (mode and time), weather suitability, traffic class now and expected. Right: operating-plan priority rank, an uncertainty line ("Based on 2 uncertain slots" or "No uncertain inputs"; there is no confidence level), runway condition and wet-risk time, capacity note. Below: banner area, then a one-sentence "Why".
+**Content (DB-2).** Left block: label "MODE", the mode number at 44 px, arrival and departure runways, and the current mode with its pull-down menu (enabled modes, plus Not set). Middle: "Next change" (mode and time), weather suitability, traffic class now and expected. Right: operating-plan priority rank, an uncertainty line ("Based on 2 uncertain slots" or "No uncertain inputs"; there is no confidence level), runway condition and wet-risk time, capacity note. Below: banner area, then a one-sentence "Why".
 
 **Heading logic.** The large mode is the recommended mode for now: the first slot of the recommended sequence. A planned change appears in Next change. If the operator has entered a current mode that differs, it shows beside it as "Current: 10" and the banner explains the gap. The pull-down menu beside it sets the current mode (OD-21).
 
@@ -275,7 +275,7 @@ System font stack (`system-ui, Segoe UI, Arial, sans-serif`); monospace for META
 | Token | Size / line | Weight | Use |
 |---|---|---|---|
 | `--t-mode` | 44 / 44 px | 700 | Recommended mode number |
-| `--t-key` | 20 / 28 px | 650 | "Lasts", "Next change" values |
+| `--t-key` | 20 / 28 px | 650 | "Next change" values |
 | `--t-title` | 18 / 24 px | 650 | App title |
 | `--t-body` | 14 / 20 px | 400 | Body |
 | `--t-label` | 12 / 16 px | 500 | Panel titles (uppercase, 0.08 em), table text, chips |
