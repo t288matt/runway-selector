@@ -1,7 +1,8 @@
 // YR-12 part 1, second YSSY file: preference against change cost, wrap-around and range directions, gusts,
 // mid-slot FM, month-rollover METAR, and TAF-wet in the METAR window. Hand-worked from docs/REQUIREMENTS.md
-// before the engine was read; pack numbers as in yssy.e2e.test.ts (YSSY: tail dry 5 / wet 0, xw 20, calm 3, margin 3,
-// day penalty 5 for every mode but Mode Curfew, night penalty Mode Curfew = 0 and others = 20, change light 1 / medium 5 / busy 25).
+// before the engine was read; pack numbers as in yssy.e2e.test.ts (YSSY: headings 07 062, 25 242, 16 155, 34 335; tail dry 5 /
+// wet 0, xw 20, calm 3, margin 3; one all-day band: SODPROPS 0, 25A16D / 34A25D / 34AD25 / 07A16D 2, 34AD / 16AD 5, 07AD / 25AD 12;
+// change light 1 / medium 5 / busy 25, unknown 5; minimum stay 60 min with a 25 point penalty; METAR window 30 min).
 import { describe, expect, it } from 'vitest';
 import { YSSY_PACK } from '../helpers/packs';
 import { at, cell, chosen, kt, run, type RunOptions } from './pipeline';
@@ -11,47 +12,59 @@ const metar = (wind: string, wx = '', obs = '230300Z') => ['METAR YSSY', obs, wi
 const taf = (body: string, valid = '2303/2403') => `TAF YSSY 230200Z ${valid} ${body}`;
 const go = (o: Partial<RunOptions>) => run({ ref: YSSY_PACK, nowIso: NOW, windowMinutes: 240, ...o });
 
-// TODO YR-20b: wholly about the now-removed curfew mode's night preference; recompute or
-// replace against the new priority order once a comparable scenario exists (23-10-2026).
-describe.skip('E18 a higher operating-plan preference lasting one slot is weighed against the change cost (section 11, OP-6, OD-18)', () => {
-  // Night, TAF only: 23-10-2026 12:00Z is 23:00 AEDT, the first night slot. Wind 070/10 in slot 0, then FM 12:30Z to 340/10.
-  //   Mode Curfew (34L arrival, 16R departure): 070/10 is a pure crosswind on both ends -> SUITABLE in slot 0. At 340/10 runway 16R has a 10 kt tailwind -> UNSUITABLE.
-  //   Slot 0 modes: 34AD, 16AD, 07AD, 07A16D. Slot 1 onward (340/10): 34A25D, 34AD25, 34AD, 07AD, 25AD. Only 34AD and 07AD pass every slot; 34AD is first in the file.
-  //   Plan A: Mode Curfew in slot 0 (preference 0), then a change into Mode 34A25D (first in file at 340/10) and 7 slots at 20:  0 + change + 140.
-  //   Plan B: Mode 34AD throughout: 8 x 20 = 160, no change.
-  //   A beats B when the change costs less than 20: light (1) and medium (5) yes; busy (25) no.
-  const base = {
-    nowIso: '2026-10-23T12:10:00Z',
-    metar: null,
-    taf: `TAF YSSY 231100Z 2312/2412 ${kt(70, 10)} 9999 SCT020 FM231230 ${kt(340, 10)} 9999 SCT020`,
+// E18 used to be about the removed curfew mode's night preference (YR-20b). The same rule, a higher preference lasting only part of
+// the window weighed against the change cost, is tested here on the single all-day plan, with SODPROPS (penalty 0) as the preferred mode.
+describe('E18 a higher operating-plan preference lasting part of the window is weighed against the change cost (section 11, OP-6, OD-18, OD-74)', () => {
+  // TAF only, now 03:10Z (slot 0 = 03:00-03:30). Wind 250/10, then FM to 160/10 at 05:00 (slot 4) in the first test, at 03:30 (slot 1) in the second.
+  //   250/10: SODPROPS passes (arr 34L: dir-hdg -85, a 0.87 kt headwind; dep 16: a 0.87 kt tailwind; xw 9.96), and so does 25A16D (25 hdg 242:
+  //   a 9.9 kt headwind; 16 a 0.87 kt tailwind).
+  //   160/10: SODPROPS fails (arr 34L: dir-hdg -175, a 9.96 kt tailwind). 25A16D still passes (25: dir-hdg -82, a 1.39 kt headwind, xw 9.9; 16: dir-hdg 5, a headwind).
+  // The copy of the pack has no capacities, so traffic only sets the change cost (light 1, medium 5, busy 25, by arrivals 0-10, 11-20, 21+).
+  const noCapacity: RunOptions['edit'] = (files) => {
+    for (const m of files['modes.json'].modes as { capacity: number | null }[]) m.capacity = null;
   };
   const all = (n: number) => Array.from({ length: 8 }, () => n);
+  const tafWith = (fm: string) => `TAF YSSY 230200Z 2303/2403 ${kt(250, 10)} 9999 SCT020 FM${fm} ${kt(160, 10)} 9999 SCT020`;
+  // Plan A: SODPROPS slots 0-3 (0), a change to 25A16D at slot 4 (c), then 4 x 2 = 8:  8 + c. The SODPROPS stay is 20 + 3 x 30 = 110 min, over the minimum.
+  // Plan B: 25A16D throughout: 8 x 2 = 16, no change. A beats B when c < 8: light (1) and medium (5) yes; busy (25) no.
   it.each([
     ['light', 3],
-    ['medium', 8],
-  ] as const)('%s traffic: Mode Curfew for the one slot it passes, then Mode 34A25D', (_l, n) => {
-    const r = go({ ...base, arrivals: all(n) });
-    expect(chosen(r)).toEqual(['Curfew', '34A25D', '34A25D', '34A25D', '34A25D', '34A25D', '34A25D', '34A25D']);
-    expect(r.out.plan.recommendedModeId).toBe('Curfew');
-    expect(r.out.plan.changes[0]).toMatchObject({ slotIndex: 1, fromModeId: 'Curfew', toModeId: '34A25D' });
+    ['medium', 15],
+  ] as const)('%s traffic: SODPROPS while it passes, then 25A16D when the wind turns at 05:00', (_l, n) => {
+    const r = go({ edit: noCapacity, metar: null, taf: tafWith('230500'), arrivals: all(n) });
+    expect(chosen(r)).toEqual(['SODPROPS', 'SODPROPS', 'SODPROPS', 'SODPROPS', '25A16D', '25A16D', '25A16D', '25A16D']);
+    expect(r.out.plan.recommendedModeId).toBe('SODPROPS');
+    expect(r.out.plan.changes[0]).toMatchObject({ slotIndex: 4, fromModeId: 'SODPROPS', toModeId: '25A16D' });
   });
-  it('busy traffic: the 25 point change costs more than the 20 point preference gain, so Mode 34AD throughout', () => {
-    const r = go({ ...base, arrivals: all(14) });
-    expect(new Set(chosen(r))).toEqual(new Set(['34AD']));
+  it('busy traffic: the 25 point change costs more than the 8 point preference gain, so 25A16D throughout', () => {
+    const r = go({ edit: noCapacity, metar: null, taf: tafWith('230500'), arrivals: all(22) });
+    expect(new Set(chosen(r))).toEqual(new Set(['25A16D']));
+    expect(r.out.plan.changes).toHaveLength(0);
+  });
+  // The wind turns at 03:30, so SODPROPS passes slot 0 only (20 minutes left). Plan A: SODPROPS 0, a light change (1), a stay under the
+  // 60 minute minimum (+25), then 7 x 2 = 14:  40. Plan B: 25A16D throughout, 16. B wins even in light traffic, because a stay that short is
+  // not worth a change (OD-74).
+  it('a SODPROPS stay shorter than the minimum is not worth a change, even in light traffic', () => {
+    const r = go({ edit: noCapacity, metar: null, taf: tafWith('230330'), arrivals: all(3) });
+    expect(new Set(chosen(r))).toEqual(new Set(['25A16D']));
+    expect(r.out.plan.recommendedModeId).toBe('25A16D');
     expect(r.out.plan.changes).toHaveLength(0);
   });
 });
 
 describe('E19 directions: wrap through north, ranges that cross north, gusts, mid-slot FM (WC-2, WC-3, WC-11, OP-2)', () => {
-  it.skip('wind from 360 (36010KT): Mode 34AD (hdg 340) headwind 9.4; Mode 16AD (hdg 160) tailwind 9.4 > 5.05; Mode 07AD (hdg 070) crosswind 9.4', () => {
+  // Wind from 360 (36010KT), the direction wraps through north. Mode 34AD (hdg 335): dir-hdg = 25 -> headwind 9.06, xw 4.23 -> SUITABLE.
+  // Mode 16AD (hdg 155): dir-hdg = 205 -> cos = -0.90631 -> tailwind 9.063 > 5.05 -> UNSUITABLE TW. Mode 07AD (hdg 062): dir-hdg = 298 ->
+  // cos = 0.46947 -> headwind 4.69, xw 10 x |sin 298| = 8.83 <= 17 -> SUITABLE.
+  it('wind from 360 (36010KT): Mode 34AD (hdg 335) headwind 9.1; Mode 16AD (hdg 155) tailwind 9.1 > 5.05; Mode 07AD (hdg 062) headwind 4.7, crosswind 8.8', () => {
     const r = go({ metar: metar('36010KT'), taf: taf('36010KT 9999 SCT020') });
     expect(cell(r, '34AD', 0).status).toBe('SUITABLE');
     expect(cell(r, '16AD', 0)).toMatchObject({ status: 'UNSUITABLE', cause: 'TW' });
     expect(cell(r, '07AD', 0).status).toBe('SUITABLE');
-    expect(cell(r, '16AD', 0).runways[0]!.tailwindKt).toBeCloseTo(9.397, 3);
+    expect(cell(r, '16AD', 0).runways[0]!.tailwindKt).toBeCloseTo(9.063, 3);
   });
-  // 020/06 with range 340V040 (clockwise through north). Mode 16AD (hdg 160): tailwind = -6 cos(D-160). At the mean 020: cos(-140) = -0.766 -> 4.60: MARGINAL.
-  // At 340 (in the range): cos(180) = -1 -> 6.0 > 5.05 -> UNSUITABLE. Mode 34AD (hdg 340) sees every direction 340-040 as a headwind (<= 60 degrees off): SUITABLE;
+  // 020/06 with range 340V040 (clockwise through north). Mode 16AD (hdg 155): tailwind = -6 cos(D-155). At the mean 020: cos(-135) = -0.7071 -> 4.24: MARGINAL.
+  // At 340 (in the range): cos(185) = -0.9962 -> 5.98 > 5.05 -> UNSUITABLE. Mode 34AD (hdg 335) sees every direction 340-040 as a headwind (<= 60 degrees off): SUITABLE;
   // reading the range the long way round (040 -> 340) would put a 6 kt tailwind on it.
   it('340V040 is the short arc through north: Mode 16AD UNSUITABLE (tailwind 6.0), Mode 34AD SUITABLE; without the range Mode 16AD is MARGINAL', () => {
     const ranged = go({ metar: metar('02006KT 340V040'), taf: taf('02006KT 9999 SCT020') });
@@ -60,7 +73,7 @@ describe('E19 directions: wrap through north, ranges that cross north, gusts, mi
     const plain = go({ metar: metar('02006KT'), taf: taf('02006KT 9999 SCT020') });
     expect(cell(plain, '16AD', 0).status).toBe('MARGINAL');
   });
-  // 070/12 gusting 26: the stronger of mean and gust is used, 26. Mode 16AD (hdg 160): crosswind 26 > 20.05. Without the gust 12 <= 17: SUITABLE.
+  // 070/12 gusting 26: the stronger of mean and gust is used, 26. Mode 16AD (hdg 155): dir-hdg -85 -> crosswind 25.9 > 20.05. Without the gust 12 sin 85 = 11.95 <= 17: SUITABLE.
   it('a gust is used in place of the mean wind', () => {
     const gust = go({ metar: metar('07012G26KT'), taf: taf('07012G26KT 9999 SCT020') });
     expect(cell(gust, '16AD', 0)).toMatchObject({ status: 'UNSUITABLE', cause: 'XW' });
@@ -106,9 +119,21 @@ describe('E21 traffic level takes the higher of arrivals and departures (TR-4, O
 // 24-10-2026 — a METAR-governed slot is judged on the METAR alone; see E07). Not a YR-20b recompute case.
 
 describe('E23 other behaviours worked from the requirements', () => {
-  it.skip('a current mode that is disabled in the pack is not used as the starting mode (DESIGN 6 Current mode)' /* TODO YR-20b: no mode is disabled any more now SODPROPS is enabled; needs a new scenario (23-10-2026) */, () => {
-    const r = go({ metar: metar(kt(250, 10)), taf: taf(kt(250, 10) + ' 9999 SCT020'), current: 'SODPROPS' });
+  // No mode is disabled in the shipped pack now (SODPROPS was enabled on 23-10-2026), so the rule is tested on a copy where SODPROPS is
+  // switched off. A current mode that is disabled is not the starting mode, so there is no start and no change is charged from it: the plan
+  // is the cheapest enabled path, 25A16D (penalty 2; SODPROPS cannot be used), with no change at all. The enabled-start case is the control.
+  it('a current mode that is disabled in the pack is not used as the starting mode (DESIGN 6 Current mode)', () => {
+    const noSodprops: RunOptions['edit'] = (files) => {
+      files['modes.json'].modes.find((m: { id: string }) => m.id === 'SODPROPS').enabled = false;
+    };
+    const wx = { metar: metar(kt(250, 10)), taf: taf(kt(250, 10) + ' 9999 SCT020') };
+    const r = go({ ...wx, edit: noSodprops, current: 'SODPROPS' });
     expect(r.out.plan.startModeId).toBeNull();
+    expect(r.out.plan.recommendedModeId).toBe('25A16D');
+    expect(r.out.plan.changes).toHaveLength(0);
+    // Control: with SODPROPS enabled it is a usable starting mode.
+    const control = go({ ...wx, current: 'SODPROPS' });
+    expect(control.out.plan.startModeId).toBe('SODPROPS');
   });
   it('a METAR trend (TEMPO RA) is not weather in the slots: no trend (OD-32)', () => {
     const r = go({ metar: metar(kt(158, 4)) + ' TEMPO RA', taf: taf(kt(158, 4) + ' 9999 SCT020') });

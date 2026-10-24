@@ -10,7 +10,7 @@
 //   near-limit margin   3        2                           3
 //   PROB wet threshold  40       30                          40
 //   drying              60 min   90 min                      60 min
-//   headings            07 070, 25 250, 16 160, 34 340     9 090, 27 270, 18 180, 36 360     3 030, 21 210
+//   headings            07 062, 25 242, 16 155, 34 335     9 090, 27 270, 18 180, 36 360     3 030, 21 210
 // Mode used: YSSY 25AD (runway 25) and 07AD (runway 07); TEST TST_EAST (runway 9), TST_WEST (27), TST_SPLIT (arr 18, dep 9 and 18);
 // TEST1 ONLY_A (runway 3) and ONLY_B (21).
 // Rule for a pure tailwind or crosswind of S knots against limit L with margin M and calm C:
@@ -55,11 +55,11 @@ const label = (r: Row) => `${r.ref.name} ${r.mode} ${kt(r.dir, r.speed)} -> ${r.
 describe('P1 dry tailwind at the limit, relative to each pack (WC-1, WC-11, WC-13)', () => {
   // Wind from directly behind the runway (heading + 180).
   const rows: Row[] = [
-    // YSSY 25AD, hdg 250, wind from 070: limit 5, margin 3, calm 3.
+    // YSSY 25AD, hdg 242, wind from 070 (172 degrees off, so tailwind = 0.990 S): limit 5, margin 3, calm 3.
     { ref: YSSY_PACK, mode: '25AD', dir: 70, speed: 3, want: 'SUITABLE' }, // 3 <= calm: no tailwind
-    { ref: YSSY_PACK, mode: '25AD', dir: 70, speed: 4, want: 'MARGINAL' }, // 4 > 5 - 3
-    { ref: YSSY_PACK, mode: '25AD', dir: 70, speed: 5, want: 'MARGINAL' }, // on the limit
-    { ref: YSSY_PACK, mode: '25AD', dir: 70, speed: 6, want: 'UNSUITABLE' }, // 6 > 5.05
+    { ref: YSSY_PACK, mode: '25AD', dir: 70, speed: 4, want: 'MARGINAL' }, // 3.96 > 5 - 3
+    { ref: YSSY_PACK, mode: '25AD', dir: 70, speed: 5, want: 'MARGINAL' }, // 4.95, just inside the limit
+    { ref: YSSY_PACK, mode: '25AD', dir: 70, speed: 6, want: 'UNSUITABLE' }, // 5.94 > 5.05
     // TEST TST_EAST, hdg 90, wind from 270: limit 8, margin 2, calm 4.
     { ref: TEST_PACK, mode: 'TST_EAST', dir: 270, speed: 4, want: 'SUITABLE' }, // calm
     { ref: TEST_PACK, mode: 'TST_EAST', dir: 270, speed: 5, want: 'SUITABLE' }, // 5 <= 6
@@ -83,9 +83,9 @@ describe('P1 dry tailwind at the limit, relative to each pack (WC-1, WC-11, WC-1
 // ---------------------------------------------------------------------------------------------
 describe('P2 wet runway from a METAR with rain, relative to each pack (WC-1, WC-12, WC-13)', () => {
   const rows: Row[] = [
-    // Pure tailwind with rain. YSSY wet limit 0.
+    // Near-pure tailwind with rain (070 is 172 degrees off 25's heading 242). YSSY wet limit 0.
     { ref: YSSY_PACK, mode: '25AD', dir: 70, speed: 3, want: 'SUITABLE' }, // calm
-    { ref: YSSY_PACK, mode: '25AD', dir: 70, speed: 4, want: 'UNSUITABLE' }, // 4 > 0.05
+    { ref: YSSY_PACK, mode: '25AD', dir: 70, speed: 4, want: 'UNSUITABLE' }, // 3.96 > 0.05
     // TEST wet limit 2, calm 4.
     { ref: TEST_PACK, mode: 'TST_EAST', dir: 270, speed: 4, want: 'SUITABLE' }, // calm
     { ref: TEST_PACK, mode: 'TST_EAST', dir: 270, speed: 5, want: 'UNSUITABLE' }, // 5 > 2.05
@@ -105,11 +105,10 @@ describe('P2 wet runway from a METAR with rain, relative to each pack (WC-1, WC-
   // A small tailwind component above zero, with the wind above calm.
   //   TEST EAST (hdg 90): 198/05 -> dir-hdg = 108 -> tailwind = -5 cos 108 = 1.545. Wet limit 2 (<= 2.05) and above zero -> MARGINAL; dry: 1.545 <= 6 -> SUITABLE.
   //   TEST1 ONLY_A (hdg 30): 142/04 -> dir-hdg = 112 -> tailwind 1.498. Wet limit 3 -> MARGINAL; dry limit 10 -> SUITABLE.
-  //   YSSY 25AD (hdg 250): 158/04 -> tailwind 0.140 > 0.05 -> wet UNSUITABLE (a 0 kt limit has no margin); dry SUITABLE.
-  // TODO YR-20b: the YSSY row above was hand-worked for heading 250, not the owner's verified 242
-  // (23-10-2026); with the real heading the wind is close to a pure headwind. Dropped from the
-  // table below until recomputed. The TEST/TEST1 rows are unaffected and still run.
+  //   YSSY 25AD (hdg 242): 150/04 -> dir-hdg = -92 -> tailwind -4 cos 92 = 0.140 > 0.05 -> wet UNSUITABLE (a 0 kt limit has no margin); dry
+  //   0.14 <= 5.05 and under the 2 kt margin line -> SUITABLE. (The old row used 158 for heading 250; the same 92 degrees off for 242 is 150.)
   it.each([
+    [YSSY_PACK, '25AD', 150, 4, 'SUITABLE', 'UNSUITABLE'],
     [TEST_PACK, 'TST_EAST', 198, 5, 'SUITABLE', 'MARGINAL'],
     [TEST1_PACK, 'ONLY_A', 142, 4, 'SUITABLE', 'MARGINAL'],
   ] as const)('%s small tailwind: dry and wet', (ref, mode, dir, spd, dry, wet) => {
@@ -121,8 +120,11 @@ describe('P2 wet runway from a METAR with rain, relative to each pack (WC-1, WC-
 // ---------------------------------------------------------------------------------------------
 describe('P3 crosswind against each mode\'s own limit (WC-7, WC-8)', () => {
   const rows: Row[] = [
-    // TODO YR-20b: the 4 YSSY 07AD rows here were hand-worked for heading 070, not the owner's
-    // verified 062 (23-10-2026); dropped until recomputed. TEST/TEST1 rows below are unaffected.
+    // YSSY 07AD (hdg 062), wind from 152 (dir-hdg = +90, a pure crosswind of S, no head or tail component); limit 20 (margin 3):
+    { ref: YSSY_PACK, mode: '07AD', dir: 152, speed: 15, want: 'SUITABLE' }, // 15 <= 17
+    { ref: YSSY_PACK, mode: '07AD', dir: 152, speed: 18, want: 'MARGINAL' }, // 17 < 18 <= 20.05
+    { ref: YSSY_PACK, mode: '07AD', dir: 152, speed: 20, want: 'MARGINAL' }, // on the limit passes
+    { ref: YSSY_PACK, mode: '07AD', dir: 152, speed: 21, want: 'UNSUITABLE' }, // 21 > 20.05
     // TEST, wind from 180: runway 9 and 27 see it as a pure crosswind. EAST limit 15 (margin 2), WEST default 18, SPLIT 12 (runway 9 departures).
     { ref: TEST_PACK, mode: 'TST_EAST', dir: 180, speed: 12, want: 'SUITABLE' }, // 12 <= 13
     { ref: TEST_PACK, mode: 'TST_EAST', dir: 180, speed: 14, want: 'MARGINAL' },
