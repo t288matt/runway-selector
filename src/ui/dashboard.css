@@ -461,7 +461,10 @@ select {
 }
 .scroller {
   overflow-x: auto;
+  /* Leaves room below the last row for the horizontal scrollbar, so it never sits over the bottom mode row. */
   padding-right: 16px;
+  padding-bottom: 14px;
+  scrollbar-gutter: stable;
   position: relative;
 }
 .inner {
