@@ -295,6 +295,13 @@ describe('Panel D', () => {
     expect(m.columns[0]?.departures).toBe('0');
     expect(m.columns.slice(1).every((c) => c.departures === 'not est.')).toBe(true);
     expect(m.unknownFrom).not.toBeNull();
+    // movements per hour: both known, doubled; arrivals known only, the arrivals figure labelled so, never a lower bound
+    for (const c of m.columns) {
+      expect(c.movements).not.toContain('\u2265');
+      if (c.arrivals === 'Unknown') expect(c.movements).toBe('Unknown');
+      else if (c.departures === 'not est.') expect(c.movements).toBe(`${Number(c.arrivals) * 2} (arrivals only)`);
+      else expect(c.movements).toBe(String((Number(c.arrivals) + Number(c.departures)) * 2));
+    }
     const text = textOf(renderDashboard(view, { aircraft: [], fetchedAtMs: view.calcNowMs, error: null, errorAtMs: null }));
     expect(text).toContain('Demand unknown from');
     expect(text).toContain('Connected aircraft are not movements');
