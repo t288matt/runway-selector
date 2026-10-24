@@ -36,6 +36,16 @@ describe('the airport pull-down on screen', () => {
     expect(hostile).not.toContain('<img');
   });
 
+  it('while the chosen airport loads, shows the choice as selected, locks the box and says it is loading', () => {
+    const loading = html({ icao: 'TEST', airports: ['YSSY', 'TEST'], loading: true });
+    expect(loading).toMatch(/<option value="TEST" selected/);
+    expect(loading).toMatch(/<select id="airport-icao"[^>]* disabled/);
+    expect(loading).toContain('Loading TEST');
+    const idle = html({ airports: ['YSSY', 'TEST'] });
+    expect(idle).not.toMatch(/<select id="airport-icao"[^>]* disabled/);
+    expect(idle).not.toContain('Loading');
+  });
+
   it('is part of the header whenever the page has an airport, and absent from the loading header', () => {
     const header = renderToStaticMarkup(<Header liveTag="x" onRefresh={noop} onSettings={noop} busy={false} airport={{ icao: 'YSSY', airports: ['YSSY'], error: null, onSwitch: noop }} />);
     expect(header).toContain('id="airport-icao"');

@@ -39,19 +39,22 @@ export interface AirportEntryProps {
   /** Why the last switch was refused, or null. */
   readonly error: string | null;
   readonly onSwitch: (icao: string) => void;
+  /** The chosen airport's data is still being fetched: `icao` is the choice, the box is locked and says so. */
+  readonly loading?: boolean;
 }
 
 /**
  * The always-visible airport pull-down (amends OD-37): choosing an option switches straight away, no separate
  * Switch button. Only airports with a reviewed data pack are offered, so there is nothing to type or validate.
  */
-export function AirportEntry({ icao, airports, error, onSwitch }: AirportEntryProps) {
+export function AirportEntry({ icao, airports, error, onSwitch, loading = false }: AirportEntryProps) {
   return (
     <div className="airport-entry">
       <label htmlFor="airport-icao">Airport</label>
       <select
         id="airport-icao"
         value={icao}
+        disabled={loading}
         aria-describedby={error === null ? undefined : 'airport-icao-note'}
         aria-invalid={error !== null}
         onChange={(e) => onSwitch(e.target.value)}
@@ -60,6 +63,7 @@ export function AirportEntry({ icao, airports, error, onSwitch }: AirportEntryPr
           <option key={id} value={id}>{id}</option>
         ))}
       </select>
+      {loading ? <span className="tag" role="status">Loading {icao}</span> : null}
       {error === null ? null : <span className="strip strip-bad airport-note" id="airport-icao-note" role="alert">{error}</span>}
     </div>
   );
