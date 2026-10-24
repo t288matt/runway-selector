@@ -76,7 +76,6 @@ export function Timeline({ view, model, displayNowMs, onWindowChange, reason }: 
   const [pos, setPos] = useState({ row: 0, col: 0 });
   const [hover, setHover] = useState<Anchor | null>(null);
   const [pinned, setPinned] = useState<Anchor | null>(null);
-  const [tableView, setTableView] = useState(false);
   const [nowVisible, setNowVisible] = useState(true);
   const cellRefs = useRef(new Map<string, HTMLDivElement>());
   const wantFocus = useRef(false);
@@ -171,7 +170,6 @@ export function Timeline({ view, model, displayNowMs, onWindowChange, reason }: 
             {showHidden ? 'Hide unsuitable modes' : `Show ${hiddenCount} unsuitable ${hiddenCount === 1 ? 'mode' : 'modes'}`}
           </button>
         )}
-        <button type="button" className="btn small-btn" aria-pressed={tableView} onClick={() => setTableView(!tableView)}>Table view</button>
         {!nowVisible ? <button type="button" className="btn small-btn" onClick={jumpToNow}>Jump to now</button> : null}
         <label className="small" htmlFor="window-select">Window</label>
         <select id="window-select" value={view.windowChoice} onChange={(e) => (isWindowChoice(e.target.value) ? onWindowChange(e.target.value) : undefined)}>
@@ -191,117 +189,91 @@ export function Timeline({ view, model, displayNowMs, onWindowChange, reason }: 
         ))}
       </div>
 
-      {tableView ? (
-        <div className="scroller">
-          <table className="t2 tableview">
-            <caption>Mode suitability by 30-minute slot (UTC). Same data as the timeline.</caption>
-            <thead>
-              <tr>
-                <th scope="col">Mode</th>
-                {slots.map((s) => (
-                  <th scope="col" key={s.index}>{s.time}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r, ri) => (
-                <tr key={r.modeId}>
-                  <th scope="row">{r.modeId}{r.isRecommended ? ' (recommended)' : ''}{r.isCurrent ? ' (current)' : ''}</th>
-                  {(cells[ri] ?? []).map((c, ci) => (
-                    <td key={ci} className={c.className}>{c.icon} {c.word}{c.code === '' ? '' : ` ${c.code}`}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="scroller" tabIndex={0} aria-label="Timeline, scrolls horizontally" ref={scroller} onScroll={updateNowVisible}>
-          <div className="inner" role="grid" aria-label="Mode survival timeline: modes by 30-minute slot" aria-rowcount={rows.length} aria-colcount={n} style={{ width, height }}>
-            <div className="row hdr" role="row" style={{ height: LAYOUT.timeStrip }}>
-              <div className="lab" role="rowheader"><small>Time (UTC)</small></div>
-              {slots.map((s) => (
-                <div key={s.index} role="columnheader" className={`h${s.onTheHour ? ' hr' : ''}`} title={`${hhmmZ(s.startMs)}`}>
-                  {s.dateLabel === null ? null : <span className="d">{s.dateLabel}</span>}
-                  {s.time}
-                </div>
-              ))}
-            </div>
-            <div className="row hdr" role="row" style={{ height: LAYOUT.eventStrip }}>
-              <div className="lab" role="rowheader"><small>Weather events</small></div>
-              {slots.map((s) => (
-                <div key={s.index} role="columnheader" className="ic" title={s.eventTitle}>{s.events.join(' ')}</div>
-              ))}
-            </div>
-            <div className="row hdr traf" role="row" style={{ height: LAYOUT.trafficStrip }}>
-              <div className="lab" role="rowheader"><small>Traffic</small></div>
-              {slots.map((s) => (
-                <div key={s.index} role="columnheader" className={`t lv-${s.level ?? 'x'}`} title={`Traffic ${levelWord(s.level)}`}>
-                  {s.level === 'busy' ? `${levelLetter(s.level)} ${levelWord(s.level)}` : levelLetter(s.level)}
-                </div>
-              ))}
-            </div>
-
-            {rows.map((r, ri) => (
-              <div key={r.modeId} role="row" className={`row${r.isRecommended ? ' isrec' : ''}${r.isCurrent ? ' isact' : ''}`}>
-                <div className="lab" role="rowheader" title={r.title}>
-                  <span>
-                    {r.modeId}
-                    {r.isRecommended ? <span className="rt rec"> REC</span> : null}
-                    {r.isCurrent ? <span className="rt act"> CURRENT</span> : null}
-                  </span>
-                  <small>{r.runwaysText}</small>
-                </div>
-                {(cells[ri] ?? []).map((c, ci) => {
-                  const active = pos.row === ri && pos.col === ci;
-                  return (
-                    <div
-                      key={ci}
-                      role="gridcell"
-                      ref={(el) => {
-                        if (el === null) cellRefs.current.delete(`${ri}:${ci}`);
-                        else cellRefs.current.set(`${ri}:${ci}`, el);
-                      }}
-                      className={`cell ${c.className}${c.uncertain ? ' unc' : ''}${onPath[ri]?.[ci] === true ? ' rec' : ''}`}
-                      tabIndex={active ? 0 : -1}
-                      aria-label={c.label}
-                      aria-describedby={shown !== null && shown.row === ri && shown.col === ci ? 'cell-detail' : undefined}
-                      onMouseEnter={(e) => setHover(anchorOf(e.currentTarget, ri, ci))}
-                      onMouseLeave={() => setHover(null)}
-                      onFocus={(e) => {
-                        setPos({ row: ri, col: ci });
-                        setHover(anchorOf(e.currentTarget, ri, ci));
-                      }}
-                      onBlur={() => setHover(null)}
-                      onClick={(e) => setPinned(anchorOf(e.currentTarget, ri, ci))}
-                      onKeyDown={(e) => onKeyDown(e, ri, ci)}
-                    >
-                      <span aria-hidden="true">{c.icon}</span>
-                      {c.code === '' ? null : <small aria-hidden="true">{c.code}</small>}
-                      <span className="sr">{c.word}{c.code === '' ? '' : ` ${c.code}`}</span>
-                    </div>
-                  );
-                })}
+      <div className="scroller" tabIndex={0} aria-label="Timeline, scrolls horizontally" ref={scroller} onScroll={updateNowVisible}>
+        <div className="inner" role="grid" aria-label="Mode survival timeline: modes by 30-minute slot" aria-rowcount={rows.length} aria-colcount={n} style={{ width, height }}>
+          <div className="row hdr" role="row" style={{ height: LAYOUT.timeStrip }}>
+            <div className="lab" role="rowheader"><small>Time (UTC)</small></div>
+            {slots.map((s) => (
+              <div key={s.index} role="columnheader" className={`h${s.onTheHour ? ' hr' : ''}`} title={`${hhmmZ(s.startMs)}`}>
+                {s.dateLabel === null ? null : <span className="d">{s.dateLabel}</span>}
+                {s.time}
               </div>
             ))}
-
-            {model.wetRuns.map(([a, b]) => (
-              <div key={`w${a}`} className="ov wetband" aria-hidden="true" style={{ left: LAYOUT.label + a * LAYOUT.column, width: (b - a + 1) * LAYOUT.column, top: LAYOUT.timeStrip, height: height - LAYOUT.timeStrip }} />
-            ))}
-            {model.busyRuns.map(([a, b]) => (
-              <div key={`b${a}`} className="ov busyband" aria-hidden="true" style={{ left: LAYOUT.label + a * LAYOUT.column, width: (b - a + 1) * LAYOUT.column, top: LAYOUT.timeStrip + LAYOUT.eventStrip, height: height - LAYOUT.timeStrip - LAYOUT.eventStrip }} />
-            ))}
-            {model.changeSlots.map((c) => (
-              <div key={`c${c}`} className="ov chg" aria-hidden="true" style={{ left: LAYOUT.label + c * LAYOUT.column, top: LAYOUT.timeStrip, height: height - LAYOUT.timeStrip }} />
-            ))}
-            {showNow ? (
-              <div className="ov now" aria-hidden="true" style={{ left: nowLeft, top: 0, height }}>
-                <span>NOW {hhmmZ(displayNowMs)}</span>
-              </div>
-            ) : null}
           </div>
+          <div className="row hdr" role="row" style={{ height: LAYOUT.eventStrip }}>
+            <div className="lab" role="rowheader"><small>Weather events</small></div>
+            {slots.map((s) => (
+              <div key={s.index} role="columnheader" className="ic" title={s.eventTitle}>{s.events.join(' ')}</div>
+            ))}
+          </div>
+          <div className="row hdr traf" role="row" style={{ height: LAYOUT.trafficStrip }}>
+            <div className="lab" role="rowheader"><small>Traffic</small></div>
+            {slots.map((s) => (
+              <div key={s.index} role="columnheader" className={`t lv-${s.level ?? 'x'}`} title={`Traffic ${levelWord(s.level)}`}>
+                {s.level === 'busy' ? `${levelLetter(s.level)} ${levelWord(s.level)}` : levelLetter(s.level)}
+              </div>
+            ))}
+          </div>
+
+          {rows.map((r, ri) => (
+            <div key={r.modeId} role="row" className={`row${r.isRecommended ? ' isrec' : ''}${r.isCurrent ? ' isact' : ''}`}>
+              <div className="lab" role="rowheader" title={r.title}>
+                <span>
+                  {r.modeId}
+                  {r.isRecommended ? <span className="rt rec"> REC</span> : null}
+                  {r.isCurrent ? <span className="rt act"> CURRENT</span> : null}
+                </span>
+                <small>{r.runwaysText}</small>
+              </div>
+              {(cells[ri] ?? []).map((c, ci) => {
+                const active = pos.row === ri && pos.col === ci;
+                return (
+                  <div
+                    key={ci}
+                    role="gridcell"
+                    ref={(el) => {
+                      if (el === null) cellRefs.current.delete(`${ri}:${ci}`);
+                      else cellRefs.current.set(`${ri}:${ci}`, el);
+                    }}
+                    className={`cell ${c.className}${c.uncertain ? ' unc' : ''}${onPath[ri]?.[ci] === true ? ' rec' : ''}`}
+                    tabIndex={active ? 0 : -1}
+                    aria-label={c.label}
+                    aria-describedby={shown !== null && shown.row === ri && shown.col === ci ? 'cell-detail' : undefined}
+                    onMouseEnter={(e) => setHover(anchorOf(e.currentTarget, ri, ci))}
+                    onMouseLeave={() => setHover(null)}
+                    onFocus={(e) => {
+                      setPos({ row: ri, col: ci });
+                      setHover(anchorOf(e.currentTarget, ri, ci));
+                    }}
+                    onBlur={() => setHover(null)}
+                    onClick={(e) => setPinned(anchorOf(e.currentTarget, ri, ci))}
+                    onKeyDown={(e) => onKeyDown(e, ri, ci)}
+                  >
+                    <span aria-hidden="true">{c.icon}</span>
+                    {c.code === '' ? null : <small aria-hidden="true">{c.code}</small>}
+                    <span className="sr">{c.word}{c.code === '' ? '' : ` ${c.code}`}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+
+          {model.wetRuns.map(([a, b]) => (
+            <div key={`w${a}`} className="ov wetband" aria-hidden="true" style={{ left: LAYOUT.label + a * LAYOUT.column, width: (b - a + 1) * LAYOUT.column, top: LAYOUT.timeStrip, height: height - LAYOUT.timeStrip }} />
+          ))}
+          {model.busyRuns.map(([a, b]) => (
+            <div key={`b${a}`} className="ov busyband" aria-hidden="true" style={{ left: LAYOUT.label + a * LAYOUT.column, width: (b - a + 1) * LAYOUT.column, top: LAYOUT.timeStrip + LAYOUT.eventStrip, height: height - LAYOUT.timeStrip - LAYOUT.eventStrip }} />
+          ))}
+          {model.changeSlots.map((c) => (
+            <div key={`c${c}`} className="ov chg" aria-hidden="true" style={{ left: LAYOUT.label + c * LAYOUT.column, top: LAYOUT.timeStrip, height: height - LAYOUT.timeStrip }} />
+          ))}
+          {showNow ? (
+            <div className="ov now" aria-hidden="true" style={{ left: nowLeft, top: 0, height }}>
+              <span>NOW {hhmmZ(displayNowMs)}</span>
+            </div>
+          ) : null}
         </div>
-      )}
+      </div>
 
       <div className="legend" aria-label="Legend">
         {LEGEND.map((l) => {
