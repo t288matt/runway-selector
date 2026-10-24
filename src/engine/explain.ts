@@ -105,7 +105,7 @@ function uncertaintyLineFor(count: number): string {
 function whyThisMode(pack: AirportPack, modeId: string, cell: Cell): string {
   if (cell.status === 'MARGINAL') {
     const reason = cell.reasons.find((r) => r.severity === 'MARGINAL');
-    return `${modeId} passes every limit now, with a caution. ${reason === undefined ? 'It relies on an uncertain input.' : sentence(reason.text)}`;
+    return `${modeId} passes every limit, with a caution. ${reason === undefined ? 'It relies on an uncertain input.' : sentence(reason.text)}`;
   }
   if (cell.status === 'UNKNOWN') {
     return `${modeId} is planned through, but the weather for this period is not known.`;
@@ -217,7 +217,7 @@ function whyNotTop(pack: AirportPack, result: EngineResult, plan: Plan, chosen: 
   const topMode = pack.modes[top.index];
   const topCell = result.cells[top.index]?.[0];
   if (topMode === undefined || topCell === undefined) return null;
-  const prefix = `${topMode.id} is the operating plan's first preference now, but ${chosen} is recommended`;
+  const prefix = `${topMode.id} is the operating plan's first preference, but ${chosen} is recommended`;
   if (topCell.status === 'UNSUITABLE') {
     const reason: Reason | undefined = topCell.reasons.find((r) => r.severity === 'FAIL');
     return `${prefix} because ${topMode.id} is not suitable: ${reason === undefined ? 'it fails a mandatory rule' : lowerFirst(reason.text)}.`;
@@ -233,7 +233,7 @@ function whyNotTop(pack: AirportPack, result: EngineResult, plan: Plan, chosen: 
   }
   if (plan.startModeId === chosen) {
     const level = plan.slots[0]?.trafficLevel ?? null;
-    return `${prefix} because you are in ${chosen} now, and a change to ${topMode.id} would disturb ${level === null ? 'traffic' : `${level} traffic`} without a lasting gain.`;
+    return `${prefix} because you are in ${chosen}, and a change to ${topMode.id} would disturb ${level === null ? 'traffic' : `${level} traffic`} without a lasting gain.`;
   }
   return `${prefix} because it gives a steadier sequence of modes over the forecast window.`;
 }
@@ -313,7 +313,7 @@ export function explain(pack: AirportPack, input: EngineInput, result: EngineRes
   if (notTop !== null) lines.push(notTop);
 
   return {
-    headline: nowChange === undefined ? `Recommended mode now: ${modeId}.` : `Change now to ${modeId}.`,
+    headline: nowChange === undefined ? `Recommended mode: ${modeId}.` : `Change now to ${modeId}.`,
     lines,
     earlyChange,
     noSuitableMode: null,

@@ -22,7 +22,7 @@ export function PanelA({ view, model, onCurrentMode, status, onConfirmCurrent }:
   return (
     <section className="panel A" aria-label="Panel A: current recommendation">
       <div>
-        <h2><i>A</i>Recommended now</h2>
+        <h2><i>A</i>Recommended</h2>
         {model.kind === 'recommended' ? (
           <>
             <div className="modebig" aria-label={`Recommended mode ${model.modeId ?? ''}`}>

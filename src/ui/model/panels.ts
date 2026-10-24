@@ -137,7 +137,7 @@ export function panelAModel(view: ViewData): PanelAModel {
   const curCell0 = curIndex < 0 ? undefined : evaluation.cells[curIndex]?.[0];
   if (view.currentMode !== null && curCell0 !== undefined && curCell0.status === 'UNSUITABLE') {
     const why = curCell0.reasons.find((r) => r.severity === 'FAIL')?.text ?? 'it fails a mandatory rule';
-    banners.push({ tone: 'red', title: 'CURRENT MODE UNSUITABLE NOW', text: `Current mode ${view.currentMode} is unsuitable now: ${why}. Change to Mode ${recId}.` });
+    banners.push({ tone: 'red', title: 'CURRENT MODE UNSUITABLE', text: `Current mode ${view.currentMode} is unsuitable: ${why}. Change to Mode ${recId}.` });
   }
   if (explanation.earlyChange !== null) {
     banners.push({ tone: 'amber', title: explanation.earlyChange.title, text: explanation.earlyChange.text });
@@ -374,7 +374,7 @@ export function cellDetailModel(view: ViewData, modeIndex: number, slotIndex: nu
   const s = result.evaluation.survival[modeIndex];
   const parts: string[] = [];
   if (s !== undefined && s.viableUntilMs !== null) {
-    parts.push(s.viableSlots === 0 ? 'Not suitable now' : s.endsInFailure ? `Viable from now for ${durationText(s.viableUntilMs - view.calcNowMs)}, to ${hhmmZRel(s.viableUntilMs, view.calcNowMs)}` : `Viable for the whole window, to ${hhmmZRel(s.viableUntilMs, view.calcNowMs)}`);
+    parts.push(s.viableSlots === 0 ? 'Not suitable now' : s.endsInFailure ? `Viable for ${durationText(s.viableUntilMs - view.calcNowMs)}, to ${hhmmZRel(s.viableUntilMs, view.calcNowMs)}` : `Viable for the whole window, to ${hhmmZRel(s.viableUntilMs, view.calcNowMs)}`);
     if (s.firstMarginalSlot !== null) parts.push(`first marginal slot ${hhmmZRel(view.weather.slots[s.firstMarginalSlot]?.startMs ?? 0, view.calcNowMs)}`);
     if (s.firstUnsuitableSlot !== null) parts.push(`first unsuitable slot ${hhmmZRel(view.weather.slots[s.firstUnsuitableSlot]?.startMs ?? 0, view.calcNowMs)}${s.firstUnsuitableReason === null ? '' : ` (${s.firstUnsuitableReason.text})`}`);
   }
