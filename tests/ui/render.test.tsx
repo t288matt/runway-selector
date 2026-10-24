@@ -316,7 +316,8 @@ describe('Panel D', () => {
     }
     const text = textOf(renderDashboard(view, { aircraft: [], fetchedAtMs: view.calcNowMs, error: null, errorAtMs: null }));
     expect(text).toContain('Demand unknown from');
-    expect(text).toContain('Connected aircraft are not movements');
+    expect(text).toContain('on the ground here.');
+    expect(text).not.toContain('Connected aircraft are not movements');
     expect(text).not.toMatch(/\btrend\b/i);
   });
 
