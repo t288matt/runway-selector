@@ -8,7 +8,7 @@ import { SLOT_MS, levelWord, type ViewData } from './dashboard';
 import { cellView, type CellView, type MissingWeather } from './status';
 
 /** Layout constants, in pixels. They match the mockup and the CSS. */
-export const LAYOUT = { label: 176, column: 56, rowHeight: 36, timeStrip: 34, eventStrip: 26, trafficStrip: 26 } as const;
+export const LAYOUT = { label: 176, column: 56, rowHeight: 36, timeStrip: 34, eventStrip: 42, trafficStrip: 26 } as const;
 
 export interface ModeRow {
   /** Index into pack.modes (and into the engine's cells). */
@@ -103,7 +103,18 @@ export interface TimelineSlot {
   readonly noTaf: boolean;
 }
 
+/** One stretch of slots over which the wind stays as shown (OD-51): drawn as a bar on the first line of the event strip. */
+export interface WindRun {
+  readonly startSlot: number;
+  readonly endSlot: number;
+  /** "340/07". */
+  readonly label: string;
+  readonly title: string;
+}
+
 export interface TimelineModel {
+  /** The wind bars of the event strip's first line. */
+  readonly windRuns: readonly WindRun[];
   readonly rows: readonly ModeRow[];
   readonly slots: readonly TimelineSlot[];
   /** cells[rowIndex][slotIndex] */
@@ -181,6 +192,44 @@ export function missingWeather(view: ViewData): MissingWeather {
   return view.metar === null && view.taf === null ? 'NO MET' : 'NO TAF';
 }
 
+/**
+ * The wind bars (OD-51). A bar starts at the first slot with a wind and runs until the wind changes enough to be
+ * worth a label (windShift, measured from the wind the bar started with, so slow drift cannot creep past the
+ * threshold), or until a slot has no wind. The first bar is the wind now.
+ */
+export function windRuns(winds: readonly (WindObservation | null)[]): WindRun[] {
+  const out: WindRun[] = [];
+  let start = -1;
+  let from: WindObservation | null = null;
+  let title = '';
+  const close = (end: number): void => {
+    if (start >= 0 && from !== null) out.push({ startSlot: start, endSlot: end, label: windText(from), title });
+    start = -1;
+    from = null;
+  };
+  winds.forEach((w, i) => {
+    if (w === null) {
+      close(i - 1);
+      return;
+    }
+    if (from === null) {
+      start = i;
+      from = w;
+      title = `Wind ${windText(w)}`;
+      return;
+    }
+    const shift = windShift(from, w);
+    if (shift !== null) {
+      close(i - 1);
+      start = i;
+      from = w;
+      title = shift.title;
+    }
+  });
+  close(winds.length - 1);
+  return out;
+}
+
 export function timelineModel(view: ViewData, displayNowMs: number): TimelineModel {
   const { pack, result } = view;
   const slotsIn = view.weather.slots;
@@ -198,11 +247,6 @@ export function timelineModel(view: ViewData, displayNowMs: number): TimelineMod
     const wet = wetState === 'WET' ? 'wet' : wetState === 'WET_POSSIBLE' ? 'possible' : 'none';
     const events: string[] = [];
     const titles: string[] = [];
-    const shift = windShift(i === 0 ? null : (slotsIn[i - 1]?.weather.wind ?? null), s.weather.wind);
-    if (shift !== null) {
-      events.push(shift.label);
-      titles.push(shift.title);
-    }
     if (s.weather.thunderstorm === true) {
       events.push('TS');
       titles.push('Thunderstorm at the airport');
@@ -250,6 +294,7 @@ export function timelineModel(view: ViewData, displayNowMs: number): TimelineMod
   const first = slotsIn[0];
   const last = slotsIn[slotsIn.length - 1];
   return {
+    windRuns: windRuns(slotsIn.map((s) => s.weather.wind)),
     rows,
     slots,
     cells,

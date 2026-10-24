@@ -604,11 +604,45 @@ select {
   color: var(--text);
   font-weight: 650;
 }
+.evs {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+.evw {
+  position: relative;
+  height: 18px;
+}
+.wbar {
+  position: absolute;
+  top: 0;
+  height: 18px;
+  line-height: 16px;
+  box-sizing: border-box;
+  margin-left: 1px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  background: rgba(106, 166, 255, 0.16);
+  border: 1px solid rgba(106, 166, 255, 0.45);
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.evm {
+  display: flex;
+  height: 18px;
+}
 .ic {
   width: var(--cell);
   flex: none;
   text-align: center;
   font-size: 10px;
+  line-height: 18px;
   align-self: center;
   color: var(--muted);
   white-space: nowrap;

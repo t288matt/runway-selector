@@ -18,7 +18,7 @@ import {
   windowMinutes,
   type FeedState,
 } from '../../src/ui/model/dashboard';
-import { moveFocus, modeRows, summaryTiles, timelineModel, visibleRows, windShift, windText } from '../../src/ui/model/timeline';
+import { moveFocus, modeRows, summaryTiles, timelineModel, visibleRows, windRuns, windShift, windText } from '../../src/ui/model/timeline';
 import { hhmmZ, hhmmZRel, utcAndLocal, ageText, durationText, safeHttpsLink, dir3 } from '../../src/ui/format';
 import { packOf, rigFor } from '../engine/planHelpers';
 import { viewOf } from './helpers';
@@ -362,5 +362,27 @@ describe('wind changes in the event strip', () => {
     expect(windShift(variable(5), steady(340, 10))?.label).toBe('340/10');
     expect(windShift(null, steady(340, 10))).toBeNull();
     expect(windShift(steady(340, 10), null)).toBeNull();
+  });
+});
+
+describe('wind bars in the event strip (OD-51)', () => {
+  const steady = (directionDegrees: number, speedKt: number) => ({ kind: 'steady' as const, directionDegrees, speedKt, gustKt: null, variableRangeDegrees: null });
+
+  it('starts with the wind now and breaks only where the wind changes enough to label', () => {
+    const runs = windRuns([steady(340, 7), steady(342, 8), steady(340, 7), steady(20, 14), steady(20, 14)]);
+    expect(runs.map((r) => [r.startSlot, r.endSlot, r.label])).toEqual([[0, 2, '340/07'], [3, 4, '020/14']]);
+    expect(runs[0]?.title).toBe('Wind 340/07');
+    expect(runs[1]?.title).toContain('turn of 40 degrees');
+  });
+
+  it('measures drift from the wind the bar started with, so small steps cannot add up unseen', () => {
+    const runs = windRuns([steady(340, 7), steady(346, 7), steady(352, 7), steady(358, 7)]);
+    expect(runs.map((r) => r.startSlot)).toEqual([0, 2]);
+  });
+
+  it('leaves a gap where no wind is known and restarts after it', () => {
+    const runs = windRuns([steady(340, 7), null, steady(340, 7)]);
+    expect(runs.map((r) => [r.startSlot, r.endSlot])).toEqual([[0, 0], [2, 2]]);
+    expect(windRuns([null, null])).toEqual([]);
   });
 });
