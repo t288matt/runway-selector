@@ -9,7 +9,7 @@ import type { EngineInput, TrafficLevel } from './inputs';
 import type { Changeover } from './changeover';
 import { preferencePenalty } from './optimiser';
 import type { NoRecommendation, Plan } from './optimiser';
-import type { Cell, EngineResult, Reason, ReasonCode, Survival } from './types';
+import type { Cell, EngineResult, ReasonCode, Survival } from './types';
 
 export const EARLY_CHANGE_TITLE = 'EARLY MODE CHANGE RECOMMENDED';
 export const NO_SUITABLE_TITLE = 'NO SUITABLE STANDARD MODE IDENTIFIED';
@@ -218,10 +218,8 @@ function whyNotTop(pack: AirportPack, result: EngineResult, plan: Plan, chosen: 
   const topCell = result.cells[top.index]?.[0];
   if (topMode === undefined || topCell === undefined) return null;
   const prefix = `${topMode.id} is the operating plan's first preference, but ${chosen} is recommended`;
-  if (topCell.status === 'UNSUITABLE') {
-    const reason: Reason | undefined = topCell.reasons.find((r) => r.severity === 'FAIL');
-    return `${prefix} because ${topMode.id} is not suitable: ${reason === undefined ? 'it fails a mandatory rule' : lowerFirst(reason.text)}.`;
-  }
+  // A first preference that is unsuitable now needs no sentence: the timeline and the blocked-mode list already give the limit it breaks.
+  if (topCell.status === 'UNSUITABLE') return null;
   const topSurvival = result.survival[top.index];
   const chosenSurvival = result.survival[chosenIndex];
   if (topSurvival !== undefined && chosenSurvival !== undefined && topSurvival.endsInFailure && topSurvival.viableMs < chosenSurvival.viableMs) {
