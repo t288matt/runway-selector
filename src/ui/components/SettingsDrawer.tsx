@@ -126,7 +126,7 @@ export function SettingsDrawer({ view, displayNowMs, bridge, onCurrentMode, onWi
         <p className="small">{model.planNote}</p>
         {model.plan.map((b) => (
           <div key={b.id} className="plan-band">
-            <b>Band {b.id}: {b.times}</b>
+            {b.allDay ? null : <b>Band {b.id}: {b.times}</b>}
             <ul>
               {b.groups.map((g) => (
                 <li key={g.rank}>
