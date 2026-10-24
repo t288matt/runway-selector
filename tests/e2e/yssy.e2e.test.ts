@@ -270,7 +270,7 @@ describe('E08 METAR only, TAF only, neither (WX-9, OP-13)', () => {
     expect(r.out.plan.recommendedModeId).toBe('25A16D');
     expect(r.out.plan.uncertain).toBe(true);
     expect(r.built.banners.map((b) => b.code)).toContain('no-taf');
-    expect(r.out.explanation.uncertaintyLine).toMatch(/uncertain slot/);
+    expect(r.out.explanation.uncertaintyLine).toMatch(/depends? on uncertain data/);
   });
   it('TAF only: the TAF governs from slot 1 and slot 1 is DRY', () => {
     const r = go({ metar: null, taf: taf(kt(158, 4) + ' 9999 SCT020') });

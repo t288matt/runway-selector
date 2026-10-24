@@ -35,7 +35,7 @@ Rules that follow from this:
 4. Provisional and illustrative values are always labelled where they appear, never only in a footnote.
 
 ## 3. Screen layout
-The order is fixed at every width: header, notice, freshness chips, weather entry, A, B, then C, D and F. B is always directly below A. Panel letters are not reused, so the panels are A, B, C, D and F.
+The order is fixed at every width: header, notice, freshness chips, A, B, weather entry, then C, D and F (OD-38; the weather entry used to sit above A). B is always directly below A. Panel letters are not reused, so the panels are A, B, C, D and F.
 
 ### 3.1 Wide desktop (1280 px and above, designed at 1440)
 Content width capped at 1440 px, centred, 16 px gutters. C, D and F sit side by side.
@@ -152,13 +152,13 @@ A right-hand drawer, not a page, so the dashboard stays visible behind it. In ph
 2. **Limits (read-only):** dry and wet tailwind, default crosswind limit, maximum crosswind per mode, calm wind and limit tolerance, each labelled "Simulation setting".
 3. **Runway wetness (read-only):** wet-runway probability threshold and drying time.
 4. **Plan and traffic (read-only):** operating-plan priorities and enabled modes, mode capacities, traffic bands, changeover preparation time and forecast horizon (DB-9).
-5. **Airport and data:** an airport selector, shown only when more than one pack is listed in `app.json`; a "Reload data" button that re-reads and re-validates the pack (DESIGN.md section 4c); and the pack's validation error, if a reload was rejected, with the previous valid pack still in use.
+5. **Airport and data:** the airport ICAO box is in the header, always visible (OD-37), not in this drawer; a "Reload data" button that re-reads and re-validates the pack (DESIGN.md section 4c); and the pack's validation error, if a reload was rejected, with the previous valid pack still in use.
 6. **Audit trail:** the list of setting and current-mode changes, labelled "local record, not tamper-proof", with an export.
 
 Each value shows its `description` from the pack as help text and its source status (provisional or verified). Changing the current mode takes effect at once, triggers a fresh recommendation, and writes to the audit trail (RD-6). The user never sees penalties, costs or scores (see the plain-language rule in section 13). The time display is fixed: UTC only (OD-36).
 
 ### Weather entry (above Panel A)
-Two text boxes, METAR and TAF, each with the raw text the user pasted and an Apply button (OD-28). The boxes start empty on every visit, with "No weather entered" beside them; reports are not stored (OD-30). A METAR older than its window is accepted with an amber stale flag. If only one report is entered, a banner names the missing one. On Apply the text is checked (station, size, decodable) and, if valid, replaces the previous report and triggers a fresh recommendation. An invalid paste is refused with a message naming what could not be read, and the previous report stays. The observation age is shown beside each box, taken from the report's own time group, so an old pasted report is visibly stale. Where the weather would be fetched automatically in a later phase, the same two boxes show the fetched text read-only.
+Two text boxes, METAR and TAF, each with the raw text the user pasted and an Apply button (OD-28). The boxes start empty on every visit, with "No weather entered" beside them; reports are not stored (OD-30). A METAR older than its window is accepted with an amber stale flag. If only one report is entered, a banner names the missing one. On Apply the text is checked (station, size, decodable) and, if valid, replaces the previous report and triggers a fresh recommendation. An invalid paste is refused with a message naming what could not be read, and the previous report stays. The observation age is shown beside each box, taken from the report's own time group, so an old pasted report is visibly stale. Paste is an option, not the default (owner, 24-10-2026): the paste boxes and Apply buttons are hidden until the user presses "Use my own weather" (the boxes then start empty; a fetch never writes into them, so there is no second copy of the report on screen); until then each report is shown read-only with its source and age. Automatic fetching (OD-37): the app fetches both reports for the weather station on load and every `weatherPollMinutes`, and shows the report in use read-only. Under each box a line says where the report came from (automatic or pasted) and, if the last fetch failed, why, with the previous report still in use. Applying pasted text pauses automatic updates for that report and shows a Resume automatic button. A small credit line names NOAA/NWS and Datamask Aviation. Reports are not stored (OD-30).
 
 ## 6. The survival timeline in detail
 ### 6.1 Structure

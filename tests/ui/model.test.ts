@@ -248,6 +248,16 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('timeline rows and tiles [
     expect(summaryTiles(v).map((t) => t.label)).toEqual(['Recommended', 'Survives', 'Next constraint', 'Traffic at changeover']);
     expect(summaryTiles(v)[0]?.value).toBe(`Mode ${v.result.plan.recommendedModeId}`);
   });
+
+  it('the Survives tile leads with what holds, then says how much is only marginal', () => {
+    const v = viewOf(pack, rig, wx);
+    const text = summaryTiles(v)[1]?.value ?? '';
+    expect(text).toMatch(/^Suitable to /);
+    const onPath = v.result.plan.slots.filter((s) => s.modeId !== null);
+    const marginal = onPath.filter((s) => s.status === 'MARGINAL').length;
+    if (marginal === 0) expect(text).not.toContain('marginal');
+    else expect(text).toContain(`marginal in ${marginal} of ${onPath.length} ${onPath.length === 1 ? 'slot' : 'slots'}, first at `);
+  });
 });
 
 describe('keyboard movement in the grid (UI_DESIGN section 9)', () => {

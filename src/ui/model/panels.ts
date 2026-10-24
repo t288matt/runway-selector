@@ -41,7 +41,6 @@ export interface PanelAModel {
   /** What is missing, for the no-data state. */
   readonly missing: readonly string[];
   /** The note under the current-mode pull-down. */
-  readonly currentNote: string;
 }
 
 function trafficSentence(view: ViewData): string {
@@ -49,7 +48,7 @@ function trafficSentence(view: ViewData): string {
   const levels = trafficLevelsFor(view.pack, starts, view.demand?.slots ?? []);
   const rank = (l: TrafficLevel | null): number => (l === 'light' ? 0 : l === 'medium' ? 1 : l === 'busy' ? 2 : -1);
   const now = levels[0] ?? null;
-  const base = `${levelWord(now)} now`;
+  const base = levelWord(now);
   let later = -1;
   for (let i = 1; i < levels.length; i += 1) {
     if (rank(levels[i] ?? null) > rank(now)) {
@@ -84,7 +83,6 @@ export function panelAModel(view: ViewData): PanelAModel {
   const { plan, explanation, evaluation } = result;
   const recId = plan.recommendedModeId;
   const provisional = (status: string | null): string => (status === 'provisional' ? ' (provisional)' : '');
-  const currentNote = view.currentMode === null ? 'Not set: no starting mode' : `Set by you: Mode ${view.currentMode}`;
   const enabledCount = pack.modes.filter((m) => m.enabled).length;
   const empty = {
     modeId: null,
@@ -102,7 +100,6 @@ export function panelAModel(view: ViewData): PanelAModel {
     whyLines: explanation.lines,
     noSuitable: null,
     missing: [] as string[],
-    currentNote,
   };
 
   if (recId === null) {
@@ -140,7 +137,7 @@ export function panelAModel(view: ViewData): PanelAModel {
   const curCell0 = curIndex < 0 ? undefined : evaluation.cells[curIndex]?.[0];
   if (view.currentMode !== null && curCell0 !== undefined && curCell0.status === 'UNSUITABLE') {
     const why = curCell0.reasons.find((r) => r.severity === 'FAIL')?.text ?? 'it fails a mandatory rule';
-    banners.push({ tone: 'red', title: 'CURRENT MODE UNSUITABLE NOW', text: `Current mode ${view.currentMode} is unsuitable now: ${why}. Change to Mode ${recId}.` });
+    banners.push({ tone: 'red', title: 'CURRENT MODE UNSUITABLE', text: `Current mode ${view.currentMode} is unsuitable: ${why}. Change to Mode ${recId}.` });
   }
   if (explanation.earlyChange !== null) {
     banners.push({ tone: 'amber', title: explanation.earlyChange.title, text: explanation.earlyChange.text });
@@ -161,15 +158,14 @@ export function panelAModel(view: ViewData): PanelAModel {
     nextChange,
     weather: style === null ? null : { word: style.word.toUpperCase(), icon: style.icon, className: style.className, text: explanation.lines[0] ?? '' },
     traffic: trafficSentence(view),
-    rank: rank === null ? '-' : `${rank} of ${enabledCount}${provisional(pack.meta.operatingPlan.status)}`,
+    rank: rank === null ? '-' : `${rank} of ${enabledCount} (1 is most preferred)${provisional(pack.meta.operatingPlan.status)}`,
     uncertainty: explanation.uncertaintyLine,
     runwayState: runwayStateSentence(view),
-    capacity: mode === undefined ? '-' : `${mode.capacity === null ? 'None set' : `${mode.capacity} movements/hr${provisional(pack.meta.modes.status)}`}${cell0 !== undefined && cell0.demand.knownDemand !== null ? `; demand ${cell0.demand.knownDemand} in this slot` : '; demand unknown'}`,
+    capacity: mode === undefined ? '-' : `${mode.capacity === null ? 'No limit set' : `${mode.capacity} movements/hr${provisional(pack.meta.modes.status)}`}${cell0 !== undefined && cell0.demand.knownDemand !== null ? `; ${cell0.demand.knownDemand} known movements this slot` : '; movements not known'}`,
     banners,
     whyLines: explanation.lines,
     noSuitable: null,
     missing: [],
-    currentNote,
   };
 }
 
@@ -378,7 +374,7 @@ export function cellDetailModel(view: ViewData, modeIndex: number, slotIndex: nu
   const s = result.evaluation.survival[modeIndex];
   const parts: string[] = [];
   if (s !== undefined && s.viableUntilMs !== null) {
-    parts.push(s.viableSlots === 0 ? 'Not suitable now' : s.endsInFailure ? `Viable from now for ${durationText(s.viableUntilMs - view.calcNowMs)}, to ${hhmmZRel(s.viableUntilMs, view.calcNowMs)}` : `Viable for the whole window, to ${hhmmZRel(s.viableUntilMs, view.calcNowMs)}`);
+    parts.push(s.viableSlots === 0 ? 'Not suitable now' : s.endsInFailure ? `Viable for ${durationText(s.viableUntilMs - view.calcNowMs)}, to ${hhmmZRel(s.viableUntilMs, view.calcNowMs)}` : `Viable for the whole window, to ${hhmmZRel(s.viableUntilMs, view.calcNowMs)}`);
     if (s.firstMarginalSlot !== null) parts.push(`first marginal slot ${hhmmZRel(view.weather.slots[s.firstMarginalSlot]?.startMs ?? 0, view.calcNowMs)}`);
     if (s.firstUnsuitableSlot !== null) parts.push(`first unsuitable slot ${hhmmZRel(view.weather.slots[s.firstUnsuitableSlot]?.startMs ?? 0, view.calcNowMs)}${s.firstUnsuitableReason === null ? '' : ` (${s.firstUnsuitableReason.text})`}`);
   }
