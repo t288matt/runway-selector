@@ -210,7 +210,7 @@ export function assessWind(
         runway: u.name,
         figures: { ...base, case: nearCase, near: true },
         limit: limitOf(nearCase),
-        text: `Tailwind ${compR} kt on runway ${u.name} is ${limR - compR} kt from the ${nearCase} limit of ${limR} kt (within the ${f1(s.nearLimitMarginKt)} kt caution margin)`,
+        text: `Tailwind ${compR} kt on runway ${u.name} is ${limR - compR} kt from the ${nearCase} limit of ${limR} kt`,
       });
     }
   }
@@ -238,7 +238,7 @@ export function assessWind(
         runway: u.name,
         figures: { ...base, near: true },
         limit: xwLimit,
-        text: `Crosswind ${compR} kt on runway ${u.name} is ${limR - compR} kt from this mode's limit of ${limR} kt (within the ${f1(s.nearLimitMarginKt)} kt caution margin)`,
+        text: `Crosswind ${compR} kt on runway ${u.name} is ${limR - compR} kt from this mode's limit of ${limR} kt`,
       });
     }
   }
