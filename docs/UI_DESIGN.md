@@ -164,10 +164,10 @@ Two text boxes, METAR and TAF, each with the raw text the user pasted and an App
 ### 6.1 Structure
 | Element | Specification |
 |---|---|
-| Rows | One per enabled mode. Order: recommended first, then the current mode if different, then by operating-plan rank. Disabled modes are not rows. |
+| Rows | One per enabled mode. Order: recommended first, then the current mode if different, then by operating-plan rank. Disabled modes are not rows. A row that is red (UNSUITABLE) in every slot of the window is hidden by default, with a "Show N unsuitable modes" button in the panel heading that reveals them and "Hide unsuitable modes" to hide them again (OD-39). The recommended row and the current-mode row are never hidden, and when every row is red all are shown, so the grid is never empty. |
 | Row height | 36 px (cell 32 px plus a 2 px margin each side). |
 | Columns | One per 30-minute slot, 56 px pitch (cell 54 px wide). Slots are clock-aligned half-hours; there are no extra columns at TAF change times (OD-24). |
-| Row header | 176 px, sticky at the left. Line 1: "Mode 12" plus tags REC and CURRENT. Line 2: runways in small text. |
+| Row header | 176 px, sticky at the left. Line 1: the mode id ("12", with no "Mode" before it) plus tags REC and CURRENT. Line 2: runways in small text. |
 | Column header | Three sticky-top strips: time (HH:MM, hour labels in bold), weather events (BECMG, TEMPO, wet risk, change marker, no TAF), traffic class chips (L, M, H HIGH). |
 | Default span | The full TAF validity by default (OD-31), with options of 4 hours and 6 hours. The timeline shows the slots of the chosen window, as the mockup does. |
 | Window selector | Pull-down in the B header: Full TAF (default), 4 h, 6 h (OD-31). It sets the forecast window (OD-26) and the slots the timeline shows, as in the mockup. |
