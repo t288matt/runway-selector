@@ -85,6 +85,7 @@ A web application that recommends the runway operating mode for Sydney Kingsford
 | OD-72 | 24-10-2026 (owner, chat): the quiet NOTE banner "Recommended differs from current. See the timeline (B)." is removed from Panel A. Amends UI_DESIGN section 5. |
 | OD-73 | 24-10-2026 (owner, chat): the SUITABLE/MARGINAL status chip is removed from Panel A's Weather line, which shows the METAR text alone. Amends OD-65. |
 | OD-74 | 24-10-2026 (owner, chat): the plan has a minimum stay in a mode, pack settings minimumStayMinutes (60) and shortStayPenalty (25). A stay shorter than the minimum that ends in a change costs the penalty; slot 0 counts only the time left in it; the mode in use now and the last stay in the window are not counted; moves into or out of NO_MODE are not penalised. Stops a recommendation such as SODPROPS for 6 minutes and then another mode. |
+| OD-75 | 24-10-2026 (owner, chat): the METAR window (pack setting metarValidityMinutes) is 40 minutes in the YSSY and YMML packs, up from 30: a METAR decides every slot that starts less than 40 minutes after its observation time, so a METAR up to 40 minutes old still governs the current slot. Replaces the 30 minutes set earlier on 24-10-2026. |
 | OD-9 | 23-10-2026: the app will later be used for other airports, so the code must be airport-agnostic and entirely reference-data driven. YSSY is the first dataset, not a special case. This is a key requirement and takes precedence over convenience in every design choice. |
 
 ## 3. Reference-data requirements
