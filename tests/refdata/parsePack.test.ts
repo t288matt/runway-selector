@@ -639,6 +639,36 @@ describe('ranges and caps on every value (SEC-3)', () => {
     );
   });
 
+  describe('mode minima', () => {
+    const withMinima = (minima: unknown) => bad((f) => { f['modes.json'].modes[0].minima = minima; });
+
+    it('accepts any one or all of the three keys and fills the rest', () => {
+      const all = parsePack(withMinima({ ceilingFt: 4500, visibilityMetres: 8000, requiresDrySurface: true }));
+      expect(all.modes[0]?.minima).toEqual({ ceilingFt: 4500, visibilityMetres: 8000, requiresDrySurface: true });
+      expect(parsePack(withMinima({ visibilityMetres: 800 })).modes[0]?.minima).toEqual({ ceilingFt: null, visibilityMetres: 800, requiresDrySurface: false });
+      expect(parsePack(withMinima({ requiresDrySurface: false })).modes[0]?.minima).toEqual({ ceilingFt: null, visibilityMetres: null, requiresDrySurface: false });
+      expect(parsePack(withMinima({ ceilingFt: 0, visibilityMetres: 10000 })).modes[0]?.minima?.ceilingFt).toBe(0);
+    });
+    it('a mode without minima has null', () => {
+      for (const m of loadPackFrom(TEST_PACK).modes) expect(m.minima).toBeNull();
+    });
+    it('refuses an unknown key', () => {
+      expectRefused(withMinima({ ceilingFt: 4500, windshear: true }), 'modes.json', 'modes[0].minima');
+    });
+    it('refuses an empty minima object', () => {
+      expectRefused(withMinima({}), 'modes.json', 'modes[0].minima', 'at least one');
+    });
+    it('refuses values out of range, fractional or of the wrong type', () => {
+      expectRefused(withMinima({ ceilingFt: -1 }), 'modes.json', 'modes[0].minima.ceilingFt');
+      expectRefused(withMinima({ ceilingFt: BOUNDS.range.minimaCeilingFt.max + 1 }), 'modes.json', 'modes[0].minima.ceilingFt');
+      expectRefused(withMinima({ ceilingFt: 4500.5 }), 'modes.json', 'modes[0].minima.ceilingFt');
+      expectRefused(withMinima({ visibilityMetres: BOUNDS.range.minimaVisibilityMetres.max + 1 }), 'modes.json', 'modes[0].minima.visibilityMetres');
+      expectRefused(withMinima({ visibilityMetres: -5 }), 'modes.json', 'modes[0].minima.visibilityMetres');
+      expectRefused(withMinima({ requiresDrySurface: 'yes' }), 'modes.json', 'modes[0].minima.requiresDrySurface');
+      expectRefused(withMinima(null), 'modes.json', 'modes[0].minima');
+    });
+  });
+
   it('ranges on airport, runway, mode and plan numbers', () => {
     expectRefused(bad((f) => { f['airport.json'].latitude = 91; }), 'airport.json', 'latitude');
     expectRefused(bad((f) => { f['airport.json'].longitude = -181; }), 'airport.json', 'longitude');
