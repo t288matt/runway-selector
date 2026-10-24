@@ -152,7 +152,7 @@ A right-hand drawer, not a page, so the dashboard stays visible behind it. In ph
 2. **Limits (read-only):** dry and wet tailwind, default crosswind limit, maximum crosswind per mode, calm wind and limit tolerance, each labelled "Simulation setting".
 3. **Runway wetness (read-only):** wet-runway probability threshold and drying time.
 4. **Plan and traffic (read-only):** operating-plan priorities and enabled modes, mode capacities, traffic bands, changeover preparation time and forecast horizon (DB-9).
-5. **Airport and data:** the airport ICAO box is in the header, always visible (OD-37), not in this drawer; a "Reload data" button that re-reads and re-validates the pack (DESIGN.md section 4c); and the pack's validation error, if a reload was rejected, with the previous valid pack still in use.
+5. **Airport and data:** the airport pull-down is in the header, always visible (OD-37; a pull-down of the listed packs since OD-68), not in this drawer; a "Reload data" button that re-reads and re-validates the pack (DESIGN.md section 4c); and the pack's validation error, if a reload was rejected, with the previous valid pack still in use.
 6. **Audit trail:** the list of setting and current-mode changes, labelled "local record, not tamper-proof", with an export.
 
 Each value shows its `description` from the pack as help text and its source status (provisional or verified). Changing the current mode takes effect at once, triggers a fresh recommendation, and writes to the audit trail (RD-6). The user never sees penalties, costs or scores (see the plain-language rule in section 13). The time display is fixed: UTC only (OD-36).
