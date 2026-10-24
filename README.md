@@ -2,9 +2,8 @@
 
 A decision-support tool for VATSIM controllers. It recommends which runway mode to use at an airport, and looks ahead through the whole forecast so the recommendation is a mode that should keep working, not just the best mode for the latest weather report.
 
-**Flight simulation only.** Never use it for real-world navigation, flight planning or operations. Rules, limits and capacities are simulation assumptions unless the airport's data says otherwise.
+**Flight simulation only.** Never use it for real-world navigation, flight planning or operations. 
 
-Eight Australian airports are included: Sydney (YSSY), Melbourne (YMML), Brisbane (YBBN), Adelaide (YPAD), Perth (YPPH), Western Sydney (YSWS), Darwin (YPDN) and Canberra (YSCB). The tool works for any airport that has a data pack (see Airports); an airport selector appears whenever more than one is configured.
 
 ## What it does
 
