@@ -10,7 +10,10 @@ import { NO_AUTO_WEATHER } from '../../src/ui/controller';
 import { WeatherEntry, ApplyNote } from '../../src/ui/components/WeatherEntry';
 import { calculate, defaultWindowFor, EMPTY_FEED, type ViewData } from '../../src/ui/model/dashboard';
 import { cellDetailModel, currentWind, panelDModel, runwayComponentRows } from '../../src/ui/model/panels';
-import { modeRows } from '../../src/ui/model/timeline';
+import { modeRows, timelineModel, visibleRows } from '../../src/ui/model/timeline';
+
+/** The rows the screen draws by default: fully red rows are hidden until the user asks (OD-39). */
+const drawnRows = (view: ViewData) => visibleRows(timelineModel(view, view.calcNowMs), false);
 import { applyMetarText } from '../../src/ui/model/apply';
 import { PACKS, readJson, toRaw, TEST1_PACK } from '../helpers/packs';
 import { baseFor, inputFor, quietTraffic, steady, tailwindOn } from '../engine/helpers';
@@ -61,11 +64,11 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the screen from real repo
   });
 
   it('draws one row per enabled mode and one cell per mode and slot', () => {
-    const rows = modeRows(view);
-    expect(rows).toHaveLength(pack.modes.filter((m) => m.enabled).length);
+    const drawn = drawnRows(view);
+    expect(drawn.rows.length + drawn.hiddenCount).toBe(pack.modes.filter((m) => m.enabled).length);
     const cells = gridCellClasses(html);
-    expect(cells).toHaveLength(rows.length * view.weather.slots.length);
-    for (const m of pack.modes.filter((x) => x.enabled)) expect(text).toContain(`Mode ${m.id}`);
+    expect(cells).toHaveLength(drawn.rows.length * view.weather.slots.length);
+    for (const r of drawn.rows) expect(text).toContain(r.modeId);
   });
 
   it('shows every runway end of the pack in Panel C and in the diagram, for any number of runways', () => {
@@ -132,7 +135,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('a cell is green only when
     const levels: (TrafficLevel | null)[] = wx.map((_w, i) => (i % 3 === 0 ? 'busy' : i % 3 === 1 ? 'medium' : null));
     const view = viewOf(pack, rig, wx, levels);
     const classes = gridCellClasses(renderDashboard(view));
-    const rows = modeRows(view);
+    const rows = drawnRows(view).rows;
     let k = 0;
     let suitable = 0;
     rows.forEach((row) => {
@@ -157,7 +160,8 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('a cell is green only when
     if (used === undefined) throw new Error('no runway');
     const base = baseFor(pack, mode.id, 1);
     const input: EngineInput = inputFor(base, [{ wind: tailwindOn(used.headingDegrees, pack.settings.tailwindDryKt + 0.1, pack.settings.calmWindKt) }], quietTraffic(base, 1));
-    const view = viewFromInput(pack, input);
+    // the mode is the current one, so its fully red row is drawn (a current-mode row is never hidden)
+    const view = { ...viewFromInput(pack, input), currentMode: mode.id };
     const rows = modeRows(view);
     const html = renderDashboard(view);
     const classes = gridCellClasses(html);
