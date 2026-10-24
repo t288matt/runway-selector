@@ -255,8 +255,6 @@ interface WeatherPart {
   readonly overlay: Reason[];
 }
 
-const rank = (status: Status): number => (status === 'UNSUITABLE' ? 2 : status === 'MARGINAL' ? 1 : 0);
-
 function overlayLabel(o: WeatherOverlay): string {
   return o.probabilityPct === null ? o.kind : `${o.kind} (PROB${o.probabilityPct})`;
 }
