@@ -187,7 +187,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('Panel A states [%s]', (_n
     const html = renderDashboard(view);
     const text = textOf(html);
     expect(html).toContain('banner banner-red');
-    expect(text).toContain(`Current mode ${rig.a} is unsuitable now`);
+    expect(text).toContain(`Current mode ${rig.a} is unsuitable`);
     expect(text).toContain(`Change to Mode ${view.result.plan.recommendedModeId}`);
     expect(text).not.toMatch(BANNED);
   });
