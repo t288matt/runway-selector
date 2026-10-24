@@ -393,7 +393,9 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('drawer content [%s]', (_n
       expect([...m.notAllowed].sort()).toEqual(pack.modes.filter((x) => x.enabled && value(x.id) === null).map((x) => x.id).sort());
       expect(m.groups[0]?.rank).toBe(1);
       expect(m.allEqual).toBe(m.groups.length === 1);
-      expect(text).toContain(`Band ${band.id}:`);
+      // an all-day band is the only band and has no heading line; any other band is headed with its hours
+      if (band.allDay) expect(text).not.toContain(`Band ${band.id}:`);
+      else expect(text).toContain(`Band ${band.id}:`);
     });
   });
 });
