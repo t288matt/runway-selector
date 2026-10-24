@@ -200,7 +200,7 @@ Everything in this section applies to the YSSY pack only. Sydney's operating pla
 | SY-3 | Runway ends: 16L/34R, 16R/34L, 07/25. Long-haul-only runway uses are not modelled; the wind checks treat every runway a mode uses alike (OD-19). |
 | SY-4 | Simulation limits: dry runway maximum tailwind 5 kt; wet runway maximum tailwind 0 kt; maximum crosswind 20 kt per mode (OD-8). |
 | SY-5 | Curfew and shoulder rules from the Sydney operating plan are held in the pack's rule data in Sydney local time. |
-| SY-7 | Mode capacities are left empty in the Sydney pack until the owner supplies figures, so the capacity check does not run for Sydney (OD-23). |
+| SY-7 | Mode capacities in the Sydney pack are the owner's own provisional estimates (24-10-2026), not official figures: 20 movements per hour for SODPROPS, 07AD and 25AD; 30 for the crossing-runway modes 25A16D, 34A25D, 34AD25 and 07A16D; no limit (empty) for 34AD and 16AD, so the capacity check does not run for those two (OD-16, TR-6). |
 | SY-8 | Draft pack (23-10-2026): files in refdata/airports/YSSY. The 2015 table gives no preference order, so all modes share one preference by day (Curfew mode not allowed by day); at night (23:00 to 06:00 local) the Curfew mode is preferred and the others carry a higher penalty instead of being forbidden. SODPROPS is disabled. Runway headings are placeholders to be checked. All of it is provisional. |
 | SY-6 | The weather station and the VATSIM filter are YSSY, set in the pack. |
 
