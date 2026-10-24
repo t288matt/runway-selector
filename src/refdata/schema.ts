@@ -74,6 +74,7 @@ export const BOUNDS = {
     sourceChars: 300,
     labelKeyChars: 40,
     labelValueChars: 300,
+    conditionalNameChars: 40,
     timeZoneChars: 64,
     maxReportedIssues: 20,
   },
@@ -182,6 +183,20 @@ const MinimaSchema = v.pipe(
   }),
   v.check((m) => m.ceilingFt !== undefined || m.visibilityMetres !== undefined || m.requiresDrySurface !== undefined, 'minima must give at least one of ceilingFt, visibilityMetres or requiresDrySurface'),
 );
+/**
+ * A mode's optional conditional operation (issue 58): a named note, e.g. shown on screen as "<name> conditions met",
+ * when the weather meets the stated conditions. It never changes a status or the plan. Every condition is optional,
+ * at least one is required. The name is shown to the user, so it is held to the same rules as a label.
+ */
+const ConditionalOperationSchema = v.pipe(
+  v.strictObject({
+    name: labelText(C.conditionalNameChars),
+    ceilingFt: v.optional(int(R.minimaCeilingFt)),
+    visibilityMetres: v.optional(int(R.minimaVisibilityMetres)),
+    requiresDrySurface: v.optional(v.boolean('Expected true or false')),
+  }),
+  v.check((m) => m.ceilingFt !== undefined || m.visibilityMetres !== undefined || m.requiresDrySurface !== undefined, 'conditionalOperation must give at least one of ceilingFt, visibilityMetres or requiresDrySurface'),
+);
 const ModeSchema = v.strictObject({
   id: modeId,
   enabled: v.boolean('Expected true or false'),
@@ -190,6 +205,7 @@ const ModeSchema = v.strictObject({
   maxCrosswindKt: v.optional(num(R.crosswindKt)),
   capacity: v.optional(v.nullable(int(R.capacityPerHour))),
   minima: v.optional(MinimaSchema),
+  conditionalOperation: v.optional(ConditionalOperationSchema),
   ...meta,
 });
 export const ModesFileSchema = v.strictObject({

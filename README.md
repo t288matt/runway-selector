@@ -37,6 +37,7 @@ If only a METAR is available, the tool judges the first hour from it and marks l
 - How long the recommended mode lasts, and the next change with its time.
 - Weather suitability, traffic now and later, the mode's rank in the airport's operating plan, the runway state, and a line saying how much of the plan rests on uncertain inputs.
 - A red banner if your current mode is unsuitable now, and an amber banner, EARLY MODE CHANGE RECOMMENDED, when changing earlier avoids a forced change in busier traffic.
+- A quiet green note, such as "LAHSO conditions met until 14:30Z", when the recommended mode has a conditional operation in its airport data and its conditions (cloud ceiling, visibility, dry runway) are met on a green slot. It shows nothing otherwise and never changes the recommendation.
 - If no mode is suitable, it says so and lists, for every mode, what blocks it. It never names a "least bad" mode.
 
 **Panel B: optimal mode timeline.** Its header has the Recommended, Next change and Next wet runway summary tiles, and the window selector (full TAF, 4 hours or 6 hours). Rows are modes and columns are half-hour slots. The recommended path is outlined, and a dashed line marks the planned change. Cell colours:

@@ -119,6 +119,7 @@ Common to all panels: a title (the letter badge is removed, owner 24-10-2026, OD
 | State | Display |
 |---|---|
 | Normal, current equals recommended or not set | No banner. "No change needed" in Next change if no change is planned. |
+| Recommended mode has a conditional operation and its conditions are met (OD-79) | A quiet green note in the banner area under the facts, after any red or amber banner: "<name> conditions met until HH:MMZ" (or "from HH:MMZ"). Nothing otherwise. Mockup: docs/images/lahso-conditions-met-mockup.png. |
 | Current differs, no urgency | No banner (OD-72). |
 | Current mode failing now | Red banner: "Current mode 10 is unsuitable now (tailwind 16L 7 kt). Change to Mode 12." |
 | EARLY MODE CHANGE RECOMMENDED | Amber banner with trigger, timing, benefit, traffic at changeover (section 7.1). |

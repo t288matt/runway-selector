@@ -669,6 +669,47 @@ describe('ranges and caps on every value (SEC-3)', () => {
     });
   });
 
+  describe('mode conditional operation', () => {
+    const FULL = { name: 'NOTE', ceilingFt: 3000, visibilityMetres: 8000, requiresDrySurface: true };
+    const withOp = (op: unknown) => bad((f) => { f['modes.json'].modes[0].conditionalOperation = op; });
+    const P = 'modes[0].conditionalOperation';
+
+    it('accepts a name with any one or all of the conditions and fills the rest', () => {
+      expect(parsePack(withOp(FULL)).modes[0]?.conditionalOperation).toEqual(FULL);
+      expect(parsePack(withOp({ name: 'NOTE', visibilityMetres: 800 })).modes[0]?.conditionalOperation).toEqual({ name: 'NOTE', ceilingFt: null, visibilityMetres: 800, requiresDrySurface: false });
+      expect(parsePack(withOp({ name: 'NOTE', requiresDrySurface: true })).modes[0]?.conditionalOperation).toEqual({ name: 'NOTE', ceilingFt: null, visibilityMetres: null, requiresDrySurface: true });
+      expect(parsePack(withOp({ ...FULL, name: 'N'.repeat(40) })).modes[0]?.conditionalOperation?.name).toHaveLength(40);
+    });
+    it('a mode without it has null', () => {
+      for (const m of loadPackFrom(TEST_PACK).modes) expect(m.conditionalOperation).toBeNull();
+    });
+    it('refuses an unknown key', () => {
+      expectRefused(withOp({ ...FULL, windshear: true }), 'modes.json', P);
+    });
+    it('refuses a name with no condition, and an empty object', () => {
+      expectRefused(withOp({ name: 'NOTE' }), 'modes.json', P, 'at least one');
+      expectRefused(withOp({}), 'modes.json', P);
+    });
+    it('refuses a missing, empty, over-long or unsafe name', () => {
+      const { name: _name, ...noName } = FULL;
+      expectRefused(withOp(noName), 'modes.json', `${P}.name`);
+      expectRefused(withOp({ ...FULL, name: '' }), 'modes.json', `${P}.name`);
+      expectRefused(withOp({ ...FULL, name: 'N'.repeat(41) }), 'modes.json', `${P}.name`);
+      expectRefused(withOp({ ...FULL, name: 'A\nB' }), 'modes.json', `${P}.name`);
+      expectRefused(withOp({ ...FULL, name: 'A‮B' }), 'modes.json', `${P}.name`);
+      expectRefused(withOp({ ...FULL, name: 7 }), 'modes.json', `${P}.name`);
+    });
+    it('refuses values out of range, fractional or of the wrong type', () => {
+      expectRefused(withOp({ ...FULL, ceilingFt: -1 }), 'modes.json', `${P}.ceilingFt`);
+      expectRefused(withOp({ ...FULL, ceilingFt: BOUNDS.range.minimaCeilingFt.max + 1 }), 'modes.json', `${P}.ceilingFt`);
+      expectRefused(withOp({ ...FULL, ceilingFt: 3000.5 }), 'modes.json', `${P}.ceilingFt`);
+      expectRefused(withOp({ ...FULL, visibilityMetres: BOUNDS.range.minimaVisibilityMetres.max + 1 }), 'modes.json', `${P}.visibilityMetres`);
+      expectRefused(withOp({ ...FULL, visibilityMetres: -5 }), 'modes.json', `${P}.visibilityMetres`);
+      expectRefused(withOp({ ...FULL, requiresDrySurface: 'yes' }), 'modes.json', `${P}.requiresDrySurface`);
+      expectRefused(withOp(null), 'modes.json', P);
+    });
+  });
+
   it('ranges on airport, runway, mode and plan numbers', () => {
     expectRefused(bad((f) => { f['airport.json'].latitude = 91; }), 'airport.json', 'latitude');
     expectRefused(bad((f) => { f['airport.json'].longitude = -181; }), 'airport.json', 'longitude');

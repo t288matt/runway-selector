@@ -80,5 +80,6 @@ export type * from './optimiser';
 export type * from './changeover';
 export type * from './explain';
 export { NO_MODE } from './optimiser';
+export { conditionalOperationCheck, type ConditionalCheck } from './conditionalOperation';
 export { EARLY_CHANGE_TITLE, NO_SUITABLE_TITLE, explanationStrings } from './explain';
 export { classifyTraffic, levelOfCount, trafficLevelsFor } from './trafficLevel';
