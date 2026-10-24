@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "description": "Darwin International Airport. PROVISIONAL DRAFT 24-10-2026: reference point and elevation from public sources (Wikipedia 12 24 53 S 130 52 36 E, 103 ft; SkyVector 12 24.88 S 130 52.60 E, 103.0 ft), not yet checked against the AIP. Other simulation assumptions carry over from the Adelaide pack. Darwin does not observe daylight saving.",
+  "icao": "YPDN",
+  "name": "Darwin",
+  "latitude": -12.4147,
+  "longitude": 130.8767,
+  "elevationFt": 103,
+  "timeZone": "Australia/Darwin",
+  "weatherStation": "YPDN",
+  "trafficAreaNm": 5,
+  "groundMaxSpeedKt": 40,
+  "groundAltitudeMarginFt": 100,
+  "arrivalSpeedFloorKt": 150,
+  "labels": {}
+}
