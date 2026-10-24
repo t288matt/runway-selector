@@ -246,7 +246,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('timeline rows and tiles [
   it('has four summary tiles with fixed labels', () => {
     const v = viewOf(pack, rig, wx);
     expect(summaryTiles(v).map((t) => t.label)).toEqual(['Recommended', 'Survives', 'Next constraint', 'Traffic at changeover']);
-    expect(summaryTiles(v)[0]?.value).toBe(`Mode ${v.result.plan.recommendedModeId}`);
+    expect(summaryTiles(v)[0]?.value).toBe(v.result.plan.recommendedModeId);
   });
 
   it('the Survives tile leads with what holds, then says how much is only marginal', () => {
