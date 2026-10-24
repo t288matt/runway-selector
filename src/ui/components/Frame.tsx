@@ -1,7 +1,6 @@
 // Header strip, the fixed notice, freshness chips and data notices (UI_DESIGN
 // section 4). Every string is a text node (SEC-2).
-import { useState, type FormEvent } from 'react';
-import { AIRPORT_ID, type AirportPack } from '../../refdata';
+import type { AirportPack } from '../../refdata';
 import type { Chip, Notice } from '../model/dashboard';
 
 /**
@@ -35,60 +34,34 @@ export function NoticeBar({ pack }: { pack: AirportPack | null }) {
 
 export interface AirportEntryProps {
   readonly icao: string;
-  /** Airport ids with a reviewed data pack (app.json), offered as suggestions only; any code can be typed. */
+  /** Airport ids with a reviewed data pack (app.json): the pull-down's only options (owner, 24-10-2026, amending OD-37). */
   readonly airports: readonly string[];
   /** Why the last switch was refused, or null. */
   readonly error: string | null;
   readonly onSwitch: (icao: string) => void;
 }
 
-/** What is wrong with a typed airport code, or null when it is well formed (OD-37). */
-export function icaoProblem(typed: string): string | null {
-  return AIRPORT_ID.test(typed) ? null : 'An airport code is 3 to 8 capital letters or digits.';
-}
-
 /**
- * The always-visible airport box (OD-37). Typing a code only switches between airports that already have a
- * reviewed data pack; the check against the list, and the message when there is none, is the caller's.
+ * The always-visible airport pull-down (amends OD-37): choosing an option switches straight away, no separate
+ * Switch button. Only airports with a reviewed data pack are offered, so there is nothing to type or validate.
  */
 export function AirportEntry({ icao, airports, error, onSwitch }: AirportEntryProps) {
-  const [typed, setTyped] = useState(icao);
-  const [problem, setProblem] = useState<string | null>(null);
-  const submit = (e: FormEvent): void => {
-    e.preventDefault();
-    const code = typed.trim().toUpperCase();
-    setTyped(code);
-    const bad = icaoProblem(code);
-    setProblem(bad);
-    if (bad === null) onSwitch(code);
-  };
-  const shown = problem ?? error;
   return (
-    <form className="airport-entry" onSubmit={submit}>
+    <div className="airport-entry">
       <label htmlFor="airport-icao">Airport</label>
-      <input
+      <select
         id="airport-icao"
-        type="text"
-        value={typed}
-        maxLength={8}
-        spellCheck={false}
-        autoComplete="off"
-        list="airport-packs"
-        aria-describedby={shown === null ? undefined : 'airport-icao-note'}
-        aria-invalid={shown !== null}
-        onChange={(e) => {
-          setTyped(e.target.value.toUpperCase());
-          setProblem(null);
-        }}
-      />
-      <datalist id="airport-packs">
+        value={icao}
+        aria-describedby={error === null ? undefined : 'airport-icao-note'}
+        aria-invalid={error !== null}
+        onChange={(e) => onSwitch(e.target.value)}
+      >
         {airports.map((id) => (
-          <option key={id} value={id} />
+          <option key={id} value={id}>{id}</option>
         ))}
-      </datalist>
-      <button type="submit" className="btn">Switch</button>
-      {shown === null ? null : <span className="strip strip-bad airport-note" id="airport-icao-note" role="alert">{shown}</span>}
-    </form>
+      </select>
+      {error === null ? null : <span className="strip strip-bad airport-note" id="airport-icao-note" role="alert">{error}</span>}
+    </div>
   );
 }
 
