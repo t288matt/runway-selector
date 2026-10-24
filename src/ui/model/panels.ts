@@ -41,7 +41,6 @@ export interface PanelAModel {
   /** What is missing, for the no-data state. */
   readonly missing: readonly string[];
   /** The note under the current-mode pull-down. */
-  readonly currentNote: string;
 }
 
 function trafficSentence(view: ViewData): string {
@@ -84,7 +83,6 @@ export function panelAModel(view: ViewData): PanelAModel {
   const { plan, explanation, evaluation } = result;
   const recId = plan.recommendedModeId;
   const provisional = (status: string | null): string => (status === 'provisional' ? ' (provisional)' : '');
-  const currentNote = view.currentMode === null ? '' : `Set by you: Mode ${view.currentMode}`;
   const enabledCount = pack.modes.filter((m) => m.enabled).length;
   const empty = {
     modeId: null,
@@ -102,7 +100,6 @@ export function panelAModel(view: ViewData): PanelAModel {
     whyLines: explanation.lines,
     noSuitable: null,
     missing: [] as string[],
-    currentNote,
   };
 
   if (recId === null) {
@@ -169,7 +166,6 @@ export function panelAModel(view: ViewData): PanelAModel {
     whyLines: explanation.lines,
     noSuitable: null,
     missing: [],
-    currentNote,
   };
 }
 
