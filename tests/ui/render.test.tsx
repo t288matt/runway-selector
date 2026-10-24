@@ -45,7 +45,8 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the screen from real repo
   const text = textOf(html);
 
   it('builds the title from the pack and shows the fixed notice and the pack line', () => {
-    expect(text).toContain(`${pack.airport.name} (${pack.airport.icao}) Runway Mode Planner`);
+    expect(text).toContain('Runway Mode Planner');
+    expect(text).not.toContain(`${pack.airport.name} (${pack.airport.icao})`);
     expect(html).toContain(FLIGHT_SIM_NOTICE);
     const extra = extraNoticeOf(pack);
     if (extra !== null) expect(text).toContain(extra);
