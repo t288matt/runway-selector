@@ -1,11 +1,10 @@
-// The always-visible airport box (OD-37): the format check, what it shows, and
-// what typing a code does. Only airports with a reviewed pack can be shown; any
-// other code is refused with a plain message and nothing is switched (OD-5, RD-2).
+// The always-visible airport pull-down (amends OD-37, owner 24-10-2026): what it shows, and what choosing an
+// option does. Only airports with a reviewed pack are offered, so there is nothing to type or validate.
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { createMemoryStore } from '../../src/store';
 import { switchAirportTo, type PackState } from '../../src/ui/App';
-import { AirportEntry, Header, icaoProblem } from '../../src/ui/components/Frame';
+import { AirportEntry, Header } from '../../src/ui/components/Frame';
 import { NO_AUTO_REPORT, type AutoReportState } from '../../src/ui/controller';
 import { WeatherEntry } from '../../src/ui/components/WeatherEntry';
 import { TEST_PACK, YSSY_PACK, readJson, toRaw, type PackRef } from '../helpers/packs';
@@ -15,35 +14,15 @@ const NOW = Date.UTC(2026, 9, 24, 3, 0, 0);
 const yssy = packWith(YSSY_PACK);
 const noop = (): void => undefined;
 
-describe('icaoProblem (the same rule as the pack schema: 3 to 8 capital letters or digits)', () => {
-  it.each([
-    ['YSSY', true],
-    ['TEST', true],
-    ['EGLL', true],
-    ['K1AB', true],
-    ['ABC', true],
-    ['ABCDEFGH', true],
-    ['AB', false],
-    ['ABCDEFGHI', false],
-    ['', false],
-    ['YS SY', false],
-    ['YSS-', false],
-    ['yssy', false],
-    ['YSSY\n', false],
-    ['<IMG>', false],
-  ])('%j is %s', (typed, ok) => {
-    expect(icaoProblem(typed) === null).toBe(ok);
-  });
-});
-
-describe('the airport box on screen', () => {
+describe('the airport pull-down on screen', () => {
   const html = (props: Partial<Parameters<typeof AirportEntry>[0]> = {}): string =>
     renderToStaticMarkup(<AirportEntry icao="YSSY" airports={['YSSY']} error={null} onSwitch={noop} {...props} />);
 
-  it('is pre-filled with the current airport, with the listed packs as suggestions only', () => {
+  it('offers only the listed packs, with the current airport selected, and no Switch button', () => {
     const one = html();
-    expect(one).toMatch(/<input id="airport-icao"[^>]*value="YSSY"/);
+    expect(one).toMatch(/<select id="airport-icao"[^>]*>/);
     expect(one).toContain('<option value="YSSY"');
+    expect(one).not.toContain('>Switch<');
     const two = html({ airports: ['YSSY', 'TEST'] });
     expect(two).toContain('<option value="TEST"');
   });

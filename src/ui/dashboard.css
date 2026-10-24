@@ -1002,8 +1002,8 @@ p.small {
   color: var(--accent-text);
   font-weight: 600;
 }
-.airport-entry input {
-  width: 12ch;
+.airport-entry select {
+  min-width: 10ch;
   min-height: 32px;
   background: var(--panel2);
   color: var(--text);
@@ -1011,7 +1011,6 @@ p.small {
   border-radius: 4px;
   padding: 4px 8px;
   font: 13px Consolas, Menlo, monospace;
-  text-transform: uppercase;
 }
 .airport-note {
   /* out of the flow, so a message never moves Refresh and Settings */
@@ -1037,7 +1036,7 @@ p.small {
   .btn,
   .small-btn,
   select,
-  .airport-entry input {
+  .airport-entry select {
     min-height: 44px;
   }
   .btn,
