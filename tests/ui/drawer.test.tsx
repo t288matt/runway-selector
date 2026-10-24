@@ -262,7 +262,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('Reload data [%s]', (_name
     expect(s.view.pack.settings.tailwindDryKt).toBe(2);
     expect(s.view.pack).not.toBe(pack);
     expect(s.view.calcNowMs).toBe(r.clock.now);
-    expect(textOf(renderDashboard(s.view, EMPTY_FEED, true, testBridge({ reload: s.reload })))).toContain('2.0 kt');
+    expect(textOf(renderDashboard(s.view, EMPTY_FEED, true, testBridge({ reload: s.reload })))).toContain('2 kt');
   });
 
   it('clears a stored current mode that the new pack no longer enables, with a message', async () => {
@@ -337,12 +337,14 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('drawer content [%s]', (_n
 
   it('shows every read-only value from the pack with its description', () => {
     const s = pack.settings;
-    for (const v of [`${s.tailwindDryKt.toFixed(1)} kt`, `${s.tailwindWetKt.toFixed(1)} kt`, `${s.calmWindKt.toFixed(1)} kt`, `${s.limitToleranceKt} kt`, `${s.nearLimitMarginKt.toFixed(1)} kt`, `${s.wetRunwayProbabilityPct} %`, `${s.dryingTimeMinutes} min`, `${s.changeoverPreparationMinutes} min`, `${s.demandHorizonMinutes} min`]) {
+    // Owner decision 24-10-2026: display is whole knots (kt1), except limitToleranceKt, which is
+    // never passed through kt1 and so keeps its own precision (0.05).
+    for (const v of [`${Math.round(s.tailwindDryKt)} kt`, `${Math.round(s.tailwindWetKt)} kt`, `${Math.round(s.calmWindKt)} kt`, `${s.limitToleranceKt} kt`, `${Math.round(s.nearLimitMarginKt)} kt`, `${s.wetRunwayProbabilityPct} %`, `${s.dryingTimeMinutes} min`, `${s.changeoverPreparationMinutes} min`, `${s.demandHorizonMinutes} min`]) {
       expect(text).toContain(v);
     }
     for (const m of pack.modes.filter((x) => x.enabled)) {
       expect(text).toContain(`Crosswind limit, Mode ${m.id}`);
-      expect(text).toContain(`${m.maxCrosswindKt.toFixed(1)} kt`);
+      expect(text).toContain(`${Math.round(m.maxCrosswindKt)} kt`);
       expect(text).toContain(m.capacity === null ? 'no limit' : `${m.capacity} movements per hour`);
     }
     for (const name of ['tailwindDryKt', 'tailwindWetKt', 'calmWindKt', 'limitToleranceKt', 'nearLimitMarginKt', 'wetRunwayProbabilityPct', 'dryingTimeMinutes', 'trafficBands', 'changeoverPreparationMinutes', 'demandHorizonMinutes'] as const) {

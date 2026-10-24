@@ -9,7 +9,11 @@ import { isFullCircle, isUsableWind, nearLimit, runwayWind, withinLimit } from '
 
 const MS_PER_HOUR = 3_600_000;
 
-const f1 = (n: number): string => n.toFixed(1);
+// Whole knots for the reason text a person reads (owner decision 24-10-2026,
+// amending WC-3's earlier one-decimal rule). The numbers compared against
+// limits above (`limit`, `figures`) keep full precision; this only formats
+// the sentence.
+const f1 = (n: number): string => Math.round(n).toString();
 
 interface UsedRunway {
   readonly name: string;

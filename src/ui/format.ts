@@ -138,8 +138,13 @@ export function durationText(ms: number): string {
   return m === 0 ? `${h} h` : `${h} h ${m} min`;
 }
 
-/** One decimal place, the display rule for every component (WC-3). */
-export const kt1 = (n: number): string => n.toFixed(1);
+/**
+ * Whole knots, the display rule for every component (WC-3, owner decision
+ * 24-10-2026, amending the earlier one-decimal rule). Never used for the
+ * calculation itself, which keeps full precision; this only formats a number
+ * for a person to read. The name is historical.
+ */
+export const kt1 = (n: number): string => Math.round(n).toString();
 
 /** Three-digit direction, "090". */
 export const dir3 = (degrees: number): string => String(Math.round(((degrees % 360) + 360) % 360) || 360).padStart(3, '0');

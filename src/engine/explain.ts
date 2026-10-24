@@ -119,7 +119,9 @@ function whyThisMode(pack: AirportPack, modeId: string, cell: Cell): string {
     first === undefined ? 0 : state === 'DRY' ? first.tailwindLimitDryKt : state === 'WET' ? first.tailwindLimitWetKt : Math.min(first.tailwindLimitDryKt, first.tailwindLimitWetKt);
   const crossLimit = first?.crosswindLimitKt ?? pack.settings.defaultCrosswindKt;
   const runwayWord = state === 'DRY' ? 'dry' : state === 'WET' ? 'wet' : 'possibly wet';
-  return `${modeId} meets every limit on the runways it uses (${runwayWord} runway): tailwind up to ${tail.toFixed(1)} kt against a limit of ${tailLimit.toFixed(1)} kt, crosswind up to ${cross.toFixed(1)} kt against a limit of ${crossLimit.toFixed(1)} kt.`;
+  // Whole knots (owner decision 24-10-2026, amending WC-3); the numbers above keep full precision.
+  const r1 = (n: number): string => Math.round(n).toString();
+  return `${modeId} meets every limit on the runways it uses (${runwayWord} runway): tailwind up to ${r1(tail)} kt against a limit of ${r1(tailLimit)} kt, crosswind up to ${r1(cross)} kt against a limit of ${r1(crossLimit)} kt.`;
 }
 
 function whyItLasts(modeId: string, survival: Survival | undefined, nowMs: number): string {

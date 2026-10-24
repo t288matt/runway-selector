@@ -43,6 +43,7 @@ A web application that recommends the runway operating mode for Sydney Kingsford
 | OD-32 | 23-10-2026 (owner, chat): the traffic panel (D) shows no trend. The raw METAR and TAF are shown at the top of the screen, in the weather entry boxes. Panel C shows runway components against the limits only, with no raw or decoded text. Amends TR-3 and DB-8. |
 | OD-33 | 23-10-2026 (owner, chat): variable wind (VRB) is not judged against the wet-runway tailwind limit. VRB above the calm threshold makes a mode MARGINAL with the cause VRB. It is UNSUITABLE only if the full speed breaks the dry tailwind limit or the mode's crosswind limit on every runway the mode uses. Amends OD-27, WC-1 and WC-11. |
 | OD-34 | 23-10-2026 (owner, chat): weather in the vicinity (code VC) never counts as precipitation or as a wet runway. Amends WC-9. |
+| OD-35 | 24-10-2026 (owner, chat): every wind component, limit and other figure shown on screen or in a cell's reason text is a whole number of knots, rounded for display only. The underlying calculation, the tolerance comparison and the near-limit margin all keep full precision; nothing is rounded before a limit is applied. Amends WC-3. |
 | OD-9 | 23-10-2026: the app will later be used for other airports, so the code must be airport-agnostic and entirely reference-data driven. YSSY is the first dataset, not a special case. This is a key requirement and takes precedence over convenience in every design choice. |
 
 ## 3. Reference-data requirements
@@ -78,7 +79,7 @@ A web application that recommends the runway operating mode for Sydney Kingsford
 |---|---|
 | WC-1 | Tailwind limits for dry and wet runways are pack values (RD-5). A mode is unsuitable if any required runway exceeds the limit for the current runway condition. Variable wind is judged against the dry limit only (OD-33). The Sydney values (dry 5 kt, wet 0 kt) are in section 16. |
 | WC-2 | Headwind = speed x cos(direction - heading); tailwind = max(0, -headwind); crosswind = abs(speed x sin(direction - heading)). For both, speed is the stronger of the mean wind and the gust. Wind direction and runway heading share one reference (OD-11): no conversion between true and magnetic. |
-| WC-3 | Handle gusts and variable wind. Never round before applying limits; display to one decimal place. |
+| WC-3 | Handle gusts and variable wind. Never round before applying limits; display as a whole number (owner decision, 24-10-2026, amending the earlier one-decimal rule; OD-35). |
 | WC-4 | Runway state is DRY, WET or WET POSSIBLE and is derived only from the METAR and TAF; there is no manual selection (OD-14). The runway is not dry the moment rain stops (WC-10). |
 | WC-5 | WET POSSIBLE evaluates the dry and wet cases separately and flags uncertainty. A mode that passes only the dry case is MARGINAL, never SUITABLE. Where the first slot's METAR shows no rain, the state is DRY (owner decision, 23-10-2026), and the screen states the assumption. |
 | WC-6 | Crosswind limits are configurable and labelled as simulation settings unless a verified rule exists. |
