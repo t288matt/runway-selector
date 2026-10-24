@@ -60,8 +60,14 @@ describe('YMML land-and-hold-short mode minima', () => {
 
 describe('YMML non-LAHSO twin of the land-and-hold-short mode', () => {
   const TWIN = '34A27AD';
-  it('sits after 27AD and before 16AD in the pack', () => {
-    expect(pack.modes.map((m) => m.id)).toEqual(['27AD34D', '16A27D', '09A16D', '34A27AD-LAHSO', '09AD', '27AD', TWIN, '16AD', '34AD']);
+  it('sits directly below the LAHSO mode in the pack', () => {
+    expect(pack.modes.map((m) => m.id)).toEqual(['27AD34D', '16A27D', '09A16D', '34A27AD-LAHSO', TWIN, '09AD', '27AD', '16AD', '34AD']);
+  });
+  it('ranks below the LAHSO mode and above 27AD, 16AD and 34AD in the operating plan', () => {
+    const rows = pack.plan[0]!.rows;
+    const penalty = (id: string) => rows.find((r) => r.mode === id)!.penalty;
+    expect(penalty(MODE)).toBeLessThan(penalty(TWIN));
+    for (const id of ['27AD', '16AD', '34AD']) expect(penalty(TWIN)).toBeLessThan(penalty(id));
   });
   it('has the same runways and no minima', () => {
     const m = pack.modes.find((x) => x.id === TWIN)!;
