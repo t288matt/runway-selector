@@ -36,6 +36,8 @@ export interface RankGroup {
 export interface PlanBandModel {
   readonly id: string;
   readonly times: string;
+  /** The band covers the whole day, so it is the only band and needs no heading of its own (OD-40). */
+  readonly allDay: boolean;
   readonly groups: readonly RankGroup[];
   readonly notAllowed: readonly string[];
   readonly allEqual: boolean;
@@ -98,7 +100,7 @@ export function planBandModel(pack: AirportPack, band: PlanBand): PlanBandModel 
     word: i === 0 ? (values.length === 1 ? 'all equal' : 'preferred') : 'less preferred',
     modes: entries.filter((e) => e.value === value).map((e) => e.id),
   }));
-  return { id: band.id, times: bandTimes(band), groups, notAllowed, allEqual: values.length === 1 };
+  return { id: band.id, times: bandTimes(band), allDay: band.allDay, groups, notAllowed, allEqual: values.length === 1 };
 }
 
 function trafficBandsText(pack: AirportPack): string {
