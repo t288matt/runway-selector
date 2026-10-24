@@ -5,8 +5,8 @@
 //   headings: 16L/16R 155, 34L/34R 335, 07 062, 25 242.
 //   tailwind dry 5, wet 0, tolerance 0.05 (pass if component <= limit + 0.05), calm 3, near-limit margin 3,
 //   crosswind limit 20 for every mode, so MARGINAL when 17 < xw <= 20.05, UNSUITABLE above 20.05.
-//   wet-probability 40, drying 60 min, METAR window 30 min (a METAR governs a slot only when the slot starts less than
-//   30 min after the observation), marginal penalty 3.
+//   wet-probability 40, drying 60 min, METAR window 40 min (a METAR governs a slot only when the slot starts less than
+//   40 min after the observation, so slot 0 and the next slot when the METAR is observed on the half hour), marginal penalty 3.
 //   one all-day band, every mode allowed. Preference penalty: SODPROPS 0; 25A16D, 34A25D, 34AD25, 07A16D 2; 34AD, 16AD 5;
 //   07AD, 25AD 12. Equal penalties tie-break by file order.
 //   change penalty light 1 / medium 5 / busy 25, unknown-demand change 5. Minimum stay 60 min: a stay shorter than that which
@@ -134,14 +134,15 @@ describe('E03 wet runway from the METAR (WC-12, WC-1, WC-10)', () => {
     expect(cell(w, '25AD', 0).status).toBe('SUITABLE');
     expect(cell(w, '07AD', 0)).toMatchObject({ status: 'UNSUITABLE', cause: 'TW' });
   });
-  // Rain in the METAR at slot 0 (03:00-03:30), observed 03:00 so it governs slot 0 only (30 min window). Drying: a slot is held
-  // WET while its START is before the last wet slot's END + 60 min = 03:30 + 60 = 04:30. So 03:30 and 04:00 are WET (held by
-  // drying, which does not restart the clock), and 04:30 is the first DRY slot.
-  it('stays wet while drying and is DRY again from 04:30', () => {
+  // Rain in the METAR observed 03:00. The 40 min window covers the slots starting 03:00 and 03:30 (30 < 40), so both carry the METAR's
+  // own rain and are WET for sure; the last wet slot is 03:30-04:00. Drying: a slot is held WET while its START is before the last wet
+  // slot's END + 60 min = 04:00 + 60 = 05:00. So 04:00 and 04:30 are WET (held by drying, which does not restart the clock), and 05:00 is
+  // the first DRY slot.
+  it('stays wet while drying and is DRY again from 05:00', () => {
     const w = go({ metar: metar(LIGHT_TAIL, '-RA'), taf: tafDry });
     expect(w.out.evaluation.slots[at(w, '03:30')]!.runwayState).toBe('WET');
     expect(w.out.evaluation.slots[at(w, '04:00')]!.runwayState).toBe('WET');
-    expect(w.out.evaluation.slots[at(w, '04:30')]!.runwayState).toBe('DRY');
+    expect(w.out.evaluation.slots[at(w, '04:30')]!.runwayState).toBe('WET');
     expect(w.out.evaluation.slots[at(w, '05:00')]!.runwayState).toBe('DRY');
     expect(cell(w, '25AD', '04:00').status).toBe('UNSUITABLE');
     expect(cell(w, '25AD', '05:00').status).toBe('SUITABLE');
@@ -265,28 +266,32 @@ describe('E06 BECMG applies from its start time (WX-8, OD-20)', () => {
 
 // ---------------------------------------------------------------------------------------------
 describe('E07 METAR governs its slot alone; the TAF is not consulted (owner, 24-10-2026, amending WX-7, OD-25)', () => {
-  // METAR obs 03:00: 250/10, metarValidityMinutes 30. TAF: 250/10, FM 03:30 -> 070/10.
-  // Slot 03:00 starts at the observation (age 0) -> METAR-governed. Slot 03:30 starts exactly at the 30-minute
-  // boundary, which is outside the window (metarWindowMs uses strict <), so the TAF governs it directly.
-  // Mode 25AD (hdg 250): METAR headwind 10 -> SUITABLE at 03:00, unaffected by the TAF's worse view there.
-  //   From 03:30 the TAF's own 070/10 governs directly: tailwind 10 > 5.05 -> UNSUITABLE (no TAF reason needed,
-  //   the TAF is simply the weather now).
-  // Mode 07AD (hdg 070): METAR tailwind 10 -> UNSUITABLE at 03:00 (its own worse TAF view does not apply here
-  //   either); SUITABLE from 03:30 once the TAF (a headwind on 07) governs.
+  // METAR obs 03:00: 250/10, metarValidityMinutes 40. TAF: 250/10, FM 03:30 -> 070/10.
+  // Slots 03:00 (age 0) and 03:30 (30 min after the observation, under 40) are METAR-governed. Slot 04:00 starts 60 min after it, outside
+  // the window (strict <), so the TAF governs it directly.
+  // Mode 25AD (hdg 242): METAR headwind 9.9 -> SUITABLE at 03:00 and at 03:30, unaffected by the TAF's worse view of 03:30 (FM 03:30 -> 070/10).
+  //   From 04:00 the TAF's own 070/10 governs directly: dir-hdg = -172 -> tailwind 9.9 > 5.05 -> UNSUITABLE (no TAF
+  //   reason needed, the TAF is simply the weather now).
+  // Mode 07AD (hdg 062): METAR tailwind 9.9 -> UNSUITABLE at 03:00 and 03:30 (its own better TAF view does not apply here either);
+  //   SUITABLE from 04:00 once the TAF (a headwind on 07) governs.
   const r = go({ metar: metar(kt(250, 10)), taf: taf(`${kt(250, 10)} 9999 SCT020 FM230330 ${kt(70, 10)} 9999 SCT020`) });
-  it('slot 03:00 is METAR-governed; slot 03:30 (the 30-minute boundary) is already TAF-governed', () => {
+  it('slots 03:00 and 03:30 are METAR-governed; slot 04:00 (60 minutes after the observation) is TAF-governed', () => {
     expect(r.out.evaluation.slots[0]!.governedBy).toBe('METAR');
-    expect(r.out.evaluation.slots[1]!.governedBy).toBe('TAF');
+    expect(r.out.evaluation.slots[1]!.governedBy).toBe('METAR');
+    expect(r.out.evaluation.slots[2]!.governedBy).toBe('TAF');
   });
   it('mode 25AD: SUITABLE under the METAR, UNSUITABLE once the TAF governs, with no TAF reason while the METAR governed', () => {
     const first = cell(r, '25AD', '03:00');
     expect(first.status).toBe('SUITABLE');
     expect(first.reasons.some((x) => x.code === 'TAF')).toBe(false);
-    expect(cell(r, '25AD', '03:30').status).toBe('UNSUITABLE');
+    expect(cell(r, '25AD', '03:30').status).toBe('SUITABLE');
+    expect(cell(r, '25AD', '03:30').reasons.some((x) => x.code === 'TAF')).toBe(false);
+    expect(cell(r, '25AD', '04:00').status).toBe('UNSUITABLE');
   });
   it('mode 07AD: UNSUITABLE under the METAR, SUITABLE once the TAF governs', () => {
     expect(cell(r, '07AD', '03:00').status).toBe('UNSUITABLE');
-    expect(cell(r, '07AD', '03:30').status).toBe('SUITABLE');
+    expect(cell(r, '07AD', '03:30').status).toBe('UNSUITABLE');
+    expect(cell(r, '07AD', '04:00').status).toBe('SUITABLE');
   });
 });
 
@@ -305,10 +310,10 @@ describe('E08 METAR only, TAF only, neither (WX-9, OP-13)', () => {
     expect(r.out.plan.recommendedModeId).toBe('SODPROPS');
     expect(r.out.plan.uncertain).toBe(true);
     expect(r.built.banners.map((b) => b.code)).toContain('no-taf');
-    // OD-57 (24-10-2026): the line names each uncertain period and its reason, periods joined by "; ". Worked by hand: slot 0
-    // (03:00-03:30) is uncertain because SODPROPS has a capacity and no traffic is entered, so demand is not known; slots 1-7
-    // (03:30-07:00) have no weather at all, so they are uncertain because nothing forecasts them.
-    expect(r.out.explanation.uncertaintyLine).toMatch(/^03:00 UTC to 03:30 UTC: .*demand.*; 03:30 UTC to 07:00 UTC: .*forecast/);
+    // OD-57 (24-10-2026): the line names each uncertain period and its reason, periods joined by "; ". Worked by hand: slots 0 and 1
+    // (03:00-04:00, both inside the 40 min METAR window) are uncertain because SODPROPS has a capacity and no traffic is entered, so
+    // demand is not known; slots 2-7 (04:00-07:00) have no weather at all, so they are uncertain because nothing forecasts them.
+    expect(r.out.explanation.uncertaintyLine).toMatch(/^03:00 UTC to 04:00 UTC: .*demand.*; 04:00 UTC to 07:00 UTC: .*forecast/);
   });
   it('TAF only: the TAF governs from slot 1 and slot 1 is DRY', () => {
     const r = go({ metar: null, taf: taf(LIGHT_TAIL + ' 9999 SCT020') });
@@ -346,7 +351,7 @@ describe('E09 stale and old METARs (WX-7, WX-9, OD-30)', () => {
     expect(r.built.banners.map((b) => b.code)).toContain('metar-stale');
     expect(r.built.metarAgeMinutes).toBe(130);
   });
-  // The METAR window is 30 minutes: a METAR governs a slot only when the slot starts less than 30 minutes after the observation.
+  // The METAR window is 40 minutes: a METAR governs a slot only when the slot starts less than 40 minutes after the observation.
   it('a METAR observed 02:50Z (20 min old) governs slot 03:00 (10 min after observation) but not 03:30 (40 min)', () => {
     const r = go({ metar: metar(LIGHT_TAIL, '-RA', '230250Z'), taf: tafOk });
     expect(r.out.evaluation.slots[0]!.governedBy).toBe('METAR');
@@ -357,7 +362,7 @@ describe('E09 stale and old METARs (WX-7, WX-9, OD-30)', () => {
     expect(r.out.evaluation.slots[1]!.runwayState).toBe('WET');
     expect(r.out.evaluation.slots[1]!.runwayStateCause).toBe('DRYING');
   });
-  it('a METAR observed 02:20Z (50 min old, not stale) is outside its 30 minute window and governs nothing', () => {
+  it('a METAR observed 02:20Z (50 min old, not stale) is outside its 40 minute window and governs nothing (slot 03:00 starts 40 minutes after it)', () => {
     const r = go({ metar: metar(LIGHT_TAIL, '-RA', '230220Z'), taf: tafOk });
     expect(r.out.evaluation.slots[0]!.governedBy).toBe('TAF');
     expect(r.out.evaluation.slots[0]!.runwayState).toBe('DRY');

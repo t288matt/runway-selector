@@ -2,7 +2,7 @@
 // mid-slot FM, month-rollover METAR, and TAF-wet in the METAR window. Hand-worked from docs/REQUIREMENTS.md
 // before the engine was read; pack numbers as in yssy.e2e.test.ts (YSSY: headings 07 062, 25 242, 16 155, 34 335; tail dry 5 /
 // wet 0, xw 20, calm 3, margin 3; one all-day band: SODPROPS 0, 25A16D / 34A25D / 34AD25 / 07A16D 2, 34AD / 16AD 5, 07AD / 25AD 12;
-// change light 1 / medium 5 / busy 25, unknown 5; minimum stay 60 min with a 25 point penalty; METAR window 30 min).
+// change light 1 / medium 5 / busy 25, unknown 5; minimum stay 60 min with a 25 point penalty; METAR window 40 min).
 import { describe, expect, it } from 'vitest';
 import { YSSY_PACK } from '../helpers/packs';
 import { at, cell, chosen, kt, run, type RunOptions } from './pipeline';
@@ -91,7 +91,7 @@ describe('E19 directions: wrap through north, ranges that cross north, gusts, mi
 
 describe('E20 METAR date resolution across a month end, and a METAR slightly ahead of the clock (WX-1, section 6 "Report entry")', () => {
   // Clock 01-11-2026 00:10Z. METAR day 31 at 23:50Z resolves to 31-10-2026 (the most recent such date at or before now): 20 minutes old.
-  // Slot 00:00 (10 min after the observation) is inside the 30 minute window (metarValidityMinutes); 00:30 (40 min) is not.
+  // Slot 00:00 (10 min after the observation) is inside the 40 minute window (metarValidityMinutes); 00:30 (40 min, not under 40) is not.
   it('METAR 312350Z read on 01-11 is 20 minutes old and governs only 00:00', () => {
     const r = run({ ref: YSSY_PACK, nowIso: '2026-11-01T00:10:00Z', windowMinutes: 240, metar: 'METAR YSSY 312350Z 25010KT 9999 FEW020 20/10 Q1015', taf: null });
     expect(r.metar!.observedAtMs).toBe(Date.parse('2026-10-31T23:50:00Z'));
