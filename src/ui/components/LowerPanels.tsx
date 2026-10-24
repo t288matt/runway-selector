@@ -91,6 +91,7 @@ export function PanelF({ view }: { view: ViewData }) {
               </marker>
             </defs>
             <line x1={d.arrow.x1} y1={d.arrow.y1} x2={d.arrow.x2} y2={d.arrow.y2} markerEnd="url(#wind-head)" />
+            <text x={d.arrow.labelX} y={d.arrow.labelY} textAnchor={d.arrow.labelAnchor} className="dg-windspeed">{d.arrow.label}</text>
           </g>
         )}
         <text x="290" y="14" textAnchor="end" className="dg-north">N up</text>

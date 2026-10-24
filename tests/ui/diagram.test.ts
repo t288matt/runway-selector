@@ -69,6 +69,15 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the diagram is generated 
     expect(a.y2).toBeLessThan(a.y1);
   });
 
+  it('writes the wind speed beside the tail of the arrow, on the side away from the middle', () => {
+    const a = d.arrow;
+    expect(a?.label).toBe('12 kt');
+    if (a === null) return;
+    // wind from 140: the tail is south-east, so the label runs to the right of it
+    expect(a.labelAnchor).toBe('start');
+    expect(a.labelX).toBeGreaterThan(a.x1);
+  });
+
   it('has a text equivalent naming every runway, the wind and the mode', () => {
     for (const r of pack.runways) expect(d.caption).toContain(r.name);
     expect(d.caption).toContain('Wind from 140 degrees at 12 knots, gusting 16');
