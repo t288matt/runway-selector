@@ -63,15 +63,15 @@ function trafficSentence(view: ViewData): string {
 }
 
 /**
- * The raw text of the report actually governing the current slot (owner, 24-10-2026, OD-65): the METAR if it
- * governs, the TAF if that governs instead, or null with no report. Replaces the derived "is suitable on the
- * runways it uses ..." sentence that used to open the Weather row in Panel A.
+ * The raw METAR text for the Weather row in Panel A (owner, 24-10-2026, OD-65, then METAR only), or null with no
+ * METAR. The TAF is never shown here, even when it governs the slot. Replaces the derived "is suitable on the
+ * runways it uses ..." sentence that used to open the Weather row.
  */
 function currentReportText(view: ViewData): string | null {
-  const governedBy = view.weather.slots[0]?.governedBy;
-  if (governedBy === 'METAR') return view.metar?.raw ?? null;
-  if (governedBy === 'TAF') return view.taf?.raw ?? null;
-  return null;
+  const raw = view.metar?.raw;
+  if (raw === undefined) return null;
+  // The airport is already chosen at the top of the page, so the station code is dropped (owner, 24-10-2026).
+  return raw.replace(/^(\s*(?:METAR|SPECI)\s+)?(?:COR\s+)?[A-Z]{4}\s+/i, '$1').trim();
 }
 
 /**
