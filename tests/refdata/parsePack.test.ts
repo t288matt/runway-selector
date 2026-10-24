@@ -696,6 +696,16 @@ describe('ranges and caps on every value (SEC-3)', () => {
     );
   });
 
+  it('a label may not hold control or direction-changing characters (issue 18)', () => {
+    const withLabel = (value: string) => bad((f) => { f['airport.json'].labels = { extra: value }; });
+    const hostile = ['line one\nline two', 'tab\there', 'right to left \u202Eoverride', 'embedding \u202Aleft', 'isolate \u2066text\u2069', 'mark\u200Efor', 'zero\u200Bwidth', 'separator\u2028here'];
+    for (const value of hostile) {
+      expectRefused(withLabel(value), 'airport.json', 'labels', 'control or direction-changing');
+    }
+    // Ordinary text, including accents and punctuation, is fine.
+    expect(() => parsePack(withLabel('Runway works on 16R until 14:00Z - expect delays (café, 35 kt limit)'))).not.toThrow();
+  });
+
   it('shape rules: times, zone, ids, names, status, code', () => {
     expectRefused(bad((f) => { f['operating_plan.json'].bands[0].start = '24:00'; }), 'operating_plan.json', 'bands[0].start');
     expectRefused(bad((f) => { f['operating_plan.json'].bands[0].start = '6:30'; }), 'operating_plan.json', 'bands[0].start');

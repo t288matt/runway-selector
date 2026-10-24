@@ -43,6 +43,14 @@ describe('fetchFeed success', () => {
     expect(s.calls[0]?.init?.headers).toBeUndefined();
     expect(s.calls[0]?.init?.signal).toBeInstanceOf(AbortSignal);
   });
+
+  it('asks with redirect: error, and refuses an answer that came from a redirect (issue 18)', async () => {
+    const s = serve(() => Object.defineProperty(new Response(fixture), 'redirected', { value: true }));
+    const r = await run(s.fetch);
+    expect(s.calls[0]?.init?.redirect).toBe('error');
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.message).toContain('redirect');
+  });
 });
 
 describe('fetchFeed failures return an error object (the caller keeps its previous data)', () => {
