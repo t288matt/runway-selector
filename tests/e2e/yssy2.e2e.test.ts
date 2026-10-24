@@ -78,12 +78,12 @@ describe('E19 directions: wrap through north, ranges that cross north, gusts, mi
 
 describe('E20 METAR date resolution across a month end, and a METAR slightly ahead of the clock (WX-1, section 6 "Report entry")', () => {
   // Clock 01-11-2026 00:10Z. METAR day 31 at 23:50Z resolves to 31-10-2026 (the most recent such date at or before now): 20 minutes old.
-  // Slots 00:00 (10 min after the observation) and 00:30 (40 min) are inside the 60 minute window; 01:00 (70 min) is not.
-  it('METAR 312350Z read on 01-11 is 20 minutes old and governs 00:00 and 00:30', () => {
+  // Slot 00:00 (10 min after the observation) is inside the 30 minute window (metarValidityMinutes); 00:30 (40 min) is not.
+  it('METAR 312350Z read on 01-11 is 20 minutes old and governs only 00:00', () => {
     const r = run({ ref: YSSY_PACK, nowIso: '2026-11-01T00:10:00Z', windowMinutes: 240, metar: 'METAR YSSY 312350Z 25010KT 9999 FEW020 20/10 Q1015', taf: null });
     expect(r.metar!.observedAtMs).toBe(Date.parse('2026-10-31T23:50:00Z'));
     expect(r.built.metarAgeMinutes).toBe(20);
-    expect(r.out.evaluation.slots.map((s) => s.governedBy).slice(0, 3)).toEqual(['METAR', 'METAR', 'NONE']);
+    expect(r.out.evaluation.slots.map((s) => s.governedBy).slice(0, 3)).toEqual(['METAR', 'NONE', 'NONE']);
     expect(r.built.banners.map((b) => b.code)).not.toContain('metar-stale');
   });
   it('a METAR stamped 5 minutes ahead of the clock (clock skew) is still read as today, not as last month', () => {
@@ -101,38 +101,9 @@ describe('E21 traffic level takes the higher of arrivals and departures (TR-4, O
   });
 });
 
-describe('E22 a TAF that would be worse inside the METAR window warns without overriding it (WX-7, OD-25)', () => {
-  // METAR dry 158/04; TAF has TEMPO RA 2303/2305 (03:00-05:00). Mode 25AD tailwind 0.14: SUITABLE dry, UNSUITABLE wet.
-  //   03:00 and 03:30: METAR governs and the runway is DRY, but the TAF view is WET POSSIBLE (MARGINAL for mode 25AD) -> cell MARGINAL with a TAF reason.
-  //   04:00 and 04:30: TAF governs: WET POSSIBLE -> MARGINAL.   05:00: TAF dry -> SUITABLE.
-  //   Mode 16AD (hdg 160) has a headwind: SUITABLE in every slot (the TAF cannot make it worse).
-  const r = go({ metar: metar(kt(158, 4)), taf: taf(`${kt(158, 4)} 9999 SCT020 TEMPO 2303/2305 4000 RA`) });
-  it.skip('mode 25AD is MARGINAL on the TAF warning while the METAR keeps the runway DRY', () => {
-    for (const t of ['03:00', '03:30']) {
-      expect(r.out.evaluation.slots[at(r, t)]!.runwayState).toBe('DRY');
-      const c = cell(r, '25AD', t);
-      expect(c.status).toBe('MARGINAL');
-      expect(c.reasons.some((x) => x.code === 'TAF')).toBe(true);
-    }
-    for (const t of ['04:00', '04:30']) {
-      expect(r.out.evaluation.slots[at(r, t)]!.runwayState).toBe('WET_POSSIBLE');
-      expect(cell(r, '25AD', t).status).toBe('MARGINAL');
-    }
-    expect(cell(r, '25AD', '05:00').status).toBe('SUITABLE');
-    expect(hhmm(r, 0)).toBe('03:00');
-  });
-  it.skip('mode 16AD is unaffected and stays the recommendation' /* TODO YR-20b: recompute against the new priority order (23-10-2026) */, () => {
-    expect(r.out.evaluation.cells[r.pack.modes.findIndex((m) => m.id === '16AD')]!.every((c) => c.status === 'SUITABLE')).toBe(true);
-    expect(r.out.plan.recommendedModeId).toBe('16AD');
-  });
-  it.skip('a prevailing TAF rain against a dry METAR: METAR-window cells MARGINAL, TAF-governed cells UNSUITABLE with the runway WET', () => {
-    const w = go({ metar: metar(kt(158, 4)), taf: taf(`${kt(158, 4)} 9999 -RA SCT020`), windowMinutes: 360 });
-    expect(cell(w, '25AD', '03:00').status).toBe('MARGINAL');
-    expect(w.out.evaluation.slots[at(w, '03:00')]!.runwayState).toBe('DRY');
-    expect(cell(w, '25AD', '04:00')).toMatchObject({ status: 'UNSUITABLE', cause: 'TW' });
-    expect(w.out.evaluation.slots[at(w, '04:00')]!.runwayState).toBe('WET');
-  });
-});
+// E22 (a TAF that would be worse inside the METAR window warns without overriding it, WX-7, OD-25) is removed:
+// its entire premise, the METAR-governed cross-check against the TAF's own view, no longer exists (owner,
+// 24-10-2026 — a METAR-governed slot is judged on the METAR alone; see E07). Not a YR-20b recompute case.
 
 describe('E23 other behaviours worked from the requirements', () => {
   it.skip('a current mode that is disabled in the pack is not used as the starting mode (DESIGN 6 Current mode)' /* TODO YR-20b: no mode is disabled any more now SODPROPS is enabled; needs a new scenario (23-10-2026) */, () => {
