@@ -18,7 +18,7 @@ import {
   windowMinutes,
   type FeedState,
 } from '../../src/ui/model/dashboard';
-import { moveFocus, modeRows, summaryTiles, timelineModel, visibleRows } from '../../src/ui/model/timeline';
+import { moveFocus, modeRows, summaryTiles, timelineModel, visibleRows, windShift, windText } from '../../src/ui/model/timeline';
 import { hhmmZ, hhmmZRel, utcAndLocal, ageText, durationText, safeHttpsLink, dir3 } from '../../src/ui/format';
 import { packOf, rigFor } from '../engine/planHelpers';
 import { viewOf } from './helpers';
@@ -332,5 +332,40 @@ describe('keyboard movement in the grid (UI_DESIGN section 9)', () => {
     expect(moveFocus('c', at, 3, 10, 0, 4)).toEqual({ row: 1, col: 4 });
     expect(moveFocus('C', at, 3, 10, 0, null)).toBeNull();
     expect(moveFocus('x', at, 3, 10, 0, 4)).toBeNull();
+  });
+});
+
+describe('wind changes in the event strip', () => {
+  const steady = (directionDegrees: number, speedKt: number, gustKt: number | null = null) => ({ kind: 'steady' as const, directionDegrees, speedKt, gustKt, variableRangeDegrees: null });
+  const variable = (speedKt: number) => ({ kind: 'variable' as const, speedKt, gustKt: null });
+
+  it('shows direction, speed and gust', () => {
+    expect(windText(steady(20, 12, 22))).toBe('020/12G22');
+    expect(windText(steady(340, 5))).toBe('340/05');
+    expect(windText(variable(4))).toBe('VRB/04');
+  });
+
+  it('labels a turn with the new wind and gives the old wind and the size of the turn in the hover text', () => {
+    expect(windShift(steady(340, 10), steady(20, 12, 22))).toEqual({ label: '020/12G22', title: 'Wind 340/10 to 020/12G22, turn of 40 degrees' });
+  });
+
+  it('measures the turn the short way round', () => {
+    expect(windShift(steady(350, 10), steady(10, 10))?.title).toContain('turn of 20 degrees');
+  });
+
+  it('ignores a change under 10 degrees and under 5 knots, but not a bigger direction, speed or gust change', () => {
+    expect(windShift(steady(340, 10), steady(345, 12))).toBeNull();
+    expect(windShift(steady(340, 10), steady(340, 10))).toBeNull();
+    expect(windShift(steady(340, 10), steady(350, 10))).not.toBeNull();
+    expect(windShift(steady(340, 10), steady(340, 15))).not.toBeNull();
+    expect(windShift(steady(340, 10), steady(340, 10, 20))).not.toBeNull();
+  });
+
+  it('handles variable wind and missing wind', () => {
+    expect(windShift(steady(340, 10), variable(5))?.label).toBe('VRB/05');
+    expect(windShift(variable(5), variable(6))).toBeNull();
+    expect(windShift(variable(5), steady(340, 10))?.label).toBe('340/10');
+    expect(windShift(null, steady(340, 10))).toBeNull();
+    expect(windShift(steady(340, 10), null)).toBeNull();
   });
 });

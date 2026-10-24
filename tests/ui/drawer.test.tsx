@@ -8,7 +8,7 @@ import { parsePack, type AirportPack } from '../../src/refdata';
 import { createMemoryStore, loadAudit, loadCurrentMode, storageKey, saveCurrentMode, type Store } from '../../src/store';
 import { AppBody } from '../../src/ui/App';
 import { createController, type Controller } from '../../src/ui/controller';
-import { calculate, EMPTY_FEED } from '../../src/ui/model/dashboard';
+import { calculate, defaultWindowFor, EMPTY_FEED } from '../../src/ui/model/dashboard';
 import { auditRows, currentModeStatus, drawerModel, limitText, planBandModel } from '../../src/ui/model/drawer';
 import { PACKS, TEST_PACK, YSSY_PACK, readJson, toRaw, type PackRef } from '../helpers/packs';
 import { packWith } from '../weather/helpers';
@@ -64,6 +64,17 @@ describe('limitText formats the pack value, not a literal 2 hours', () => {
   });
 });
 
+describe('Sydney changeover preparation time (owner, 24-10-2026)', () => {
+  it('is 30 minutes, and the drawer shows it', () => {
+    const pack = packWith(YSSY_PACK);
+    expect(pack.settings.changeoverPreparationMinutes).toBe(30);
+    const view = calculate({ pack, nowMs: NOW, metar: null, taf: null, windowChoice: 'full', currentMode: null, feed: EMPTY_FEED });
+    // The row is the label, then its help sentence, then the value in the next cell.
+    const text = textOf(renderDashboard(view, EMPTY_FEED, true));
+    expect(text).toMatch(/Changeover preparation time .*? 30 min Forecast horizon for traffic/);
+  });
+});
+
 describe('the stale words come from the pack value', () => {
   it.each([[90, 'set more than 90 minutes ago'], [180, 'set more than 3 hours ago'], [120, 'set more than 2 hours ago']])('currentModeStaleMinutes %i', (minutes, words) => {
     const pack = packWith(YSSY_PACK, { settings: { currentModeStaleMinutes: minutes } });
@@ -76,16 +87,17 @@ describe('the stale words come from the pack value', () => {
 describe.each(PACKS.map((p) => [p.name, p] as const))('current mode and window are kept [%s]', (_name, ref) => {
   const pack = packWith(ref);
   const [a, b] = enabledIds(pack) as [string, string];
+  const other = defaultWindowFor(pack) === 'full' ? '4h' : 'full';
 
   it('survives a fresh controller on the same store (round trip)', () => {
     const r = rig(pack);
     r.ctrl.setCurrentMode(b);
-    r.ctrl.setWindowChoice('6h');
+    r.ctrl.setWindowChoice(other);
     const again = rig(pack, r.store, undefined, NOW + 5 * MIN);
     const s = again.ctrl.getState();
     expect(s.view.currentMode).toBe(b);
     expect(s.currentModeRecord).toEqual({ schemaVersion: 1, modeId: b, setAtMs: NOW });
-    expect(s.view.windowChoice).toBe('6h');
+    expect(s.view.windowChoice).toBe(other);
     expect(s.audit.map((e) => e.path)).toEqual(['currentMode', 'forecastWindow']);
     expect(s.notices).toEqual([]);
   });
@@ -292,15 +304,15 @@ describe('airports are kept apart (AG-8)', () => {
     const one = rig(yssy, store);
     const two = rig(test, store);
     one.ctrl.setCurrentMode(enabledIds(yssy)[1] as string);
-    one.ctrl.setWindowChoice('6h');
+    one.ctrl.setWindowChoice('full');
     two.ctrl.setCurrentMode(enabledIds(test)[0] as string);
     const freshYssy = rig(yssy, store).ctrl.getState();
     const freshTest = rig(test, store).ctrl.getState();
     expect(freshYssy.view.currentMode).toBe(enabledIds(yssy)[1]);
-    expect(freshYssy.view.windowChoice).toBe('6h');
+    expect(freshYssy.view.windowChoice).toBe('full');
     expect(freshYssy.audit).toHaveLength(2);
     expect(freshTest.view.currentMode).toBe(enabledIds(test)[0]);
-    expect(freshTest.view.windowChoice).not.toBe('6h');
+    expect(freshTest.view.windowChoice).not.toBe('full');
     expect(freshTest.audit).toHaveLength(1);
     expect(loadAudit(store, 'YSSY', 500).entries.every((e) => e.airport === 'YSSY')).toBe(true);
     expect(loadAudit(store, 'TEST', 500).entries.every((e) => e.airport === 'TEST')).toBe(true);
@@ -426,7 +438,7 @@ describe('audit trail view', () => {
     const rows = auditRows(r.ctrl.getState().audit, pack);
     expect(rows.map((x) => x.what)).toEqual(['Current mode', 'Forecast window', 'Current mode']);
     expect(rows[0]).toMatchObject({ old: `Mode ${a}`, new: `Mode ${b}` });
-    expect(rows[1]).toMatchObject({ old: 'Full TAF', new: '4 hours' });
+    expect(rows[1]).toMatchObject({ old: '6 hours', new: '4 hours' });
     expect(rows[2]).toMatchObject({ old: 'Not set', new: `Mode ${a}` });
     expect(rows[0]?.time).toBe('10:10Z');
     const html = renderDashboard(r.ctrl.getState().view, EMPTY_FEED, true, testBridge({ audit: r.ctrl.getState().audit }));

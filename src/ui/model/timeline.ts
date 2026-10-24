@@ -133,12 +133,35 @@ export function visibleRows(model: Pick<TimelineModel, 'rows' | 'cells' | 'onPat
   return { rows: keep.map((i) => model.rows[i] as ModeRow), cells: keep.map((i) => model.cells[i] ?? []), onPath: keep.map((i) => model.onPath[i] ?? []), hiddenCount: hidden };
 }
 
-function windShiftLabel(prev: WindObservation | null, cur: WindObservation | null): string | null {
-  if (cur === null) return null;
-  if (cur.kind === 'variable') return prev !== null && prev.kind === 'variable' ? null : 'wind VRB';
-  if (prev === null) return null;
-  if (prev.kind === 'steady' && Math.round(prev.directionDegrees) === Math.round(cur.directionDegrees)) return null;
-  return `wind to ${dir3(cur.directionDegrees)}`;
+/** A wind change smaller than both of these is not worth a label in the event strip (display only). */
+export const WIND_SHIFT_MIN_DEGREES = 10;
+export const WIND_SHIFT_MIN_KT = 5;
+
+/** Wind as reported: "340/10", "020/12G22", "VRB/05". */
+export function windText(w: WindObservation): string {
+  const gust = w.gustKt === null ? '' : `G${kt1(w.gustKt)}`;
+  return `${w.kind === 'variable' ? 'VRB' : dir3(w.directionDegrees)}/${kt1(w.speedKt).padStart(2, '0')}${gust}`;
+}
+
+const turnDegrees = (a: number, b: number): number => {
+  const d = Math.abs(a - b) % 360;
+  return Math.round(d > 180 ? 360 - d : d);
+};
+
+/**
+ * The event-strip label and hover text for a wind change between two slots, or null when there is none worth
+ * showing: the direction moved by less than WIND_SHIFT_MIN_DEGREES and neither the speed nor the gust moved by
+ * WIND_SHIFT_MIN_KT. The first slot has no earlier wind to compare with, so it never has a label.
+ */
+export function windShift(prev: WindObservation | null, cur: WindObservation | null): { readonly label: string; readonly title: string } | null {
+  if (cur === null || prev === null) return null;
+  const speedMove = Math.max(Math.abs(cur.speedKt - prev.speedKt), Math.abs((cur.gustKt ?? cur.speedKt) - (prev.gustKt ?? prev.speedKt)));
+  const bothSteady = prev.kind === 'steady' && cur.kind === 'steady';
+  const turn = prev.kind === 'steady' && cur.kind === 'steady' ? turnDegrees(prev.directionDegrees, cur.directionDegrees) : null;
+  const small = turn === null ? prev.kind === cur.kind && speedMove < WIND_SHIFT_MIN_KT : turn < WIND_SHIFT_MIN_DEGREES && speedMove < WIND_SHIFT_MIN_KT;
+  if (small) return null;
+  const turnText = bothSteady && turn !== null && turn > 0 ? `, turn of ${turn} degrees` : '';
+  return { label: windText(cur), title: `Wind ${windText(prev)} to ${windText(cur)}${turnText}` };
 }
 
 function runs(flags: readonly boolean[]): (readonly [number, number])[] {
@@ -176,8 +199,19 @@ export function timelineModel(view: ViewData, displayNowMs: number): TimelineMod
     const wet = wetState === 'WET' ? 'wet' : wetState === 'WET_POSSIBLE' ? 'possible' : 'none';
     const events: string[] = [];
     const titles: string[] = [];
-    const shift = windShiftLabel(i === 0 ? null : (slotsIn[i - 1]?.weather.wind ?? null), s.weather.wind);
-    if (shift !== null) events.push(shift);
+    const shift = windShift(i === 0 ? null : (slotsIn[i - 1]?.weather.wind ?? null), s.weather.wind);
+    if (shift !== null) {
+      events.push(shift.label);
+      titles.push(shift.title);
+    }
+    if (s.weather.thunderstorm === true) {
+      events.push('TS');
+      titles.push('Thunderstorm at the airport');
+    }
+    if (s.weather.lowVisibility === true) {
+      events.push('low vis');
+      titles.push(`Visibility below ${pack.settings.lowVisibilityMetres} m`);
+    }
     const overlays = s.governedBy === 'METAR' ? (s.tafView?.overlays ?? []) : s.weather.overlays;
     const kinds = [...new Set(overlays.map((o) => o.kind))];
     for (const k of kinds) events.push(k);

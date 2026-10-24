@@ -55,6 +55,10 @@ export interface SlotWeather {
   readonly wind: WindObservation | null;
   readonly precipitation: PrecipitationFlags;
   readonly overlays: readonly WeatherOverlay[];
+  /** Thunderstorm at the station (TS, not VC). Shown as an event only; no mode depends on it. */
+  readonly thunderstorm?: boolean;
+  /** Visibility below the pack's lowVisibilityMetres. Shown as an event only. */
+  readonly lowVisibility?: boolean;
 }
 
 export type SlotSource = 'METAR' | 'TAF' | 'NONE';

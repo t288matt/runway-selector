@@ -315,10 +315,8 @@ function primaryReason(cell: Cell): string {
     if (r !== undefined) return r.text;
     return 'No further detail';
   }
-  if (cell.runways.length === 0) return 'Within every limit';
-  const tail = Math.max(...cell.runways.map((r) => r.tailwindKt));
-  const cross = Math.max(...cell.runways.map((r) => r.crosswindKt));
-  return `Within every limit: tailwind up to ${kt1(tail)} kt, crosswind up to ${kt1(cross)} kt`;
+  // A suitable cell has nothing to explain: no summary line and no runway table (owner, 24-10-2026, OD-44).
+  return '';
 }
 
 export function cellDetailModel(view: ViewData, modeIndex: number, slotIndex: number): CellDetailModel | null {
@@ -331,7 +329,7 @@ export function cellDetailModel(view: ViewData, modeIndex: number, slotIndex: nu
   const cv = cellView(cell, slot.startMs, missingWeather(view), view.calcNowMs);
   const level = trafficLevelsFor(pack, [slot.startMs], view.demand?.slots ?? [])[0] ?? null;
 
-  const runways = cell.runways.map((r) => ({
+  const runways = (cell.status === 'SUITABLE' ? [] : cell.runways).map((r) => ({
     name: r.runway,
     roles: r.roles.map((x) => (x === 'ARRIVAL' ? 'ARR' : 'DEP')).join(' '),
     tailwind: kt1(r.tailwindKt),

@@ -5,7 +5,7 @@
 // that depends on the airport comes from the pack's settings.
 import type { PrecipitationFlags, SlotWeather, WeatherOverlay, WeatherSlot } from '../engine/inputs';
 import type { Settings } from '../refdata/schema';
-import type { DecodedMetar, DecodedTaf, DecodedWeatherCondition } from './types';
+import type { DecodedMetar, DecodedTaf, DecodedVisibility, DecodedWeatherCondition } from './types';
 
 export const SLOT_MINUTES = 30;
 const MINUTE_MS = 60_000;
@@ -27,7 +27,7 @@ export interface WeatherBanner {
 
 export interface BuildWeatherSlotsInput {
   /** Only the settings are read. */
-  readonly pack: { readonly settings: Pick<Settings, 'metarValidityMinutes' | 'metarStaleMinutes' | 'tafStaleMinutes' | 'precipitationCodes'> };
+  readonly pack: { readonly settings: Pick<Settings, 'metarValidityMinutes' | 'lowVisibilityMetres' | 'metarStaleMinutes' | 'tafStaleMinutes' | 'precipitationCodes'> };
   readonly nowMs: number;
   readonly metar: DecodedMetar | null;
   readonly taf: DecodedTaf | null;
@@ -51,17 +51,27 @@ function hasPrecipitation(weather: readonly DecodedWeatherCondition[], codes: Re
   return weather.some((c) => c.intensity !== 'VC' && c.codes.some((code) => codes.has(code)));
 }
 
+function hasThunderstorm(weather: readonly DecodedWeatherCondition[]): boolean {
+  return weather.some((c) => c.intensity !== 'VC' && c.codes.includes('TS'));
+}
+
+function isLowVisibility(visibility: DecodedVisibility | null, limitMetres: number): boolean {
+  return visibility !== null && !visibility.moreThan && visibility.metres < limitMetres;
+}
+
 const NO_FLAGS: PrecipitationFlags = { prevailing: false, probable: null, temporary: false, recent: false };
 
 function noWeather(): SlotWeather {
   return { wind: null, precipitation: { ...NO_FLAGS }, overlays: [] };
 }
 
-function metarWeather(metar: DecodedMetar, codes: ReadonlySet<string>): SlotWeather {
+function metarWeather(metar: DecodedMetar, codes: ReadonlySet<string>, lowVisibilityMetres: number): SlotWeather {
   return {
     wind: metar.wind,
     precipitation: { prevailing: hasPrecipitation(metar.weather, codes), probable: null, temporary: false, recent: hasPrecipitation(metar.recentWeather, codes) },
     overlays: [],
+    thunderstorm: hasThunderstorm(metar.weather),
+    lowVisibility: isLowVisibility(metar.visibility, lowVisibilityMetres),
   };
 }
 
@@ -72,7 +82,7 @@ function metarWeather(metar: DecodedMetar, codes: ReadonlySet<string>): SlotWeat
  * that starts before the slot ends. TEMPO, INTER and PROB groups cover every
  * slot their window overlaps.
  */
-function tafWeather(taf: DecodedTaf, startMs: number, endMs: number, codes: ReadonlySet<string>): SlotWeather | null {
+function tafWeather(taf: DecodedTaf, startMs: number, endMs: number, codes: ReadonlySet<string>, lowVisibilityMetres: number): SlotWeather | null {
   if (startMs >= taf.validToMs || endMs <= taf.validFromMs) return null;
   let period = taf.periods[0];
   for (const p of taf.periods) if (p.startMs < endMs) period = p;
@@ -92,6 +102,8 @@ function tafWeather(taf: DecodedTaf, startMs: number, endMs: number, codes: Read
     wind: period.wind,
     precipitation: { prevailing: hasPrecipitation(period.weather, codes), probable, temporary, recent: false },
     overlays,
+    thunderstorm: hasThunderstorm(period.weather),
+    lowVisibility: isLowVisibility(period.visibility, lowVisibilityMetres),
   };
 }
 
@@ -149,10 +161,10 @@ export function buildWeatherSlots(input: BuildWeatherSlotsInput): BuildWeatherSl
   for (let i = 0; i < n; i++) {
     const startMs = slot0Start + i * SLOT_MS;
     const endMs = startMs + SLOT_MS;
-    const forecast = taf === null ? null : tafWeather(taf, startMs, endMs, codes);
+    const forecast = taf === null ? null : tafWeather(taf, startMs, endMs, codes, settings.lowVisibilityMetres);
     // A slot that starts exactly at observation time + window is not inside the window: the TAF governs it.
     if (metar !== null && startMs < metar.observedAtMs + metarWindowMs) {
-      slots.push({ startMs, endMs, governedBy: 'METAR', weather: metarWeather(metar, codes), tafView: forecast });
+      slots.push({ startMs, endMs, governedBy: 'METAR', weather: metarWeather(metar, codes, settings.lowVisibilityMetres), tafView: forecast });
     } else if (forecast !== null) {
       slots.push({ startMs, endMs, governedBy: 'TAF', weather: forecast, tafView: null });
     } else {
