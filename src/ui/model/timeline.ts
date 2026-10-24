@@ -317,9 +317,14 @@ export interface Tile {
   readonly value: string;
 }
 
-/** The summary tile above the grid: the recommended mode (OD-49 removed Survives, Next constraint and Traffic at changeover). */
+/** The summary tiles above the grid: the recommended mode and the next change, with the new mode and time (OD-49, OD-50). */
 export function summaryTiles(view: ViewData): Tile[] {
-  return [{ label: 'Recommended', value: view.result.plan.recommendedModeId ?? 'None' }];
+  const change = view.result.changeovers[0];
+  const next = view.result.plan.recommendedModeId === null ? '-' : change === undefined ? 'No change planned' : `${change.change.toModeId} at ${hhmmZRel(change.change.startMs, view.calcNowMs)}`;
+  return [
+    { label: 'Recommended', value: view.result.plan.recommendedModeId ?? 'None' },
+    { label: 'Next change', value: next },
+  ];
 }
 
 /** The legend entries, in order. Icon and pattern come from STATUS_STYLE. */

@@ -243,10 +243,15 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('timeline rows and tiles [
     expect(m.slots.filter((s) => s.isChange).map((s) => s.index)).toEqual([...m.changeSlots]);
   });
 
-  it('has one summary tile, Recommended (OD-49)', () => {
+  it('has two summary tiles, Recommended and Next change (OD-50)', () => {
     const v = viewOf(pack, rig, wx);
-    expect(summaryTiles(v).map((t) => t.label)).toEqual(['Recommended']);
+    expect(summaryTiles(v).map((t) => t.label)).toEqual(['Recommended', 'Next change']);
     expect(summaryTiles(v)[0]?.value).toBe(v.result.plan.recommendedModeId);
+    const c = v.result.changeovers[0];
+    const next = summaryTiles(v)[1]?.value ?? '';
+    if (v.result.plan.recommendedModeId === null) expect(next).toBe('-');
+    else if (c === undefined) expect(next).toBe('No change planned');
+    else expect(next).toBe(`${c.change.toModeId} at ${hhmmZRel(c.change.startMs, v.calcNowMs)}`);
   });
 });
 

@@ -56,7 +56,7 @@ Content width capped at 1440 px, centred, 16 px gutters. C, D and F sit side by 
 | Why Mode 12: one sentence                                                                                |
 +----------------------------------------------------------------------------------------------------------+
 | B  OPTIMAL MODE TIMELINE           Window [Full TAF v]                                                   |
-| [Recommended]  (one summary tile, OD-49)                                                                 |
+| [Recommended] [Next change]  (two summary tiles, OD-49, OD-50)                                           |
 | Time (UTC) | 22:00 | 22:30 | 23:00  | ...                                                                |
 | Events     | BECMG | TEMPO | CHANGE | ...                                                                |
 | Traffic    | L     | M     | H HIGH | ...                                                                |
@@ -224,7 +224,7 @@ Event-strip hover shows the TAF group in raw and decoded form.
 - The scroll bar is shown only when the slots do not fit, with a visible track.
 
 ### 6.6 Summary tiles and reason line
-One tile above the grid: Recommended. The Survives, Next constraint and Traffic at changeover tiles are removed (OD-49). Below the legend, a one-line reason in the style of the owner's illustration: "Mode 12 is recommended because it is the only mode with no unsuitable slot until 07:30Z..." The reason is a template sentence filled from the engine, never hand-written text.
+Two tiles above the grid: Recommended, and Next change (the new mode and its time, for example "34A25D at 14:00Z", or "No change planned"). The Survives, Next constraint and Traffic at changeover tiles are removed (OD-49). Below the legend, a one-line reason in the style of the owner's illustration: "Mode 12 is recommended because it is the only mode with no unsuitable slot until 07:30Z..." The reason is a template sentence filled from the engine, never hand-written text.
 
 ### 6.7 Legend
 Always visible under the grid: each status with its icon, pattern and word, plus the overlay keys (recommended outline, change line, busy band, wet band, uncertainty corner).
