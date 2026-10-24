@@ -24,6 +24,8 @@
   "changePenaltyBusy":        { "value": 25,   "description": "Score for changing mode in a slot with busy traffic." },
   "unknownDemandChangePenalty": { "value": 5,  "description": "Score for changing mode in a slot where traffic is unknown." },
   "noModePenalty":            { "value": 1000, "description": "Score per slot in which no mode is allowed, so a plan can always be produced." },
+  "minimumStayMinutes":       { "value": 60,   "description": "A mode should be held at least this long once entered; a shorter stay costs shortStayPenalty. The mode in use now, and the last stay in the window, are not counted." },
+  "shortStayPenalty":         { "value": 25,   "description": "Score for each stay in a mode shorter than minimumStayMinutes, so a plan does not change mode and change again soon after." },
   "changeoverPreparationMinutes": { "value": 30, "description": "Warning time shown before a planned change. Set to 30 by the owner on 24-10-2026; preparation for a runway change should start 30 minutes before." },
   "metarStaleMinutes":        { "value": 60,   "description": "METAR older than this is flagged stale." },
   "tafStaleMinutes":          { "value": 480,  "description": "TAF older than this is flagged stale." },

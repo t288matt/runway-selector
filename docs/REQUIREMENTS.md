@@ -84,6 +84,7 @@ A web application that recommends the runway operating mode for Sydney Kingsford
 | OD-71 | 24-10-2026 (owner, chat): in a timeline cell's detail, a MARGINAL or UNSUITABLE cell opens with a highlighted cause box under the title: the wind group that caused it in large type when it came from a TEMPO, PROB or similar group (e.g. "TEMPO PROB30 VRB20G30KT"), then the reason sentence. |
 | OD-72 | 24-10-2026 (owner, chat): the quiet NOTE banner "Recommended differs from current. See the timeline (B)." is removed from Panel A. Amends UI_DESIGN section 5. |
 | OD-73 | 24-10-2026 (owner, chat): the SUITABLE/MARGINAL status chip is removed from Panel A's Weather line, which shows the METAR text alone. Amends OD-65. |
+| OD-74 | 24-10-2026 (owner, chat): the plan has a minimum stay in a mode, pack settings minimumStayMinutes (60) and shortStayPenalty (25). A stay shorter than the minimum that ends in a change costs the penalty; slot 0 counts only the time left in it; the mode in use now and the last stay in the window are not counted; moves into or out of NO_MODE are not penalised. Stops a recommendation such as SODPROPS for 6 minutes and then another mode. |
 | OD-9 | 23-10-2026: the app will later be used for other airports, so the code must be airport-agnostic and entirely reference-data driven. YSSY is the first dataset, not a special case. This is a key requirement and takes precedence over convenience in every design choice. |
 
 ## 3. Reference-data requirements
