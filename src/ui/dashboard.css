@@ -373,7 +373,7 @@ select {
   display: none;
 }
 .why summary::before {
-  content: 'B8';
+  content: '▸';
   display: inline-block;
   margin-right: 6px;
   transition: transform 0.1s ease;
