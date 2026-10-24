@@ -879,6 +879,11 @@ p.small {
 .dg-wind path {
   fill: var(--warn-text);
 }
+.dg-windspeed {
+  fill: var(--warn-text);
+  font-size: 12px;
+  font-weight: 600;
+}
 /* settings drawer */
 #drawer {
   position: fixed;

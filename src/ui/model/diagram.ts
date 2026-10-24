@@ -35,6 +35,12 @@ export interface WindArrow {
   readonly y1: number;
   readonly x2: number;
   readonly y2: number;
+  /** The wind speed, such as "12 kt", drawn beside the tail of the arrow. */
+  readonly label: string;
+  readonly labelX: number;
+  readonly labelY: number;
+  /** Which side of labelX the text runs, so it stays clear of the arrow. */
+  readonly labelAnchor: 'start' | 'end';
 }
 
 export interface Diagram {
@@ -208,6 +214,10 @@ export function buildDiagram(input: DiagramInput): Diagram {
       y1: cy - Math.cos(from) * r * 0.95,
       x2: cx + Math.sin(from) * r * 0.55,
       y2: cy - Math.cos(from) * r * 0.55 * 0.95,
+      label: `${Math.round(w.speedKt)} kt`,
+      labelX: cx + Math.sin(from) * r + (Math.sin(from) < 0 ? -8 : 8),
+      labelY: cy - Math.cos(from) * r * 0.95 + 4,
+      labelAnchor: Math.sin(from) < 0 ? 'end' : 'start',
     };
     windPart = `Wind from ${String(Math.round(w.directionDegrees)).padStart(3, '0')} degrees at ${Math.round(w.speedKt)} knots${w.gustKt === null ? '' : `, gusting ${Math.round(w.gustKt)}`}.`;
   } else if (w !== null) {
