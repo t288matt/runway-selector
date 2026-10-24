@@ -44,7 +44,7 @@ function DetailBody({ d }: { d: CellDetailModel }) {
           </tbody>
         </table>
       )}
-      <div>Wind used: {d.wind} (the stronger of mean and gust). {d.source}.</div>
+      <div>Wind used: {d.wind}</div>
       {d.overlays.map((o) => (
         <div key={o}>Forecast: {o}</div>
       ))}
