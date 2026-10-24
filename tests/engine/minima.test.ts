@@ -74,7 +74,13 @@ describe('rule MIN: visibility', () => {
     expect(c.status).toBe('UNSUITABLE');
     expect(c.cause).toBe('MIN');
     expect(minReasons(c)[0]?.figures).toMatchObject({ visibilityMetres: 7999, minimumMetres: 8000 });
-    expect(first({ ...good, visibilityMetres: 6000 }).reasons.find((r) => r.code === 'MIN')?.text).toBe("Visibility 6.0 km is below this mode's minimum of 8.0 km");
+    expect(first({ ...good, visibilityMetres: 6000 }).reasons.find((r) => r.code === 'MIN')?.text).toBe("Visibility 6 km is below this mode's minimum of 8 km");
+  });
+  it('never shows equal numbers for a fail: 7,999 m is written in metres', () => {
+    const c = first({ ...good, visibilityMetres: 7999 });
+    expect(minReasons(c)[0]?.text).toBe("Visibility 7,999 m is below this mode's minimum of 8,000 m");
+    expect(minReasons(first({ ...good, visibilityMetres: 7950 }))[0]?.text).toContain('7,950 m');
+    expect(minReasons(first({ ...good, visibilityMetres: 7900 }))[0]?.text).toBe("Visibility 7.9 km is below this mode's minimum of 8 km");
   });
   it('an unknown visibility is MARGINAL and uncertain', () => {
     const c = first({ ceilingFt: 6000 });
@@ -167,12 +173,27 @@ describe('rule MIN: TEMPO, INTER and PROB groups', () => {
   it('a group below the visibility minimum makes the cell MARGINAL', () => {
     const c = first({ ...good, overlays: [overlay({ ceilingFt: 6000, visibilityMetres: 3000 })] }, pack, { gov: 'TAF' });
     expect(c.status).toBe('MARGINAL');
-    expect(c.reasons.find((x) => x.code === 'OVERLAY')?.text).toContain('Visibility 3.0 km');
+    expect(c.reasons.find((x) => x.code === 'OVERLAY')?.text).toContain('Visibility 3 km');
   });
   it('a group with rain breaks the dry requirement', () => {
     const c = first({ ...good, overlays: [overlay({ ceilingFt: 6000, visibilityMetres: 9999, precipitation: true })] }, pack, { gov: 'TAF' });
     expect(c.status).toBe('MARGINAL');
     expect(c.reasons.find((x) => x.code === 'OVERLAY')?.text).toContain('needs a dry runway');
+  });
+  it('a rain group on a runway that may already be wet adds no second surface reason', () => {
+    const [, second] = cells(pack, MODE, [
+      { weather: good },
+      { weather: { ...good, overlays: [overlay({ ceilingFt: 6000, visibilityMetres: 9999, precipitation: true })] }, gov: 'TAF', precip: { temporary: true } },
+    ]);
+    expect(second?.runwayState).toBe('WET_POSSIBLE');
+    expect(second?.reasons.filter((r) => r.severity === 'MARGINAL' && /dry runway/.test(r.text))).toHaveLength(1);
+  });
+  it('a group on a runway that may be wet still reports a ceiling it would break', () => {
+    const [, second] = cells(pack, MODE, [
+      { weather: good },
+      { weather: { ...good, overlays: [overlay({ ceilingFt: 1200, visibilityMetres: 9999 })] }, gov: 'TAF', precip: { temporary: true } },
+    ]);
+    expect(second?.reasons.some((r) => r.code === 'OVERLAY' && r.text.includes('Ceiling 1,200 ft'))).toBe(true);
   });
   it('a group that keeps the minima changes nothing', () => {
     const c = first({ ...good, overlays: [overlay({ ceilingFt: 6000, visibilityMetres: 9999 })] }, pack, { gov: 'TAF' });
