@@ -8,7 +8,7 @@ import { hhmmZRel } from '../format';
 export interface StatusStyle {
   /** CSS class that carries colour and pattern. */
   readonly className: string;
-  /** Text icon: tick, tilde, cross, question mark. */
+  /** Text icon: tick, cross, question mark; none for marginal (its stripes say it). */
   readonly icon: string;
   /** The status in a word, lower case. */
   readonly word: string;
@@ -16,7 +16,7 @@ export interface StatusStyle {
 
 export const STATUS_STYLE: Readonly<Record<Status, StatusStyle>> = {
   SUITABLE: { className: 'cs-suitable', icon: '\u2713', word: 'suitable' },
-  MARGINAL: { className: 'cs-marginal', icon: '~', word: 'marginal' },
+  MARGINAL: { className: 'cs-marginal', icon: '', word: 'marginal' },
   UNSUITABLE: { className: 'cs-unsuitable', icon: '\u2715', word: 'unsuitable' },
   UNKNOWN: { className: 'cs-unknown', icon: '?', word: 'unknown' },
 };
