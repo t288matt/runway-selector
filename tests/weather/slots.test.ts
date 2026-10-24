@@ -276,7 +276,8 @@ describeForEachPack('slot builder', (pack, ref) => {
     });
 
     it('recent weather alone (RESHRA, no present weather) sets recent and not prevailing', () => {
-      const { nowMs, metar } = reports(ref, '2026-10-23T14:10:00Z', { metar: 'metar-hkel-showers-re' });
+      // Observed 13:30Z; kept inside every pack's metarValidityMinutes (YSSY 30, TEST/TEST1 60) so the METAR governs.
+      const { nowMs, metar } = reports(ref, '2026-10-23T13:55:00Z', { metar: 'metar-hkel-showers-re' });
       const p = build(pack, nowMs, metar, null, 30).slots[0]!.weather.precipitation;
       expect(p.prevailing).toBe(false);
       expect(p.recent).toBe(codes.includes('SH') || codes.includes('RA'));

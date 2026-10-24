@@ -255,8 +255,6 @@ interface WeatherPart {
   readonly overlay: Reason[];
 }
 
-const rank = (status: Status): number => (status === 'UNSUITABLE' ? 2 : status === 'MARGINAL' ? 1 : 0);
-
 function overlayLabel(o: WeatherOverlay): string {
   return o.probabilityPct === null ? o.kind : `${o.kind} (PROB${o.probabilityPct})`;
 }
@@ -309,8 +307,6 @@ export interface CellContext {
   readonly slotIndex: number;
   readonly slot: WeatherSlot;
   readonly runwayState: RunwayState;
-  /** The state implied by the TAF's view of the slot, or null. */
-  readonly tafState: RunwayState | null;
   readonly band: PlanBand | null;
   readonly traffic: TrafficSlot | null;
 }
@@ -374,24 +370,10 @@ export function evaluateCell(ctx: CellContext): Cell {
     reasons.push({ code: 'NO_WIND', severity: 'UNKNOWN', figures: { governedBy: slot.governedBy }, limit: null, text: 'No wind is available for this slot' });
   }
 
-  // METAR-governed slot: a worse TAF view makes the cell MARGINAL, with the TAF reason (WX-7).
-  if (slot.governedBy === 'METAR' && slot.tafView !== null && (status === 'SUITABLE' || status === 'MARGINAL')) {
-    const tafPart = weatherPart(pack, mode, used, slot.tafView, ctx.tafState ?? runwayState);
-    if (tafPart.status !== 'UNKNOWN' && rank(tafPart.status) > rank(status)) {
-      const inner =
-        [...tafPart.tw, ...tafPart.xw].find((r) => r.severity === 'FAIL') ??
-        [...tafPart.tw, ...tafPart.xw, ...tafPart.vrb, ...tafPart.overlay].find((r) => r.severity === 'MARGINAL');
-      reasons.push({
-        code: 'TAF',
-        severity: 'MARGINAL',
-        ...(inner?.runway === undefined ? {} : { runway: inner.runway }),
-        figures: { tafStatus: tafPart.status, tafCause: inner?.code ?? null, ...(inner?.figures ?? {}), uncertain: true },
-        limit: inner?.limit ?? null,
-        text: `The TAF for this slot would make the mode ${tafPart.status}${inner === undefined ? '' : `: ${inner.text}`}`,
-      });
-      status = 'MARGINAL';
-    }
-  }
+  // A METAR governs this slot alone while it is current; the TAF is not consulted (owner, 24-10-2026, amending
+  // WX-7: a METAR-governed slot used to go MARGINAL when the TAF's own view of the same slot would be worse,
+  // with a TAF reason. The METAR's own observation is a better record of the slot than the forecast it is
+  // inside, so that cross-check is removed).
 
   if (reasons.some((r) => (r.severity === 'MARGINAL' || r.severity === 'INFO') && r.figures.uncertain === true)) uncertain = true;
 

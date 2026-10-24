@@ -196,11 +196,10 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('Panel A states [%s]', (_n
     expect(text).not.toMatch(BANNED);
   });
 
-  it('shows a quiet note when the recommendation differs from the current mode and nothing is urgent', () => {
+  it('shows no note when the recommendation differs from the current mode and nothing is urgent (OD-72)', () => {
     const view = viewOf(pack, rig, same<Wx>(4, 'ok'), same(4, 'light'), rig.b);
     const text = textOf(renderDashboard(view));
-    if (view.result.plan.recommendedModeId !== rig.b) expect(text).toContain('Recommended differs from current');
-    else expect(text).not.toContain('Recommended differs from current');
+    expect(text).not.toContain('Recommended differs from current');
   });
 
   it('shows the amber EARLY MODE CHANGE RECOMMENDED banner with the engine text', () => {

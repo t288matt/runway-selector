@@ -52,7 +52,7 @@ export function planRank(view: ViewData, modeIndex: number, slotIndex = 0): numb
   return better + 1;
 }
 
-/** Rows: recommended first, then the current mode if different, then by operating-plan rank. Enabled modes only. */
+/** Rows in operating-plan priority order for the first slot (owner, 24-10-2026); the recommended and current modes are badged, not moved. Enabled modes only. */
 export function modeRows(view: ViewData): ModeRow[] {
   const { pack, result } = view;
   const rec = result.plan.recommendedModeId;
@@ -74,7 +74,7 @@ export function modeRows(view: ViewData): ModeRow[] {
       allUnsuitable,
       runwaysText: runwaysText(mode.arrivals, mode.departures),
       title: `Mode ${mode.id}: ${runwaysText(mode.arrivals, mode.departures)}; ${cap}; crosswind limit ${kt1(mode.maxCrosswindKt)} kt`,
-      sort: (isRecommended ? 0 : isCurrent ? 1 : 2) * 1e9 + penalty,
+      sort: penalty,
       order: index,
     });
   });

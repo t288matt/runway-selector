@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { PACKS } from '../helpers/packs';
-import { decodeMetar } from '../../src/weather';
-import { panelAModel } from '../../src/ui/model/panels';
+import { PACKS, YSSY_PACK } from '../helpers/packs';
+import { decodeMetar, decodeTaf } from '../../src/weather';
+import { preferencePenalty } from '../../src/engine/optimiser';
+import { cellDetailModel, panelAModel } from '../../src/ui/model/panels';
 import { decodeMetarFixture, decodeTafFixture, nowOf, fixture, packWith, MIN } from '../weather/helpers';
 import {
   applyFeedResult,
@@ -218,18 +219,15 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('timeline rows and tiles [
   const pack = packOf(rig);
   const wx = ['ok', 'ok', 'ok', 'ok', 'badA', 'badA'] as const;
 
-  it('lists enabled modes only, recommended first, then the current mode', () => {
+  it('lists enabled modes only, in operating-plan priority order, badging the recommended and current modes', () => {
     const v = viewOf(pack, rig, wx, [], rig.b);
     const rows = modeRows(v);
     expect(rows.map((r) => r.modeId).sort()).toEqual(pack.modes.filter((m) => m.enabled).map((m) => m.id).sort());
-    expect(rows[0]?.isRecommended).toBe(true);
-    expect(rows[0]?.modeId).toBe(v.result.plan.recommendedModeId);
-    if (v.result.plan.recommendedModeId !== rig.b) {
-      expect(rows[1]?.modeId).toBe(rig.b);
-      expect(rows[1]?.isCurrent).toBe(true);
-    } else {
-      expect(rows[0]?.isCurrent).toBe(true);
-    }
+    const cell0 = (r: (typeof rows)[number]) => v.result.evaluation.cells[r.index]?.[0];
+    const penalties = rows.map((r) => preferencePenalty(pack, cell0(r)?.bandId ?? '', r.modeId));
+    expect(penalties).toEqual([...penalties].sort((x, y) => x - y));
+    expect(rows.find((r) => r.isRecommended)?.modeId).toBe(v.result.plan.recommendedModeId);
+    expect(rows.find((r) => r.isCurrent)?.modeId).toBe(rig.b);
     expect(rows.filter((r) => r.isRecommended)).toHaveLength(1);
   });
 
@@ -433,5 +431,23 @@ describe('Ceiling (OD-66)', () => {
   it('is Unknown with no governing report', () => {
     const view = calculate({ pack, nowMs: now, metar: null, taf: null, windowChoice: 'full', currentMode: null, feed: EMPTY_FEED });
     expect(panelAModel(view).ceiling).toBe('Unknown');
+  });
+});
+
+describe('cell detail cause (OD-71)', () => {
+  it('names the TEMPO or PROB wind group that makes a cell marginal', () => {
+    const pack = packWith(YSSY_PACK, { weatherStation: 'YSSY' });
+    const nowMs = Date.UTC(2026, 9, 24, 12, 52);
+    const m = decodeMetar('METAR YSSY 241230Z 02012KT 9999 SCT040 20/12 Q1016', { pack, nowMs });
+    const t = decodeTaf('TAF AMD YSSY 241117Z 2412/2518 02012KT CAVOK TEMPO 2509/2512 VRB20G30KT 4000 TSRA SCT015 SCT070CB', { pack, nowMs });
+    if (m.kind !== 'ok' || t.kind !== 'ok') throw new Error('decode');
+    const view = calculate({ pack, nowMs, metar: m.report, taf: t.report, windowChoice: 'full', currentMode: null, feed: EMPTY_FEED });
+    const triggers: string[] = [];
+    view.result.evaluation.cells.forEach((row, mi) => row.forEach((_c, si) => {
+      const d = cellDetailModel(view, mi, si);
+      if (d !== null && d.trigger !== '') triggers.push(d.trigger);
+    }));
+    expect(triggers.length).toBeGreaterThan(0);
+    expect(triggers.every((x) => /^TEMPO .*VRB20G30KT$/.test(x))).toBe(true);
   });
 });
