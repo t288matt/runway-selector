@@ -1033,6 +1033,31 @@ p.small {
   padding: 4px 8px;
   font: 13px Consolas, Menlo, monospace;
 }
+/* The two inputs the user acts on (Airport, Current mode) stand out from the buttons and readouts: an accent border with a soft
+   glow, brighter text and an accent label, in the way vatpac.org marks its primary controls (owner, 24-10-2026). */
+.cur label {
+  color: var(--accent-text);
+  font-weight: 600;
+}
+.cur select,
+.airport-entry select {
+  background: #1b2f63;
+  color: #fff;
+  border: 1.5px solid var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  font-weight: 600;
+  cursor: pointer;
+}
+.cur select:hover,
+.airport-entry select:hover {
+  border-color: var(--accent-text);
+  box-shadow: 0 0 0 3px rgba(106, 166, 255, 0.3);
+}
+.cur select:disabled,
+.airport-entry select:disabled {
+  opacity: 0.75;
+  cursor: progress;
+}
 .airport-note {
   /* out of the flow, so a message never moves Refresh and Settings */
   position: absolute;

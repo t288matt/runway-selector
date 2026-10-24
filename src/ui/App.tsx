@@ -39,6 +39,8 @@ export function Loading() {
 interface AirportSwitch {
   readonly airports: readonly string[];
   readonly airportError: string | null;
+  /** The airport chosen in the pull-down whose pack is still being fetched, or null. */
+  readonly pending: string | null;
   readonly onSwitch: (icao: string) => void;
 }
 
@@ -65,6 +67,7 @@ function Screen({ pack, deps, airport }: { pack: AirportPack; deps: AppDeps; air
         reload: s.reload,
         airports: airport.airports,
         airportError: airport.airportError,
+        pendingAirport: airport.pending,
         notices: s.notices,
         onConfirmCurrent: s.confirmCurrentMode,
         onReload: s.reloadPack,
@@ -90,12 +93,12 @@ class Boundary extends Component<{ children: ReactNode }, { error: string | null
 }
 
 /** What the page shows for each load state. An invalid pack gives the error and nothing else. */
-export function AppBody({ state, deps, onSwitchAirport = () => undefined }: { state: PackState; deps: AppDeps; onSwitchAirport?: (icao: string) => void }) {
+export function AppBody({ state, deps, onSwitchAirport = () => undefined, pendingAirport = null }: { state: PackState; deps: AppDeps; onSwitchAirport?: (icao: string) => void; pendingAirport?: string | null }) {
   if (state.status === 'loading') return <Loading />;
   if (state.status === 'error') return <PackError message={state.message} />;
   return (
     <Boundary key={state.pack.airport.icao}>
-      <Screen pack={state.pack} deps={deps} airport={{ airports: state.airports, airportError: state.airportError, onSwitch: onSwitchAirport }} />
+      <Screen pack={state.pack} deps={deps} airport={{ airports: state.airports, airportError: state.airportError, pending: pendingAirport, onSwitch: onSwitchAirport }} />
     </Boundary>
   );
 }
@@ -127,11 +130,17 @@ export function App({ deps }: { deps: AppDeps }) {
   }, [deps]);
   // Switching airport builds a new screen with its own controller: nothing of the old airport (weather, traffic,
   // current mode) is carried over, and its stored state stays under its own code (AG-8). A refused switch keeps the current airport.
+  // While the new airport's pack is fetched the pull-down shows the choice and says it is loading, so the old screen does not
+  // look as if nothing happened (the pack can take a second or more on a slow connection).
+  const [pendingAirport, setPendingAirport] = useState<string | null>(null);
   const switchAirport = (icao: string): void => {
-    if (state.status !== 'ready') return;
-    void switchAirportTo(state, icao, deps).then((change) => {
-      if (change !== null) setState((prev) => (prev.status === 'ready' ? { ...prev, ...change } : prev));
-    });
+    if (state.status !== 'ready' || pendingAirport !== null) return;
+    if (icao !== state.pack.airport.icao && state.airports.includes(icao)) setPendingAirport(icao);
+    void switchAirportTo(state, icao, deps)
+      .then((change) => {
+        if (change !== null) setState((prev) => (prev.status === 'ready' ? { ...prev, ...change } : prev));
+      })
+      .finally(() => setPendingAirport(null));
   };
-  return <AppBody state={state} deps={deps} onSwitchAirport={switchAirport} />;
+  return <AppBody state={state} deps={deps} onSwitchAirport={switchAirport} pendingAirport={pendingAirport} />;
 }
