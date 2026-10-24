@@ -366,7 +366,7 @@ function nextWetRunwayText(view: ViewData): string {
   if (first === undefined || view.weather.slots[0]?.governedBy === 'NONE') return 'Unknown';
   if (first.runwayState !== 'DRY') return 'Now';
   const next = slots.findIndex((s, i) => i > 0 && s.runwayState !== 'DRY');
-  return next < 0 ? 'None in window' : hhmmZRel(slots[next]?.startMs ?? 0, view.calcNowMs);
+  return next < 0 ? 'Not in forecast' : hhmmZRel(slots[next]?.startMs ?? 0, view.calcNowMs);
 }
 
 /** The summary tiles above the grid: the recommended mode, the next change, and the next wet runway (OD-49, OD-50, OD-59). */

@@ -69,7 +69,7 @@ export function AirportEntry({ icao, airports, error, onSwitch, loading = false 
   );
 }
 
-export function Header({ liveTag, onRefresh, onSettings, busy, airport }: { liveTag: string; onRefresh: () => void; onSettings: () => void; busy: boolean; airport?: AirportEntryProps }) {
+export function Header({ liveTag, onSettings, busy, airport }: { liveTag: string; onSettings: () => void; busy: boolean; airport?: AirportEntryProps }) {
   return (
     <header className="top">
       <h1>{appTitle()}</h1>
@@ -78,7 +78,6 @@ export function Header({ liveTag, onRefresh, onSettings, busy, airport }: { live
       {airport === undefined ? null : <AirportEntry key={airport.icao} {...airport} />}
       {busy ? <span className="tag" role="status">Recalculating</span> : null}
       <span className="utc">Times UTC</span>
-      <button type="button" className="btn" onClick={onRefresh}>Refresh</button>
       <button type="button" className="btn" onClick={onSettings}>Settings</button>
     </header>
   );

@@ -49,9 +49,9 @@ describe('the airport pull-down on screen', () => {
   });
 
   it('is part of the header whenever the page has an airport, and absent from the loading header', () => {
-    const header = renderToStaticMarkup(<Header liveTag="x" onRefresh={noop} onSettings={noop} busy={false} airport={{ icao: 'YSSY', airports: ['YSSY'], error: null, onSwitch: noop }} />);
+    const header = renderToStaticMarkup(<Header liveTag="x" onSettings={noop} busy={false} airport={{ icao: 'YSSY', airports: ['YSSY'], error: null, onSwitch: noop }} />);
     expect(header).toContain('id="airport-icao"');
-    expect(renderToStaticMarkup(<Header liveTag="x" onRefresh={noop} onSettings={noop} busy={false} />)).not.toContain('airport-icao');
+    expect(renderToStaticMarkup(<Header liveTag="x" onSettings={noop} busy={false} />)).not.toContain('airport-icao');
   });
 });
 
