@@ -253,16 +253,10 @@ describeEachPack('METAR window and the TAF', (pack) => {
   const s = pack.settings;
   const over = tailwindOn(h, s.tailwindDryKt + s.limitToleranceKt + 0.05, s.calmWindKt);
 
-  it('a TAF that would make the mode worse makes the METAR-governed cell MARGINAL with the TAF reason', () => {
+  it('a TAF that would make the mode worse does not affect the METAR-governed cell: the METAR is not second-guessed while it governs (owner, 24-10-2026, amending WX-7)', () => {
     const c = runMode(pack, id, [{ gov: 'METAR', tafView: { wind: over } }]).cell(0);
-    expect(c.status).toBe('MARGINAL');
-    expect(c.cause).toBe('TAF');
-    expect(c.uncertain).toBe(true);
-    const reason = c.reasons.find((r) => r.code === 'TAF');
-    expect(reason?.severity).toBe('MARGINAL');
-    expect(reason?.figures.tafStatus).toBe('UNSUITABLE');
-    expect(reason?.figures.tafCause).toBe('TW');
-    expect(reason?.limit).toBe(s.tailwindDryKt);
+    expect(c.status).toBe('SUITABLE');
+    expect(c.reasons.some((r) => r.code === 'TAF')).toBe(false);
   });
 
   it('a TAF that agrees, or is better, changes nothing', () => {
@@ -275,19 +269,19 @@ describeEachPack('METAR window and the TAF', (pack) => {
     expect(runMode(pack, id, [{ gov: 'METAR' }]).cell(0).status).toBe('SUITABLE');
   });
 
-  it('a TAF that is only MARGINAL for a SUITABLE METAR cell also gives MARGINAL with the TAF reason', () => {
+  it('a TAF that would only be MARGINAL for a SUITABLE METAR cell does not affect it either', () => {
     const near = crosswindOn(h, mode.maxCrosswindKt - s.nearLimitMarginKt + 0.1);
     const c = runMode(pack, id, [{ gov: 'METAR', tafView: { wind: near } }]).cell(0);
-    expect(c.status).toBe('MARGINAL');
-    expect(c.cause).toBe('TAF');
+    expect(c.status).toBe('SUITABLE');
+    expect(c.reasons.some((r) => r.code === 'TAF')).toBe(false);
   });
 
-  it('the TAF is judged with its own runway state: rain in the TAF view can make it worse', () => {
+  it("the TAF view's runway state (rain forecast) does not affect a METAR-governed cell either: the real runway state is unchanged and the mode is judged dry", () => {
     const wetOnly = tailwindOn(h, s.tailwindWetKt + s.limitToleranceKt + 0.05, s.calmWindKt);
     const c = runMode(pack, id, [{}, { gov: 'METAR', wind: wetOnly, tafView: { wind: wetOnly, precip: { prevailing: true } } }]).cell(1);
     expect(c.runwayState).toBe('DRY');
-    expect(c.cause).toBe('TAF');
-    expect(c.status).toBe('MARGINAL');
+    expect(c.reasons.some((r) => r.code === 'TAF')).toBe(false);
+    expect(c.status).toBe('SUITABLE');
   });
 
   it('a TAF slot (not METAR-governed) is judged on its own weather and has no TAF reason', () => {

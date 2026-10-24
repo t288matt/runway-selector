@@ -63,15 +63,15 @@ function trafficSentence(view: ViewData): string {
 }
 
 /**
- * The raw text of the report actually governing the current slot (owner, 24-10-2026, OD-65): the METAR if it
- * governs, the TAF if that governs instead, or null with no report. Replaces the derived "is suitable on the
- * runways it uses ..." sentence that used to open the Weather row in Panel A.
+ * The raw METAR text for the Weather row in Panel A (owner, 24-10-2026, OD-65, then METAR only), or null with no
+ * METAR. The TAF is never shown here, even when it governs the slot. Replaces the derived "is suitable on the
+ * runways it uses ..." sentence that used to open the Weather row.
  */
 function currentReportText(view: ViewData): string | null {
-  const governedBy = view.weather.slots[0]?.governedBy;
-  if (governedBy === 'METAR') return view.metar?.raw ?? null;
-  if (governedBy === 'TAF') return view.taf?.raw ?? null;
-  return null;
+  const raw = view.metar?.raw;
+  if (raw === undefined) return null;
+  // The airport is already chosen at the top of the page, so the station code is dropped (owner, 24-10-2026).
+  return raw.replace(/^(\s*(?:METAR|SPECI)\s+)?(?:COR\s+)?[A-Z]{4}\s+/i, '$1').trim();
 }
 
 /**
@@ -174,9 +174,6 @@ export function panelAModel(view: ViewData): PanelAModel {
   }
   if (explanation.earlyChange !== null) {
     banners.push({ tone: 'amber', title: explanation.earlyChange.title, text: explanation.earlyChange.text });
-  }
-  if (banners.length === 0 && view.currentMode !== null && view.currentMode !== recId) {
-    banners.push({ tone: 'note', title: 'NOTE', text: 'Recommended differs from current. See the timeline (B).' });
   }
 
   const style = cell0 === undefined ? null : STATUS_STYLE[cell0.status];
@@ -333,6 +330,8 @@ export interface CellDetailModel {
   readonly className: string;
   readonly code: string;
   readonly reason: string;
+  /** The wind group that caused a MARGINAL or UNSUITABLE cell, e.g. "TEMPO PROB30 VRB20G30KT"; '' when the cause is not a forecast group. Drawn large at the top. */
+  readonly trigger: string;
   readonly runways: readonly { name: string; roles: string; tailwind: string; crosswind: string; tailLimit: string; crossLimit: string; overTailwind: boolean; overCrosswind: boolean }[];
   readonly wind: string;
   readonly source: string;
@@ -349,6 +348,22 @@ function windText(wind: WindObservation | null): string {
   const gust = wind.gustKt === null ? '' : `, gusting ${kt1(wind.gustKt)} kt`;
   if (wind.kind === 'variable') return `Variable at ${kt1(wind.speedKt)} kt${gust}`;
   return `${dir3(wind.directionDegrees)} degrees at ${kt1(wind.speedKt)} kt${gust}`;
+}
+
+const WIND_GROUP = /\b(?:VRB|\d{3})\d{2}(?:G\d{2,3})?KT\b/;
+
+/** The forecast group behind the first MARGINAL or FAIL reason, when that reason came from a TEMPO, PROB or similar group (owner, 24-10-2026, OD-71). */
+function triggerText(cell: Cell): string {
+  if (cell.status !== 'MARGINAL' && cell.status !== 'UNSUITABLE') return '';
+  const severity = cell.status === 'UNSUITABLE' ? 'FAIL' : 'MARGINAL';
+  const r = cell.reasons.find((x) => x.severity === severity);
+  if (r === undefined || r.code !== 'OVERLAY') return '';
+  const group = r.figures.group;
+  const wind = typeof group === 'string' ? WIND_GROUP.exec(group)?.[0] : undefined;
+  if (wind === undefined) return '';
+  const prob = r.figures.probabilityPct;
+  const kind = r.figures.overlayKind;
+  return `${typeof kind === 'string' ? kind : 'Forecast group'}${typeof prob === 'number' ? ` PROB${prob}` : ''} ${wind}`;
 }
 
 function primaryReason(cell: Cell): string {
@@ -422,6 +437,7 @@ export function cellDetailModel(view: ViewData, modeIndex: number, slotIndex: nu
     className: cv.className,
     code: code === '' ? '' : `${code}: ${CAUSE_WORDS[code] ?? code}`,
     reason: primary,
+    trigger: triggerText(cell),
     runways,
     wind: windText(slot.weather.wind),
     source,

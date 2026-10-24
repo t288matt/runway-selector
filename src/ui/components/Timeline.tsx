@@ -21,9 +21,14 @@ function DetailBody({ d }: { d: CellDetailModel }) {
     <>
       <h3>
         {d.title} <span className={`chip chip-${d.statusWord.toLowerCase()}`}>{d.icon} {d.statusWord}</span>
-        {d.code === '' ? null : <span className="detail-code"> {d.code}</span>}
+        {d.code === '' || d.trigger !== '' ? null : <span className="detail-code"> {d.code}</span>}
       </h3>
-      {d.reason === '' ? null : <div>{d.reason}</div>}
+      {d.reason === '' ? null : (
+        <div className={`cause cause-${d.statusWord.toLowerCase()}`}>
+          {d.trigger === '' ? null : <div className="cause-trigger">{d.trigger}</div>}
+          <div>{d.reason}</div>
+        </div>
+      )}
       {d.runways.length === 0 ? null : (
         <table>
           <thead>

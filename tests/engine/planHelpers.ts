@@ -51,6 +51,8 @@ function normalise(files: JsonFiles, a: string, b: string, w: Weights, capacityA
   setSetting(files, 'unknownDemandChangePenalty', w.unknown);
   setSetting(files, 'marginalPenalty', w.marginal);
   setSetting(files, 'noModePenalty', w.noMode);
+  setSetting(files, 'minimumStayMinutes', 0);
+  setSetting(files, 'shortStayPenalty', 0);
   setSetting(files, 'preferenceDefaultPenalty', 5);
 }
 

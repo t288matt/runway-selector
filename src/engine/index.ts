@@ -45,7 +45,6 @@ export function evaluate(pack: AirportPack, input: EngineInput): EngineResult {
         slotIndex: i,
         slot,
         runwayState: conditions[i]?.state ?? 'DRY',
-        tafState: conditions[i]?.tafState ?? null,
         band: bands[i] ?? null,
         traffic: trafficByStart.get(slot.startMs) ?? null,
       }),

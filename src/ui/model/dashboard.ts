@@ -160,18 +160,18 @@ export function freshnessChips(view: ViewData, feed: FeedState, nowMs: number): 
 
   if (feed.error !== null) {
     const last = feed.fetchedAtMs === null ? 'no earlier data' : `last good data ${hhmmssZ(feed.fetchedAtMs)}`;
-    chips.push({ id: 'vatsim', label: 'VATSIM', detail: last, tone: 'bad', flag: 'Failed' });
+    chips.push({ id: 'vatsim', label: 'VATSIM traffic', detail: last, tone: 'bad', flag: 'Failed' });
   } else if (feed.fetchedAtMs === null) {
-    chips.push({ id: 'vatsim', label: 'VATSIM', detail: 'Loading', tone: 'unk', flag: null });
+    chips.push({ id: 'vatsim', label: 'VATSIM traffic', detail: 'Loading', tone: 'unk', flag: null });
   } else {
     const f = freshness(nowMs, feed.fetchedAtMs, s.vatsimStaleMinutes);
     const seconds = Math.max(0, Math.floor((nowMs - feed.fetchedAtMs) / 1000));
-    chips.push({ id: 'vatsim', label: 'VATSIM', detail: `${hhmmssZ(feed.fetchedAtMs)}, ${seconds < 120 ? `${seconds} s` : ageText(f.ageMinutes)} old`, tone: f.stale ? 'warn' : 'ok', flag: f.stale ? 'Stale' : null });
+    chips.push({ id: 'vatsim', label: 'VATSIM traffic', detail: `${hhmmssZ(feed.fetchedAtMs)}, ${seconds < 120 ? `${seconds} s` : ageText(f.ageMinutes)} old`, tone: f.stale ? 'warn' : 'ok', flag: f.stale ? 'Stale' : null });
   }
 
   // Runway state is not repeated here: it is one line below in Panel A, and every
   // timeline cell carries its own slot-by-slot runway-state detail on hover.
-  chips.push({ id: 'plan', label: 'Recalculates at', detail: `${hhmmZ(view.calcNowMs)}, next ${hhmmZ(nextPlanMs(view.calcNowMs))}`, tone: 'ok', flag: null });
+  chips.push({ id: 'plan', label: 'Recalculated at', detail: `${hhmmZ(view.calcNowMs)}, next ${hhmmZ(nextPlanMs(view.calcNowMs))}`, tone: 'ok', flag: null });
   return chips;
 }
 

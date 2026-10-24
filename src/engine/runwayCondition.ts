@@ -18,10 +18,11 @@
 //    treated uniformly with TAF-governed ones. The METAR's "recent" flag has
 //    meaning only in slot 0; for later slots the drying time after slot 0
 //    covers it.
-//  - tafView (the TAF's own view of a METAR-governed slot) is classified with
-//    the later-slot rules, even in slot 0, then combined with the drying
-//    state of the real chain: if the runway is held WET by drying it is WET
-//    whichever report is read. It never changes the chain itself.
+//  - A METAR-governed slot's own tafView (the TAF's own view of the same
+//    slot) plays no part in the runway state while the METAR governs (owner,
+//    24-10-2026): a current METAR is not second-guessed by the forecast it
+//    sits inside. tafView is still used, unrelated to this, to show TEMPO and
+//    PROB overlay events in the timeline even when the METAR governs.
 import type { AirportPack } from '../refdata/types';
 import type { SlotWeather, WeatherSlot } from './inputs';
 import type { RunwayState, RunwayStateCause } from './types';
@@ -29,8 +30,6 @@ import type { RunwayState, RunwayStateCause } from './types';
 export interface SlotRunwayCondition {
   readonly state: RunwayState;
   readonly cause: RunwayStateCause;
-  /** The state the TAF's view of the slot implies, or null when the slot has no tafView. */
-  readonly tafState: RunwayState | null;
 }
 
 interface Classified {
@@ -65,12 +64,7 @@ export function runwayConditions(pack: AirportPack, weather: readonly WeatherSlo
     const heldByDrying = own.state !== 'WET' && slot.startMs < lastWetEndMs + dryingMs;
     const final: Classified = heldByDrying ? { state: 'WET', cause: 'DRYING' } : own;
     if (own.state === 'WET') lastWetEndMs = slot.endMs;
-    let tafState: RunwayState | null = null;
-    if (slot.tafView !== null) {
-      const view = classifyForecast(slot.tafView, wetProbabilityPct);
-      tafState = heldByDrying ? 'WET' : view.state;
-    }
-    out.push({ state: final.state, cause: final.cause, tafState });
+    out.push({ state: final.state, cause: final.cause });
   });
   return out;
 }
