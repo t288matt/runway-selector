@@ -7,7 +7,7 @@ import { buildWeatherSlots, decodeMetar } from '../../src/weather';
 import { loadPackFrom } from '../helpers/packs';
 
 const pack = loadPackFrom({ name: 'YMML', dir: join(resolve(import.meta.dirname, '..', '..'), 'refdata', 'airports', 'YMML') });
-const MODE = '34A27AD';
+const MODE = '34A27AD-LAHSO';
 const nowMs = Date.UTC(2026, 0, 15, 2, 10);
 
 function cellFor(body: string, mode = MODE): Cell {
@@ -55,5 +55,38 @@ describe('YMML land-and-hold-short mode minima', () => {
   });
   it('another mode is not gated', () => {
     expect(cellFor('34008KT 9999 -RA BKN030 Q1015', '34AD').reasons.some((r) => r.code === 'MIN')).toBe(false);
+  });
+});
+
+describe('YMML non-LAHSO twin of the land-and-hold-short mode', () => {
+  const TWIN = '34A27AD';
+  it('sits directly below the LAHSO mode in the pack', () => {
+    expect(pack.modes.map((m) => m.id)).toEqual(['27AD34D', '16A27D', '09A16D', '34A27AD-LAHSO', TWIN, '09AD', '27AD', '16AD', '34AD']);
+  });
+  it('ranks below the LAHSO mode and above 27AD, 16AD and 34AD in the operating plan', () => {
+    const rows = pack.plan[0]!.rows;
+    const penalty = (id: string) => rows.find((r) => r.mode === id)!.penalty;
+    expect(penalty(MODE)).toBeLessThan(penalty(TWIN));
+    for (const id of ['27AD', '16AD', '34AD']) expect(penalty(TWIN)).toBeLessThan(penalty(id));
+  });
+  it('has the same runways and no minima', () => {
+    const m = pack.modes.find((x) => x.id === TWIN)!;
+    expect(m.minima).toBeNull();
+    expect(m.arrivals).toEqual(['34', '27']);
+    expect(m.departures).toEqual(['27']);
+  });
+  it('a low ceiling rules out the LAHSO mode but not the twin', () => {
+    const good = cellFor('34008KT 9999 BKN045 Q1015', TWIN);
+    const low = cellFor('34008KT 9999 BKN020 Q1015', TWIN);
+    expect(cellFor('34008KT 9999 BKN020 Q1015')).toMatchObject({ status: 'UNSUITABLE', cause: 'MIN' });
+    expect(good.status).toBe('SUITABLE');
+    expect(low.status).toBe(good.status);
+    expect(low.reasons.some((r) => r.code === 'MIN')).toBe(false);
+  });
+  it('rain rules out the LAHSO mode but not the twin', () => {
+    expect(cellFor('34008KT 9999 -RA BKN045 Q1015')).toMatchObject({ status: 'UNSUITABLE', cause: 'MIN' });
+    const wet = cellFor('34008KT 9999 -RA BKN045 Q1015', TWIN);
+    expect(wet.status).toBe(cellFor('34008KT 9999 BKN045 Q1015', TWIN).status);
+    expect(wet.reasons.some((r) => r.code === 'MIN')).toBe(false);
   });
 });
