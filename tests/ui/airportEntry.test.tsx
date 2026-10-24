@@ -40,7 +40,9 @@ describe('the airport pull-down on screen', () => {
     const loading = html({ icao: 'TEST', airports: ['YSSY', 'TEST'], loading: true });
     expect(loading).toMatch(/<option value="TEST" selected/);
     expect(loading).toMatch(/<select id="airport-icao"[^>]* disabled/);
-    expect(loading).toContain('Loading TEST');
+    // Out of the flow, under the pull-down (the airport-note position), so Refresh and Settings do not move; an old refusal is hidden meanwhile.
+    expect(loading).toMatch(/class="tag airport-note airport-loading"[^>]*>Loading TEST/);
+    expect(html({ icao: 'TEST', airports: ['YSSY', 'TEST'], loading: true, error: 'No data pack for EGLL yet.' })).not.toContain('EGLL');
     const idle = html({ airports: ['YSSY', 'TEST'] });
     expect(idle).not.toMatch(/<select id="airport-icao"[^>]* disabled/);
     expect(idle).not.toContain('Loading');
