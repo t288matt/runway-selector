@@ -214,8 +214,9 @@ export function dataNotices(view: ViewData, feed: FeedState, nowMs: number): Not
 export function levelWord(level: TrafficLevel | null): string {
   return level === null ? 'UNKNOWN' : level === 'light' ? 'LOW' : level === 'medium' ? 'MEDIUM' : 'HIGH';
 }
-export function levelLetter(level: TrafficLevel | null): string {
-  return level === null ? '?' : level === 'light' ? 'L' : level === 'medium' ? 'M' : 'H';
+/** The short word shown in the timeline's narrow traffic column, where levelWord's MEDIUM does not fit as well. */
+export function levelShortWord(level: TrafficLevel | null): string {
+  return level === null ? '?' : level === 'light' ? 'LOW' : level === 'medium' ? 'MED' : 'HIGH';
 }
 export function levelTone(level: TrafficLevel | null): Tone {
   return level === null ? 'unk' : level === 'light' ? 'ok' : 'warn';
