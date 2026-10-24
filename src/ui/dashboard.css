@@ -362,6 +362,8 @@ select {
 .banner-ok {
   background: #10261a;
   border-color: var(--ok);
+  width: fit-content;
+  justify-self: start;
 }
 .banner-ok b {
   color: var(--ok-text);
