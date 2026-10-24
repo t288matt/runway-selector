@@ -4,11 +4,11 @@ A decision-support tool for VATSIM controllers. It recommends which runway mode 
 
 **Flight simulation only.** Never use it for real-world navigation, flight planning or operations. Rules, limits and capacities are simulation assumptions unless the airport's data says otherwise.
 
-The first airport included is Sydney (YSSY). The tool works for any airport that has a data pack (see Airports).
+Six Australian airports are included: Sydney (YSSY), Melbourne (YMML), Brisbane (YBBN), Adelaide (YPAD), Perth (YPPH) and Western Sydney (YSWS). The tool works for any airport that has a data pack (see Airports); an airport selector appears whenever more than one is configured.
 
 ## What it does
 
-- Takes the latest **METAR** and **TAF**, which you paste in.
+- Fetches the latest **METAR** and **TAF** automatically for the airport's weather station, with a box to paste your own over either report when you want to override it.
 - Reads **live VATSIM traffic** and estimates arrivals and departures for each half-hour.
 - Checks every standard mode for the airport against the wind, the runway state, the traffic and the airport's operating plan, for every half-hour of the forecast.
 - Recommends the mode to use now, and a sequence of modes across the forecast, with the fewest and least disruptive changes.
@@ -19,16 +19,17 @@ It advises only. It never changes anything, and the final decision is yours.
 
 ## Using it
 
-1. **Paste the METAR** into the METAR box and press Apply. Paste the **TAF** into the TAF box and press Apply. Each box shows the age of the report, taken from the report's own time group. A report that cannot be read is refused with a message saying what is wrong, and the previous report stays in use. The boxes start empty each time you open the page.
-2. **Choose the current mode** from the pull-down menu in Panel A, if you want the advice to take it into account. The list has the airport's enabled modes and "Not set". The tool remembers your choice and shows when you set it. If it is older than two hours it turns amber, so a forgotten setting is visible.
-3. **Read the recommendation** in Panel A, then check the optimal mode timeline below it.
-4. Choose the **window** above the timeline: the full TAF (the default), or 4 or 6 hours.
+1. **Open the airport** you want from the selector in the header, if more than one is configured. Each airport keeps its own current mode, window and audit trail.
+2. The **METAR and TAF are fetched automatically** and kept up to date. To use your own instead, press "Use my own weather", paste your report into the box and press Apply; that pauses automatic updates for that report until you press "Resume automatic". Each report shows its age, taken from its own time group. A report that cannot be read is refused with a message saying what is wrong, and the previous report stays in use.
+3. **Choose the current mode** from the pull-down menu in Panel A, if you want the advice to take it into account. The list has the airport's enabled modes and "Not set". The tool remembers your choice and shows when you set it. If it is older than a set limit it turns amber with a "Still current" button, so a forgotten setting is visible.
+4. **Read the recommendation** in Panel A, then check the optimal mode timeline below it.
+5. Choose the **window** in Panel B's header: the full TAF (the default), or 4 or 6 hours.
 
-If you enter only a METAR, the tool judges the first hour from it and marks later slots unknown. If you enter only a TAF, the TAF is used from the first slot. With neither, it shows no recommendation and says so.
+If only a METAR is available, the tool judges the first hour from it and marks later slots unknown. If only a TAF is available, the TAF is used from the first slot. With neither, it shows no recommendation and says so.
 
 ## The screen
 
-**Under the header:** the age of the METAR, the TAF and the traffic data, the runway state, and the pasted METAR and TAF text.
+**Under the header:** the age of the METAR, the TAF and the traffic data, the runway state, and the raw METAR and TAF text.
 
 **Panel A: recommendation.**
 - The recommended mode for now, with its arrival and departure runways.
@@ -38,7 +39,7 @@ If you enter only a METAR, the tool judges the first hour from it and marks late
 - A red banner if your current mode is unsuitable now, and an amber banner, EARLY MODE CHANGE RECOMMENDED, when changing earlier avoids a forced change in busier traffic.
 - If no mode is suitable, it says so and lists, for every mode, what blocks it. It never names a "least bad" mode.
 
-**Panel B: optimal mode timeline.** Rows are modes and columns are half-hour slots. The recommended path is outlined, and a dashed line marks the planned change. Cell colours:
+**Panel B: optimal mode timeline.** Its header has the Recommended, Next change and Next wet runway summary tiles, and the window selector (full TAF, 4 hours or 6 hours). Rows are modes and columns are half-hour slots. The recommended path is outlined, and a dashed line marks the planned change. Cell colours:
 - Green: suitable.
 - Amber with stripes: marginal, or depends on an uncertain input (a white corner marks those).
 - Red with cross-hatching: unsuitable, with the cause (for example TW tailwind, XW crosswind, CAP capacity, PLAN operating plan).
@@ -52,7 +53,7 @@ Hover or focus a cell to see the time (UTC and local), the wind and the tailwind
 
 **Panel F: runway diagram.** The runways, the wind, and the runways the recommended mode uses.
 
-**Settings drawer.** Shows the current mode and the limits and values in use, with a short explanation of each. It has a Reload data button, and the audit trail of changes you have made.
+**Settings drawer.** Read only: every limit, threshold and setting in use, with a short explanation of each, plus the enabled modes, the operating plan's priority order, the time zone, a Reload data button, and the audit trail of changes you have made. The current mode and window are changed in Panel A and Panel B, not here.
 
 ## How a mode is judged
 
@@ -78,16 +79,16 @@ Traffic is read from the public VATSIM data feed every five minutes while the pa
 
 ## Airports
 
-Each airport is a data pack: a folder of plain JSON files describing the airport, its runways, its modes, its operating plan and its settings. The Sydney pack is in `refdata/airports/YSSY`. To add an airport, add a folder in the same shape and list it in `refdata/app.json`. When more than one airport is listed, an airport selector appears. Nothing in the program is specific to any airport.
+Each airport is a data pack: a folder of plain JSON files describing the airport, its runways, its modes, its operating plan and its settings. The packs are in `refdata/airports/`. To add an airport, add a folder in the same shape and list it in `refdata/app.json`. When more than one airport is listed, an airport selector appears. Nothing in the program is specific to any airport.
 
-The values in a pack, including every limit and threshold, are edited in its files and take effect after Reload data. Each value carries a short description of what it means. A pack that is incomplete or inconsistent is refused with a message naming the file and field. The Sydney pack is marked provisional; its values are simulation assumptions.
+The values in a pack, including every limit and threshold, are edited in its files and take effect after Reload data. Each value carries a short description of what it means. A pack that is incomplete or inconsistent is refused with a message naming the file and field. Every pack's own status (shown in its description) states whether its figures are confirmed or still provisional estimates.
 
 ## Data and privacy
 
-- Your pasted METAR and TAF stay in the page. They are not stored or sent anywhere.
+- METAR and TAF are fetched directly from your browser (VATSIM for METAR, then a couple of small weather relays for TAF) and are not stored between visits; a report you paste over the fetched one stays in the page only.
 - The only things stored in your browser are your current mode, the audit trail of changes you have made, and the settings you have chosen, all kept per airport.
 - The audit trail is a local record, not tamper-proof. You can export it.
-- The page reads the VATSIM feed directly from your browser. It sends nothing of yours to any other service.
+- The page reads the VATSIM traffic feed directly from your browser. It sends nothing of yours to any other service.
 
 ## Running it
 
@@ -112,4 +113,4 @@ The built files go in `dist/`. Serve them over HTTP; opening the page by double-
 - Traffic estimates are rough, particularly for aircraft that have not yet taken off.
 - Counting every aircraft on the ground as departing in the next slot can overstate demand when many are at gates, and a capacity limit can then make a mode unsuitable until aircraft leave.
 - With no current mode set, the recommendation can change between recalculations when the weather changes slightly.
-- Weather is entered by hand. Automatic fetching of weather is not part of the product yet.
+- Weather fetching depends on third-party relays; a failure keeps the previous report and says so, and pasting your own report always works as a fallback.
