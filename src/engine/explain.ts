@@ -140,8 +140,7 @@ function lowerFirst(text: string): string {
   return first.toLowerCase() + text.slice(1);
 }
 
-function nextChangeLine(c: Changeover | undefined, nowMs: number): string {
-  if (c === undefined) return 'No mode change is planned in the forecast window.';
+function nextChangeLine(c: Changeover, nowMs: number): string {
   const when = formatTime(c.change.startMs, nowMs);
   const traffic = trafficWords(c.trafficLevel);
   const prep = c.preparationDue ? 'Preparation should start now.' : `Preparation should start at ${formatTime(c.preparationStartMs, nowMs)}.`;
@@ -305,7 +304,8 @@ export function explain(pack: AirportPack, input: EngineInput, result: EngineRes
   if (nowChange !== undefined) lines.push(changeNowLine(nowChange, nowMs));
   const upcoming = nowChange === undefined ? changeovers[0] : changeovers[1];
   const gaps = gapLines(plan, nowMs);
-  if (upcoming !== undefined || gaps.length === 0) lines.push(nextChangeLine(upcoming, nowMs));
+  // No line when no change is planned: the Next change row in Panel A already says so (OD-41).
+  if (upcoming !== undefined) lines.push(nextChangeLine(upcoming, nowMs));
   lines.push(...gaps);
   const notTop = whyNotTop(pack, result, plan, modeId, nowMs);
   if (notTop !== null) lines.push(notTop);
