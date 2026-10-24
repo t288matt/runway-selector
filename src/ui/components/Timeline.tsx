@@ -51,7 +51,7 @@ function DetailBody({ d }: { d: CellDetailModel }) {
       <div>Runway state: {d.runwayAssumption}.</div>
       <div>Traffic: {d.traffic}.</div>
       <div>Operating plan: {d.operatingPlan}.</div>
-      {d.survival === '' ? null : <div>Survival: {d.survival}.</div>}
+      {d.survival === '' ? null : <div>Outlook: {d.survival}.</div>}
       {d.notes.map((n) => (
         <div key={n}>{n}</div>
       ))}
