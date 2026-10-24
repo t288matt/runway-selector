@@ -6,7 +6,7 @@
 import type { AirportPack, PlanBand, SettingName } from '../../refdata';
 import { formatClock } from '../../refdata';
 import type { AuditEntry, AuditValue, CurrentModeRecord } from '../../store';
-import { ddmmyyyy, hhmm, kt1, utcAndLocal } from '../format';
+import { ddmmyyyy, hhmm, kt1, minimaText, utcAndLocal } from '../format';
 import { isCurrentModeStale } from '../../store';
 import { levelWord, WINDOW_OPTIONS } from './dashboard';
 
@@ -113,6 +113,7 @@ export function drawerModel(pack: AirportPack, nowMs: number): DrawerModel {
       row(pack, 'tailwindWetKt', 'Tailwind limit, wet runway', `${kt1(s.tailwindWetKt)} kt`),
       row(pack, 'defaultCrosswindKt', 'Default crosswind limit', `${kt1(s.defaultCrosswindKt)} kt`),
       ...enabled.map((m): DrawerRow => ({ label: `Crosswind limit, Mode ${m.id}`, value: `${kt1(m.maxCrosswindKt)} kt`, help: null })),
+      ...enabled.flatMap((m): DrawerRow[] => (m.minima === null ? [] : [{ label: `Minima, Mode ${m.id}`, value: minimaText(m.minima), help: null }])),
       row(pack, 'calmWindKt', 'Calm wind threshold', `${kt1(s.calmWindKt)} kt`),
       row(pack, 'limitToleranceKt', 'Limit tolerance', `${s.limitToleranceKt} kt`),
       row(pack, 'nearLimitMarginKt', 'Near-limit margin', `${kt1(s.nearLimitMarginKt)} kt`),

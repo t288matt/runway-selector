@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "description": "Preferred runway modes, owner-supplied 24-10-2026, in priority order (order in this file is the tie-break). 27AD34D's departures are split by SID in real operations (34 via MNG, NONIX and DOSEL; 27 otherwise); the pack has no SID-conditional runway, so both are listed. 34A27AD is LAHSO: 34 active, 27 passive. Its minima (ceiling, visibility, dry surface, no windshear) are not yet enforced — see the enhancement issue. The four single-runway modes are the lowest-priority fallback: 27AD, 16AD and 34AD equal, 09AD the single lowest of every mode. No crosswind limit or capacity has been supplied for any mode; they fall back to the pack default and have no capacity limit.",
+  "description": "Preferred runway modes, owner-supplied 24-10-2026, in priority order (order in this file is the tie-break). 27AD34D's departures are split by SID in real operations (34 via MNG, NONIX and DOSEL; 27 otherwise); the pack has no SID-conditional runway, so both are listed. 34A27AD is LAHSO: 34 active, 27 passive. Its weather minima (ceiling 4,500 ft or higher, visibility 8 km or more, dry runway) are enforced by the engine; windshear is not, as it cannot be derived from a METAR or TAF. The four single-runway modes are the lowest-priority fallback: 27AD, 16AD and 34AD equal, 09AD the single lowest of every mode. No crosswind limit or capacity has been supplied for any mode; they fall back to the pack default and have no capacity limit.",
   "status": "verified",
   "modes": [
     { "id": "27AD34D", "description": "Arrivals 27; departures 34 (via MNG, NONIX, DOSEL) and 27 (all other departures)", "enabled": true, "arrivals": ["27"], "departures": ["34", "27"] },
     { "id": "16A27D",  "description": "Arrivals 16, departures 27", "enabled": true, "arrivals": ["16"], "departures": ["27"] },
     { "id": "09A16D",  "description": "Arrivals 09, departures 16", "enabled": true, "arrivals": ["09"], "departures": ["16"] },
-    { "id": "34A27AD", "description": "LAHSO: arrivals 34 and 27, departures 27. Runway 34 active, 27 passive. Minima not enforced by the engine (see enhancement issue).", "enabled": true, "arrivals": ["34", "27"], "departures": ["27"] },
+    { "id": "34A27AD", "description": "LAHSO: arrivals 34 and 27, departures 27. Runway 34 active, 27 passive.", "enabled": true, "arrivals": ["34", "27"], "departures": ["27"], "minima": { "ceilingFt": 4500, "visibilityMetres": 8000, "requiresDrySurface": true } },
     { "id": "09AD", "description": "Arrivals and departures 09", "enabled": true, "arrivals": ["09"], "departures": ["09"] },
     { "id": "27AD", "description": "Arrivals and departures 27", "enabled": true, "arrivals": ["27"], "departures": ["27"] },
     { "id": "16AD", "description": "Arrivals and departures 16", "enabled": true, "arrivals": ["16"], "departures": ["16"] },

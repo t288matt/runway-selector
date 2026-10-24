@@ -168,6 +168,7 @@ export function parsePack(raw: Readonly<Record<string, string>>): AirportPack {
       departures: [...m.departures],
       maxCrosswindKt: m.maxCrosswindKt ?? defaultCrosswindKt,
       capacity: m.capacity ?? null,
+      minima: m.minima === undefined ? null : { ceilingFt: m.minima.ceilingFt ?? null, visibilityMetres: m.minima.visibilityMetres ?? null, requiresDrySurface: m.minima.requiresDrySurface ?? false },
       ...prov(m),
     })),
     plan: operatingPlan.bands.map((b) => ({
