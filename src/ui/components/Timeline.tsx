@@ -159,7 +159,7 @@ export function Timeline({ view, model, displayNowMs, onWindowChange }: Timeline
   return (
     <section className="panel B" aria-label="Panel B: optimal mode timeline">
       <h2>
-        <i>B</i>Optimal mode timeline <span className="range">{model.rangeText}</span>
+        Optimal mode timeline <span className="range">{model.rangeText}</span>
         <span className="sp" />
         {hiddenCount === 0 && !showHidden ? null : (
           <button type="button" className="btn small-btn" aria-pressed={showHidden} onClick={() => {

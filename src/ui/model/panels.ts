@@ -259,7 +259,9 @@ export function panelDModel(view: ViewData): PanelDModel {
       label,
       arrivals: arrivals === null ? 'Unknown' : String(arrivals),
       departures: departures === null ? 'not est.' : String(departures),
-      movements: arrivals === null ? 'Unknown' : departures === null ? `${arrivals * 2} (arrivals only)` : String((arrivals + departures) * 2),
+      // When departures are not estimated, the raw arrivals count for this slot is shown as is, not doubled to
+      // an hourly rate (OD-41, fixing a bug that kept the old "lower bound" doubling after the "≥" was dropped).
+      movements: arrivals === null ? 'Unknown' : departures === null ? `${arrivals} (arrivals only)` : String((arrivals + departures) * 2),
       level: levels[i] ?? null,
       known: arrivals !== null,
     });

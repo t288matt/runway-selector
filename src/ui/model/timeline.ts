@@ -361,13 +361,24 @@ export interface Tile {
   readonly value: string;
 }
 
-/** The summary tiles above the grid: the recommended mode and the next change, with the new mode and time (OD-49, OD-50). */
+/** The time the runway next becomes wet or possibly wet, for the Next wet runway tile (OD-59). */
+function nextWetRunwayText(view: ViewData): string {
+  const slots = view.result.evaluation.slots;
+  const first = slots[0];
+  if (first === undefined || view.weather.slots[0]?.governedBy === 'NONE') return 'Unknown';
+  if (first.runwayState !== 'DRY') return 'Now';
+  const next = slots.findIndex((s, i) => i > 0 && s.runwayState !== 'DRY');
+  return next < 0 ? 'None in window' : hhmmZRel(slots[next]?.startMs ?? 0, view.calcNowMs);
+}
+
+/** The summary tiles above the grid: the recommended mode, the next change, and the next wet runway (OD-49, OD-50, OD-59). */
 export function summaryTiles(view: ViewData): Tile[] {
   const change = view.result.changeovers[0];
   const next = view.result.plan.recommendedModeId === null ? '-' : change === undefined ? 'No change planned' : `${change.change.toModeId} at ${hhmmZRel(change.change.startMs, view.calcNowMs)}`;
   return [
     { label: 'Recommended', value: view.result.plan.recommendedModeId ?? 'None' },
     { label: 'Next change', value: next },
+    { label: 'Next wet runway', value: nextWetRunwayText(view) },
   ];
 }
 
