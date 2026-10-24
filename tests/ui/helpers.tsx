@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { plan, type EngineInput, type PlanResult } from '../../src/engine';
 import type { AirportPack } from '../../src/refdata';
 import { Dashboard } from '../../src/ui/components/Dashboard';
+import { NO_AUTO_WEATHER } from '../../src/ui/controller';
 import type { SettingsBridge } from '../../src/ui/components/SettingsDrawer';
 import { EMPTY_FEED, type FeedState, type ViewData } from '../../src/ui/model/dashboard';
 import { BASE, specsFor, trafficFor, type Rig, type Wx } from '../engine/planHelpers';
@@ -83,6 +84,8 @@ export function renderDashboard(view: ViewData, feed: FeedState = EMPTY_FEED, dr
       onCurrentMode={() => undefined}
       onApplyMetar={() => NOOP_OUTCOME}
       onApplyTaf={() => NOOP_OUTCOME}
+      autoWeather={NO_AUTO_WEATHER}
+      onResumeAutomatic={() => undefined}
       settings={bridge}
     />,
   );

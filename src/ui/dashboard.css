@@ -950,3 +950,31 @@ p.small {
     transition: none !important;
   }
 }
+.airport-entry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.airport-entry label {
+  color: var(--accent-text);
+  font-weight: 600;
+}
+.airport-entry input {
+  width: 9ch;
+  background: var(--panel2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font: 13px Consolas, Menlo, monospace;
+  text-transform: uppercase;
+}
+.airport-note {
+  margin: 0;
+  padding: 2px 8px;
+}
+.credit {
+  margin-top: 6px;
+  color: var(--muted);
+}

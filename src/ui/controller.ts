@@ -10,6 +10,7 @@ import { reloadPack, type AirportPack, type FetchLike } from '../refdata';
 import { clearAudit, confirmCurrentMode, exportAudit, loadAudit, loadCurrentMode, loadWindowChoice, recordCurrentMode, recordForecastWindow, type AuditEntry, type AuditExport, type CurrentModeRecord, type Store } from '../store';
 import { fetchFeed } from '../traffic/fetchFeed';
 import type { DecodedMetar, DecodedTaf } from '../weather';
+import { fetchMetarText, fetchTafText, type WeatherFetchResult } from '../weather/fetchWeather';
 import { cacheBustToken, type Clock } from './clock';
 import type { ApplyOutcome } from './components/WeatherEntry';
 import { applyMetarText, applyTafText } from './model/apply';
@@ -39,6 +40,30 @@ export interface ReloadState {
   readonly message: string | null;
 }
 
+/** The two reports the page can fetch by itself (OD-37). */
+export type WeatherKind = 'metar' | 'taf';
+
+/**
+ * Where one report came from and how the last automatic fetch went (OD-37).
+ * `paused` is true after the user applied pasted text: automatic updates for
+ * that report stop until the user resumes them, so a deliberate override is
+ * never silently replaced.
+ */
+export interface AutoReportState {
+  readonly source: 'automatic' | 'pasted' | null;
+  readonly paused: boolean;
+  /** Why the last automatic fetch failed or was refused, or null. The report in use is unchanged. */
+  readonly error: string | null;
+  /** Things the decoder noticed in the last fetched report. */
+  readonly warnings: readonly string[];
+  /** The last accepted fetched text, for the box to show; `fillSeq` changes each time it is replaced. */
+  readonly fillText: string | null;
+  readonly fillSeq: number;
+}
+
+export const NO_AUTO_REPORT: AutoReportState = { source: null, paused: false, error: null, warnings: [], fillText: null, fillSeq: 0 };
+export const NO_AUTO_WEATHER: Readonly<Record<WeatherKind, AutoReportState>> = { metar: NO_AUTO_REPORT, taf: NO_AUTO_REPORT };
+
 /** Tick for ages and the now marker, and the check for the 30-minute boundary. */
 export const TICK_MS = 60_000;
 
@@ -53,6 +78,7 @@ export interface ControllerState {
   /** Messages about stored values that were cleared or discarded; each is shown until dismissed. */
   readonly notices: readonly string[];
   readonly reload: ReloadState;
+  readonly autoWeather: Readonly<Record<WeatherKind, AutoReportState>>;
 }
 
 export interface Controller {
@@ -77,6 +103,8 @@ export interface Controller {
   readonly dismissNotice: (index: number) => void;
   readonly applyMetar: (text: string) => ApplyOutcome;
   readonly applyTaf: (text: string) => ApplyOutcome;
+  /** Pasted text paused automatic updates for this report: start them again and fetch now. */
+  readonly resumeAutomatic: (kind: WeatherKind) => void;
 }
 
 export function createController(deps: ControllerDeps): Controller {
@@ -89,7 +117,10 @@ export function createController(deps: ControllerDeps): Controller {
   let running = false;
   let generation = 0;
   let pollInFlight: Promise<void> | null = null;
+  let weatherInFlight: Promise<void> | null = null;
+  let auto: Record<WeatherKind, AutoReportState> = { ...NO_AUTO_WEATHER };
   let pollTimer: unknown = null;
+  let weatherTimer: unknown = null;
   let tickTimer: unknown = null;
   let notices: string[] = [];
   let reload: ReloadState = { status: 'idle', message: null };
@@ -113,7 +144,7 @@ export function createController(deps: ControllerDeps): Controller {
   const currentModeId = (): string | null => record?.modeId ?? null;
 
   const first = deps.now();
-  const build = (view: ViewData, displayNowMs: number): ControllerState => ({ view, feed, displayNowMs, currentModeRecord: record, audit, notices, reload });
+  const build = (view: ViewData, displayNowMs: number): ControllerState => ({ view, feed, displayNowMs, currentModeRecord: record, audit, notices, reload, autoWeather: auto });
   let state: ControllerState = build(calculate({ pack, nowMs: first, metar, taf, windowChoice, currentMode: currentModeId(), feed }), first);
 
   const publish = (next: ControllerState): void => {
@@ -160,6 +191,56 @@ export function createController(deps: ControllerDeps): Controller {
     pollInFlight = runPoll();
   };
 
+  const setAuto = (kind: WeatherKind, change: Partial<AutoReportState>): void => {
+    auto = { ...auto, [kind]: { ...auto[kind], ...change } };
+  };
+
+  /**
+   * One automatic fetch of one report. The text goes through the same checks as
+   * pasted text (applyMetarText, applyTafText). A failure or a refusal keeps the
+   * report in use and records why. Returns true when the report in use changed.
+   */
+  const fetchOne = async (kind: WeatherKind): Promise<boolean> => {
+    const station = pack.airport.weatherStation;
+    const fetched: WeatherFetchResult = await (kind === 'metar' ? fetchMetarText : fetchTafText)(station, { fetch: deps.fetch });
+    // Stopped (the airport was switched), the station changed, or the user pasted while this was in flight: drop it.
+    if (!running || station !== pack.airport.weatherStation || auto[kind].paused) return false;
+    const label = kind === 'metar' ? 'METAR' : 'TAF';
+    if (!fetched.ok) {
+      setAuto(kind, { error: fetched.message });
+      return false;
+    }
+    const now = deps.now();
+    const applied = kind === 'metar' ? applyMetarText(fetched.text, pack, now) : applyTafText(fetched.text, pack, now);
+    if (applied.report === null) {
+      setAuto(kind, { error: `The fetched ${label} was refused. ${applied.outcome.message ?? ''}`.trim() });
+      return false;
+    }
+    const unchanged = (kind === 'metar' ? metar?.raw : taf?.raw) === applied.report.raw && auto[kind].source === 'automatic';
+    if (kind === 'metar') metar = applied.report as DecodedMetar;
+    else taf = applied.report as DecodedTaf;
+    setAuto(kind, { source: 'automatic', error: null, warnings: applied.outcome.warnings, fillText: fetched.text, fillSeq: unchanged ? auto[kind].fillSeq : auto[kind].fillSeq + 1 });
+    return !unchanged;
+  };
+
+  const runWeatherPoll = async (): Promise<void> => {
+    try {
+      const kinds = (['metar', 'taf'] as const).filter((k) => !auto[k].paused);
+      const changed = await Promise.all(kinds.map(fetchOne));
+      if (!running) return;
+      // A new METAR or TAF recalculates the plan (UP-1); an unchanged one, or a failure, only updates what is shown about the fetch.
+      if (changed.some(Boolean)) recalculate(deps.now());
+      else republish();
+    } finally {
+      weatherInFlight = null;
+    }
+  };
+
+  const pollWeather = (): void => {
+    if (weatherInFlight !== null) return;
+    weatherInFlight = runWeatherPoll();
+  };
+
   const tick = (): void => {
     const now = deps.now();
     if (needsRecalculation(state.view.calcNowMs, now)) recalculate(now);
@@ -168,12 +249,15 @@ export function createController(deps: ControllerDeps): Controller {
 
   const startTimers = (): void => {
     pollTimer = deps.timers.setInterval(poll, pack.settings.vatsimPollSeconds * 1000);
+    weatherTimer = deps.timers.setInterval(pollWeather, pack.settings.weatherPollMinutes * 60_000);
     tickTimer = deps.timers.setInterval(tick, TICK_MS);
   };
   const stopTimers = (): void => {
     if (pollTimer !== null) deps.timers.clearInterval(pollTimer);
+    if (weatherTimer !== null) deps.timers.clearInterval(weatherTimer);
     if (tickTimer !== null) deps.timers.clearInterval(tickTimer);
     pollTimer = null;
+    weatherTimer = null;
     tickTimer = null;
   };
 
@@ -197,7 +281,7 @@ export function createController(deps: ControllerDeps): Controller {
       setReload({ status: 'unchanged', message: 'The airport data was re-read and has not changed.' });
       return;
     }
-    const pollChanged = result.pack.settings.vatsimPollSeconds !== pack.settings.vatsimPollSeconds;
+    const pollChanged = result.pack.settings.vatsimPollSeconds !== pack.settings.vatsimPollSeconds || result.pack.settings.weatherPollMinutes !== pack.settings.weatherPollMinutes;
     pack = result.pack;
     // A stored current mode that the new pack no longer enables is cleared, with a message (DESIGN section 4c).
     const reread = loadCurrentMode(store, pack);
@@ -224,6 +308,7 @@ export function createController(deps: ControllerDeps): Controller {
       if (running) return;
       running = true;
       poll();
+      pollWeather();
       startTimers();
     },
     stop: () => {
@@ -233,10 +318,12 @@ export function createController(deps: ControllerDeps): Controller {
     },
     settled: async () => {
       await pollInFlight;
+      await weatherInFlight;
     },
     refresh: () => {
       recalculate(deps.now());
       poll();
+      pollWeather();
     },
     setWindowChoice: (choice) => {
       const now = deps.now();
@@ -277,6 +364,7 @@ export function createController(deps: ControllerDeps): Controller {
       const applied = applyMetarText(text, pack, now);
       if (applied.report !== null) {
         metar = applied.report;
+        setAuto('metar', { source: 'pasted', paused: true, error: null, warnings: [] });
         recalculate(now);
       }
       return applied.outcome;
@@ -286,9 +374,15 @@ export function createController(deps: ControllerDeps): Controller {
       const applied = applyTafText(text, pack, now);
       if (applied.report !== null) {
         taf = applied.report;
+        setAuto('taf', { source: 'pasted', paused: true, error: null, warnings: [] });
         recalculate(now);
       }
       return applied.outcome;
+    },
+    resumeAutomatic: (kind) => {
+      setAuto(kind, { paused: false });
+      republish();
+      pollWeather();
     },
   };
 }

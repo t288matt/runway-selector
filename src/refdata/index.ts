@@ -1,4 +1,4 @@
-export { BOUNDS, SUPPORTED_SCHEMA_VERSIONS, SETTING_NAMES } from './schema';
+export { AIRPORT_ID, BOUNDS, SUPPORTED_SCHEMA_VERSIONS, SETTING_NAMES } from './schema';
 export type { Settings, SettingName, AppFile } from './schema';
 export { parsePack, parseAppConfig, deepFreeze, PACK_FILE_NAMES } from './parsePack';
 export type { RawPackText, PackFileName } from './parsePack';

@@ -1,6 +1,7 @@
 // Header strip, the fixed notice, freshness chips and data notices (UI_DESIGN
 // section 4). Every string is a text node (SEC-2).
-import type { AirportPack } from '../../refdata';
+import { useState, type FormEvent } from 'react';
+import { AIRPORT_ID, type AirportPack } from '../../refdata';
 import type { Chip, Notice } from '../model/dashboard';
 
 /**
@@ -31,12 +32,72 @@ export function NoticeBar({ pack }: { pack: AirportPack | null }) {
   );
 }
 
-export function Header({ pack, liveTag, onRefresh, onSettings, busy }: { pack: AirportPack | null; liveTag: string; onRefresh: () => void; onSettings: () => void; busy: boolean }) {
+export interface AirportEntryProps {
+  readonly icao: string;
+  /** Airport ids with a reviewed data pack (app.json), offered as suggestions only; any code can be typed. */
+  readonly airports: readonly string[];
+  /** Why the last switch was refused, or null. */
+  readonly error: string | null;
+  readonly onSwitch: (icao: string) => void;
+}
+
+/** What is wrong with a typed airport code, or null when it is well formed (OD-37). */
+export function icaoProblem(typed: string): string | null {
+  return AIRPORT_ID.test(typed) ? null : 'An airport code is 3 to 8 capital letters or digits.';
+}
+
+/**
+ * The always-visible airport box (OD-37). Typing a code only switches between airports that already have a
+ * reviewed data pack; the check against the list, and the message when there is none, is the caller's.
+ */
+export function AirportEntry({ icao, airports, error, onSwitch }: AirportEntryProps) {
+  const [typed, setTyped] = useState(icao);
+  const [problem, setProblem] = useState<string | null>(null);
+  const submit = (e: FormEvent): void => {
+    e.preventDefault();
+    const code = typed.trim().toUpperCase();
+    setTyped(code);
+    const bad = icaoProblem(code);
+    setProblem(bad);
+    if (bad === null) onSwitch(code);
+  };
+  const shown = problem ?? error;
+  return (
+    <form className="airport-entry" onSubmit={submit}>
+      <label htmlFor="airport-icao">Airport</label>
+      <input
+        id="airport-icao"
+        type="text"
+        value={typed}
+        maxLength={8}
+        spellCheck={false}
+        autoComplete="off"
+        list="airport-packs"
+        aria-describedby={shown === null ? undefined : 'airport-icao-note'}
+        aria-invalid={shown !== null}
+        onChange={(e) => {
+          setTyped(e.target.value.toUpperCase());
+          setProblem(null);
+        }}
+      />
+      <datalist id="airport-packs">
+        {airports.map((id) => (
+          <option key={id} value={id} />
+        ))}
+      </datalist>
+      <button type="submit" className="btn">Switch</button>
+      {shown === null ? null : <span className="strip strip-bad airport-note" id="airport-icao-note" role="alert">{shown}</span>}
+    </form>
+  );
+}
+
+export function Header({ pack, liveTag, onRefresh, onSettings, busy, airport }: { pack: AirportPack | null; liveTag: string; onRefresh: () => void; onSettings: () => void; busy: boolean; airport?: AirportEntryProps }) {
   return (
     <header className="top">
       <h1>{appTitle(pack)}</h1>
       <span className="tag">{liveTag}</span>
       <span className="sp" />
+      {airport === undefined ? null : <AirportEntry key={airport.icao} {...airport} />}
       {busy ? <span className="tag" role="status">Recalculating</span> : null}
       <span className="tag">Times UTC</span>
       <button type="button" className="btn" onClick={onRefresh}>Refresh</button>
