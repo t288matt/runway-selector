@@ -35,7 +35,7 @@ Rules that follow from this:
 4. Provisional and illustrative values are always labelled where they appear, never only in a footnote.
 
 ## 3. Screen layout
-The order is fixed at every width: header, notice, freshness chips, A, B, weather entry, then D and F (OD-38, OD-40; the weather entry used to sit above A). B is always directly below A. Panel letters are not reused, so the panels are A, B, C, D and F.
+The order is fixed at every width: header, freshness chips, A, B, weather entry, D and F, then the flight-simulation notice at the bottom (OD-38, OD-40, OD-41; the weather entry used to sit above A). B is always directly below A. Panel letters are not reused, so the panels are A, B, C, D and F.
 
 ### 3.1 Wide desktop (1280 px and above, designed at 1440)
 Content width capped at 1440 px, centred, 16 px gutters. C, D and F sit side by side.
@@ -76,7 +76,7 @@ At 1440 px the timeline shows its slots with no scroll; at 1280 px the rest of t
 Same order. A uses two columns (mode block left, facts right; banner and why full width). B scrolls horizontally with the mode labels sticky. C and D sit side by side, then F takes the full width.
 ```
 +--------------------------------------------+
-| header, notice, chips (wrap)               |
+| header, chips (wrap)                       |
 | METAR and TAF boxes, Apply buttons         |
 +--------------------------------------------+
 | A  MODE 12  |  next change, weather |

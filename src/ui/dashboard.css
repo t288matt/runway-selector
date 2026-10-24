@@ -108,6 +108,7 @@ select {
   font: inherit;
 }
 .notice {
+  margin-top: 12px;
   background: #1a2442;
   border: 1px solid var(--line);
   border-left: 4px solid var(--accent);

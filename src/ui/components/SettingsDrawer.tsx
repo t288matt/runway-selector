@@ -109,7 +109,6 @@ export function SettingsDrawer({ view, displayNowMs, bridge, onCurrentMode, onWi
             <option key={o.id} value={o.id}>{o.label}</option>
           ))}
         </select>
-        <p className="small">The plan looks ahead only as far as the window you choose.</p>
       </div>
 
       {model.sections.map((sec) => (
