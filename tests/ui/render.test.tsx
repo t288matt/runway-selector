@@ -103,6 +103,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the screen from real repo
     expect(html).toContain('aria-label="Legend"');
     expect(html).toContain('class="ov now"');
     expect(text).toContain('Recommended');
+    expect(text).toContain('Next change');
     for (const label of ['Survives', 'Next constraint', 'Traffic at changeover']) expect(text).not.toContain(label);
   });
 });
