@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "description": "Melbourne (Tullamarine) Airport. PROVISIONAL DRAFT 24-10-2026: coordinates and elevation from public sources (AcukWik, SkyVector, Airport Guide), not yet checked against the AIP. Other simulation assumptions carried over from the YSSY pack pending review.",
+  "icao": "YMML",
+  "name": "Melbourne",
+  "latitude": -37.6707,
+  "longitude": 144.8379,
+  "elevationFt": 434,
+  "timeZone": "Australia/Melbourne",
+  "weatherStation": "YMML",
+  "trafficAreaNm": 5,
+  "groundMaxSpeedKt": 40,
+  "groundAltitudeMarginFt": 100,
+  "arrivalSpeedFloorKt": 150,
+  "labels": {}
+}

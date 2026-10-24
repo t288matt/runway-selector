@@ -321,13 +321,12 @@ describe('airports are kept apart (AG-8)', () => {
     expect(rig(yssy, store).ctrl.getState().view.currentMode).toBeNull();
   });
 
-  it('the airport box is always visible, with one pack listed or several, and the drawer has no second control (OD-37)', () => {
+  it('the airport pull-down is always visible, with one pack listed or several, and the drawer has no second control (amends OD-37)', () => {
     const view = calculate({ pack: yssy, nowMs: NOW, metar: null, taf: null, windowChoice: 'full', currentMode: null, feed: EMPTY_FEED });
     for (const airports of [['YSSY'], ['YSSY', 'TEST']]) {
       for (const drawerOpen of [false, true]) {
         const html = renderDashboard(view, EMPTY_FEED, drawerOpen, testBridge({ airports }));
-        expect(html).toMatch(/<input id="airport-icao"[^>]*value="YSSY"/);
-        expect(html).not.toContain('airport-select');
+        expect(html).toMatch(/<select id="airport-icao"[^>]*>/);
         for (const id of airports) expect(html).toContain(`<option value="${id}"`);
       }
     }
