@@ -3,7 +3,7 @@
 // the pack; the words penalty, cost, points and score never appear (plain-language
 // rule, UI_DESIGN section 13).
 import { runwayWind, trafficLevelsFor, withinLimit, type Cell, type TrafficLevel, type WindObservation } from '../../engine';
-import { dir3, durationText, hhmmZRel, kt1, localStamp } from '../format';
+import { dir3, durationText, hhmmZRel, kt1 } from '../format';
 import { RUNWAY_STATE_WORDS, levelWord, type ViewData } from './dashboard';
 import { missingWeather, planRank } from './timeline';
 import { cellView, CAUSE_WORDS, STATUS_STYLE } from './status';
@@ -341,7 +341,6 @@ export function cellDetailModel(view: ViewData, modeIndex: number, slotIndex: nu
   const info = result.evaluation.slots[slotIndex];
   const cell = result.evaluation.cells[modeIndex]?.[slotIndex];
   if (mode === undefined || slot === undefined || info === undefined || cell === undefined) return null;
-  const tz = pack.airport.timeZone;
   const cv = cellView(cell, slot.startMs, missingWeather(view), view.calcNowMs);
   const level = trafficLevelsFor(pack, [slot.startMs], view.demand?.slots ?? [])[0] ?? null;
 
@@ -390,7 +389,7 @@ export function cellDetailModel(view: ViewData, modeIndex: number, slotIndex: nu
   const others = cell.reasons.map((r) => r.text).filter((t) => t !== primary);
   const code = cv.code;
   return {
-    title: `Mode ${mode.id}, ${hhmmZRel(slot.startMs, view.calcNowMs)} to ${hhmmZRel(slot.endMs, view.calcNowMs)} (${localStamp(slot.startMs, tz)} to ${localStamp(slot.endMs, tz)} local)`,
+    title: `Mode ${mode.id}, ${hhmmZRel(slot.startMs, view.calcNowMs)} to ${hhmmZRel(slot.endMs, view.calcNowMs)}`,
     statusWord: cv.word.toUpperCase(),
     icon: cv.icon,
     className: cv.className,

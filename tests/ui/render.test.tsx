@@ -11,12 +11,11 @@ import { calculate, defaultWindowFor, EMPTY_FEED, type ViewData } from '../../sr
 import { cellDetailModel, currentWind, panelDModel, runwayComponentRows } from '../../src/ui/model/panels';
 import { modeRows } from '../../src/ui/model/timeline';
 import { applyMetarText } from '../../src/ui/model/apply';
-import { PACKS, readJson, toRaw, TEST_PACK, TEST1_PACK } from '../helpers/packs';
+import { PACKS, readJson, toRaw, TEST1_PACK } from '../helpers/packs';
 import { baseFor, inputFor, quietTraffic, steady, tailwindOn } from '../engine/helpers';
 import { BASE, packOf, rigFor, same, type Wx } from '../engine/planHelpers';
 import { decodeMetarFixture, decodeTafFixture, fixture, nowOf, packWith } from '../weather/helpers';
 import { createMemoryStore } from '../../src/store';
-import { zoneOffsetLabel } from '../../src/ui/format';
 import { gridCellClasses, renderDashboard, textOf, viewFromInput, viewOf } from './helpers';
 
 const METAR_ID = 'metar-yssy-auto-nodata';
@@ -273,7 +272,6 @@ describe('the weather components and the hover detail come from the engine', () 
       expect(d?.reason).toBe(cell?.reasons.find((r) => r.severity === 'FAIL')?.text);
       expect(d?.runways.map((r) => r.name)).toEqual(cell?.runways.map((r) => r.runway));
       expect(d?.title).toContain('Z to');
-      expect(d?.title).toContain('local');
       expect(d?.runwayAssumption).toBe('DRY');
       expect(d?.traffic).toContain('HIGH');
       expect(d?.operatingPlan.length).toBeGreaterThan(0);
@@ -412,16 +410,17 @@ describe('the application states', () => {
   });
 });
 
-describe.each(PACKS.map((p) => [p.name, p] as const))('local times and the window note [%s]', (_n, ref) => {
+describe.each(PACKS.map((p) => [p.name, p] as const))('times are UTC only and the window note [%s]', (_n, ref) => {
   const pack = packWith(ref, { weatherStation: fixture(METAR_ID).station });
   const view = realView(pack, ref);
   const text = textOf(renderDashboard(view));
-  const tz = pack.airport.timeZone;
 
-  it('states the zone offset once in the timeline header, from the pack time zone', () => {
-    const offset = zoneOffsetLabel(view.weather.slots[0]?.startMs ?? 0, tz);
-    expect(text).toContain(`local (${offset})`);
-    expect(text.match(/local \(UTC[^)]*\)/g)).toHaveLength(1);
+  // OD-36 (24-10-2026): no clock time is shown in the airport's local zone and no zone
+  // offset is stated. "local record" (the audit trail) and a band's own hours ("06:00 to
+  // 23:00 local time", a pack fact, not a parallel clock) are unaffected and still say "local".
+  it('shows no UTC-offset wording and no clock stamp paired with "local"', () => {
+    expect(text).not.toMatch(/UTC[+-]\d/);
+    expect(text).not.toMatch(/\d{1,2}:\d{2}[^)]*\(?\s*local\)/i);
   });
 
   it('says the plan looks ahead only as far as the chosen window', () => {
@@ -429,15 +428,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('local times and the windo
   });
 });
 
-describe('local dates and the zone offset in a half-hour and a 45-minute zone', () => {
-  it.each([
-    ['TEST1', TEST1_PACK, Date.UTC(2026, 9, 23, 20, 10), 'UTC+5:45', '24-10 01:45'],
-    ['TEST', TEST_PACK, Date.UTC(2026, 9, 23, 1, 10), 'UTC-2:30', '22-10 22:30'],
-  ] as const)('%s: the header gives the offset once and a dated local start', (_n, ref, nowMs, offset, start) => {
-    const pack = packWith(ref, { weatherStation: fixture(METAR_ID).station });
-    const view = calculate({ pack, nowMs, metar: null, taf: null, windowChoice: 'full', currentMode: null, feed: EMPTY_FEED });
-    const text = textOf(renderDashboard(view));
-    expect(text).toContain(`local (${offset}) ${start}`);
-    expect(text.match(/local \(UTC[^)]*\)/g)).toHaveLength(1);
-  });
-});
+// OD-36 (24-10-2026) removed local-time display entirely, so the half-hour/45-minute zone
+// case this used to cover (tests/ui/render.test.tsx formerly here) no longer has anything to
+// test against; the generic "times are UTC only" check above runs on every pack, TEST and
+// TEST1 included.

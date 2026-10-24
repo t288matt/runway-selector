@@ -6,7 +6,7 @@
 import type { AirportPack, PlanBand, SettingName } from '../../refdata';
 import { formatClock } from '../../refdata';
 import type { AuditEntry, AuditValue, CurrentModeRecord } from '../../store';
-import { ddmmyyyy, hhmm, kt1, localStamp, safeHttpsLink, utcAndLocal, zoneOffsetLabel } from '../format';
+import { ddmmyyyy, hhmm, kt1, safeHttpsLink, utcAndLocal } from '../format';
 import { isCurrentModeStale } from '../../store';
 import { levelWord, WINDOW_OPTIONS } from './dashboard';
 
@@ -167,8 +167,8 @@ export function drawerModel(pack: AirportPack, nowMs: number): DrawerModel {
     plan: pack.plan.map((b) => planBandModel(pack, b)),
     planNote: 'Rank 1 is the most preferred. Modes with the same rank are equally preferred. The recommendation also weighs weather and traffic.',
     zone: [
-      { label: 'Time zone', value: `${tz}, ${zoneOffsetLabel(nowMs, tz)} now`, help: null },
-      { label: 'Now', value: utcAndLocal(nowMs, tz), help: 'Times on screen are UTC, with the airport local time beside.' },
+      { label: 'Time zone', value: tz, help: "The airport's own time zone. Used only to work out the operating plan's time bands; every time on screen is UTC (OD-36)." },
+      { label: 'Now', value: utcAndLocal(nowMs, tz), help: 'Times on screen are UTC.' },
     ],
     provenance: [prov('Airport', m.airport), prov('Runways', m.runways), prov('Modes', m.modes), prov('Operating plan', m.operatingPlan), prov('Settings', m.settings)],
   };
@@ -178,7 +178,7 @@ export function drawerModel(pack: AirportPack, nowMs: number): DrawerModel {
 export interface CurrentModeStatus {
   /** null when no mode is set. */
   readonly modeId: string | null;
-  /** "set 10:15 UTC (21:15 local)", or null when no mode is set. */
+  /** "set 10:15 UTC", or null when no mode is set. */
   readonly setText: string | null;
   readonly stale: boolean;
   /** "set more than 2 hours ago", from the pack value; null when not stale. */
@@ -194,7 +194,7 @@ export function currentModeStatus(record: CurrentModeRecord | null, nowMs: numbe
   const stale = isCurrentModeStale(record, nowMs, pack);
   return {
     modeId: record.modeId,
-    setText: `set ${when} (${localStamp(record.setAtMs, pack.airport.timeZone)} local)`,
+    setText: `set ${when}`,
     stale,
     staleWords: stale ? `set more than ${limitText(pack.settings.currentModeStaleMinutes)} ago` : null,
     canConfirm: true,
