@@ -309,12 +309,12 @@ describe('Panel D', () => {
     expect(m.columns[0]?.departures).toBe('0');
     expect(m.columns.slice(1).every((c) => c.departures === 'not est.')).toBe(true);
     expect(m.unknownFrom).not.toBeNull();
-    // movements per hour: both known, doubled; arrivals known only, the raw arrivals figure labelled so (OD-41), never doubled and never a lower bound
+    // movements: the raw 30-minute count, never doubled to an hourly rate, never a lower bound (OD-63, amending OD-41 and OD-61)
     for (const c of m.columns) {
       expect(c.movements).not.toContain('\u2265');
       if (c.arrivals === 'Unknown') expect(c.movements).toBe('Unknown');
       else if (c.departures === 'not est.') expect(c.movements).toBe(`${c.arrivals} (arrivals only)`);
-      else expect(c.movements).toBe(String((Number(c.arrivals) + Number(c.departures)) * 2));
+      else expect(c.movements).toBe(String(Number(c.arrivals) + Number(c.departures)));
     }
     const text = textOf(renderDashboard(view, { aircraft: [], fetchedAtMs: view.calcNowMs, error: null, errorAtMs: null }));
     expect(text).toContain('Demand unknown from');
