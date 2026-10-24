@@ -258,7 +258,7 @@ export function panelDModel(view: ViewData): PanelDModel {
     const t = slots[i];
     const arrivals = t?.arrivals ?? null;
     const departures = t?.departures ?? null;
-    const label = i === 0 ? 'Now' : `+${i * 30} min`;
+    const label = i === 0 ? 'Next 30 mins' : `+${i * 30} min`;
     columns.push({
       label,
       arrivals: arrivals === null ? 'Unknown' : String(arrivals),
