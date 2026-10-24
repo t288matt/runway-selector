@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "description": "Brisbane Airport. PROVISIONAL DRAFT 24-10-2026: coordinates and elevation from a public source (SkyVector), not yet checked against the AIP. Other simulation assumptions carry over from the other Australian packs.",
+  "icao": "YBBN",
+  "name": "Brisbane",
+  "latitude": -27.3842,
+  "longitude": 153.1175,
+  "elevationFt": 15,
+  "timeZone": "Australia/Brisbane",
+  "weatherStation": "YBBN",
+  "trafficAreaNm": 5,
+  "groundMaxSpeedKt": 40,
+  "groundAltitudeMarginFt": 100,
+  "arrivalSpeedFloorKt": 150,
+  "labels": {}
+}
