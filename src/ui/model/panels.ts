@@ -81,7 +81,6 @@ export function panelAModel(view: ViewData): PanelAModel {
   const { pack, result } = view;
   const { plan, explanation, evaluation } = result;
   const recId = plan.recommendedModeId;
-  const provisional = (status: string | null): string => (status === 'provisional' ? ' (provisional)' : '');
   const enabledCount = pack.modes.filter((m) => m.enabled).length;
   const empty = {
     modeId: null,
@@ -149,10 +148,10 @@ export function panelAModel(view: ViewData): PanelAModel {
     nextChange,
     weather: style === null ? null : { word: style.word.toUpperCase(), icon: style.icon, className: style.className, text: explanation.lines[0] ?? '' },
     traffic: trafficSentence(view),
-    rank: rank === null ? '-' : `${rank} of ${enabledCount} (1 is most preferred)${provisional(pack.meta.operatingPlan.status)}`,
+    rank: rank === null ? '-' : `${rank} of ${enabledCount} (1 is most preferred)`,
     uncertainty: explanation.uncertaintyLine,
     runwayState: runwayStateSentence(view),
-    capacity: mode === undefined ? '-' : `${mode.capacity === null ? 'No limit set' : `${mode.capacity} movements/hr${provisional(pack.meta.modes.status)}`}${cell0 !== undefined && cell0.demand.knownDemand !== null ? `; ${cell0.demand.knownDemand} known movements this slot` : '; movements not known'}`,
+    capacity: mode === undefined ? '-' : `${mode.capacity === null ? 'No limit set' : `${mode.capacity} movements/hr`}${cell0 !== undefined && cell0.demand.knownDemand !== null ? `; ${cell0.demand.knownDemand} known movements this slot` : '; movements not known'}`,
     banners,
     whyLines: explanation.lines,
     noSuitable: null,
@@ -355,10 +354,9 @@ export function cellDetailModel(view: ViewData, modeIndex: number, slotIndex: nu
   const band = cell.bandId;
   const planFail = cell.reasons.some((r) => r.code === 'PLAN' && r.severity === 'FAIL');
   const rank = planRank(view, modeIndex, slotIndex);
-  const planStatus = pack.meta.operatingPlan.status === 'provisional' ? ', provisional' : '';
   const operatingPlan = planFail
-    ? `Not allowed in time band ${band ?? 'unknown'}${planStatus}`
-    : `Allowed${band === null || pack.plan.find((b) => b.id === band)?.allDay === true ? '' : ` in time band ${band}`}${rank === null ? '' : `, rank ${rank}`}${planStatus}`;
+    ? `Not allowed in time band ${band ?? 'unknown'}`
+    : `Allowed${band === null || pack.plan.find((b) => b.id === band)?.allDay === true ? '' : ` in time band ${band}`}${rank === null ? '' : `, rank ${rank}`}`;
 
   const s = result.evaluation.survival[modeIndex];
   const parts: string[] = [];
