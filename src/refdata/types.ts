@@ -50,6 +50,15 @@ export interface ModeMinima {
   readonly requiresDrySurface: boolean;
 }
 
+/** A mode's conditional operation: a named note shown when the weather meets these conditions. A key the pack leaves out is null (or false). */
+export interface ConditionalOperation {
+  /** Shown on screen, e.g. in "<name> conditions met". */
+  readonly name: string;
+  readonly ceilingFt: number | null;
+  readonly visibilityMetres: number | null;
+  readonly requiresDrySurface: boolean;
+}
+
 export interface Mode extends Provenance {
   readonly id: string;
   readonly enabled: boolean;
@@ -62,6 +71,8 @@ export interface Mode extends Provenance {
   readonly capacity: number | null;
   /** The mode's weather minima, or null when it has none. */
   readonly minima: ModeMinima | null;
+  /** The mode's conditional operation (a note only, never a gate), or null when it has none. */
+  readonly conditionalOperation: ConditionalOperation | null;
 }
 
 export interface PlanRow extends Provenance {

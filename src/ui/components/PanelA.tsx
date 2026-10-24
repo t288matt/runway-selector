@@ -79,8 +79,8 @@ export function PanelA({ view, model, onCurrentMode, status, onConfirmCurrent }:
       )}
 
       {model.banners.map((b) => (
-        <div key={b.title} className={`banner banner-${b.tone}`} role={b.tone === 'note' ? 'status' : 'alert'}>
-          <b>{b.tone === 'amber' ? '⚠ ' : b.tone === 'red' ? '✕ ' : ''}{b.title}</b>
+        <div key={b.title} className={`banner banner-${b.tone}`} role={b.tone === 'note' || b.tone === 'ok' ? 'status' : 'alert'}>
+          <b>{b.tone === 'amber' ? '⚠ ' : b.tone === 'red' ? '✕ ' : b.tone === 'ok' ? '✓ ' : ''}{b.title}</b>
           <span>{b.text}</span>
         </div>
       ))}

@@ -2,7 +2,7 @@
 // 6.4). Text for the recommendation comes from the engine's explanation or from
 // the pack; the words penalty, cost, points and score never appear (plain-language
 // rule, UI_DESIGN section 13).
-import { runwayWind, trafficLevelsFor, withinLimit, type Cell, type TrafficLevel, type WindObservation } from '../../engine';
+import { conditionalOperationCheck, runwayWind, trafficLevelsFor, withinLimit, type Cell, type TrafficLevel, type WindObservation } from '../../engine';
 import { dir3, durationText, hhmmZRel, kt1 } from '../format';
 import { RUNWAY_STATE_WORDS, levelWord, type ViewData } from './dashboard';
 import { missingWeather, planRank } from './timeline';
@@ -11,7 +11,7 @@ import { cellView, CAUSE_WORDS, STATUS_STYLE } from './status';
 
 // ------------------------------------------------------------------ Panel A
 export interface BannerModel {
-  readonly tone: 'red' | 'amber' | 'note';
+  readonly tone: 'red' | 'amber' | 'note' | 'ok';
   readonly title: string;
   readonly text: string;
 }
@@ -117,6 +117,34 @@ function runwayStateSentence(view: ViewData): string {
   return word;
 }
 
+/**
+ * The conditional-operation note (issue 58): "<name> conditions met" for the recommended mode, when it has a conditional
+ * operation, along the recommended path, on slots where its cell is SUITABLE and the check is MET. "until HH:MMZ" when the
+ * first slot qualifies (the end of the last consecutive qualifying slot), "from HH:MMZ" when only a later one does, else
+ * no banner. Advisory only: it reads the plan and the cells and changes neither.
+ */
+function conditionalOperationBanner(view: ViewData, modeIndex: number): BannerModel | null {
+  const op = view.pack.modes[modeIndex]?.conditionalOperation ?? null;
+  const recId = view.result.plan.recommendedModeId;
+  if (op === null || recId === null) return null;
+  const { evaluation, plan } = view.result;
+  const qualifies = (i: number): boolean =>
+    plan.slots[i]?.modeId === recId &&
+    evaluation.cells[modeIndex]?.[i]?.status === 'SUITABLE' &&
+    conditionalOperationCheck(op, view.weather.slots[i]!, evaluation.slots[i]?.runwayState ?? 'DRY') === 'MET';
+  const count = Math.min(plan.slots.length, view.weather.slots.length);
+  const title = `${op.name} conditions met`;
+  if (count > 0 && qualifies(0)) {
+    let last = 0;
+    while (last + 1 < count && qualifies(last + 1)) last += 1;
+    return { tone: 'ok', title, text: `until ${hhmmZRel(view.weather.slots[last]!.endMs, view.calcNowMs)}` };
+  }
+  for (let i = 1; i < count; i += 1) {
+    if (qualifies(i)) return { tone: 'ok', title, text: `from ${hhmmZRel(view.weather.slots[i]!.startMs, view.calcNowMs)}` };
+  }
+  return null;
+}
+
 export function panelAModel(view: ViewData): PanelAModel {
   const { pack, result } = view;
   const { plan, explanation, evaluation } = result;
@@ -173,6 +201,9 @@ export function panelAModel(view: ViewData): PanelAModel {
   if (explanation.earlyChange !== null) {
     banners.push({ tone: 'amber', title: explanation.earlyChange.title, text: explanation.earlyChange.text });
   }
+
+  const conditional = conditionalOperationBanner(view, modeIndex);
+  if (conditional !== null) banners.push(conditional);
 
   const style = cell0 === undefined ? null : STATUS_STYLE[cell0.status];
   const rank = explanation.operatingPlanRank;
