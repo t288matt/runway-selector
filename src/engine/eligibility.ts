@@ -253,6 +253,18 @@ const thousands = (n: number): string => Math.round(n).toString().replace(/\B(?=
 const km = (metres: number): string => `${Number((metres / 1000).toFixed(1))} km`;
 const metresText = (metres: number): string => `${thousands(metres)} m`;
 
+/** How one ceiling reading compares with a minimum: no ceiling passes, exactly the minimum passes, undefined is unknown. Shared with the conditional-operation check. */
+export function ceilingAgainst(minimumFt: number, ceilingFt: number | null | undefined): 'OK' | 'BELOW' | 'UNKNOWN' {
+  if (ceilingFt === undefined) return 'UNKNOWN';
+  return ceilingFt !== null && ceilingFt < minimumFt ? 'BELOW' : 'OK';
+}
+
+/** How one visibility reading compares with a minimum: exactly the minimum passes, undefined is unknown. */
+export function visibilityAgainst(minimumMetres: number, visibilityMetres: number | undefined): 'OK' | 'BELOW' | 'UNKNOWN' {
+  if (visibilityMetres === undefined) return 'UNKNOWN';
+  return visibilityMetres < minimumMetres ? 'BELOW' : 'OK';
+}
+
 interface MinimaFinding {
   readonly element: 'ceiling' | 'visibility' | 'surface';
   /** FAIL: below a minimum or wet. MARGINAL: not known, or the runway may be wet. */
@@ -267,17 +279,19 @@ function minimaFindings(minima: ModeMinima, ceilingFt: number | null | undefined
   const out: MinimaFinding[] = [];
   if (minima.ceilingFt !== null) {
     const min = minima.ceilingFt;
-    if (ceilingFt === undefined) {
+    const against = ceilingAgainst(min, ceilingFt);
+    if (against === 'UNKNOWN') {
       out.push({ element: 'ceiling', severity: 'MARGINAL', figures: { ceilingFt: null, minimumFt: min, uncertain: true }, limit: min, text: `Ceiling is not known, so this mode's minimum of ${thousands(min)} ft could not be checked` });
-    } else if (ceilingFt !== null && ceilingFt < min) {
+    } else if (against === 'BELOW' && ceilingFt !== null && ceilingFt !== undefined) {
       out.push({ element: 'ceiling', severity: 'FAIL', figures: { ceilingFt, minimumFt: min }, limit: min, text: `Ceiling ${thousands(ceilingFt)} ft is below this mode's minimum of ${thousands(min)} ft` });
     }
   }
   if (minima.visibilityMetres !== null) {
     const min = minima.visibilityMetres;
-    if (visibilityMetres === undefined) {
+    const against = visibilityAgainst(min, visibilityMetres);
+    if (against === 'UNKNOWN') {
       out.push({ element: 'visibility', severity: 'MARGINAL', figures: { visibilityMetres: null, minimumMetres: min, uncertain: true }, limit: min, text: `Visibility is not known, so this mode's minimum of ${km(min)} could not be checked` });
-    } else if (visibilityMetres < min) {
+    } else if (against === 'BELOW' && visibilityMetres !== undefined) {
       // Never show equal numbers for a fail: fall back to metres when the kilometre text would round to the minimum.
       const inKm = km(visibilityMetres) !== km(min);
       const shown = inKm ? { actual: km(visibilityMetres), minimum: km(min) } : { actual: metresText(visibilityMetres), minimum: metresText(min) };

@@ -359,6 +359,13 @@ select {
 .banner-note b {
   color: var(--muted);
 }
+.banner-ok {
+  background: #10261a;
+  border-color: var(--ok);
+}
+.banner-ok b {
+  color: var(--ok-text);
+}
 .why {
   grid-column: 1 / -1;
   border-top: 1px solid var(--line);
