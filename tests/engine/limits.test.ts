@@ -22,7 +22,8 @@ describeEachPack('crosswind limit', (pack) => {
       expect(over.cause).toBe('XW');
       const reason = over.reasons.find((r) => r.code === 'XW');
       expect(reason?.limit).toBe(limit);
-      expect(reason?.text).toContain(limit.toFixed(1));
+      // The reason text is rounded to a whole knot for display (owner decision 24-10-2026); `limit` above stays exact.
+      expect(reason?.text).toContain(Math.round(limit).toString());
       expect(reason?.text).toContain("mode's limit");
     });
 

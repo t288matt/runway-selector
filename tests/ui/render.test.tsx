@@ -251,8 +251,8 @@ describe('the weather components and the hover detail come from the engine', () 
       const view = viewFromInput(pack, input);
       const row = runwayComponentRows(view)[0];
       expect(row?.name).toBe(r0.name);
-      expect(row?.tailwind).toBe(speed.toFixed(1));
-      expect(row?.headwind).toBe('0.0');
+      expect(row?.tailwind).toBe(Math.round(speed).toString());
+      expect(row?.headwind).toBe('0');
       expect(row?.over).toBe('TW');
       expect(runwayComponentRows(view)).toHaveLength(pack.runways.length);
       expect(currentWind(view)).not.toBeNull();
