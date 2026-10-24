@@ -214,7 +214,7 @@ export function buildDiagram(input: DiagramInput): Diagram {
       y1: cy - Math.cos(from) * r * 0.95,
       x2: cx + Math.sin(from) * r * 0.55,
       y2: cy - Math.cos(from) * r * 0.55 * 0.95,
-      label: `${Math.round(w.speedKt)} kt`,
+      label: `${Math.round(w.speedKt)}${w.gustKt === null ? '' : `G${Math.round(w.gustKt)}`} kt`,
       labelX: cx + Math.sin(from) * r + (Math.sin(from) < 0 ? -8 : 8),
       labelY: cy - Math.cos(from) * r * 0.95 + 4,
       labelAnchor: Math.sin(from) < 0 ? 'end' : 'start',

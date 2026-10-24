@@ -328,6 +328,11 @@ describe('TAF structure', () => {
     expect(decodeTafFixture('taf-mmmx-cor', YSSY_PACK).corrected).toBe(true);
   });
 
+  it('reads a relay-duplicated prefix (TAF AMD TAF AMD EGLL ...), not just one TAF and one AMD/COR (owner, 24-10-2026)', () => {
+    const t = decodeTaf('TAF AMD TAF AMD EGLL 242217Z 2422/2524 26020G32KT 9999 SCT030', ctx('EGLL'));
+    expect(t).toMatchObject({ kind: 'ok', report: { station: 'EGLL', amended: true } });
+  });
+
   it('a cancelled TAF is "no TAF"', () => {
     const f = fixture('taf-vtbd-cancelled');
     expect(decodeTaf(f.raw, ctx('VTBD', f.nowUtc))).toMatchObject({ kind: 'none', reason: 'cancelled', station: 'VTBD' });

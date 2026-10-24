@@ -69,9 +69,9 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the diagram is generated 
     expect(a.y2).toBeLessThan(a.y1);
   });
 
-  it('writes the wind speed beside the tail of the arrow, on the side away from the middle', () => {
+  it('writes the wind speed and gust beside the tail of the arrow, on the side away from the middle', () => {
     const a = d.arrow;
-    expect(a?.label).toBe('12 kt');
+    expect(a?.label).toBe('12G16 kt');
     if (a === null) return;
     // wind from 140: the tail is south-east, so the label runs to the right of it
     expect(a.labelAnchor).toBe('start');
