@@ -16,6 +16,8 @@ export interface ModeRow {
   readonly modeId: string;
   readonly isRecommended: boolean;
   readonly isCurrent: boolean;
+  /** Every slot in the window is UNSUITABLE for this mode (a fully red row). */
+  readonly allUnsuitable: boolean;
   /** Second line of the row header, from the mode's runways. */
   readonly runwaysText: string;
   /** Hover text for the row label. */
@@ -60,6 +62,8 @@ export function modeRows(view: ViewData): ModeRow[] {
     const isRecommended = mode.id === rec;
     const isCurrent = mode.id === view.currentMode;
     const cell0 = result.evaluation.cells[index]?.[0];
+    const cellsOfMode = result.evaluation.cells[index] ?? [];
+    const allUnsuitable = cellsOfMode.length > 0 && cellsOfMode.every((c) => c.status === 'UNSUITABLE');
     const penalty = cell0 === undefined ? Number.MAX_SAFE_INTEGER : preferencePenalty(pack, cell0.bandId, mode.id);
     const cap = mode.capacity === null ? 'no capacity set' : `capacity ${mode.capacity} per hour`;
     const status = pack.meta.modes.status === null ? '' : ` (${pack.meta.modes.status})`;
@@ -68,6 +72,7 @@ export function modeRows(view: ViewData): ModeRow[] {
       modeId: mode.id,
       isRecommended,
       isCurrent,
+      allUnsuitable,
       runwaysText: runwaysText(mode.arrivals, mode.departures),
       title: `Mode ${mode.id}: ${runwaysText(mode.arrivals, mode.departures)}; ${cap}${status}; crosswind limit ${kt1(mode.maxCrosswindKt)} kt`,
       sort: (isRecommended ? 0 : isCurrent ? 1 : 2) * 1e9 + penalty,
@@ -113,6 +118,19 @@ export interface TimelineModel {
   readonly changeSlots: readonly number[];
   readonly nowSlotFraction: number;
   readonly rangeText: string;
+}
+
+/**
+ * The rows to draw (OD-39). A fully red row (UNSUITABLE in every slot) is hidden unless the user asks to see it.
+ * The recommended and current-mode rows are never hidden, and when every row is fully red all are shown so the
+ * grid is never empty. `hiddenCount` is how many rows the user can reveal.
+ */
+export function visibleRows(model: Pick<TimelineModel, 'rows' | 'cells' | 'onPath'>, showAll: boolean): Pick<TimelineModel, 'rows' | 'cells' | 'onPath'> & { readonly hiddenCount: number } {
+  const hide = (r: ModeRow): boolean => r.allUnsuitable && !r.isRecommended && !r.isCurrent;
+  const hidden = model.rows.filter(hide).length;
+  if (showAll || hidden === 0 || hidden === model.rows.length) return { rows: model.rows, cells: model.cells, onPath: model.onPath, hiddenCount: showAll || hidden === model.rows.length ? 0 : hidden };
+  const keep = model.rows.map((r, i) => (hide(r) ? -1 : i)).filter((i) => i >= 0);
+  return { rows: keep.map((i) => model.rows[i] as ModeRow), cells: keep.map((i) => model.cells[i] ?? []), onPath: keep.map((i) => model.onPath[i] ?? []), hiddenCount: hidden };
 }
 
 function windShiftLabel(prev: WindObservation | null, cur: WindObservation | null): string | null {

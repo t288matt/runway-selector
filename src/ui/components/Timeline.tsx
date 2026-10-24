@@ -6,7 +6,7 @@ import { hhmmZ } from '../format';
 import { WINDOW_OPTIONS, type ViewData, type WindowChoice, isWindowChoice, levelWord, levelLetter } from '../model/dashboard';
 import { cellDetailModel, type CellDetailModel } from '../model/panels';
 import { STATUS_STYLE } from '../model/status';
-import { LAYOUT, LEGEND, moveFocus, summaryTiles, type TimelineModel } from '../model/timeline';
+import { LAYOUT, LEGEND, moveFocus, summaryTiles, visibleRows, type TimelineModel } from '../model/timeline';
 
 interface Anchor {
   readonly row: number;
@@ -68,7 +68,9 @@ export interface TimelineProps {
 }
 
 export function Timeline({ view, model, displayNowMs, onWindowChange, reason }: TimelineProps) {
-  const { rows, slots, cells, onPath } = model;
+  const [showHidden, setShowHidden] = useState(false);
+  const { rows, cells, onPath, hiddenCount } = visibleRows(model, showHidden);
+  const { slots } = model;
   const tiles = summaryTiles(view);
   const n = slots.length;
   const [pos, setPos] = useState({ row: 0, col: 0 });
@@ -161,6 +163,14 @@ export function Timeline({ view, model, displayNowMs, onWindowChange, reason }: 
       <h2>
         <i>B</i>Mode survival timeline <span className="range">{model.rangeText}</span>
         <span className="sp" />
+        {hiddenCount === 0 && !showHidden ? null : (
+          <button type="button" className="btn small-btn" aria-pressed={showHidden} onClick={() => {
+            setShowHidden(!showHidden);
+            setPos({ row: 0, col: 0 });
+          }}>
+            {showHidden ? 'Hide unsuitable modes' : `Show ${hiddenCount} unsuitable ${hiddenCount === 1 ? 'mode' : 'modes'}`}
+          </button>
+        )}
         <button type="button" className="btn small-btn" aria-pressed={tableView} onClick={() => setTableView(!tableView)}>Table view</button>
         {!nowVisible ? <button type="button" className="btn small-btn" onClick={jumpToNow}>Jump to now</button> : null}
         <label className="small" htmlFor="window-select">Window</label>
@@ -196,7 +206,7 @@ export function Timeline({ view, model, displayNowMs, onWindowChange, reason }: 
             <tbody>
               {rows.map((r, ri) => (
                 <tr key={r.modeId}>
-                  <th scope="row">Mode {r.modeId}{r.isRecommended ? ' (recommended)' : ''}{r.isCurrent ? ' (current)' : ''}</th>
+                  <th scope="row">{r.modeId}{r.isRecommended ? ' (recommended)' : ''}{r.isCurrent ? ' (current)' : ''}</th>
                   {(cells[ri] ?? []).map((c, ci) => (
                     <td key={ci} className={c.className}>{c.icon} {c.word}{c.code === '' ? '' : ` ${c.code}`}</td>
                   ))}
@@ -236,7 +246,7 @@ export function Timeline({ view, model, displayNowMs, onWindowChange, reason }: 
               <div key={r.modeId} role="row" className={`row${r.isRecommended ? ' isrec' : ''}${r.isCurrent ? ' isact' : ''}`}>
                 <div className="lab" role="rowheader" title={r.title}>
                   <span>
-                    Mode {r.modeId}
+                    {r.modeId}
                     {r.isRecommended ? <span className="rt rec"> REC</span> : null}
                     {r.isCurrent ? <span className="rt act"> CURRENT</span> : null}
                   </span>

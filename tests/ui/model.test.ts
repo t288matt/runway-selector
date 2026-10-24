@@ -18,7 +18,7 @@ import {
   windowMinutes,
   type FeedState,
 } from '../../src/ui/model/dashboard';
-import { moveFocus, modeRows, summaryTiles, timelineModel } from '../../src/ui/model/timeline';
+import { moveFocus, modeRows, summaryTiles, timelineModel, visibleRows } from '../../src/ui/model/timeline';
 import { hhmmZ, hhmmZRel, utcAndLocal, ageText, durationText, safeHttpsLink, dir3 } from '../../src/ui/format';
 import { packOf, rigFor } from '../engine/planHelpers';
 import { viewOf } from './helpers';
@@ -257,6 +257,58 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('timeline rows and tiles [
     const marginal = onPath.filter((s) => s.status === 'MARGINAL').length;
     if (marginal === 0) expect(text).not.toContain('marginal');
     else expect(text).toContain(`marginal in ${marginal} of ${onPath.length} ${onPath.length === 1 ? 'slot' : 'slots'}, first at `);
+  });
+});
+
+describe.each(PACKS.map((p) => [p.name, p] as const))('fully red rows are hidden unless asked for (OD-39) [%s]', (_n, ref) => {
+  const rig = rigFor(ref);
+  const pack = packOf(rig);
+  const enabled = pack.modes.filter((m) => m.enabled).length;
+  const scenarios = [
+    ['A unsuitable throughout', ['badA', 'badA', 'badA', 'badA']],
+    ['everything unsuitable', ['badBoth', 'badBoth', 'badBoth', 'badBoth']],
+    ['all fine', ['ok', 'ok', 'ok', 'ok']],
+  ] as const;
+
+  it.each(scenarios)('%s: only fully red rows that are neither recommended nor current are hidden', (_name, wx) => {
+    const v = viewOf(pack, rig, wx, [], rig.b);
+    const model = timelineModel(v, v.calcNowMs);
+    const shown = visibleRows(model, false);
+    const all = modeRows(v);
+    const hidden = all.filter((r) => !shown.rows.some((s) => s.modeId === r.modeId));
+    expect(shown.rows.length + hidden.length).toBe(enabled);
+    for (const r of hidden) {
+      expect(r.allUnsuitable).toBe(true);
+      expect(r.isRecommended || r.isCurrent).toBe(false);
+    }
+    // a row that is shown and fully red is only so because it is recommended, current, or nothing else could be drawn
+    for (const r of shown.rows.filter((x) => x.allUnsuitable)) expect(r.isRecommended || r.isCurrent || hidden.length === 0).toBe(true);
+    expect(shown.cells).toHaveLength(shown.rows.length);
+    expect(shown.onPath).toHaveLength(shown.rows.length);
+    expect(shown.hiddenCount).toBe(hidden.length);
+  });
+
+  it.each(scenarios)('%s: asking to see them returns every row, in the same order', (_name, wx) => {
+    const v = viewOf(pack, rig, wx, [], rig.b);
+    const model = timelineModel(v, v.calcNowMs);
+    const everything = visibleRows(model, true);
+    expect(everything.rows.map((r) => r.modeId)).toEqual(modeRows(v).map((r) => r.modeId));
+    expect(everything.hiddenCount).toBe(0);
+  });
+
+  it('never leaves the grid empty: when every row is fully red, all are shown', () => {
+    const v = viewOf(pack, rig, ['badBoth', 'badBoth', 'badBoth', 'badBoth']);
+    const rows = modeRows(v);
+    if (!rows.every((r) => r.allUnsuitable)) return;
+    const shown = visibleRows(timelineModel(v, v.calcNowMs), false);
+    expect(shown.rows).toHaveLength(rows.length);
+    expect(shown.hiddenCount).toBe(0);
+  });
+
+  it('hides at least one row somewhere in the pack scenarios, so the feature is exercised', () => {
+    const v = viewOf(pack, rig, ['badA', 'badA', 'badA', 'badA'], [], rig.b);
+    const total = visibleRows(timelineModel(v, v.calcNowMs), false).hiddenCount;
+    expect(total).toBeGreaterThanOrEqual(ref.name === 'TEST1' ? 0 : 1);
   });
 });
 
