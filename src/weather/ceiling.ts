@@ -26,8 +26,10 @@ export function ceilingOf(c: DecodedConditions): number | null | undefined {
   return c.clouds.length === 0 ? undefined : null;
 }
 
-/** Visibility in metres: CAVOK is at least 10 km; "more than" counts as the stated metres; undefined when not stated. */
+/** Visibility in metres: CAVOK is at least 10 km; "more than" 9999 counts as 10 km, like CAVOK, other "more than" values as the stated metres; undefined when not stated. */
 export function visibilityMetresOf(c: DecodedConditions): number | undefined {
   if (c.cavok) return CAVOK_VISIBILITY_METRES;
-  return c.visibility === null ? undefined : c.visibility.metres;
+  if (c.visibility === null) return undefined;
+  // 9999 means 10 km or more, the same as CAVOK.
+  return c.visibility.moreThan && c.visibility.metres >= 9999 ? CAVOK_VISIBILITY_METRES : c.visibility.metres;
 }

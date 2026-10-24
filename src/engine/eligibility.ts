@@ -1,6 +1,6 @@
 // Eligibility matrix: mode x slot (REQUIREMENTS OP-4, WC-1 to WC-13, TR-6;
 // DESIGN section 6B). Every rule is evaluated in the fixed order
-// MODE, PLAN, TW, XW, CAP; every reason is kept; the status is the worst.
+// MODE, PLAN, TW, XW, MIN, CAP; every reason is kept; the status is the worst.
 // Every limit and threshold is read from the pack. Pure.
 import type { AirportPack, Mode, ModeMinima, PlanBand } from '../refdata/types';
 import type { SlotWeather, TrafficSlot, WeatherOverlay, WeatherSlot, WindObservation } from './inputs';
@@ -250,7 +250,8 @@ export function assessWind(
 // and a dry-runway requirement. Numbers for the sentence are formatted here;
 // the figures keep full precision.
 const thousands = (n: number): string => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-const km = (metres: number): string => (metres / 1000).toFixed(1);
+const km = (metres: number): string => `${Number((metres / 1000).toFixed(1))} km`;
+const metresText = (metres: number): string => `${thousands(metres)} m`;
 
 interface MinimaFinding {
   readonly element: 'ceiling' | 'visibility' | 'surface';
@@ -275,9 +276,12 @@ function minimaFindings(minima: ModeMinima, ceilingFt: number | null | undefined
   if (minima.visibilityMetres !== null) {
     const min = minima.visibilityMetres;
     if (visibilityMetres === undefined) {
-      out.push({ element: 'visibility', severity: 'MARGINAL', figures: { visibilityMetres: null, minimumMetres: min, uncertain: true }, limit: min, text: `Visibility is not known, so this mode's minimum of ${km(min)} km could not be checked` });
+      out.push({ element: 'visibility', severity: 'MARGINAL', figures: { visibilityMetres: null, minimumMetres: min, uncertain: true }, limit: min, text: `Visibility is not known, so this mode's minimum of ${km(min)} could not be checked` });
     } else if (visibilityMetres < min) {
-      out.push({ element: 'visibility', severity: 'FAIL', figures: { visibilityMetres, minimumMetres: min }, limit: min, text: `Visibility ${km(visibilityMetres)} km is below this mode's minimum of ${km(min)} km` });
+      // Never show equal numbers for a fail: fall back to metres when the kilometre text would round to the minimum.
+      const inKm = km(visibilityMetres) !== km(min);
+      const shown = inKm ? { actual: km(visibilityMetres), minimum: km(min) } : { actual: metresText(visibilityMetres), minimum: metresText(min) };
+      out.push({ element: 'visibility', severity: 'FAIL', figures: { visibilityMetres, minimumMetres: min }, limit: min, text: `Visibility ${shown.actual} is below this mode's minimum of ${shown.minimum}` });
     }
   }
   if (minima.requiresDrySurface && state === 'WET') {
@@ -315,6 +319,8 @@ function weatherPart(pack: AirportPack, mode: Mode, used: readonly UsedRunway[],
       // A group that would break a minimum the prevailing weather keeps is MARGINAL; rain in the group wets the runway.
       for (const f of minimaFindings(minima, o.ceilingFt, o.visibilityMetres, o.precipitation ? 'WET' : state)) {
         if (f.severity !== 'FAIL' || mainBreaks.some((b) => b.element === f.element)) continue;
+        // The prevailing weather already gave the marginal surface reason for a runway that may be wet.
+        if (f.element === 'surface' && state === 'WET_POSSIBLE') continue;
         overlay.push({
           code: 'OVERLAY',
           severity: 'MARGINAL',

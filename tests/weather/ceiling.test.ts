@@ -43,12 +43,31 @@ describe('visibilityMetresOf', () => {
     expect(visibilityMetresOf(conditions({ visibility: { metres: 6000, moreThan: false, lessThan: false } }))).toBe(6000);
     expect(visibilityMetresOf(conditions({ visibility: { metres: 10000, moreThan: true, lessThan: false } }))).toBe(10000);
   });
+  it('counts "more than" 9999 as 10 km, like CAVOK, but other stated metres as they are', () => {
+    expect(visibilityMetresOf(conditions({ visibility: { metres: 9999, moreThan: true, lessThan: false } }))).toBe(10000);
+    expect(visibilityMetresOf(conditions({ visibility: { metres: 9999, moreThan: false, lessThan: false } }))).toBe(9999);
+    expect(visibilityMetresOf(conditions({ visibility: { metres: 9000, moreThan: false, lessThan: false } }))).toBe(9000);
+  });
   it('is at least 10 km for CAVOK', () => {
     expect(visibilityMetresOf(conditions({ cavok: true }))).toBe(10000);
   });
   it('is undefined when none is stated', () => {
     expect(visibilityMetresOf(conditions())).toBeUndefined();
   });
+});
+
+describe('ceilingOf on real decoded METARs', () => {
+  const pack = packWith(TEST_PACK);
+  const nowMs = Date.UTC(2026, 0, 15, 2, 10);
+  const decoded = (body: string) => {
+    const r = decodeMetar(`METAR ${pack.airport.weatherStation} 150150Z ${body}`, { pack, nowMs });
+    if (r.kind !== 'ok') throw new Error('metar not decoded');
+    return r.report;
+  };
+  it('NSC is no ceiling', () => expect(ceilingOf(decoded('27010KT 9999 NSC Q1015'))).toBeNull());
+  it('SKC is no ceiling', () => expect(ceilingOf(decoded('27010KT 9999 SKC Q1015'))).toBeNull());
+  it('no cloud group at all is unknown', () => expect(ceilingOf(decoded('27010KT 9999 Q1015'))).toBeUndefined());
+  it('a 9999 visibility reads as 10 km', () => expect(visibilityMetresOf(decoded('27010KT 9999 NSC Q1015'))).toBe(10000));
 });
 
 describe('slot builder: ceiling and visibility', () => {
@@ -80,7 +99,7 @@ describe('slot builder: ceiling and visibility', () => {
   it('leaves a METAR with no cloud group unknown, never invented', () => {
     const w = build(metarOf('27010KT 9999 Q1015'), null).slots[0]!.weather;
     expect(w.ceilingFt).toBeUndefined();
-    expect(w.visibilityMetres).toBe(9999);
+    expect(w.visibilityMetres).toBe(10000);
   });
   it('fills a TAF slot from its prevailing period', () => {
     const slot = build(null, tafOf('1500/1512 34010KT 8000 BKN045')).slots[0]!;
@@ -98,7 +117,7 @@ describe('slot builder: ceiling and visibility', () => {
     const taf = tafOf('1500/1512 34010KT 9999 BKN045 TEMPO 1500/1512 OVC012');
     const [o] = build(null, taf).slots[0]!.weather.overlays;
     expect(o?.ceilingFt).toBe(1200);
-    expect(o?.visibilityMetres).toBe(9999);
+    expect(o?.visibilityMetres).toBe(10000);
   });
   it('carries a PROB group through the same way', () => {
     const taf = tafOf('1500/1512 34010KT 9999 BKN045 PROB30 1500/1512 3000 BKN008');
