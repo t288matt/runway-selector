@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "description": "Preferred runway modes, owner-supplied 24-10-2026, in priority order (order in this file is the tie-break): 1 15AD; 2 33AD. No crosswind limit or capacity has been supplied for either mode; they fall back to the pack default and have no capacity limit.",
+  "status": "verified",
+  "modes": [
+    { "id": "15AD", "description": "Arrivals and departures 15", "enabled": true, "arrivals": ["15"], "departures": ["15"] },
+    { "id": "33AD", "description": "Arrivals and departures 33", "enabled": true, "arrivals": ["33"], "departures": ["33"] }
+  ]
+}
