@@ -25,6 +25,7 @@ export const STATUS_STYLE: Readonly<Record<Status, StatusStyle>> = {
 export const CAUSE_WORDS: Readonly<Record<string, string>> = {
   TW: 'tailwind',
   XW: 'crosswind',
+  MIN: 'weather minima',
   CAP: 'capacity',
   PLAN: 'operating plan',
   VRB: 'variable wind',

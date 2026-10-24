@@ -3,6 +3,7 @@
 // complicated than it was worth, and daylight saving was a source of
 // mistakes). Every function returns a string; nothing here produces markup
 // (SEC-2).
+import type { ModeMinima } from '../refdata';
 const MS_MINUTE = 60_000;
 const MS_DAY = 86_400_000;
 
@@ -85,6 +86,15 @@ export function durationText(ms: number): string {
  * for a person to read. The name is historical.
  */
 export const kt1 = (n: number): string => Math.round(n).toString();
+
+/** A mode's weather minima in plain words, e.g. "ceiling 4,500 ft or higher; visibility 8 km or more; dry runway". */
+export function minimaText(minima: ModeMinima): string {
+  const parts: string[] = [];
+  if (minima.ceilingFt !== null) parts.push(`ceiling ${minima.ceilingFt.toLocaleString('en-GB')} ft or higher`);
+  if (minima.visibilityMetres !== null) parts.push(`visibility ${Number((minima.visibilityMetres / 1000).toFixed(1))} km or more`);
+  if (minima.requiresDrySurface) parts.push('dry runway');
+  return parts.join('; ');
+}
 
 /** Three-digit direction, "090". */
 export const dir3 = (degrees: number): string => String(Math.round(((degrees % 360) + 360) % 360) || 360).padStart(3, '0');

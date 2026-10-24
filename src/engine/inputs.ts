@@ -45,6 +45,14 @@ export interface WeatherOverlay {
   /** Wind inside the overlay, or null if the group gives none. */
   readonly wind: WindObservation | null;
   readonly precipitation: boolean;
+  /**
+   * Cloud ceiling in feet, for a mode's weather minima. A number is the ceiling,
+   * null means the report says there is none, undefined means it says nothing
+   * about cloud (unknown). The same encoding is used on a WeatherOverlay.
+   */
+  readonly ceilingFt?: number | null;
+  /** Visibility in metres, or undefined when the report gives none (unknown). */
+  readonly visibilityMetres?: number;
   /** Original group text, plain text, for the hover detail. */
   readonly text: string;
 }
@@ -55,6 +63,14 @@ export interface SlotWeather {
   readonly wind: WindObservation | null;
   readonly precipitation: PrecipitationFlags;
   readonly overlays: readonly WeatherOverlay[];
+  /**
+   * Cloud ceiling in feet, for a mode's weather minima. A number is the ceiling,
+   * null means the report says there is none, undefined means it says nothing
+   * about cloud (unknown). The same encoding is used on a WeatherOverlay.
+   */
+  readonly ceilingFt?: number | null;
+  /** Visibility in metres, or undefined when the report gives none (unknown). */
+  readonly visibilityMetres?: number;
   /** Thunderstorm at the station (TS, not VC). Shown as an event only; no mode depends on it. */
   readonly thunderstorm?: boolean;
   /** Visibility below the pack's lowVisibilityMetres. Shown as an event only. */

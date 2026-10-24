@@ -16,10 +16,10 @@ export type RunwayStateCause =
   | 'DRYING'; // within the drying time after a wet slot
 
 /**
- * The rule that produced a reason. MODE, PLAN, TW, XW and CAP are the hard
+ * The rule that produced a reason. MODE, PLAN, TW, XW, MIN and CAP are the hard
  * rules in evaluation order; the rest are marginal or informational.
  */
-export type ReasonCode = 'MODE' | 'PLAN' | 'TW' | 'XW' | 'CAP' | 'VRB' | 'OVERLAY' | 'TAF' | 'NO_WIND' | 'NO_DEMAND';
+export type ReasonCode = 'MODE' | 'PLAN' | 'TW' | 'XW' | 'MIN' | 'CAP' | 'VRB' | 'OVERLAY' | 'TAF' | 'NO_WIND' | 'NO_DEMAND';
 
 /**
  * FAIL: makes the cell UNSUITABLE. MARGINAL: makes it MARGINAL.

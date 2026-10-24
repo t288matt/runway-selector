@@ -3,7 +3,7 @@
 // is chosen here except through cellView (status.ts).
 import { trafficLevelsFor, type Cell, type TrafficLevel, type WindObservation } from '../../engine';
 import { preferencePenalty } from '../../engine/optimiser';
-import { dir3, ddmm, hhmm, hhmmZ, hhmmZRel, kt1 } from '../format';
+import { dir3, ddmm, hhmm, hhmmZ, hhmmZRel, kt1, minimaText } from '../format';
 import { SLOT_MS, levelWord, type ViewData } from './dashboard';
 import { cellView, type CellView, type MissingWeather } from './status';
 
@@ -73,7 +73,7 @@ export function modeRows(view: ViewData): ModeRow[] {
       isCurrent,
       allUnsuitable,
       runwaysText: runwaysText(mode.arrivals, mode.departures),
-      title: `Mode ${mode.id}: ${runwaysText(mode.arrivals, mode.departures)}; ${cap}; crosswind limit ${kt1(mode.maxCrosswindKt)} kt`,
+      title: `Mode ${mode.id}: ${runwaysText(mode.arrivals, mode.departures)}; ${cap}; crosswind limit ${kt1(mode.maxCrosswindKt)} kt${mode.minima === null ? '' : `; minima: ${minimaText(mode.minima)}`}`,
       sort: penalty,
       order: index,
     });
