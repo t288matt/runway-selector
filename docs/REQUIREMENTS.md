@@ -64,6 +64,7 @@ A web application that recommends the runway operating mode for Sydney Kingsford
 | OD-53 | 24-10-2026 (owner, chat): the planned change marker in the event strip has no text label (it no longer says "CHANGE", and the new mode is not repeated there because the Next change tile gives it). The dashed line and the hover text are unchanged. Amends OD-50 and UI_DESIGN section 6. |
 | OD-54 | 24-10-2026 (owner, chat): the legend entry for the recommended outline reads "Recommended path"; the words "(the outline, whatever the cell's own colour)" are removed. The legend entry for the dashed line reads "Dashed blue line: planned change", without "(CHANGE)". |
 | OD-55 | 24-10-2026 (owner, chat): the timeline's horizontal scrollbar overlapped the bottom mode row. The grid now leaves room below the last row for the scrollbar. |
+| OD-56 | 24-10-2026 (owner, chat): the "More about <mode>" explanation lines in Panel A are collapsed behind an expandable arrow, closed by default. The heading reads "More about <mode>" without the colon, and is the clickable disclosure. |
 | OD-9 | 23-10-2026: the app will later be used for other airports, so the code must be airport-agnostic and entirely reference-data driven. YSSY is the first dataset, not a special case. This is a key requirement and takes precedence over convenience in every design choice. |
 
 ## 3. Reference-data requirements

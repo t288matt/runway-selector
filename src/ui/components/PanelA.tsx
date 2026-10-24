@@ -95,14 +95,14 @@ export function PanelA({ view, model, onCurrentMode, status, onConfirmCurrent }:
         </div>
       ))}
 
-      {/* The first line is the Weather row above; it is not said twice. */}
+      {/* The first line is the Weather row above; it is not said twice. Collapsed by default (OD-56). */}
       {model.kind === 'recommended' && model.whyLines.length > 1 ? (
-        <div className="why">
-          <b>More about {model.modeId}:</b>
+        <details className="why">
+          <summary>More about {model.modeId}</summary>
           {model.whyLines.slice(1).map((l, i) => (
             <p key={`${i}-${l}`} className={i === 0 ? 'why-first' : 'why-more'}>{l}</p>
           ))}
-        </div>
+        </details>
       ) : null}
     </section>
   );
