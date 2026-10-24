@@ -62,7 +62,7 @@ export function PanelA({ view, model, onCurrentMode, status, onConfirmCurrent }:
             <dd>{model.uncertainty}</dd>
             <dt>Runway state</dt>
             <dd>{model.runwayState}</dd>
-            <dt>Capacity</dt>
+            <dt>Traffic capacity</dt>
             <dd>{model.capacity}</dd>
           </dl>
         </>
