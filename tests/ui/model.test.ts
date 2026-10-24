@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PACKS } from '../helpers/packs';
+import { decodeMetar } from '../../src/weather';
+import { panelAModel } from '../../src/ui/model/panels';
 import { decodeMetarFixture, decodeTafFixture, nowOf, fixture, packWith, MIN } from '../weather/helpers';
 import {
   applyFeedResult,
@@ -398,5 +400,38 @@ describe('wind bars in the event strip (OD-51)', () => {
     const runs = windRuns([steady(340, 7), null, steady(340, 7)]);
     expect(runs.map((r) => [r.startSlot, r.endSlot])).toEqual([[0, 0], [2, 2]]);
     expect(windRuns([null, null])).toEqual([]);
+  });
+});
+
+describe('Ceiling (OD-66)', () => {
+  const ref = PACKS[0]!;
+  const pack = packWith(ref, { weatherStation: 'YSSY' });
+  const now = Date.parse('2026-10-24T10:00:00Z');
+  const ceilingFor = (body: string): string => {
+    const metar = decodeMetar(`YSSY 241000Z ${body}`, { pack, nowMs: now });
+    if (metar.kind !== 'ok') throw new Error('bad fixture METAR');
+    const view = calculate({ pack, nowMs: now, metar: metar.report, taf: null, windowChoice: 'full', currentMode: null, feed: EMPTY_FEED });
+    return panelAModel(view).ceiling;
+  };
+
+  it('is the lowest BKN or OVC base', () => {
+    expect(ceilingFor('03010KT 9999 FEW020 BKN030 OVC045 24/15 Q1013')).toBe('3,000 ft');
+  });
+
+  it('ignores FEW and SCT, which are not a ceiling', () => {
+    expect(ceilingFor('03010KT 9999 FEW005 SCT010 24/15 Q1013')).toBe('No ceiling');
+  });
+
+  it('is the vertical visibility when it is lower than the lowest cloud, or when no base is reported', () => {
+    expect(ceilingFor('03010KT 0800 VV002 24/15 Q1013')).toBe('200 ft');
+  });
+
+  it('CAVOK means no ceiling', () => {
+    expect(ceilingFor('03010KT CAVOK 24/15 Q1013')).toBe('CAVOK (no ceiling)');
+  });
+
+  it('is Unknown with no governing report', () => {
+    const view = calculate({ pack, nowMs: now, metar: null, taf: null, windowChoice: 'full', currentMode: null, feed: EMPTY_FEED });
+    expect(panelAModel(view).ceiling).toBe('Unknown');
   });
 });

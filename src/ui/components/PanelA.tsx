@@ -53,6 +53,8 @@ export function PanelA({ view, model, onCurrentMode, status, onConfirmCurrent }:
             <dd>{model.traffic}</dd>
             <dt>Runway state</dt>
             <dd>{model.runwayState}</dd>
+            <dt>Ceiling</dt>
+            <dd>{model.ceiling}</dd>
           </dl>
           <dl className="kv">
             <dt>Operating plan preference</dt>
