@@ -200,17 +200,14 @@ export function assessWind(
       if (nearCase === null || limitOf(c) < limitOf(nearCase)) nearCase = c;
     }
     if (nearCase !== null) {
-      // The gap is the difference of the two ROUNDED numbers shown (not the raw, unrounded
-      // gap rounded separately), so the sentence always subtracts correctly as printed.
-      const limR = Math.round(limitOf(nearCase));
-      const compR = Math.round(w.tailwindKt);
+      // Owner, 24-10-2026: just the figure; the limit is in the cell's table.
       tw.push({
         code: 'TW',
         severity: 'MARGINAL',
         runway: u.name,
         figures: { ...base, case: nearCase, near: true },
         limit: limitOf(nearCase),
-        text: `Tailwind ${compR} kt on runway ${u.name} is ${limR - compR} kt from the ${nearCase} limit of ${limR} kt`,
+        text: `Tailwind ${Math.round(w.tailwindKt)} kt on runway ${u.name}`,
       });
     }
   }
@@ -229,16 +226,13 @@ export function assessWind(
         text: `Crosswind ${f1(w.crosswindKt)} kt on runway ${u.name} exceeds this mode's limit of ${f1(xwLimit)} kt`,
       });
     } else if (nearLimit(w.crosswindKt, xwLimit, s.nearLimitMarginKt, tol)) {
-      // Same reasoning as the tailwind near-limit case above: subtract the two rounded numbers.
-      const limR = Math.round(xwLimit);
-      const compR = Math.round(w.crosswindKt);
       xw.push({
         code: 'XW',
         severity: 'MARGINAL',
         runway: u.name,
         figures: { ...base, near: true },
         limit: xwLimit,
-        text: `Crosswind ${compR} kt on runway ${u.name} is ${limR - compR} kt from this mode's limit of ${limR} kt`,
+        text: `Crosswind ${Math.round(w.crosswindKt)} kt on runway ${u.name}`,
       });
     }
   }
