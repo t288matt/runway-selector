@@ -54,7 +54,7 @@ describe('good packs', () => {
     expect(pack.settings.trafficBands).toEqual({ light: [0, 5], medium: [6, 11], busy: [12, null] });
     expect(pack.settings.forecastWindowMinutes).toBeNull();
     expect(pack.settings.precipitationCodes).toEqual(files['settings.json'].precipitationCodes.value);
-    expect(pack.modes.find((m) => m.id === 'SODPROPS')?.enabled).toBe(false);
+    expect(pack.modes.find((m) => m.id === 'SODPROPS')?.enabled).toBe(true);
     expect(pack.modes.find((m) => m.id === 'SODPROPS')?.arrivals).toEqual(['34L']);
     expect(pack.modes.some((m) => m.id === '4')).toBe(false);
     expect(pack.modes.every((m) => m.maxCrosswindKt === 20)).toBe(true);
@@ -63,11 +63,10 @@ describe('good packs', () => {
 
   it('turns the YSSY plan bands into minutes of the local day', () => {
     const pack = loadPackFrom(YSSY_PACK);
-    expect(pack.plan.map((b) => [b.id, b.startMinute, b.endMinute])).toEqual([
-      ['day', 360, 1380],
-      ['night', 1380, 360],
-    ]);
-    expect(pack.plan[1]?.rows[0]).toMatchObject({ mode: 'Curfew', allowed: true, penalty: 0 });
+    // The owner removed the curfew mode and confirmed every remaining mode is
+    // usable at any time, so the Sydney pack now has one all-day band.
+    expect(pack.plan.map((b) => [b.id, b.startMinute, b.endMinute])).toEqual([['all-day', 0, 0]]);
+    expect(pack.plan[0]?.rows[0]).toMatchObject({ mode: 'SODPROPS', allowed: true, penalty: 0 });
   });
 
   it('every tunable of every pack is unwrapped and its description kept apart', () => {

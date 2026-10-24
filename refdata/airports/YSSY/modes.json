@@ -3,8 +3,7 @@
   "description": "Standard modes from the 2015 Airservices table (provisional). Order in this file is the final tie-break. Capacity is empty because no official figures were found (SY-7). Runway uses marked long-haul only in the source are listed like any other use; the engine ignores the aircraft class (OD-19).",
   "status": "provisional",
   "modes": [
-    { "id": "Curfew",        "description": "Curfew mode", "enabled": true, "arrivals": ["34L"], "departures": ["16R"], "maxCrosswindKt": 20, "capacity": null },
-    { "id": "SODPROPS", "description": "Simultaneous opposite direction parallel runway operations; disabled until confirmed", "enabled": false, "arrivals": ["34L"], "departures": ["16L", "16R"], "maxCrosswindKt": 20, "capacity": null },
+    { "id": "SODPROPS", "description": "Simultaneous opposite direction parallel runway operations; enabled by the owner, 23-10-2026, for use at any time of day", "enabled": true, "arrivals": ["34L"], "departures": ["16L", "16R"], "maxCrosswindKt": 20, "capacity": null },
     { "id": "25A16D",        "description": "Arrivals 25, departures 16L and 16R", "enabled": true, "arrivals": ["25"], "departures": ["16L", "16R"], "maxCrosswindKt": 20, "capacity": null },
     { "id": "34A25D",        "description": "Arrivals 34L and 34R, departures 25", "enabled": true, "arrivals": ["34L", "34R"], "departures": ["25"], "maxCrosswindKt": 20, "capacity": null },
     { "id": "34AD25",        "description": "Arrivals 34L and 34R, departures 25, 34R and 34L", "enabled": true, "arrivals": ["34L", "34R"], "departures": ["25", "34R", "34L"], "maxCrosswindKt": 20, "capacity": null },
