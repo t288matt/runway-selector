@@ -171,7 +171,7 @@ export function freshnessChips(view: ViewData, feed: FeedState, nowMs: number): 
 
   // Runway state is not repeated here: it is one line below in Panel A, and every
   // timeline cell carries its own slot-by-slot runway-state detail on hover.
-  chips.push({ id: 'plan', label: 'Recalculates at', detail: `${hhmmZ(view.calcNowMs)}, next ${hhmmZ(nextPlanMs(view.calcNowMs))}`, tone: 'ok', flag: null });
+  chips.push({ id: 'plan', label: 'Recalculated at', detail: `${hhmmZ(view.calcNowMs)}, next ${hhmmZ(nextPlanMs(view.calcNowMs))}`, tone: 'ok', flag: null });
   return chips;
 }
 
