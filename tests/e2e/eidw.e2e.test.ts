@@ -3,7 +3,8 @@
 // Pack numbers (refdata/airports/EIDW, provisional 24-10-2026):
 //   headings (magnetic): 10 98, 28 278, 16 159, 34 339. 10/28 is modelled as a single runway (no L/R suffix); Dublin's second,
 //   parallel 10/28 runway is not in this pack.
-//   Limits carried over from the other packs: tailwind dry 5 / wet 0, tolerance 0.05, calm 3, near-limit margin 3, crosswind 20 (default),
+//   Limits carried over from the other packs: tailwind dry 5 / wet 0, tolerance 0.05, calm 3, near-limit margin 3, crosswind 20 (default).
+//   28AD and 10AD have their own 28 kt crosswind limit (owner, 24-10-2026); 16AD and 34AD use the 20 kt default.
 //   marginal penalty 3, change penalties light 1 / medium 5 / busy 25 / unknown 5. No capacities.
 //   Preference penalty (owner's order): 28AD 0, 10AD 0 (equal first), 16AD 2, 34AD 2 (equal second).
 // Component maths: headwind = S cos(D - H), tailwind = max(0, -headwind), crosswind = S |sin(D - H)|.
@@ -48,10 +49,10 @@ describe('D02 wind 280/10, the other way: 10AD fails on tailwind and 28AD is rec
   });
 });
 
-describe('D03 wind 010/22: the crosswind maxes out 10/28 and the plan falls back to 34AD', () => {
-  // 10 and 28 (one physical runway): crosswind 21.99 > 20.05 -> UNSUITABLE XW on both ends, so 10AD and 28AD are both UNSUITABLE.
-  // 16: tailwind 18.86 -> UNSUITABLE TW. 34: near headwind, xw 11.33 -> SUITABLE. Only 34AD passes.
-  const r = go(kt(10, 22));
+describe('D03 wind 010/29: the crosswind maxes out 10/28 (28 kt limit) and the plan falls back to 34AD', () => {
+  // 10 and 28 (one physical runway, 28 kt limit): crosswind 28.98 > 28.05 -> UNSUITABLE XW on both ends, so 10AD and 28AD are both UNSUITABLE.
+  // 16 (20 kt default limit): tailwind 24.86 -> UNSUITABLE TW. 34: near headwind, xw 14.94 -> SUITABLE. Only 34AD passes.
+  const r = go(kt(10, 29));
   it('statuses and the recommendation', () => {
     for (const id of ['10AD', '28AD', '16AD']) expect(cell(r, id, 0), id).toMatchObject({ status: 'UNSUITABLE' });
     expect(cell(r, '34AD', 0).status).toBe('SUITABLE');
@@ -59,8 +60,8 @@ describe('D03 wind 010/22: the crosswind maxes out 10/28 and the plan falls back
   });
 });
 
-describe('D04 wind 190/22, the other way: the crosswind maxes out 10/28 and the plan falls back to 16AD', () => {
-  const r = go(kt(190, 22));
+describe('D04 wind 190/29, the other way: the crosswind maxes out 10/28 (28 kt limit) and the plan falls back to 16AD', () => {
+  const r = go(kt(190, 29));
   it('statuses and the recommendation', () => {
     for (const id of ['10AD', '28AD', '34AD']) expect(cell(r, id, 0), id).toMatchObject({ status: 'UNSUITABLE' });
     expect(cell(r, '16AD', 0).status).toBe('SUITABLE');
