@@ -29,6 +29,57 @@ function fake(served: Served): { fetch: FetchLike; urls: string[] } {
 
 const good = (): Served => ({ app: APP, packs: { YSSY: readRaw(YSSY_PACK) } });
 
+describe('loadPack: slow answers and redirects (issue 18)', () => {
+  it('asks with redirect: error and a timeout signal, and no cookies', async () => {
+    const inits: (RequestInit | undefined)[] = [];
+    const inner = fake(good()).fetch;
+    const r = await loadPack((url, init) => (inits.push(init), inner(url, init)), { cacheBust: 'x1' });
+    expect(r.ok).toBe(true);
+    expect(inits).toHaveLength(6);
+    for (const init of inits) {
+      expect(init).toMatchObject({ redirect: 'error', credentials: 'omit', cache: 'no-store' });
+      expect(init?.signal).toBeInstanceOf(AbortSignal);
+    }
+  });
+
+  it('a response that came from a redirect is refused and names the file', async () => {
+    const served = good();
+    served.special = { './refdata/airports/YSSY/runways.json': () => Object.defineProperty(new Response(readRaw(YSSY_PACK)['runways.json']), 'redirected', { value: true }) };
+    const r = await loadPack(fake(served).fetch, { cacheBust: 'x1' });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.message).toContain('runways.json');
+      expect(r.message).toContain('redirected');
+    }
+  });
+
+  it('a redirect status is refused too, with no following of it', async () => {
+    const served = good();
+    served.special = { './refdata/app.json': () => new Response(null, { status: 302, headers: { location: 'https://elsewhere.example/app.json' } }) };
+    const r = await loadPack(fake(served).fetch, { cacheBust: 'x1' });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.message).toContain('redirected');
+  });
+
+  it('a file that never answers is given up on at the timeout', async () => {
+    const hang: FetchLike = (_url, init) =>
+      new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () => reject(init.signal?.reason ?? new Error('aborted')), { once: true });
+      });
+    const r = await loadPack(hang, { cacheBust: 'x1', timeoutMs: 30 });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.message).toContain('did not arrive within');
+  });
+
+  it('a body that never ends is cut at the timeout', async () => {
+    const served = good();
+    served.special = { './refdata/app.json': () => new Response(new ReadableStream<Uint8Array>({ pull: () => new Promise(() => undefined) })) };
+    const r = await loadPack(fake(served).fetch, { cacheBust: 'x1', timeoutMs: 30 });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.message).toContain('did not arrive within');
+  });
+});
+
 describe('loadPack', () => {
   it('loads a valid pack and asks for every file with the cache-bust query', async () => {
     const { fetch, urls } = fake(good());
