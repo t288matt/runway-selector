@@ -12,7 +12,7 @@ import {
   EMPTY_FEED,
   freshness,
   freshnessChips,
-  levelLetter,
+  levelShortWord,
   levelWord,
   needsRecalculation,
   nextPlanMs,
@@ -181,7 +181,7 @@ describe('traffic words (display mapping only)', () => {
     expect(levelWord('medium')).toBe('MEDIUM');
     expect(levelWord('busy')).toBe('HIGH');
     expect(levelWord(null)).toBe('UNKNOWN');
-    expect(['light', 'medium', 'busy', null].map((l) => levelLetter(l as 'light' | 'medium' | 'busy' | null))).toEqual(['L', 'M', 'H', '?']);
+    expect(['light', 'medium', 'busy', null].map((l) => levelShortWord(l as 'light' | 'medium' | 'busy' | null))).toEqual(['LOW', 'MED', 'HIGH', '?']);
   });
 });
 

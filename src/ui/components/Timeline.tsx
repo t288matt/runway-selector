@@ -3,7 +3,7 @@
 // from the engine's status through cellView() and from nothing else.
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { hhmmZ } from '../format';
-import { WINDOW_OPTIONS, type ViewData, type WindowChoice, isWindowChoice, levelWord, levelLetter } from '../model/dashboard';
+import { WINDOW_OPTIONS, type ViewData, type WindowChoice, isWindowChoice, levelWord, levelShortWord } from '../model/dashboard';
 import { cellDetailModel, type CellDetailModel } from '../model/panels';
 import { STATUS_STYLE } from '../model/status';
 import { LAYOUT, LEGEND, moveFocus, summaryTiles, visibleRows, type TimelineModel } from '../model/timeline';
@@ -222,7 +222,7 @@ export function Timeline({ view, model, displayNowMs, onWindowChange }: Timeline
             <div className="lab" role="rowheader"><small>Traffic</small></div>
             {slots.map((s) => (
               <div key={s.index} role="columnheader" className={`t lv-${s.level ?? 'x'}`} title={`Traffic ${levelWord(s.level)}`}>
-                {s.level === 'busy' ? `${levelLetter(s.level)} ${levelWord(s.level)}` : levelLetter(s.level)}
+                {levelShortWord(s.level)}
               </div>
             ))}
           </div>
