@@ -29,7 +29,8 @@ async function getBody(url: string, options: FetchWeatherOptions): Promise<{ ok:
   const timeoutMs = options.timeoutMs ?? WEATHER_TIMEOUT_MS;
   const signal = AbortSignal.timeout(timeoutMs);
   try {
-    const res = await options.fetch(url, { cache: 'no-store', credentials: 'omit', signal });
+    const res = await options.fetch(url, { cache: 'no-store', credentials: 'omit', redirect: 'error', signal });
+    if (res.redirected) return fail('network', 'the answer came from a redirect, which is refused');
     if (!res.ok) return fail('http', `HTTP ${res.status}`);
     return { ok: true, body: await readLimited(res, WEATHER_MAX_BYTES, signal) };
   } catch (e) {

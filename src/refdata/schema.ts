@@ -86,6 +86,13 @@ const num = (r: { min: number; max: number }) =>
 const int = (r: { min: number; max: number }) =>
   v.pipe(v.number('Expected a whole number'), v.integer(), v.minValue(r.min), v.maxValue(r.max));
 const text = (max: number) => v.pipe(v.string('Expected text'), v.minLength(1), v.maxLength(max));
+/**
+ * A label value is shown to the user (the extra notice line), so it may not hold control characters (\p{Cc}, which includes line
+ * breaks) or format characters (\p{Cf}: the left-to-right and right-to-left marks, embeddings, overrides and isolates, zero-width
+ * joiners) or the line and paragraph separators, any of which can reorder or hide text (issue 18).
+ */
+const labelText = (max: number) =>
+  v.pipe(text(max), v.regex(/^[^\p{Cc}\p{Cf}\p{Zl}\p{Zp}]*$/u, 'A label may not contain control or direction-changing characters'));
 const note = v.pipe(v.string('Expected text'), v.trim(), v.nonEmpty('A description must not be empty'), v.maxLength(C.descriptionChars));
 const status = v.picklist(['verified', 'provisional'], 'status must be "verified" or "provisional"');
 
@@ -143,7 +150,7 @@ export const AirportFileSchema = v.strictObject({
   arrivalSpeedFloorKt: num(R.arrivalSpeedFloorKt),
   labels: v.optional(
     v.pipe(
-      v.record(v.pipe(v.string(), v.regex(/^[A-Za-z][A-Za-z0-9_]{0,39}$/, 'A label key is 1 to 40 letters, digits or "_", starting with a letter (keys starting with "_" are notes and are not allowed here)')), text(C.labelValueChars)),
+      v.record(v.pipe(v.string(), v.regex(/^[A-Za-z][A-Za-z0-9_]{0,39}$/, 'A label key is 1 to 40 letters, digits or "_", starting with a letter (keys starting with "_" are notes and are not allowed here)')), labelText(C.labelValueChars)),
       v.check((o) => Object.keys(o).length <= C.maxLabels, `At most ${C.maxLabels} labels`),
     ),
   ),

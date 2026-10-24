@@ -56,7 +56,8 @@ export async function fetchFeed(options: FetchFeedOptions): Promise<FetchFeedRes
   const signal = AbortSignal.timeout(timeoutMs);
   let text: string;
   try {
-    const res = await options.fetch(url, { cache: 'no-store', credentials: 'omit', signal });
+    const res = await options.fetch(url, { cache: 'no-store', credentials: 'omit', redirect: 'error', signal });
+    if (res.redirected) return fail('network', 'Traffic data came from a redirect, which is refused');
     if (!res.ok) return fail('http', `Traffic data could not be fetched: HTTP ${res.status}`);
     text = await readLimited(res, FEED_MAX_BYTES, signal);
   } catch (e) {
