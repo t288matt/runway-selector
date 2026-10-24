@@ -146,10 +146,16 @@ export function visibleRows(model: Pick<TimelineModel, 'rows' | 'cells' | 'onPat
 export const WIND_SHIFT_MIN_DEGREES = 10;
 export const WIND_SHIFT_MIN_KT = 5;
 
-/** Wind as reported: "340/10", "020/12G22", "VRB/05". */
+/**
+ * Wind as reported: "340/10", "020/12G22", "VRB/05". A variable direction range (160V220) replaces the single
+ * direction, since the engine's crosswind and tailwind figures use the worst case across that range (WC-11),
+ * not the mean direction shown alone.
+ */
 export function windText(w: WindObservation): string {
   const gust = w.gustKt === null ? '' : `G${kt1(w.gustKt)}`;
-  return `${w.kind === 'variable' ? 'VRB' : dir3(w.directionDegrees)}/${kt1(w.speedKt).padStart(2, '0')}${gust}`;
+  const direction =
+    w.kind === 'variable' ? 'VRB' : w.variableRangeDegrees === null ? dir3(w.directionDegrees) : `${dir3(w.variableRangeDegrees[0])}V${dir3(w.variableRangeDegrees[1])}`;
+  return `${direction}/${kt1(w.speedKt).padStart(2, '0')}${gust}`;
 }
 
 const turnDegrees = (a: number, b: number): number => {
