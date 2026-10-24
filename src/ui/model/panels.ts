@@ -84,7 +84,7 @@ export function panelAModel(view: ViewData): PanelAModel {
   const { plan, explanation, evaluation } = result;
   const recId = plan.recommendedModeId;
   const provisional = (status: string | null): string => (status === 'provisional' ? ' (provisional)' : '');
-  const currentNote = view.currentMode === null ? 'Not set: no starting mode' : `Set by you: Mode ${view.currentMode}`;
+  const currentNote = view.currentMode === null ? '' : `Set by you: Mode ${view.currentMode}`;
   const enabledCount = pack.modes.filter((m) => m.enabled).length;
   const empty = {
     modeId: null,

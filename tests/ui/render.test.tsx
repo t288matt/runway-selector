@@ -179,7 +179,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('Panel A states [%s]', (_n
   it('shows no banner when nothing is wrong and the current mode is not set', () => {
     const html = renderDashboard(viewOf(pack, rig, same<Wx>(4, 'ok')));
     expect(html).not.toContain('class="banner');
-    expect(html).toContain('Not set: no starting mode');
+    expect(html).not.toContain('Not set: no starting mode');
   });
 
   it('shows the red banner when the current mode is unsuitable now', () => {
