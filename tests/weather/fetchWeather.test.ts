@@ -30,6 +30,16 @@ function serve(answers: Record<string, () => Response | Error>): Served {
   };
 }
 
+describe('redirects are refused (issue 18)', () => {
+  it('asks with redirect: error and refuses an answer that came from a redirect', async () => {
+    const s = serve({ [METAR_URL_BASE]: () => Object.defineProperty(new Response(metarsEu(METAR_TEXT)), 'redirected', { value: true }) });
+    const r = await fetchMetarText('YSSY', { fetch: s.fetch });
+    expect(s.calls[0]?.init?.redirect).toBe('error');
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.message).toContain('redirect');
+  });
+});
+
 describe('stripDuplicateTafPrefix', () => {
   it.each([
     ['TAF TAF YSSY 240516Z 2406/2512 04020KT CAVOK', 'TAF YSSY 240516Z 2406/2512 04020KT CAVOK'],
