@@ -26,13 +26,12 @@ export function PanelA({ view, model, onCurrentMode, status, onConfirmCurrent }:
         {model.kind === 'recommended' ? (
           <>
             <div className="modebig" aria-label={`Recommended mode ${model.modeId ?? ''}`}>
-              <small>MODE</small>
               {model.modeId}
             </div>
             <div className="rwy">Arr <b>{model.arrivalsText}</b>, Dep <b>{model.departuresText}</b></div>
           </>
         ) : (
-          <div className="modebig"><small>MODE</small>-</div>
+          <div className="modebig">-</div>
         )}
         {select}
       </div>
