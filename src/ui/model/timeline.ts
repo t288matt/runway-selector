@@ -66,7 +66,6 @@ export function modeRows(view: ViewData): ModeRow[] {
     const allUnsuitable = cellsOfMode.length > 0 && cellsOfMode.every((c) => c.status === 'UNSUITABLE');
     const penalty = cell0 === undefined ? Number.MAX_SAFE_INTEGER : preferencePenalty(pack, cell0.bandId, mode.id);
     const cap = mode.capacity === null ? 'no capacity set' : `capacity ${mode.capacity} per hour`;
-    const status = pack.meta.modes.status === null ? '' : ` (${pack.meta.modes.status})`;
     rows.push({
       index,
       modeId: mode.id,
@@ -74,7 +73,7 @@ export function modeRows(view: ViewData): ModeRow[] {
       isCurrent,
       allUnsuitable,
       runwaysText: runwaysText(mode.arrivals, mode.departures),
-      title: `Mode ${mode.id}: ${runwaysText(mode.arrivals, mode.departures)}; ${cap}${status}; crosswind limit ${kt1(mode.maxCrosswindKt)} kt`,
+      title: `Mode ${mode.id}: ${runwaysText(mode.arrivals, mode.departures)}; ${cap}; crosswind limit ${kt1(mode.maxCrosswindKt)} kt`,
       sort: (isRecommended ? 0 : isCurrent ? 1 : 2) * 1e9 + penalty,
       order: index,
     });
