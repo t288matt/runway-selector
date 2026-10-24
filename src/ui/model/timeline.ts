@@ -1,4 +1,4 @@
-// The view model of Panel B, the survival timeline (UI_DESIGN section 6). Plain
+// The view model of Panel B, the optimal mode timeline (UI_DESIGN section 6). Plain
 // data from one engine result: rows, columns, cell views, overlays. No colour
 // is chosen here except through cellView (status.ts).
 import { trafficLevelsFor, type Cell, type TrafficLevel, type WindObservation } from '../../engine';
@@ -317,54 +317,9 @@ export interface Tile {
   readonly value: string;
 }
 
-/** The four summary tiles (DB-6), from the engine's plan, survival and changeovers. */
+/** The summary tile above the grid: the recommended mode (OD-49 removed Survives, Next constraint and Traffic at changeover). */
 export function summaryTiles(view: ViewData): Tile[] {
-  const { result } = view;
-  const rec = result.plan.recommendedModeId;
-  if (rec === null) {
-    return [
-      { label: 'Recommended', value: 'None' },
-      { label: 'Survives', value: '-' },
-      { label: 'Next constraint', value: '-' },
-      { label: 'Traffic at changeover', value: '-' },
-    ];
-  }
-  const recIndex = view.pack.modes.findIndex((m) => m.id === rec);
-  const survival = result.evaluation.survival[recIndex];
-  const onPath = result.plan.slots.filter((s) => s.modeId !== null);
-  const marginalOnPath = onPath.filter((s) => s.status === 'MARGINAL').length;
-  const firstMarginal = result.plan.slots.findIndex((s) => s.modeId !== null && s.status === 'MARGINAL');
-  const firstMarginalStart = view.weather.slots[firstMarginal]?.startMs;
-  // Lead with what holds (suitable until when), then say how much of it is only marginal and where that starts.
-  const marginalWords =
-    marginalOnPath === 0
-      ? ''
-      : `; marginal in ${marginalOnPath} of ${onPath.length} ${onPath.length === 1 ? 'slot' : 'slots'}${firstMarginalStart === undefined ? '' : `, first at ${hhmmZRel(firstMarginalStart, view.calcNowMs)}`}`;
-  const survives =
-    survival === undefined || survival.viableUntilMs === null
-      ? '-'
-      : `${survival.endsInFailure ? 'Suitable to' : 'Suitable to end of window,'} ${hhmmZRel(survival.viableUntilMs, view.calcNowMs)}${marginalWords}`;
-
-  const slots = view.weather.slots;
-  const missing = missingWeather(view);
-  let constraint = 'None in window';
-  for (let i = 0; i < result.plan.slots.length; i += 1) {
-    const p = result.plan.slots[i];
-    const s = slots[i];
-    if (p === undefined || s === undefined || p.modeId === null || p.status === 'SUITABLE' || p.status === null) continue;
-    const idx = view.pack.modes.findIndex((m) => m.id === p.modeId);
-    const cv = cellView(cellAt(view, idx, i), s.startMs, missing, view.calcNowMs);
-    constraint = `${hhmmZRel(s.startMs, view.calcNowMs)} ${cv.code}`.trim();
-    break;
-  }
-  const upcoming = result.changeovers.find((c) => c.change.slotIndex > 0) ?? result.changeovers[0];
-  const atChange = upcoming === undefined ? 'No change' : `${levelWord(upcoming.trafficLevel)} (${hhmmZRel(upcoming.change.startMs, view.calcNowMs)})`;
-  return [
-    { label: 'Recommended', value: rec },
-    { label: 'Survives', value: survives },
-    { label: 'Next constraint', value: constraint },
-    { label: 'Traffic at changeover', value: atChange },
-  ];
+  return [{ label: 'Recommended', value: view.result.plan.recommendedModeId ?? 'None' }];
 }
 
 /** The legend entries, in order. Icon and pattern come from STATUS_STYLE. */

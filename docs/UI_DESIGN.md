@@ -55,8 +55,8 @@ Content width capped at 1440 px, centred, 16 px gutters. C, D and F sit side by 
 | [banner: EARLY MODE CHANGE RECOMMENDED: trigger, timing, benefit]                                        |
 | Why Mode 12: one sentence                                                                                |
 +----------------------------------------------------------------------------------------------------------+
-| B  MODE SURVIVAL TIMELINE          Window [Full TAF v]                                                   |
-| [Recommended] [Survives] [Next constraint] [Traffic at changeover]  (four summary tiles)                 |
+| B  OPTIMAL MODE TIMELINE           Window [Full TAF v]                                                   |
+| [Recommended]  (one summary tile, OD-49)                                                                 |
 | Time (UTC) | 22:00 | 22:30 | 23:00  | ...                                                                |
 | Events     | BECMG | TEMPO | CHANGE | ...                                                                |
 | Traffic    | L     | M     | H HIGH | ...                                                                |
@@ -127,7 +127,7 @@ Common to all panels: a letter badge and title; a small "provisional" mark where
 
 **Interactions.** Clicking "Next change" scrolls B to the changeover marker and focuses it. Clicking "Why" expands the full explanation (the engine's template text with numbers).
 
-### Panel B: survival timeline
+### Panel B: optimal mode timeline
 Section 6 describes it in full.
 
 ### Panel C: weather (removed, OD-40)
@@ -160,7 +160,7 @@ Each value shows its `description` from the pack as help text and its source sta
 ### Weather entry (above Panel A)
 Two text boxes, METAR and TAF, each with the raw text the user pasted and an Apply button (OD-28). The boxes start empty on every visit, with "No weather entered" beside them; reports are not stored (OD-30). A METAR older than its window is accepted with an amber stale flag. If only one report is entered, a banner names the missing one. On Apply the text is checked (station, size, decodable) and, if valid, replaces the previous report and triggers a fresh recommendation. An invalid paste is refused with a message naming what could not be read, and the previous report stays. The observation age is shown beside each box, taken from the report's own time group, so an old pasted report is visibly stale. Paste is an option, not the default (owner, 24-10-2026): the paste boxes and Apply buttons are hidden until the user presses "Use my own weather" (the boxes then start empty; a fetch never writes into them, so there is no second copy of the report on screen); until then each report is shown read-only with its source and age. Automatic fetching (OD-37): the app fetches both reports for the weather station on load and every `weatherPollMinutes`, and shows the report in use read-only. Under each box a line says where the report came from (automatic or pasted) and, if the last fetch failed, why, with the previous report still in use. Applying pasted text pauses automatic updates for that report and shows a Resume automatic button. A small credit line names NOAA/NWS and Datamask Aviation. Reports are not stored (OD-30).
 
-## 6. The survival timeline in detail
+## 6. The optimal mode timeline in detail
 ### 6.1 Structure
 | Element | Specification |
 |---|---|
@@ -224,7 +224,7 @@ Event-strip hover shows the TAF group in raw and decoded form.
 - The scroll bar is shown only when the slots do not fit, with a visible track.
 
 ### 6.6 Summary tiles and reason line
-Four tiles above the grid (DB-6): Recommended, Survives (end time and count of marginal slots), Next constraint (first forecast event that changes any cell of the recommended mode or the current mode), Traffic at changeover. Below the legend, a one-line reason in the style of the owner's illustration: "Mode 12 is recommended because it is the only mode with no unsuitable slot until 07:30Z..." The reason is a template sentence filled from the engine, never hand-written text.
+One tile above the grid: Recommended. The Survives, Next constraint and Traffic at changeover tiles are removed (OD-49). Below the legend, a one-line reason in the style of the owner's illustration: "Mode 12 is recommended because it is the only mode with no unsuitable slot until 07:30Z..." The reason is a template sentence filled from the engine, never hand-written text.
 
 ### 6.7 Legend
 Always visible under the grid: each status with its icon, pattern and word, plus the overlay keys (recommended outline, change line, busy band, wet band, uncertainty corner).

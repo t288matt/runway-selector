@@ -243,20 +243,10 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('timeline rows and tiles [
     expect(m.slots.filter((s) => s.isChange).map((s) => s.index)).toEqual([...m.changeSlots]);
   });
 
-  it('has four summary tiles with fixed labels', () => {
+  it('has one summary tile, Recommended (OD-49)', () => {
     const v = viewOf(pack, rig, wx);
-    expect(summaryTiles(v).map((t) => t.label)).toEqual(['Recommended', 'Survives', 'Next constraint', 'Traffic at changeover']);
+    expect(summaryTiles(v).map((t) => t.label)).toEqual(['Recommended']);
     expect(summaryTiles(v)[0]?.value).toBe(v.result.plan.recommendedModeId);
-  });
-
-  it('the Survives tile leads with what holds, then says how much is only marginal', () => {
-    const v = viewOf(pack, rig, wx);
-    const text = summaryTiles(v)[1]?.value ?? '';
-    expect(text).toMatch(/^Suitable to /);
-    const onPath = v.result.plan.slots.filter((s) => s.modeId !== null);
-    const marginal = onPath.filter((s) => s.status === 'MARGINAL').length;
-    if (marginal === 0) expect(text).not.toContain('marginal');
-    else expect(text).toContain(`marginal in ${marginal} of ${onPath.length} ${onPath.length === 1 ? 'slot' : 'slots'}, first at `);
   });
 });
 
