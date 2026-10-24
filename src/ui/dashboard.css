@@ -568,9 +568,11 @@ select {
     var(--unk);
 }
 .cell.rec {
+  /* 4 px outline (was 2 px, OD-52); drawn above the neighbouring cells it overlaps. */
+  z-index: 3;
   box-shadow:
-    0 0 0 2px var(--bg),
-    0 0 0 4px var(--accent-text);
+    0 0 0 1px var(--bg),
+    0 0 0 5px var(--accent-text);
 }
 .cell.unc::after {
   content: '';

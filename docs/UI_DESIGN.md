@@ -190,7 +190,7 @@ A white triangle in the top-right corner marks a cell whose status depends on an
 | Overlay | Drawing | Notes |
 |---|---|---|
 | Now marker | 2 px white vertical line across all rows at the exact minute, with label "NOW 22:12Z" at the top | Moves each minute; the page scrolls so it is at the left edge on load. |
-| Recommended sequence | A 2 px accent-coloured outline (with 2 px gap) around the cells of the recommended mode in each time span, stepping between rows at changeovers | If no change is planned the outline stays on one row. |
+| Recommended sequence | A 4 px accent-coloured outline (with 1 px gap; was 2 px, OD-52) around the cells of the recommended mode in each time span, stepping between rows at changeovers | If no change is planned the outline stays on one row. |
 | Recommended mode row | Accent bar at the left of the row label and tag REC | |
 | Planned changeover | Dashed accent vertical line from the event strip to the bottom, labelled CHANGE in the event strip, hover text "10 to 12, 00:00Z, traffic MEDIUM, prepare from 23:45Z" | The preparation period is a short bracket on the event strip. |
 | High-traffic bands | A translucent amber band behind all rows from the traffic strip down, with dashed amber side edges, and the traffic chip "H HIGH" in the strip | Drawn behind cells; cell colours stay unchanged so contrast is kept. |
