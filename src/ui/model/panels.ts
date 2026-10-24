@@ -6,6 +6,7 @@ import { runwayWind, trafficLevelsFor, withinLimit, type Cell, type TrafficLevel
 import { dir3, durationText, hhmmZRel, kt1 } from '../format';
 import { RUNWAY_STATE_WORDS, levelWord, type ViewData } from './dashboard';
 import { missingWeather, planRank } from './timeline';
+import type { DecodedConditions } from '../../weather';
 import { cellView, CAUSE_WORDS, STATUS_STYLE } from './status';
 
 // ------------------------------------------------------------------ Panel A
@@ -33,6 +34,7 @@ export interface PanelAModel {
   readonly rank: string;
   readonly uncertainty: string;
   readonly runwayState: string;
+  readonly ceiling: string;
   readonly banners: readonly BannerModel[];
   readonly whyLines: readonly string[];
   readonly noSuitable: { readonly title: string; readonly perMode: readonly BlockedModeModel[] } | null;
@@ -72,6 +74,35 @@ function currentReportText(view: ViewData): string | null {
   return null;
 }
 
+/**
+ * The decoded conditions (clouds, CAVOK, vertical visibility) of whichever report governs the current slot: the
+ * METAR, or the TAF's prevailing period at this time when the METAR does not govern. Mirrors the period choice
+ * in weather/slots.ts's tafWeather, so it names the same period that decides the slot's weather.
+ */
+function currentConditions(view: ViewData): DecodedConditions | null {
+  const governedBy = view.weather.slots[0]?.governedBy;
+  if (governedBy === 'METAR') return view.metar;
+  if (governedBy === 'TAF' && view.taf !== null) {
+    const endMs = view.weather.slots[0]?.endMs ?? view.calcNowMs;
+    let period = view.taf.periods[0];
+    for (const p of view.taf.periods) if (p.startMs < endMs) period = p;
+    return period ?? null;
+  }
+  return null;
+}
+
+const thousands = (n: number): string => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+/** Ceiling (owner, 24-10-2026, OD-66): the lowest BKN or OVC base, or the vertical visibility if lower or if no cloud base is reported. CAVOK and a clear sky both mean no ceiling. */
+function ceilingText(c: DecodedConditions | null): string {
+  if (c === null) return 'Unknown';
+  if (c.cavok) return 'CAVOK (no ceiling)';
+  const bases = c.clouds.filter((cl) => (cl.quantity === 'BKN' || cl.quantity === 'OVC') && cl.baseFt !== null).map((cl) => cl.baseFt as number);
+  const lowestCloud = bases.length === 0 ? null : Math.min(...bases);
+  const ceilingFt = c.verticalVisibilityFt !== null && (lowestCloud === null || c.verticalVisibilityFt < lowestCloud) ? c.verticalVisibilityFt : lowestCloud;
+  return ceilingFt === null ? 'No ceiling' : `${thousands(ceilingFt)} ft`;
+}
+
 function runwayStateSentence(view: ViewData): string {
   const slots = view.result.evaluation.slots;
   const first = slots[0];
@@ -103,6 +134,7 @@ export function panelAModel(view: ViewData): PanelAModel {
     rank: '-',
     uncertainty: explanation.uncertaintyLine,
     runwayState: runwayStateSentence(view),
+    ceiling: ceilingText(currentConditions(view)),
     banners: [] as BannerModel[],
     whyLines: explanation.lines,
     noSuitable: null,
@@ -161,6 +193,7 @@ export function panelAModel(view: ViewData): PanelAModel {
     rank: rank === null ? '-' : `${rank} of ${enabledCount} (1 is most preferred)`,
     uncertainty: explanation.uncertaintyLine,
     runwayState: runwayStateSentence(view),
+    ceiling: ceilingText(currentConditions(view)),
     banners,
     whyLines: explanation.lines,
     noSuitable: null,
