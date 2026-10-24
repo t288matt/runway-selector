@@ -6,7 +6,7 @@ import type { AirportPack, FetchLike } from '../refdata';
 import type { AuditExport, Store } from '../store';
 import type { Clock } from './clock';
 import type { ApplyOutcome } from './components/WeatherEntry';
-import { createController, type Controller, type ControllerState } from './controller';
+import { createController, type Controller, type ControllerState, type WeatherKind } from './controller';
 import type { WindowChoice } from './model/dashboard';
 
 export { TICK_MS } from './controller';
@@ -33,6 +33,7 @@ export interface DashboardState extends ControllerState {
   readonly dismissNotice: (index: number) => void;
   readonly applyMetar: (text: string) => ApplyOutcome;
   readonly applyTaf: (text: string) => ApplyOutcome;
+  readonly resumeAutomatic: (kind: WeatherKind) => void;
 }
 
 export function useDashboard(pack: AirportPack, deps: AppDeps): DashboardState {
@@ -66,5 +67,6 @@ export function useDashboard(pack: AirportPack, deps: AppDeps): DashboardState {
     dismissNotice: controller.dismissNotice,
     applyMetar: controller.applyMetar,
     applyTaf: controller.applyTaf,
+    resumeAutomatic: controller.resumeAutomatic,
   };
 }

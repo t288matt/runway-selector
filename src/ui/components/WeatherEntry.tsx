@@ -1,10 +1,14 @@
-// Weather entry (UI_DESIGN section 5, WX-1, WX-3, OD-28, OD-30): two text boxes
-// that start empty on every visit, each with an Apply button. The decision to
-// accept a report is made by the caller (the decode adapter); a refused report
-// leaves the previous one in use and shows a plain message here.
-import { useState } from 'react';
+// Weather entry (UI_DESIGN section 5, WX-1, WX-3, OD-28, OD-30, OD-37): two text
+// boxes, each with an Apply button. The page fetches both reports by itself and
+// fills a box with the fetched text; pasting over it and pressing Apply is the
+// override. The decision to accept a report is made by the caller (the decode
+// adapter); a refused report leaves the previous one in use and shows a plain
+// message here.
+import { useEffect, useRef, useState } from 'react';
 import type { AirportPack } from '../../refdata';
 import type { DecodedMetar, DecodedTaf } from '../../weather';
+import { WEATHER_CREDIT } from '../../weather/config';
+import type { AutoReportState, WeatherKind } from '../controller';
 import { ageText, utcAndLocal } from '../format';
 import { freshness } from '../model/dashboard';
 
@@ -23,6 +27,8 @@ export interface WeatherEntryProps {
   readonly displayNowMs: number;
   readonly onApplyMetar: (text: string) => ApplyOutcome;
   readonly onApplyTaf: (text: string) => ApplyOutcome;
+  readonly auto: Readonly<Record<WeatherKind, AutoReportState>>;
+  readonly onResumeAutomatic: (kind: WeatherKind) => void;
 }
 
 interface BoxProps {
@@ -31,7 +37,9 @@ interface BoxProps {
   readonly rows: number;
   readonly note: string;
   readonly inUse: string | null;
+  readonly auto: AutoReportState;
   readonly onApply: (text: string) => ApplyOutcome;
+  readonly onResume: () => void;
 }
 
 /** The refusal message and the decoder's warnings, as plain text (SEC-2). */
@@ -50,16 +58,54 @@ export function ApplyNote({ outcome }: { outcome: ApplyOutcome }) {
   );
 }
 
-function Box({ id, label, rows, note, inUse, onApply }: BoxProps) {
+/** Where the report in use came from, and how the last automatic fetch went. */
+function SourceNote({ id, label, auto, onResume }: { id: string; label: string; auto: AutoReportState; onResume: () => void }) {
+  return (
+    <>
+      {auto.source === 'automatic' ? <div className="age" data-testid={`${id}-source`}>Fetched automatically.</div> : null}
+      {auto.paused ? (
+        <div className="age" data-testid={`${id}-source`}>
+          Pasted by you; automatic {label} updates are paused.{' '}
+          <button type="button" className="btn small-btn" onClick={onResume}>Resume automatic</button>
+        </div>
+      ) : null}
+      {auto.error === null ? null : <div className="refused" role="alert" data-testid={`${id}-fetch-error`}>{auto.error} The previous {label}, if any, stays in use.</div>}
+      {auto.warnings.length === 0 ? null : (
+        <ul className="warnings">
+          {auto.warnings.map((w) => (
+            <li key={w}>{w}</li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
+function Box({ id, label, rows, note, inUse, auto, onApply, onResume }: BoxProps) {
   const [text, setText] = useState('');
   const [outcome, setOutcome] = useState<ApplyOutcome | null>(null);
+  // The last text this box was filled with by a fetch. A box holding anything else has unsaved input
+  // from the user, which a fetch must not overwrite (OD-37).
+  const filled = useRef('');
+  useEffect(() => {
+    if (auto.fillText === null) return;
+    const before = filled.current;
+    const fetched = auto.fillText;
+    filled.current = fetched;
+    setText((current) => (current === before ? fetched : current));
+  }, [auto.fillSeq, auto.fillText]);
   return (
     <div className="wxbox">
       <label htmlFor={id}>{label}</label>
       <div>
-        <textarea id={id} rows={rows} spellCheck={false} autoComplete="off" placeholder={`Paste the latest ${label} here`} value={text} onChange={(e) => setText(e.target.value)} aria-describedby={`${id}-note`} />
+        <textarea id={id} rows={rows} spellCheck={false} autoComplete="off" placeholder={`Fetched automatically; or paste the latest ${label} here`} value={text} onChange={(e) => setText(e.target.value)} aria-describedby={`${id}-note`} />
         <div className="age" id={`${id}-note`}>{note}</div>
         {inUse === null ? null : <div className="mono" data-testid={`${id}-in-use`}>{inUse}</div>}
+        <SourceNote id={id} label={label} auto={auto} onResume={() => {
+          // Resuming means the next fetched report should show in the box, whatever was pasted there.
+          filled.current = text;
+          onResume();
+        }} />
         {outcome === null ? null : <ApplyNote outcome={outcome} />}
       </div>
       <button type="button" className="btn" onClick={() => setOutcome(onApply(text))}>Apply</button>
@@ -67,7 +113,7 @@ function Box({ id, label, rows, note, inUse, onApply }: BoxProps) {
   );
 }
 
-export function WeatherEntry({ pack, metar, taf, displayNowMs, onApplyMetar, onApplyTaf }: WeatherEntryProps) {
+export function WeatherEntry({ pack, metar, taf, displayNowMs, onApplyMetar, onApplyTaf, auto, onResumeAutomatic }: WeatherEntryProps) {
   const tz = pack.airport.timeZone;
   const nothing = metar === null && taf === null;
   let metarNote = `Station ${pack.airport.weatherStation}. No METAR entered.`;
@@ -83,11 +129,12 @@ export function WeatherEntry({ pack, metar, taf, displayNowMs, onApplyMetar, onA
   return (
     <section className="wxtop" aria-label="Raw METAR and TAF">
       <div className="small">
-        Paste the latest METAR and TAF, then press Apply. Reports are not stored.
+        The METAR and TAF for {pack.airport.weatherStation} are fetched automatically every {pack.settings.weatherPollMinutes} minutes. To use your own, paste it and press Apply. Reports are not stored.
         {nothing ? <b className="nowx"> No weather entered.</b> : null}
       </div>
-      <Box id="wx-metar" label="METAR" rows={2} note={metarNote} inUse={metar === null ? null : metar.raw} onApply={onApplyMetar} />
-      <Box id="wx-taf" label="TAF" rows={3} note={tafNote} inUse={taf === null ? null : taf.raw} onApply={onApplyTaf} />
+      <Box id="wx-metar" label="METAR" rows={2} note={metarNote} inUse={metar === null ? null : metar.raw} auto={auto.metar} onApply={onApplyMetar} onResume={() => onResumeAutomatic('metar')} />
+      <Box id="wx-taf" label="TAF" rows={3} note={tafNote} inUse={taf === null ? null : taf.raw} auto={auto.taf} onApply={onApplyTaf} onResume={() => onResumeAutomatic('taf')} />
+      <div className="small credit">{WEATHER_CREDIT}</div>
     </section>
   );
 }

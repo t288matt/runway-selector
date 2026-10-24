@@ -6,6 +6,7 @@ import { NO_SUITABLE_TITLE, EARLY_CHANGE_TITLE, type EngineInput, type TrafficLe
 import { runwaysOfMode } from '../../src/engine/eligibility';
 import { AppBody, PackError } from '../../src/ui/App';
 import { FLIGHT_SIM_NOTICE, extraNoticeOf } from '../../src/ui/components/Frame';
+import { NO_AUTO_WEATHER } from '../../src/ui/controller';
 import { WeatherEntry, ApplyNote } from '../../src/ui/components/WeatherEntry';
 import { calculate, defaultWindowFor, EMPTY_FEED, type ViewData } from '../../src/ui/model/dashboard';
 import { cellDetailModel, currentWind, panelDModel, runwayComponentRows } from '../../src/ui/model/panels';
@@ -364,7 +365,7 @@ describe('text safety (SEC-2)', () => {
     const ref = PACKS[0] ?? TEST1_PACK;
     const pack = packWith(ref, { weatherStation: fixture(METAR_ID).station });
     const hostileMetar: DecodedMetar = { ...decodeMetarFixture(METAR_ID, ref), raw: HOSTILE };
-    const html = renderToStaticMarkup(<WeatherEntry pack={pack} metar={hostileMetar} taf={null} displayNowMs={nowOf(fixture(METAR_ID))} onApplyMetar={() => ({ ok: true, message: null, warnings: [] })} onApplyTaf={() => ({ ok: true, message: null, warnings: [] })} />);
+    const html = renderToStaticMarkup(<WeatherEntry pack={pack} metar={hostileMetar} taf={null} displayNowMs={nowOf(fixture(METAR_ID))} onApplyMetar={() => ({ ok: true, message: null, warnings: [] })} onApplyTaf={() => ({ ok: true, message: null, warnings: [] })} auto={NO_AUTO_WEATHER} onResumeAutomatic={() => undefined} />);
     expect(html).not.toContain('<img');
     expect(html).toContain('&lt;img');
     // the real refusal of a hostile paste, rendered the way the screen renders it
