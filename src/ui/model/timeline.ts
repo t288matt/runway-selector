@@ -309,7 +309,7 @@ export function summaryTiles(view: ViewData): Tile[] {
   const upcoming = result.changeovers.find((c) => c.change.slotIndex > 0) ?? result.changeovers[0];
   const atChange = upcoming === undefined ? 'No change' : `${levelWord(upcoming.trafficLevel)} (${hhmmZRel(upcoming.change.startMs, view.calcNowMs)})`;
   return [
-    { label: 'Recommended', value: `Mode ${rec}` },
+    { label: 'Recommended', value: rec },
     { label: 'Survives', value: survives },
     { label: 'Next constraint', value: constraint },
     { label: 'Traffic at changeover', value: atChange },
