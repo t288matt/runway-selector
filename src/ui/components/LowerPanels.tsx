@@ -50,7 +50,7 @@ export function PanelD({ view }: { view: ViewData }) {
             </tbody>
           </table>
           <p className="small">
-            Connected now: {m.connectedArrivals} bound here, {m.groundElsewhere} of them on the ground elsewhere, and {m.connectedDepartures} on the ground here.
+            Connected now: {m.connectedArrivals} inbound, {m.groundElsewhere} of them on the ground elsewhere, and {m.connectedDepartures} on the ground here.
           </p>
           {m.unknownFrom === null ? null : <p className="small">Demand unknown from {m.unknownFrom}: nothing is estimated beyond the demand horizon.</p>}
           {m.elevationMissing ? <p className="strip strip-warn">The pack gives no airport elevation, so aircraft are judged on the ground by distance and speed only. The departure count may include slow aircraft overhead.</p> : null}
