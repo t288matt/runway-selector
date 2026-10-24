@@ -117,6 +117,10 @@
     "value": 15,
     "description": "Warning time shown before a planned change."
   },
+  "lowVisibilityMetres": {
+    "value": 5000,
+    "description": "Visibility below this many metres is shown as a low-visibility event in the timeline."
+  },
   "metarStaleMinutes": {
     "value": 60,
     "description": "METAR older than this is flagged stale."

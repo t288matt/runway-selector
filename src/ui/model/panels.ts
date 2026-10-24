@@ -56,8 +56,8 @@ function trafficSentence(view: ViewData): string {
     }
   }
   if (later >= 0) return `${base}, ${levelWord(levels[later] ?? null)} by ${hhmmZRel(starts[later] ?? 0, view.calcNowMs)}`;
-  const firstUnknown = levels.findIndex((l) => l === null);
-  if (firstUnknown > 0) return `${base}; demand unknown from ${hhmmZRel(starts[firstUnknown] ?? 0, view.calcNowMs)}`;
+  // Demand that becomes unknown later in the window is not mentioned (owner, 24-10-2026, OD-45); when it is
+  // unknown in every slot, base is already UNKNOWN.
   return base;
 }
 
@@ -81,7 +81,6 @@ export function panelAModel(view: ViewData): PanelAModel {
   const { pack, result } = view;
   const { plan, explanation, evaluation } = result;
   const recId = plan.recommendedModeId;
-  const provisional = (status: string | null): string => (status === 'provisional' ? ' (provisional)' : '');
   const enabledCount = pack.modes.filter((m) => m.enabled).length;
   const empty = {
     modeId: null,
@@ -149,10 +148,10 @@ export function panelAModel(view: ViewData): PanelAModel {
     nextChange,
     weather: style === null ? null : { word: style.word.toUpperCase(), icon: style.icon, className: style.className, text: explanation.lines[0] ?? '' },
     traffic: trafficSentence(view),
-    rank: rank === null ? '-' : `${rank} of ${enabledCount} (1 is most preferred)${provisional(pack.meta.operatingPlan.status)}`,
+    rank: rank === null ? '-' : `${rank} of ${enabledCount} (1 is most preferred)`,
     uncertainty: explanation.uncertaintyLine,
     runwayState: runwayStateSentence(view),
-    capacity: mode === undefined ? '-' : `${mode.capacity === null ? 'No limit set' : `${mode.capacity} movements/hr${provisional(pack.meta.modes.status)}`}${cell0 !== undefined && cell0.demand.knownDemand !== null ? `; ${cell0.demand.knownDemand} known movements this slot` : '; movements not known'}`,
+    capacity: mode === undefined ? '-' : `${mode.capacity === null ? 'No limit set' : `${mode.capacity} movements/hr`}${cell0 !== undefined && cell0.demand.knownDemand !== null ? `; ${cell0.demand.knownDemand} known movements this slot` : '; movements not known'}`,
     banners,
     whyLines: explanation.lines,
     noSuitable: null,
@@ -315,10 +314,8 @@ function primaryReason(cell: Cell): string {
     if (r !== undefined) return r.text;
     return 'No further detail';
   }
-  if (cell.runways.length === 0) return 'Within every limit';
-  const tail = Math.max(...cell.runways.map((r) => r.tailwindKt));
-  const cross = Math.max(...cell.runways.map((r) => r.crosswindKt));
-  return `Within every limit: tailwind up to ${kt1(tail)} kt, crosswind up to ${kt1(cross)} kt`;
+  // A suitable cell has nothing to explain: no summary line and no runway table (owner, 24-10-2026, OD-44).
+  return '';
 }
 
 export function cellDetailModel(view: ViewData, modeIndex: number, slotIndex: number): CellDetailModel | null {
@@ -331,7 +328,7 @@ export function cellDetailModel(view: ViewData, modeIndex: number, slotIndex: nu
   const cv = cellView(cell, slot.startMs, missingWeather(view), view.calcNowMs);
   const level = trafficLevelsFor(pack, [slot.startMs], view.demand?.slots ?? [])[0] ?? null;
 
-  const runways = cell.runways.map((r) => ({
+  const runways = (cell.status === 'SUITABLE' ? [] : cell.runways).map((r) => ({
     name: r.runway,
     roles: r.roles.map((x) => (x === 'ARRIVAL' ? 'ARR' : 'DEP')).join(' '),
     tailwind: kt1(r.tailwindKt),
@@ -357,10 +354,9 @@ export function cellDetailModel(view: ViewData, modeIndex: number, slotIndex: nu
   const band = cell.bandId;
   const planFail = cell.reasons.some((r) => r.code === 'PLAN' && r.severity === 'FAIL');
   const rank = planRank(view, modeIndex, slotIndex);
-  const planStatus = pack.meta.operatingPlan.status === 'provisional' ? ', provisional' : '';
   const operatingPlan = planFail
-    ? `Not allowed in time band ${band ?? 'unknown'}${planStatus}`
-    : `Allowed${band === null || pack.plan.find((b) => b.id === band)?.allDay === true ? '' : ` in time band ${band}`}${rank === null ? '' : `, rank ${rank}`}${planStatus}`;
+    ? `Not allowed in time band ${band ?? 'unknown'}`
+    : `Allowed${band === null || pack.plan.find((b) => b.id === band)?.allDay === true ? '' : ` in time band ${band}`}${rank === null ? '' : `, rank ${rank}`}`;
 
   const s = result.evaluation.survival[modeIndex];
   const parts: string[] = [];
