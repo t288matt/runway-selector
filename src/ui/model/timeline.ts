@@ -264,7 +264,6 @@ export function timelineModel(view: ViewData, displayNowMs: number): TimelineMod
     if (s.governedBy === 'NONE') events.push(missing === 'NO MET' ? 'no weather' : 'no TAF');
     const change = changes.find((c) => c.change.slotIndex === i);
     if (change !== undefined) {
-      events.push(`→ ${change.change.toModeId}`);
       const prep = hhmmZRel(change.preparationStartMs, view.calcNowMs);
       titles.push(`${change.change.fromModeId} to ${change.change.toModeId}, ${hhmmZRel(change.change.startMs, view.calcNowMs)}, traffic ${levelWord(change.trafficLevel)}, prepare from ${prep}`);
     }
