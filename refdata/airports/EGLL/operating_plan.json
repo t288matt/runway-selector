@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "description": "Owner-supplied 24-10-2026. One band covers the whole day; no day/night split has been given. Both modes are priority 1, equal: 27AD, 09AD. The penalties (0, 0) encode that; lower is preferred.",
+  "status": "verified",
+  "bands": [
+    {
+      "id": "all-day",
+      "allDay": true,
+      "start": "00:00",
+      "end": "00:00",
+      "rows": [
+        { "mode": "27AD", "allowed": true, "penalty": 0 },
+        { "mode": "09AD", "allowed": true, "penalty": 0 }
+      ]
+    }
+  ]
+}
