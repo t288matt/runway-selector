@@ -108,7 +108,7 @@ type ReadyState = Extract<PackState, { status: 'ready' }>;
  */
 export async function switchAirportTo(current: ReadyState, icao: string, deps: AppDeps): Promise<Partial<ReadyState> | null> {
   if (icao === current.pack.airport.icao) return current.airportError === null ? null : { airportError: null };
-  if (!current.airports.includes(icao)) return { airportError: `No data pack for ${icao} yet.` };
+  if (!current.airports.includes(icao)) return { airportError: `No data pack for ${icao} yet. Available: ${current.airports.join(', ')}.` };
   const r = await loadPack(deps.fetch, { baseUrl: deps.baseUrl ?? './refdata', cacheBust: cacheBustToken(deps.now()), airportId: icao });
   if (!r.ok) return { airportError: `The airport could not be changed; the current one stays in use. ${r.message}` };
   return { pack: r.pack, airports: r.app.airports, airportError: null };

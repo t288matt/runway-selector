@@ -951,6 +951,7 @@ p.small {
   }
 }
 .airport-entry {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -961,7 +962,8 @@ p.small {
   font-weight: 600;
 }
 .airport-entry input {
-  width: 9ch;
+  width: 12ch;
+  min-height: 32px;
   background: var(--panel2);
   color: var(--text);
   border: 1px solid var(--line);
@@ -971,8 +973,18 @@ p.small {
   text-transform: uppercase;
 }
 .airport-note {
-  margin: 0;
+  /* out of the flow, so a message never moves Refresh and Settings */
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 5;
+  margin: 2px 0 0;
   padding: 2px 8px;
+  white-space: nowrap;
+}
+.utc {
+  color: var(--muted);
+  font-size: 12px;
 }
 .credit {
   margin-top: 6px;

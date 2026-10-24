@@ -4,7 +4,7 @@
 // override. The decision to accept a report is made by the caller (the decode
 // adapter); a refused report leaves the previous one in use and shows a plain
 // message here.
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import type { AirportPack } from '../../refdata';
 import type { DecodedMetar, DecodedTaf } from '../../weather';
 import { WEATHER_CREDIT } from '../../weather/config';
@@ -86,28 +86,14 @@ function SourceNote({ id, label, auto, onResume }: { id: string; label: string; 
 function Box({ id, label, rows, note, inUse, auto, showPaste, onApply, onResume }: BoxProps) {
   const [text, setText] = useState('');
   const [outcome, setOutcome] = useState<ApplyOutcome | null>(null);
-  // The last text this box was filled with by a fetch. A box holding anything else has unsaved input
-  // from the user, which a fetch must not overwrite (OD-37).
-  const filled = useRef('');
-  useEffect(() => {
-    if (auto.fillText === null) return;
-    const before = filled.current;
-    const fetched = auto.fillText;
-    filled.current = fetched;
-    setText((current) => (current === before ? fetched : current));
-  }, [auto.fillSeq, auto.fillText]);
   return (
     <div className="wxbox">
       <label htmlFor={showPaste ? id : undefined}>{label}</label>
       <div>
-        {showPaste ? <textarea id={id} rows={rows} spellCheck={false} autoComplete="off" placeholder={`Fetched automatically; or paste the latest ${label} here`} value={text} onChange={(e) => setText(e.target.value)} aria-describedby={`${id}-note`} /> : null}
+        {showPaste ? <textarea id={id} rows={rows} spellCheck={false} autoComplete="off" placeholder={`Paste your own ${label} here`} value={text} onChange={(e) => setText(e.target.value)} aria-describedby={`${id}-note`} /> : null}
         <div className="age" id={`${id}-note`}>{note}</div>
         {inUse === null ? null : <div className="mono" data-testid={`${id}-in-use`}>{inUse}</div>}
-        <SourceNote id={id} label={label} auto={auto} onResume={() => {
-          // Resuming means the next fetched report should show in the box, whatever was pasted there.
-          filled.current = text;
-          onResume();
-        }} />
+        <SourceNote id={id} label={label} auto={auto} onResume={onResume} />
         {outcome === null ? null : <ApplyNote outcome={outcome} />}
       </div>
       {showPaste ? <button type="button" className="btn" onClick={() => setOutcome(onApply(text))}>Apply</button> : <span />}
@@ -134,7 +120,8 @@ export function WeatherEntry({ pack, metar, taf, displayNowMs, onApplyMetar, onA
       <div className="small">
         The METAR and TAF for {pack.airport.weatherStation} are fetched automatically every {pack.settings.weatherPollMinutes} minutes. Reports are not stored.
         {nothing ? <b className="nowx"> No weather entered.</b> : null}{' '}
-        <button type="button" className="btn small-btn" aria-expanded={showPaste} onClick={() => setShowPaste(!showPaste)}>{showPaste ? 'Hide paste boxes' : 'Paste your own weather'}</button>
+        {showPaste ? 'Pasting a report replaces the fetched one and pauses automatic updates for it until you press Resume automatic. ' : null}
+        <button type="button" className="btn small-btn" aria-expanded={showPaste} onClick={() => setShowPaste(!showPaste)}>{showPaste ? 'Hide paste boxes' : 'Use my own weather'}</button>
       </div>
       <Box id="wx-metar" label="METAR" rows={2} note={metarNote} inUse={metar === null ? null : metar.raw} auto={auto.metar} showPaste={showPaste} onApply={onApplyMetar} onResume={() => onResumeAutomatic('metar')} />
       <Box id="wx-taf" label="TAF" rows={3} note={tafNote} inUse={taf === null ? null : taf.raw} auto={auto.taf} showPaste={showPaste} onApply={onApplyTaf} onResume={() => onResumeAutomatic('taf')} />

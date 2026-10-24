@@ -93,7 +93,7 @@ describe('switchAirportTo (typing a code)', () => {
     const asked: string[] = [];
     const watching = { ...deps, fetch: (url: string) => (asked.push(url), deps.fetch(url)) };
     const change = await switchAirportTo(current, icao, watching);
-    expect(change).toEqual({ airportError: `No data pack for ${icao} yet.` });
+    expect(change).toEqual({ airportError: `No data pack for ${icao} yet. Available: YSSY, TEST.` });
     // nothing was fetched for an unlisted airport: no pack, no runway or mode data is looked for
     expect(asked).toEqual([]);
   });
@@ -124,7 +124,7 @@ describe('the weather boxes with automatic fetching (OD-37)', () => {
     expect(html).not.toContain('<textarea');
     expect(html).not.toContain('>Apply<');
     expect(html).toContain('aria-expanded="false"');
-    expect(html).toContain('Paste your own weather');
+    expect(html).toContain('Use my own weather');
   });
 
   it('names the station and the interval, and carries the credit NOAA/NWS and Datamask Aviation ask for', () => {

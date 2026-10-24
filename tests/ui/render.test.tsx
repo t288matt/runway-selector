@@ -405,7 +405,7 @@ describe('the application states', () => {
       expect(text).toContain('No weather entered');
       expect(html).not.toContain('<textarea');
       expect(html).not.toContain('>Apply<');
-      expect(text).toContain('Paste your own weather');
+      expect(text).toContain('Use my own weather');
       expect(text).toContain('No data. Cannot recommend a mode.');
       expect(html).toContain('Panel A');
     }
