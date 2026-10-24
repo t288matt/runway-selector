@@ -47,8 +47,9 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('pasting reports [%s]', (_
 });
 
 describe('the first window comes from the pack when it is an on-screen option (OD-31)', () => {
-  it('is the full TAF when the pack gives none, and the pack value when it is 240 or 360', () => {
-    expect(defaultWindowFor(packWith(YSSY_PACK))).toBe('full');
+  it('is the full TAF when the pack gives none (Sydney gives 6 hours), and the pack value when it is 240 or 360', () => {
+    expect(defaultWindowFor(packWith(YSSY_PACK))).toBe('6h'); // Sydney default, owner 24-10-2026 (OD-42)
+    expect(defaultWindowFor(packWith(YSSY_PACK, { settings: { forecastWindowMinutes: null } }))).toBe('full');
     expect(defaultWindowFor(packWith(TEST_PACK, { settings: { forecastWindowMinutes: 240 } }))).toBe('4h');
     expect(defaultWindowFor(packWith(TEST_PACK, { settings: { forecastWindowMinutes: 360 } }))).toBe('6h');
     expect(defaultWindowFor(packWith(TEST_PACK, { settings: { forecastWindowMinutes: 300 } }))).toBe('full');

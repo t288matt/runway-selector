@@ -52,7 +52,7 @@ describe('good packs', () => {
     expect(pack.settings.tailwindDryKt).toBe(5);
     expect(pack.settings.tailwindWetKt).toBe(0);
     expect(pack.settings.trafficBands).toEqual({ light: [0, 5], medium: [6, 11], busy: [12, null] });
-    expect(pack.settings.forecastWindowMinutes).toBeNull();
+    expect(pack.settings.forecastWindowMinutes).toBe(360);
     expect(pack.settings.precipitationCodes).toEqual(files['settings.json'].precipitationCodes.value);
     expect(pack.modes.find((m) => m.id === 'SODPROPS')?.enabled).toBe(true);
     expect(pack.modes.find((m) => m.id === 'SODPROPS')?.arrivals).toEqual(['34L']);

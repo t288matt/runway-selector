@@ -23,7 +23,7 @@ function DetailBody({ d }: { d: CellDetailModel }) {
         {d.title} <span className={`chip chip-${d.statusWord.toLowerCase()}`}>{d.icon} {d.statusWord}</span>
         {d.code === '' ? null : <span className="detail-code"> {d.code}</span>}
       </h3>
-      <div>{d.reason}</div>
+      {d.reason === '' ? null : <div>{d.reason}</div>}
       {d.runways.length === 0 ? null : (
         <table>
           <thead>

@@ -498,3 +498,26 @@ describeForEachPack('vicinity weather is not precipitation', (pack, ref) => {
     expect(flags('2026-10-23T12:10:00Z', { taf: 'taf-ypcc-inter' }).precipitation.temporary).toBe(counts);
   });
 });
+
+describeForEachPack('thunderstorm and low visibility are flagged for the event strip', (pack, ref) => {
+  const { nowMs, metar } = reports(ref, '2026-10-23T14:10:00Z', { metar: 'metar-sbfi-vicinity-showers-ts' });
+  const first = (m: DecodedMetar) => build(pack, nowMs, m, null, 60).slots[0]!.weather;
+  const limit = pack.settings.lowVisibilityMetres;
+
+  it('a thunderstorm in the vicinity (VCTS) is not a thunderstorm at the airport', () => {
+    expect(first(metar!).thunderstorm).toBe(false);
+  });
+
+  it('TS at the station is', () => {
+    const ts = { intensity: null, descriptor: 'TS', phenomena: ['RA'], codes: ['TS', 'RA'] } as const;
+    expect(first({ ...metar!, weather: [ts] }).thunderstorm).toBe(true);
+  });
+
+  it('visibility below the pack limit is low, at the limit or more than it is not', () => {
+    const vis = (metres: number, moreThan = false) => ({ ...metar!, visibility: { metres, moreThan, lessThan: false } });
+    expect(first(vis(limit - 1)).lowVisibility).toBe(true);
+    expect(first(vis(limit)).lowVisibility).toBe(false);
+    expect(first(vis(limit - 1, true)).lowVisibility).toBe(false);
+    expect(first({ ...metar!, visibility: null }).lowVisibility).toBe(false);
+  });
+});

@@ -47,6 +47,7 @@ export const BOUNDS = {
     noModePenalty: { min: 0, max: 1000000 },
     changeoverPreparationMinutes: { min: 0, max: 120 },
     staleMinutes: { min: 1, max: 2880 },
+    lowVisibilityMetres: { min: 50, max: 10000 },
     weatherPollMinutes: { min: 1, max: 120 },
     // No enforced minimum (OD/UP-2): 1 is the smallest positive whole number of seconds.
     vatsimPollSeconds: { min: 1, max: 3600 },
@@ -222,6 +223,7 @@ export const SETTING_VALUE_SCHEMAS = {
     v.maxLength(C.maxPrecipitationCodes),
   ),
   metarValidityMinutes: int(R.metarValidityMinutes),
+  lowVisibilityMetres: int(R.lowVisibilityMetres),
   forecastWindowMinutes: v.nullable(int(R.forecastWindowMinutes)),
   demandHorizonMinutes: int(R.demandHorizonMinutes),
   assumedDepartureWindowMinutes: int(R.departureSpreadMinutes),
