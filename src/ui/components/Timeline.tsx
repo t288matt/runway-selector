@@ -51,7 +51,7 @@ function DetailBody({ d }: { d: CellDetailModel }) {
       <div>Runway state: {d.runwayAssumption}.</div>
       <div>Traffic: {d.traffic}.</div>
       <div>Operating plan: {d.operatingPlan}.</div>
-      {d.survival === '' ? null : <div>Survival: {d.survival}.</div>}
+      {d.survival === '' ? null : <div>Outlook: {d.survival}.</div>}
       {d.notes.map((n) => (
         <div key={n}>{n}</div>
       ))}
@@ -159,7 +159,7 @@ export function Timeline({ view, model, displayNowMs, onWindowChange }: Timeline
   return (
     <section className="panel B" aria-label="Panel B: optimal mode timeline">
       <h2>
-        <i>B</i>Optimal mode timeline <span className="range">{model.rangeText}</span>
+        Optimal mode timeline <span className="range">{model.rangeText}</span>
         <span className="sp" />
         {hiddenCount === 0 && !showHidden ? null : (
           <button type="button" className="btn small-btn" aria-pressed={showHidden} onClick={() => {
@@ -200,9 +200,18 @@ export function Timeline({ view, model, displayNowMs, onWindowChange }: Timeline
           </div>
           <div className="row hdr" role="row" style={{ height: LAYOUT.eventStrip }}>
             <div className="lab" role="rowheader"><small>Weather events</small></div>
-            {slots.map((s) => (
-              <div key={s.index} role="columnheader" className="ic" title={s.eventTitle}>{s.events.join(' ')}</div>
-            ))}
+            <div className="evs" style={{ width: n * LAYOUT.column }}>
+              <div className="evw" aria-label="Wind">
+                {model.windRuns.map((w) => (
+                  <div key={w.startSlot} className="wbar" title={w.title} style={{ left: w.startSlot * LAYOUT.column, width: (w.endSlot - w.startSlot + 1) * LAYOUT.column - 2 }}>{w.label}</div>
+                ))}
+              </div>
+              <div className="evm">
+                {slots.map((s) => (
+                  <div key={s.index} role="columnheader" className="ic" title={s.eventTitle}>{s.events.join(' ')}</div>
+                ))}
+              </div>
+            </div>
           </div>
           <div className="row hdr traf" role="row" style={{ height: LAYOUT.trafficStrip }}>
             <div className="lab" role="rowheader"><small>Traffic</small></div>
@@ -256,9 +265,6 @@ export function Timeline({ view, model, displayNowMs, onWindowChange }: Timeline
             </div>
           ))}
 
-          {model.wetRuns.map(([a, b]) => (
-            <div key={`w${a}`} className="ov wetband" aria-hidden="true" style={{ left: LAYOUT.label + a * LAYOUT.column, width: (b - a + 1) * LAYOUT.column, top: LAYOUT.timeStrip, height: height - LAYOUT.timeStrip }} />
-          ))}
           {model.busyRuns.map(([a, b]) => (
             <div key={`b${a}`} className="ov busyband" aria-hidden="true" style={{ left: LAYOUT.label + a * LAYOUT.column, width: (b - a + 1) * LAYOUT.column, top: LAYOUT.timeStrip + LAYOUT.eventStrip, height: height - LAYOUT.timeStrip - LAYOUT.eventStrip }} />
           ))}
@@ -283,10 +289,9 @@ export function Timeline({ view, model, displayNowMs, onWindowChange }: Timeline
             </span>
           );
         })}
-        <span><b className="cell rec" style={{ marginRight: 8, background: 'var(--panel2)', border: '1px solid var(--line)' }} aria-hidden="true" />Recommended path (the outline, whatever the cell's own colour)</span>
-        <span>Dashed blue line: planned change (CHANGE)</span>
+        <span><b className="cell rec" style={{ marginRight: 8, background: 'var(--panel2)', border: '1px solid var(--line)' }} aria-hidden="true" />Recommended path</span>
+        <span>Dashed blue line: planned change</span>
         <span>Amber band: HIGH traffic</span>
-        <span>Blue band: wet risk</span>
         <span>White corner: depends on an uncertain input</span>
       </div>
 

@@ -108,10 +108,10 @@ One chip each for METAR, TAF, VATSIM and when the plan last and next recalculate
 Runway state is not a separate chip: owner decision, 24-10-2026, to stop the duplication of showing it in the header and again, one line below, in Panel A. It is now stated once, in Panel A, and every timeline cell still carries its own slot-by-slot runway-state detail on hover (DB-4).
 
 ## 5. Panel specifications
-Common to all panels: a letter badge and title; a small "provisional" mark wherever a value comes from a provisional rule or placeholder band; no scrolling inside a panel except tables of more than 8 rows.
+Common to all panels: a title (the letter badge is removed, owner 24-10-2026, OD-60; panels are still called A, B, D and F in this document and in code, but the letter is no longer shown); a small "provisional" mark wherever a value comes from a provisional rule or placeholder band; no scrolling inside a panel except tables of more than 8 rows.
 
 ### Panel A: current recommendation
-**Content (DB-2).** Left block: label "MODE", the mode number at 44 px, arrival and departure runways, and the current mode with its pull-down menu (enabled modes, plus Not set). Middle: "Next change" (mode and time), weather suitability, traffic class now and expected. Right: operating-plan priority rank, an uncertainty line ("Based on 2 uncertain slots" or "No uncertain inputs"; there is no confidence level), runway condition and wet-risk time, capacity note. Below: banner area, then a one-sentence "Why".
+**Content (DB-2).** Left block: label "MODE", the mode number at 44 px, arrival and departure runways, and the current mode with its pull-down menu (enabled modes, plus Not set). Middle: "Next change" (mode and time), weather suitability, traffic class now and expected, runway condition and wet-risk time (moved here under Traffic, owner 24-10-2026, OD-58), and Ceiling (lowest BKN/OVC base or the vertical visibility, OD-66). Right: operating-plan priority rank, an uncertainty line naming the period and reason (for example "14:00 UTC to 17:00 UTC: a chance of rain", OD-57). The capacity note is removed (owner, 24-10-2026, OD-58). Below: banner area, then a one-sentence "Why".
 
 **Heading logic.** The large mode is the recommended mode for now: the first slot of the recommended sequence. A planned change appears in Next change. If the operator has entered a current mode that differs, it shows beside it as "Current: 10" and the banner explains the gap. The pull-down menu beside it sets the current mode (OD-21).
 
@@ -138,7 +138,7 @@ The owner removed this panel on 24-10-2026: it is not drawn, and its letter is n
 - States: METAR stale or missing shows "Unknown" in every figure that needs it.
 
 ### Panel D: VATSIM traffic
-- Table: for each of the first four 30-minute slots (now, +30, +60, +90 min), arrivals (airborne to the pack's airport), departures (on the ground) and movements per hour. Departures are estimated for the next slot only; later slots show "not est.". A line states "Connected aircraft are not movements."
+- Table: for each of the first four 30-minute slots (now, +30, +60, +90 min), arrivals (airborne to the pack's airport), departures (on the ground) and movements (the raw count for that 30-minute slot, never doubled to an hourly rate, OD-63). Departures are estimated for the next slot only; later slots show "not est.". A line states "Connected aircraft are not movements."
 - Traffic class chip (LOW, MEDIUM, HIGH). The footnote explaining how arrivals and departures are counted, and the note that bands are provisional placeholders, were removed by the owner on 24-10-2026 (OD-41). No trend is shown (OD-32).
 - Beyond the demand horizon (default: the forecast window, REQUIREMENTS.md TR-7): "Demand unknown" is shown, never an invented figure.
 - States: feed stale shows the last values with the age in amber; feed failed shows "No traffic data" and the timeline falls back to unknown demand (capacity checks are skipped, shown by uncertainty corners).
@@ -190,14 +190,14 @@ A white triangle in the top-right corner marks a cell whose status depends on an
 | Overlay | Drawing | Notes |
 |---|---|---|
 | Now marker | 2 px white vertical line across all rows at the exact minute, with label "NOW 22:12Z" at the top | Moves each minute; the page scrolls so it is at the left edge on load. |
-| Recommended sequence | A 2 px accent-coloured outline (with 2 px gap) around the cells of the recommended mode in each time span, stepping between rows at changeovers | If no change is planned the outline stays on one row. |
+| Recommended sequence | A 4 px accent-coloured outline (with 1 px gap; was 2 px, OD-52) around the cells of the recommended mode in each time span, stepping between rows at changeovers | If no change is planned the outline stays on one row. |
 | Recommended mode row | Accent bar at the left of the row label and tag REC | |
-| Planned changeover | Dashed accent vertical line from the event strip to the bottom, labelled CHANGE in the event strip, hover text "10 to 12, 00:00Z, traffic MEDIUM, prepare from 23:45Z" | The preparation period is a short bracket on the event strip. |
+| Planned changeover | Dashed accent vertical line from the event strip to the bottom, with no text label (OD-53; the Next change tile gives the new mode and time), hover text "10 to 12, 00:00Z, traffic MEDIUM, prepare from 23:45Z" | The preparation period is a short bracket on the event strip. |
 | High-traffic bands | A translucent amber band behind all rows from the traffic strip down, with dashed amber side edges, and the traffic chip "H HIGH" in the strip | Drawn behind cells; cell colours stay unchanged so contrast is kept. |
 | Wind shift | In the event strip, at the start time of a BECMG or FM group, a label with the new wind as reported (for example "020/12G22"); the hover text gives the old wind, the new wind and the turn in degrees. Changes under 10 degrees and 5 knots are not shown (OD-43). "TS" and "low vis" events are also shown (OD-43). | BECMG is an ordinary change at its start time (OD-20), so nothing is drawn across a transition. |
 | Tailwind exceedance | Cause code TW in the cell; the hover shows the figure. Cells over the limit are never green. | |
 | Current mode | Row label tag CURRENT (outlined) and a 2 px white underline of the row label | Separate from the recommendation (UP-4). |
-| Wet-risk | A pale blue band with dotted edges across all rows in the wet-risk slots, and the word "wet risk" in the event strip | It does not recolour cells; the status already reflects the runway state. |
+| Wet-risk | The word "wet risk" in the event strip. The pale blue band across the rows is removed (owner, 24-10-2026, OD-62): the events strip already names it, so the band was redundant. | It does not recolour cells; the status already reflects the runway state. |
 | Uncertainty | White corner triangle (6.2); UNKNOWN cells are grey with dots | |
 
 Overlay layering from back to front: wet band, busy band, cells, recommended outline, now and changeover lines, labels. The sticky row labels sit above everything except the now label.
@@ -212,7 +212,7 @@ Contents, in order:
 5. Runway assumption: DRY, WET, or "WET POSSIBLE: both evaluated".
 6. Traffic class and, where known, demand against capacity.
 7. Operating-plan eligibility (eligible, time band, provisional flag) and operating-plan rank.
-8. Survival summary for that mode: continuous viable duration from now, first marginal slot, first unsuitable slot, replacement mode.
+8. Outlook for that mode (labelled "Outlook", not "Survival", owner 24-10-2026, OD-64): continuous viable duration from now, first marginal slot, first unsuitable slot, replacement mode.
 Row-label hover shows the mode description, restrictions, capacity value and its status.
 Event-strip hover shows the TAF group in raw and decoded form.
 
@@ -299,7 +299,7 @@ Minimum text size is 11 px, used only for time labels and secondary notes; the c
 
 ## 9. Accessibility
 1. **Colour is never the only signal.** Each status has a distinct icon (tick, tilde, cross, question mark), a distinct pattern (solid, stripes, crosshatch, dots), and a text cause code for everything except SUITABLE. The legend names all four.
-2. **Overlays have text too.** Busy bands carry "H HIGH" in the traffic strip; wet risk carries the words "wet risk"; the changeover carries "CHANGE"; the uncertainty corner is explained in the hover and listed in the legend.
+2. **Overlays have text too.** Busy bands carry "H HIGH" in the traffic strip; wet risk carries the words "wet risk"; the changeover is the dashed line, with the hover text and the Next change tile; the uncertainty corner is explained in the hover and listed in the legend.
 3. **Contrast.** Body text at least 4.5 : 1 (actual 7.6 to 14.1). Cell icons at least 4.5 : 1 on their cell. Cell fills at least 3 : 1 against the panel (graphics). Banners: coloured text on a darkened tint at 7 : 1 or more.
 4. **Keyboard use of the timeline.** The timeline is a grid with roving tabindex: one Tab stop enters it, the arrow keys move between cells (up and down between modes, left and right between slots), Home and End go to the first and last slot of the row, Page Up and Page Down jump 4 slots (2 hours), Enter or Space pins the detail panel, Escape closes it. Focus scrolls the cell into view and the detail opens on focus. A visible 2 px white focus ring is drawn above the recommended outline. N moves focus to the now column; C moves it to the planned changeover.
 5. **Screen readers.** Each cell has an accessible name such as "Mode 12, 00:30Z, marginal, cause capacity". The grid has an accessible caption and the summary tiles and reason line are real text above it. There is no separate table view (removed by the owner, 24-10-2026, OD-39: not required).

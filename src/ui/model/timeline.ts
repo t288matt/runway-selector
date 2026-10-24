@@ -8,7 +8,7 @@ import { SLOT_MS, levelWord, type ViewData } from './dashboard';
 import { cellView, type CellView, type MissingWeather } from './status';
 
 /** Layout constants, in pixels. They match the mockup and the CSS. */
-export const LAYOUT = { label: 176, column: 56, rowHeight: 36, timeStrip: 34, eventStrip: 26, trafficStrip: 26 } as const;
+export const LAYOUT = { label: 176, column: 56, rowHeight: 36, timeStrip: 34, eventStrip: 42, trafficStrip: 26 } as const;
 
 export interface ModeRow {
   /** Index into pack.modes (and into the engine's cells). */
@@ -103,7 +103,18 @@ export interface TimelineSlot {
   readonly noTaf: boolean;
 }
 
+/** One stretch of slots over which the wind stays as shown (OD-51): drawn as a bar on the first line of the event strip. */
+export interface WindRun {
+  readonly startSlot: number;
+  readonly endSlot: number;
+  /** "340/07". */
+  readonly label: string;
+  readonly title: string;
+}
+
 export interface TimelineModel {
+  /** The wind bars of the event strip's first line. */
+  readonly windRuns: readonly WindRun[];
   readonly rows: readonly ModeRow[];
   readonly slots: readonly TimelineSlot[];
   /** cells[rowIndex][slotIndex] */
@@ -113,7 +124,6 @@ export interface TimelineModel {
   readonly missing: MissingWeather;
   /** Runs [first, last] of consecutive HIGH-traffic slots. */
   readonly busyRuns: readonly (readonly [number, number])[];
-  readonly wetRuns: readonly (readonly [number, number])[];
   readonly changeSlots: readonly number[];
   readonly nowSlotFraction: number;
   readonly rangeText: string;
@@ -181,6 +191,44 @@ export function missingWeather(view: ViewData): MissingWeather {
   return view.metar === null && view.taf === null ? 'NO MET' : 'NO TAF';
 }
 
+/**
+ * The wind bars (OD-51). A bar starts at the first slot with a wind and runs until the wind changes enough to be
+ * worth a label (windShift, measured from the wind the bar started with, so slow drift cannot creep past the
+ * threshold), or until a slot has no wind. The first bar is the wind now.
+ */
+export function windRuns(winds: readonly (WindObservation | null)[]): WindRun[] {
+  const out: WindRun[] = [];
+  let start = -1;
+  let from: WindObservation | null = null;
+  let title = '';
+  const close = (end: number): void => {
+    if (start >= 0 && from !== null) out.push({ startSlot: start, endSlot: end, label: windText(from), title });
+    start = -1;
+    from = null;
+  };
+  winds.forEach((w, i) => {
+    if (w === null) {
+      close(i - 1);
+      return;
+    }
+    if (from === null) {
+      start = i;
+      from = w;
+      title = `Wind ${windText(w)}`;
+      return;
+    }
+    const shift = windShift(from, w);
+    if (shift !== null) {
+      close(i - 1);
+      start = i;
+      from = w;
+      title = shift.title;
+    }
+  });
+  close(winds.length - 1);
+  return out;
+}
+
 export function timelineModel(view: ViewData, displayNowMs: number): TimelineModel {
   const { pack, result } = view;
   const slotsIn = view.weather.slots;
@@ -198,11 +246,6 @@ export function timelineModel(view: ViewData, displayNowMs: number): TimelineMod
     const wet = wetState === 'WET' ? 'wet' : wetState === 'WET_POSSIBLE' ? 'possible' : 'none';
     const events: string[] = [];
     const titles: string[] = [];
-    const shift = windShift(i === 0 ? null : (slotsIn[i - 1]?.weather.wind ?? null), s.weather.wind);
-    if (shift !== null) {
-      events.push(shift.label);
-      titles.push(shift.title);
-    }
     if (s.weather.thunderstorm === true) {
       events.push('TS');
       titles.push('Thunderstorm at the airport');
@@ -220,7 +263,6 @@ export function timelineModel(view: ViewData, displayNowMs: number): TimelineMod
     if (s.governedBy === 'NONE') events.push(missing === 'NO MET' ? 'no weather' : 'no TAF');
     const change = changes.find((c) => c.change.slotIndex === i);
     if (change !== undefined) {
-      events.push('CHANGE');
       const prep = hhmmZRel(change.preparationStartMs, view.calcNowMs);
       titles.push(`${change.change.fromModeId} to ${change.change.toModeId}, ${hhmmZRel(change.change.startMs, view.calcNowMs)}, traffic ${levelWord(change.trafficLevel)}, prepare from ${prep}`);
     }
@@ -250,13 +292,13 @@ export function timelineModel(view: ViewData, displayNowMs: number): TimelineMod
   const first = slotsIn[0];
   const last = slotsIn[slotsIn.length - 1];
   return {
+    windRuns: windRuns(slotsIn.map((s) => s.weather.wind)),
     rows,
     slots,
     cells,
     onPath,
     missing,
     busyRuns: runs(slots.map((s) => s.busy)),
-    wetRuns: runs(slots.map((s) => s.wet !== 'none')),
     changeSlots: changes.map((c) => c.change.slotIndex),
     nowSlotFraction: first === undefined ? 0 : (displayNowMs - first.startMs) / SLOT_MS,
     rangeText: first === undefined || last === undefined ? '' : `${hhmmZRel(first.startMs, view.calcNowMs)} to ${hhmmZRel(last.endMs, view.calcNowMs)}`,
@@ -317,13 +359,24 @@ export interface Tile {
   readonly value: string;
 }
 
-/** The summary tiles above the grid: the recommended mode and the next change, with the new mode and time (OD-49, OD-50). */
+/** The time the runway next becomes wet or possibly wet, for the Next wet runway tile (OD-59). */
+function nextWetRunwayText(view: ViewData): string {
+  const slots = view.result.evaluation.slots;
+  const first = slots[0];
+  if (first === undefined || view.weather.slots[0]?.governedBy === 'NONE') return 'Unknown';
+  if (first.runwayState !== 'DRY') return 'Now';
+  const next = slots.findIndex((s, i) => i > 0 && s.runwayState !== 'DRY');
+  return next < 0 ? 'None in window' : hhmmZRel(slots[next]?.startMs ?? 0, view.calcNowMs);
+}
+
+/** The summary tiles above the grid: the recommended mode, the next change, and the next wet runway (OD-49, OD-50, OD-59). */
 export function summaryTiles(view: ViewData): Tile[] {
   const change = view.result.changeovers[0];
   const next = view.result.plan.recommendedModeId === null ? '-' : change === undefined ? 'No change planned' : `${change.change.toModeId} at ${hhmmZRel(change.change.startMs, view.calcNowMs)}`;
   return [
     { label: 'Recommended', value: view.result.plan.recommendedModeId ?? 'None' },
     { label: 'Next change', value: next },
+    { label: 'Next wet runway', value: nextWetRunwayText(view) },
   ];
 }
 

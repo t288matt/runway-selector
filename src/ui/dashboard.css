@@ -364,6 +364,26 @@ select {
   border-top: 1px solid var(--line);
   padding-top: 8px;
 }
+.why summary {
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
+}
+.why summary::-webkit-details-marker {
+  display: none;
+}
+.why summary::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 6px;
+  transition: transform 0.1s ease;
+}
+.why[open] summary::before {
+  transform: rotate(90deg);
+}
+.why p {
+  margin: 6px 0 2px;
+}
 .why p {
   margin: 2px 0;
 }
@@ -461,7 +481,10 @@ select {
 }
 .scroller {
   overflow-x: auto;
+  /* Leaves room below the last row for the horizontal scrollbar, so it never sits over the bottom mode row. */
   padding-right: 16px;
+  padding-bottom: 14px;
+  scrollbar-gutter: stable;
   position: relative;
 }
 .inner {
@@ -568,9 +591,11 @@ select {
     var(--unk);
 }
 .cell.rec {
+  /* 4 px outline (was 2 px, OD-52); drawn above the neighbouring cells it overlaps. */
+  z-index: 3;
   box-shadow:
-    0 0 0 2px var(--bg),
-    0 0 0 4px var(--accent-text);
+    0 0 0 1px var(--bg),
+    0 0 0 5px var(--accent-text);
 }
 .cell.unc::after {
   content: '';
@@ -604,11 +629,45 @@ select {
   color: var(--text);
   font-weight: 650;
 }
+.evs {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+.evw {
+  position: relative;
+  height: 18px;
+}
+.wbar {
+  position: absolute;
+  top: 0;
+  height: 18px;
+  line-height: 16px;
+  box-sizing: border-box;
+  margin-left: 1px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  background: rgba(106, 166, 255, 0.16);
+  border: 1px solid rgba(106, 166, 255, 0.45);
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.evm {
+  display: flex;
+  height: 18px;
+}
 .ic {
   width: var(--cell);
   flex: none;
   text-align: center;
   font-size: 10px;
+  line-height: 18px;
   align-self: center;
   color: var(--muted);
   white-space: nowrap;
@@ -654,12 +713,6 @@ select {
   border-left: 1px dashed var(--busy);
   border-right: 1px dashed var(--busy);
   background: rgba(232, 163, 58, 0.09);
-  z-index: 1;
-}
-.wetband {
-  background: rgba(91, 184, 232, 0.1);
-  border-left: 1px dotted var(--wet);
-  border-right: 1px dotted var(--wet);
   z-index: 1;
 }
 .now {

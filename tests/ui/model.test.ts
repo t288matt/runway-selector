@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PACKS } from '../helpers/packs';
+import { decodeMetar } from '../../src/weather';
+import { panelAModel } from '../../src/ui/model/panels';
 import { decodeMetarFixture, decodeTafFixture, nowOf, fixture, packWith, MIN } from '../weather/helpers';
 import {
   applyFeedResult,
@@ -18,7 +20,7 @@ import {
   windowMinutes,
   type FeedState,
 } from '../../src/ui/model/dashboard';
-import { moveFocus, modeRows, summaryTiles, timelineModel, visibleRows, windShift, windText } from '../../src/ui/model/timeline';
+import { moveFocus, modeRows, summaryTiles, timelineModel, visibleRows, windRuns, windShift, windText } from '../../src/ui/model/timeline';
 import { hhmmZ, hhmmZRel, utcAndLocal, ageText, durationText, safeHttpsLink, dir3 } from '../../src/ui/format';
 import { packOf, rigFor } from '../engine/planHelpers';
 import { viewOf } from './helpers';
@@ -243,15 +245,29 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('timeline rows and tiles [
     expect(m.slots.filter((s) => s.isChange).map((s) => s.index)).toEqual([...m.changeSlots]);
   });
 
-  it('has two summary tiles, Recommended and Next change (OD-50)', () => {
+  it('has three summary tiles, Recommended, Next change and Next wet runway (OD-50, OD-59)', () => {
     const v = viewOf(pack, rig, wx);
-    expect(summaryTiles(v).map((t) => t.label)).toEqual(['Recommended', 'Next change']);
+    expect(summaryTiles(v).map((t) => t.label)).toEqual(['Recommended', 'Next change', 'Next wet runway']);
     expect(summaryTiles(v)[0]?.value).toBe(v.result.plan.recommendedModeId);
     const c = v.result.changeovers[0];
     const next = summaryTiles(v)[1]?.value ?? '';
     if (v.result.plan.recommendedModeId === null) expect(next).toBe('-');
     else if (c === undefined) expect(next).toBe('No change planned');
     else expect(next).toBe(`${c.change.toModeId} at ${hhmmZRel(c.change.startMs, v.calcNowMs)}`);
+  });
+
+  it('the Next wet runway tile says when the runway next turns wet (OD-59)', () => {
+    const v = viewOf(pack, rig, wx);
+    const slots = v.result.evaluation.slots;
+    const first = slots[0];
+    const value = summaryTiles(v)[2]?.value ?? '';
+    if (first === undefined || v.weather.slots[0]?.governedBy === 'NONE') expect(value).toBe('Unknown');
+    else if (first.runwayState !== 'DRY') expect(value).toBe('Now');
+    else {
+      const next = slots.findIndex((s, i) => i > 0 && s.runwayState !== 'DRY');
+      if (next < 0) expect(value).toBe('None in window');
+      else expect(value).toBe(hhmmZRel(slots[next]?.startMs ?? 0, v.calcNowMs));
+    }
   });
 });
 
@@ -362,5 +378,60 @@ describe('wind changes in the event strip', () => {
     expect(windShift(variable(5), steady(340, 10))?.label).toBe('340/10');
     expect(windShift(null, steady(340, 10))).toBeNull();
     expect(windShift(steady(340, 10), null)).toBeNull();
+  });
+});
+
+describe('wind bars in the event strip (OD-51)', () => {
+  const steady = (directionDegrees: number, speedKt: number) => ({ kind: 'steady' as const, directionDegrees, speedKt, gustKt: null, variableRangeDegrees: null });
+
+  it('starts with the wind now and breaks only where the wind changes enough to label', () => {
+    const runs = windRuns([steady(340, 7), steady(342, 8), steady(340, 7), steady(20, 14), steady(20, 14)]);
+    expect(runs.map((r) => [r.startSlot, r.endSlot, r.label])).toEqual([[0, 2, '340/07'], [3, 4, '020/14']]);
+    expect(runs[0]?.title).toBe('Wind 340/07');
+    expect(runs[1]?.title).toContain('turn of 40 degrees');
+  });
+
+  it('measures drift from the wind the bar started with, so small steps cannot add up unseen', () => {
+    const runs = windRuns([steady(340, 7), steady(346, 7), steady(352, 7), steady(358, 7)]);
+    expect(runs.map((r) => r.startSlot)).toEqual([0, 2]);
+  });
+
+  it('leaves a gap where no wind is known and restarts after it', () => {
+    const runs = windRuns([steady(340, 7), null, steady(340, 7)]);
+    expect(runs.map((r) => [r.startSlot, r.endSlot])).toEqual([[0, 0], [2, 2]]);
+    expect(windRuns([null, null])).toEqual([]);
+  });
+});
+
+describe('Ceiling (OD-66)', () => {
+  const ref = PACKS[0]!;
+  const pack = packWith(ref, { weatherStation: 'YSSY' });
+  const now = Date.parse('2026-10-24T10:00:00Z');
+  const ceilingFor = (body: string): string => {
+    const metar = decodeMetar(`YSSY 241000Z ${body}`, { pack, nowMs: now });
+    if (metar.kind !== 'ok') throw new Error('bad fixture METAR');
+    const view = calculate({ pack, nowMs: now, metar: metar.report, taf: null, windowChoice: 'full', currentMode: null, feed: EMPTY_FEED });
+    return panelAModel(view).ceiling;
+  };
+
+  it('is the lowest BKN or OVC base', () => {
+    expect(ceilingFor('03010KT 9999 FEW020 BKN030 OVC045 24/15 Q1013')).toBe('3,000 ft');
+  });
+
+  it('ignores FEW and SCT, which are not a ceiling', () => {
+    expect(ceilingFor('03010KT 9999 FEW005 SCT010 24/15 Q1013')).toBe('No ceiling');
+  });
+
+  it('is the vertical visibility when it is lower than the lowest cloud, or when no base is reported', () => {
+    expect(ceilingFor('03010KT 0800 VV002 24/15 Q1013')).toBe('200 ft');
+  });
+
+  it('CAVOK means no ceiling', () => {
+    expect(ceilingFor('03010KT CAVOK 24/15 Q1013')).toBe('CAVOK (no ceiling)');
+  });
+
+  it('is Unknown with no governing report', () => {
+    const view = calculate({ pack, nowMs: now, metar: null, taf: null, windowChoice: 'full', currentMode: null, feed: EMPTY_FEED });
+    expect(panelAModel(view).ceiling).toBe('Unknown');
   });
 });

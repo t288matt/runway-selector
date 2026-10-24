@@ -286,13 +286,13 @@ describe('the weather components and the hover detail come from the engine', () 
 });
 
 describe('the cell detail operating-plan line', () => {
-  it('does not say "in time band all-day" for an all-day plan, and keeps the rank', () => {
+  it('does not say "in time band all-day" for an all-day plan, and keeps the priority (OD-66, was "rank")', () => {
     const ref = PACKS[0];
     if (ref === undefined) throw new Error('no pack');
     const pack = packWith(ref, { weatherStation: fixture(METAR_ID).station });
     const view = realView(pack, ref, true);
     const detail = cellDetailModel(view, 0, 0);
-    expect(detail?.operatingPlan).toMatch(/^Allowed, rank \d+/);
+    expect(detail?.operatingPlan).toMatch(/^Allowed, priority \d+/);
     expect(detail?.operatingPlan).not.toContain('time band');
   });
 });
@@ -309,12 +309,12 @@ describe('Panel D', () => {
     expect(m.columns[0]?.departures).toBe('0');
     expect(m.columns.slice(1).every((c) => c.departures === 'not est.')).toBe(true);
     expect(m.unknownFrom).not.toBeNull();
-    // movements per hour: both known, doubled; arrivals known only, the arrivals figure labelled so, never a lower bound
+    // movements: the raw 30-minute count, never doubled to an hourly rate, never a lower bound (OD-63, amending OD-41 and OD-61)
     for (const c of m.columns) {
       expect(c.movements).not.toContain('\u2265');
       if (c.arrivals === 'Unknown') expect(c.movements).toBe('Unknown');
-      else if (c.departures === 'not est.') expect(c.movements).toBe(`${Number(c.arrivals) * 2} (arrivals only)`);
-      else expect(c.movements).toBe(String((Number(c.arrivals) + Number(c.departures)) * 2));
+      else if (c.departures === 'not est.') expect(c.movements).toBe(`${c.arrivals} (arrivals only)`);
+      else expect(c.movements).toBe(String(Number(c.arrivals) + Number(c.departures)));
     }
     const text = textOf(renderDashboard(view, { aircraft: [], fetchedAtMs: view.calcNowMs, error: null, errorAtMs: null }));
     expect(text).toContain('Demand unknown from');
