@@ -40,8 +40,6 @@ export function PanelA({ view, model, onCurrentMode, status, onConfirmCurrent }:
       {model.kind === 'recommended' ? (
         <>
           <dl className="kv">
-            <dt>Lasts</dt>
-            <dd className="big">{model.lasts}</dd>
             <dt>Next change</dt>
             <dd className="big">{model.nextChange}</dd>
             <dt>Weather</dt>
