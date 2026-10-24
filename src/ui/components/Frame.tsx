@@ -63,8 +63,8 @@ export function AirportEntry({ icao, airports, error, onSwitch, loading = false 
           <option key={id} value={id}>{id}</option>
         ))}
       </select>
-      {loading ? <span className="tag" role="status">Loading {icao}</span> : null}
-      {error === null ? null : <span className="strip strip-bad airport-note" id="airport-icao-note" role="alert">{error}</span>}
+      {loading ? <span className="tag airport-note airport-loading" role="status">Loading {icao}</span> : null}
+      {error === null || loading ? null : <span className="strip strip-bad airport-note" id="airport-icao-note" role="alert">{error}</span>}
     </div>
   );
 }
