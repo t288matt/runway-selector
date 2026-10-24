@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "description": "Runway ends. PROVISIONAL DRAFT 24-10-2026: magnetic headings from a public source (SkyVector), not yet checked against the AIP. Adelaide has two runways that cross: 05/23 (3,100 m) and 12/30 (1,652 m). Headings are in the reference the weather reports use, magnetic (true 050/230 and 123/303 less the 8 degree east variation).",
+  "status": "provisional",
+  "source": "SkyVector, 24-10-2026",
+  "runways": [
+    { "name": "05", "headingDegrees": 42 },
+    { "name": "23", "headingDegrees": 222 },
+    { "name": "12", "headingDegrees": 115 },
+    { "name": "30", "headingDegrees": 295 }
+  ]
+}

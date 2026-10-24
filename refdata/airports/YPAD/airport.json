@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "description": "Adelaide Airport. PROVISIONAL DRAFT 24-10-2026: coordinates and elevation from public sources (SkyVector, airport-data.com), not yet checked against the AIP. Other simulation assumptions carry over from the Sydney and Melbourne packs.",
+  "icao": "YPAD",
+  "name": "Adelaide",
+  "latitude": -34.9450,
+  "longitude": 138.5305,
+  "elevationFt": 20,
+  "timeZone": "Australia/Adelaide",
+  "weatherStation": "YPAD",
+  "trafficAreaNm": 5,
+  "groundMaxSpeedKt": 40,
+  "groundAltitudeMarginFt": 100,
+  "arrivalSpeedFloorKt": 150,
+  "labels": {}
+}
