@@ -190,7 +190,7 @@ export function panelAModel(view: ViewData): PanelAModel {
     nextChange,
     weather: style === null ? null : { word: style.word.toUpperCase(), icon: style.icon, className: style.className, text: currentReportText(view) ?? explanation.lines[0] ?? '' },
     traffic: trafficSentence(view),
-    rank: rank === null ? '-' : `${rank} of ${enabledCount} (1 is most preferred)`,
+    rank: rank === null ? '-' : `${recId} is priority ${rank} of ${enabledCount}`,
     uncertainty: explanation.uncertaintyLine,
     runwayState: runwayStateSentence(view),
     ceiling: ceilingText(currentConditions(view)),
