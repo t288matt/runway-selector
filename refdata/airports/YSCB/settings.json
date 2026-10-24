@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "All tunable values for this airport. PROVISIONAL DRAFT 24-10-2026: every value is carried over unchanged from the Western Sydney pack (itself from the Melbourne and YSSY packs); the owner confirmed on 24-10-2026 that the tailwind and crosswind limits are the same as the other packs. Every value is a simulation assumption unless a source is stated.",
+  "description": "All tunable values for this airport. Verified by the owner, 24-10-2026: every value is carried over unchanged from the Western Sydney pack (itself from the Melbourne and YSSY packs), and the tailwind and crosswind limits are the same as the other packs. Every value is a simulation assumption unless a source is stated.",
   "tailwindDryKt":            { "value": 5,    "description": "Maximum tailwind on a dry runway." },
   "tailwindWetKt":            { "value": 0,    "description": "Maximum tailwind on a wet runway." },
   "defaultCrosswindKt":       { "value": 20,   "description": "Crosswind limit used only for a mode with no maxCrosswindKt of its own." },

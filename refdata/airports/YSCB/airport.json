@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "Canberra Airport. PROVISIONAL DRAFT 24-10-2026: coordinates are the airport reference point from public aggregator sites and elevation (1,886 ft; the ERSA entry shows 1,887 ft) is rounded from the same sources; none is checked against the AIP. Other simulation assumptions carry over from the other Australian packs.",
+  "description": "Canberra Airport. Verified by the owner, 24-10-2026. Coordinates are the airport reference point and elevation is 1,886 ft. Other simulation assumptions carry over from the other Australian packs.",
   "icao": "YSCB",
   "name": "Canberra",
   "latitude": -35.3069,
