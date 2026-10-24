@@ -1,16 +1,14 @@
-// The settings drawer (UI_DESIGN "Settings", DB-9, OD-27, RD-6). On screen only
-// the current mode and the window can be changed; every other value is read
-// from the pack and shown as text (SEC-2). A source is a link only when it
-// starts with https: (done in the model). Focus: the heading takes focus on
-// opening, Escape closes, and focus returns to what opened the drawer.
+// The settings drawer (UI_DESIGN "Settings", DB-9, OD-27, RD-6). Everything
+// here is read only; the current mode and the window are changed in Panel A
+// and the timeline instead, so they are not duplicated here (SEC-2). Focus:
+// the heading takes focus on opening, Escape closes, and focus returns to
+// what opened the drawer.
 import { useEffect, useRef, useState } from 'react';
 import type { AuditEntry, AuditExport, CurrentModeRecord } from '../../store';
 import { downloadText } from '../download';
-import { WINDOW_OPTIONS, isWindowChoice, type ViewData, type WindowChoice } from '../model/dashboard';
-import { auditRows, currentModeStatus, drawerModel, SIMULATION_LABEL } from '../model/drawer';
-import { currentModeOptions } from '../model/panels';
+import type { ViewData } from '../model/dashboard';
+import { auditRows, drawerModel, SIMULATION_LABEL } from '../model/drawer';
 import type { ReloadState } from '../controller';
-import { CurrentModeStatus } from './CurrentModeStatus';
 
 /** What the drawer needs from the controller beyond the view. */
 export interface SettingsBridge {
@@ -35,8 +33,6 @@ export interface SettingsDrawerProps {
   readonly view: ViewData;
   readonly displayNowMs: number;
   readonly bridge: SettingsBridge;
-  readonly onCurrentMode: (id: string | null) => void;
-  readonly onWindowChange: (choice: WindowChoice) => void;
   readonly onClose: () => void;
 }
 
@@ -58,7 +54,7 @@ function Rows({ rows }: { rows: readonly { label: string; value: string; help: s
   );
 }
 
-export function SettingsDrawer({ view, displayNowMs, bridge, onCurrentMode, onWindowChange, onClose }: SettingsDrawerProps) {
+export function SettingsDrawer({ view, displayNowMs, bridge, onClose }: SettingsDrawerProps) {
   const { pack } = view;
   const headingRef = useRef<HTMLHeadingElement | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
@@ -80,7 +76,6 @@ export function SettingsDrawer({ view, displayNowMs, bridge, onCurrentMode, onWi
   }, []);
 
   const model = drawerModel(pack, displayNowMs);
-  const status = currentModeStatus(bridge.currentModeRecord, displayNowMs, pack);
   const rows = auditRows(bridge.audit, pack);
   const reload = bridge.reload;
 
@@ -92,26 +87,6 @@ export function SettingsDrawer({ view, displayNowMs, bridge, onCurrentMode, onWi
         <button type="button" className="btn" onClick={onClose}>Close settings</button>
       </div>
       <p className="small">{model.onScreenNote}</p>
-
-      <h3>Current mode and window</h3>
-      <div className="drawer-field">
-        <label htmlFor="drawer-current-mode">Current mode (you choose)</label>
-        <select id="drawer-current-mode" value={view.currentMode ?? ''} onChange={(e) => onCurrentMode(e.target.value === '' ? null : e.target.value)}>
-          {currentModeOptions(view).map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-        <CurrentModeStatus status={status} onConfirm={bridge.onConfirmCurrent} />
-        <p className="small">Changing the current mode recalculates the recommendation at once and is added to the audit trail below.</p>
-      </div>
-      <div className="drawer-field">
-        <label htmlFor="drawer-window">Window</label>
-        <select id="drawer-window" value={view.windowChoice} onChange={(e) => (isWindowChoice(e.target.value) ? onWindowChange(e.target.value) : undefined)}>
-          {WINDOW_OPTIONS.map((o) => (
-            <option key={o.id} value={o.id}>{o.label}</option>
-          ))}
-        </select>
-      </div>
 
       {model.sections.map((sec) => (
         <section key={sec.id} aria-labelledby={`drawer-${sec.id}`}>
@@ -143,25 +118,6 @@ export function SettingsDrawer({ view, displayNowMs, bridge, onCurrentMode, onWi
       <section aria-labelledby="drawer-zone">
         <h3 id="drawer-zone">Time zone</h3>
         <Rows rows={model.zone} />
-      </section>
-
-      <section aria-labelledby="drawer-status">
-        <h3 id="drawer-status">Status of the airport data</h3>
-        <ul className="prov">
-          {model.provenance.map((p) => (
-            <li key={p.label}>
-              {p.label}: {p.status}.
-              {p.source === null ? null : p.link === null ? (
-                <> Source: {p.source}</>
-              ) : (
-                <>
-                  {' '}
-                  Source: <a href={p.link} rel="noopener noreferrer" target="_blank">{p.link}</a>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
       </section>
 
       <section aria-labelledby="drawer-data">

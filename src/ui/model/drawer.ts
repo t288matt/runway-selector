@@ -6,7 +6,7 @@
 import type { AirportPack, PlanBand, SettingName } from '../../refdata';
 import { formatClock } from '../../refdata';
 import type { AuditEntry, AuditValue, CurrentModeRecord } from '../../store';
-import { ddmmyyyy, hhmm, kt1, safeHttpsLink, utcAndLocal } from '../format';
+import { ddmmyyyy, hhmm, kt1, utcAndLocal } from '../format';
 import { isCurrentModeStale } from '../../store';
 import { levelWord, WINDOW_OPTIONS } from './dashboard';
 
@@ -43,14 +43,6 @@ export interface PlanBandModel {
   readonly allEqual: boolean;
 }
 
-export interface ProvenanceRow {
-  readonly label: string;
-  readonly status: string;
-  readonly source: string | null;
-  /** Set only when the source starts with https: (SEC-2). */
-  readonly link: string | null;
-}
-
 export interface DrawerModel {
   readonly title: string;
   readonly onScreenNote: string;
@@ -58,7 +50,6 @@ export interface DrawerModel {
   readonly plan: readonly PlanBandModel[];
   readonly planNote: string;
   readonly zone: readonly DrawerRow[];
-  readonly provenance: readonly ProvenanceRow[];
 }
 
 export const SIMULATION_LABEL = 'Simulation setting';
@@ -155,13 +146,6 @@ export function drawerModel(pack: AirportPack, nowMs: number): DrawerModel {
     rows: enabled.map((m): DrawerRow => ({ label: `Mode ${m.id}`, value: `Arr ${m.arrivals.join(', ')}; Dep ${m.departures.join(', ')}`, help: null })),
   };
 
-  const prov = (label: string, p: { status: string | null; source: string | null }): ProvenanceRow => ({
-    label,
-    status: p.status ?? 'not stated',
-    source: p.source,
-    link: p.source === null ? null : safeHttpsLink(p.source),
-  });
-  const m = pack.meta;
   return {
     title: 'Settings',
     onScreenNote: ON_SCREEN_NOTE,
@@ -172,7 +156,6 @@ export function drawerModel(pack: AirportPack, nowMs: number): DrawerModel {
       { label: 'Time zone', value: tz, help: "The airport's own time zone. Used only to work out the operating plan's time bands; every time on screen is UTC (OD-36)." },
       { label: 'Now', value: utcAndLocal(nowMs, tz), help: 'Times on screen are UTC.' },
     ],
-    provenance: [prov('Airport', m.airport), prov('Runways', m.runways), prov('Modes', m.modes), prov('Operating plan', m.operatingPlan), prov('Settings', m.settings)],
   };
 }
 

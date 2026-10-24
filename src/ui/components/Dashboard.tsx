@@ -57,7 +57,7 @@ export function Dashboard(p: DashboardProps) {
       </div>
       <NoticeBar pack={view.pack} />
       {p.drawerOpen ? (
-        <SettingsDrawer view={view} displayNowMs={p.displayNowMs} bridge={p.settings} onCurrentMode={p.onCurrentMode} onWindowChange={p.onWindowChange} onClose={() => p.onToggleDrawer(false)} />
+        <SettingsDrawer view={view} displayNowMs={p.displayNowMs} bridge={p.settings} onClose={() => p.onToggleDrawer(false)} />
       ) : null}
     </div>
   );
