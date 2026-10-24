@@ -175,9 +175,6 @@ export function panelAModel(view: ViewData): PanelAModel {
   if (explanation.earlyChange !== null) {
     banners.push({ tone: 'amber', title: explanation.earlyChange.title, text: explanation.earlyChange.text });
   }
-  if (banners.length === 0 && view.currentMode !== null && view.currentMode !== recId) {
-    banners.push({ tone: 'note', title: 'NOTE', text: 'Recommended differs from current. See the timeline (B).' });
-  }
 
   const style = cell0 === undefined ? null : STATUS_STYLE[cell0.status];
   const rank = explanation.operatingPlanRank;
