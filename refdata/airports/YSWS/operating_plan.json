@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "description": "PROVISIONAL 24-10-2026. One band covers the whole day; no day/night split has been given (05A23D, reciprocal runway operations, is a night mode, 11pm to 5:30am, in the public material, but that is not applied). Order is the owner's preferred runway mode list, strict: 1 05A23D; 2 23AD; 3 05AD. The penalties are placeholders on the same scale as the other packs (0, 2, 5) for the owner to confirm.",
+  "status": "provisional",
+  "bands": [
+    {
+      "id": "all-day",
+      "allDay": true,
+      "start": "00:00",
+      "end": "00:00",
+      "rows": [
+        { "mode": "05A23D", "allowed": true, "penalty": 0 },
+        { "mode": "23AD", "allowed": true, "penalty": 2 },
+        { "mode": "05AD", "allowed": true, "penalty": 5 }
+      ]
+    }
+  ]
+}
