@@ -360,7 +360,7 @@ export function cellDetailModel(view: ViewData, modeIndex: number, slotIndex: nu
   const planStatus = pack.meta.operatingPlan.status === 'provisional' ? ', provisional' : '';
   const operatingPlan = planFail
     ? `Not allowed in time band ${band ?? 'unknown'}${planStatus}`
-    : `Allowed${band === null ? '' : ` in time band ${band}`}${rank === null ? '' : `, rank ${rank}`}${planStatus}`;
+    : `Allowed${band === null || pack.plan.find((b) => b.id === band)?.allDay === true ? '' : ` in time band ${band}`}${rank === null ? '' : `, rank ${rank}`}${planStatus}`;
 
   const s = result.evaluation.survival[modeIndex];
   const parts: string[] = [];
