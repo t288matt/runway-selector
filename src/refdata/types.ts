@@ -40,6 +40,16 @@ export interface RunwayEnd extends Provenance {
   readonly threshold: { readonly latitude: number; readonly longitude: number } | null;
 }
 
+/** A mode's weather minima. A key the pack leaves out is null (or false), meaning no limit of that kind. */
+export interface ModeMinima {
+  /** Lowest cloud ceiling, feet above ground, or null for no ceiling minimum. */
+  readonly ceilingFt: number | null;
+  /** Lowest visibility, metres, or null for no visibility minimum. */
+  readonly visibilityMetres: number | null;
+  /** The runway must be dry. */
+  readonly requiresDrySurface: boolean;
+}
+
 export interface Mode extends Provenance {
   readonly id: string;
   readonly enabled: boolean;
@@ -50,6 +60,8 @@ export interface Mode extends Provenance {
   readonly maxCrosswindKt: number;
   /** Total movements per hour, or null for no limit. */
   readonly capacity: number | null;
+  /** The mode's weather minima, or null when it has none. */
+  readonly minima: ModeMinima | null;
 }
 
 export interface PlanRow extends Provenance {

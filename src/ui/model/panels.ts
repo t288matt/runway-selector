@@ -6,7 +6,7 @@ import { runwayWind, trafficLevelsFor, withinLimit, type Cell, type TrafficLevel
 import { dir3, durationText, hhmmZRel, kt1 } from '../format';
 import { RUNWAY_STATE_WORDS, levelWord, type ViewData } from './dashboard';
 import { missingWeather, planRank } from './timeline';
-import type { DecodedConditions } from '../../weather';
+import { ceilingOf, type DecodedConditions } from '../../weather';
 import { cellView, CAUSE_WORDS, STATUS_STYLE } from './status';
 
 // ------------------------------------------------------------------ Panel A
@@ -97,10 +97,8 @@ const thousands = (n: number): string => n.toString().replace(/\B(?=(\d{3})+(?!\
 function ceilingText(c: DecodedConditions | null): string {
   if (c === null) return 'Unknown';
   if (c.cavok) return 'CAVOK (no ceiling)';
-  const bases = c.clouds.filter((cl) => (cl.quantity === 'BKN' || cl.quantity === 'OVC') && cl.baseFt !== null).map((cl) => cl.baseFt as number);
-  const lowestCloud = bases.length === 0 ? null : Math.min(...bases);
-  const ceilingFt = c.verticalVisibilityFt !== null && (lowestCloud === null || c.verticalVisibilityFt < lowestCloud) ? c.verticalVisibilityFt : lowestCloud;
-  return ceilingFt === null ? 'No ceiling' : `${thousands(ceilingFt)} ft`;
+  const ceilingFt = ceilingOf(c);
+  return ceilingFt === null || ceilingFt === undefined ? 'No ceiling' : `${thousands(ceilingFt)} ft`;
 }
 
 function runwayStateSentence(view: ViewData): string {

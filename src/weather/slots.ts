@@ -5,6 +5,7 @@
 // that depends on the airport comes from the pack's settings.
 import type { PrecipitationFlags, SlotWeather, WeatherOverlay, WeatherSlot } from '../engine/inputs';
 import type { Settings } from '../refdata/schema';
+import { ceilingOf, visibilityMetresOf } from './ceiling';
 import type { DecodedMetar, DecodedTaf, DecodedVisibility, DecodedWeatherCondition } from './types';
 
 export const SLOT_MINUTES = 30;
@@ -70,6 +71,8 @@ function metarWeather(metar: DecodedMetar, codes: ReadonlySet<string>, lowVisibi
     wind: metar.wind,
     precipitation: { prevailing: hasPrecipitation(metar.weather, codes), probable: null, temporary: false, recent: hasPrecipitation(metar.recentWeather, codes) },
     overlays: [],
+    ceilingFt: ceilingOf(metar),
+    visibilityMetres: visibilityMetresOf(metar),
     thunderstorm: hasThunderstorm(metar.weather),
     lowVisibility: isLowVisibility(metar.visibility, lowVisibilityMetres),
   };
@@ -94,7 +97,18 @@ function tafWeather(taf: DecodedTaf, startMs: number, endMs: number, codes: Read
   for (const o of taf.overlays) {
     if (!(o.startMs < endMs && o.endMs > startMs)) continue;
     const precipitation = hasPrecipitation(o.weather, codes);
-    overlays.push({ kind: o.kind, probabilityPct: o.probabilityPct, wind: o.wind, precipitation, text: o.text });
+    // A group that does not mention cloud (or visibility) keeps the prevailing value, as TAF rules say.
+    const ceilingFt = ceilingOf(o);
+    const visibilityMetres = visibilityMetresOf(o);
+    overlays.push({
+      kind: o.kind,
+      probabilityPct: o.probabilityPct,
+      wind: o.wind,
+      precipitation,
+      ceilingFt: ceilingFt === undefined ? ceilingOf(period) : ceilingFt,
+      visibilityMetres: visibilityMetres === undefined ? visibilityMetresOf(period) : visibilityMetres,
+      text: o.text,
+    });
     if (precipitation && (o.kind === 'TEMPO' || o.kind === 'INTER')) temporary = true;
     if (precipitation && o.kind === 'PROB' && o.probabilityPct !== null && (probable === null || o.probabilityPct > probable)) probable = o.probabilityPct;
   }
@@ -102,6 +116,8 @@ function tafWeather(taf: DecodedTaf, startMs: number, endMs: number, codes: Read
     wind: period.wind,
     precipitation: { prevailing: hasPrecipitation(period.weather, codes), probable, temporary, recent: false },
     overlays,
+    ceilingFt: ceilingOf(period),
+    visibilityMetres: visibilityMetresOf(period),
     thunderstorm: hasThunderstorm(period.weather),
     lowVisibility: isLowVisibility(period.visibility, lowVisibilityMetres),
   };
