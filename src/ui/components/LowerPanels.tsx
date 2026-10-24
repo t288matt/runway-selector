@@ -36,7 +36,7 @@ export function PanelD({ view }: { view: ViewData }) {
                 ))}
               </tr>
               <tr>
-                <td>Movements per hour</td>
+                <td>Movements</td>
                 {m.columns.map((c) => (
                   <td key={c.label}>{c.movements}</td>
                 ))}
