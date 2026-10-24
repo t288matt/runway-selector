@@ -397,14 +397,15 @@ describe('the application states', () => {
     expect(html).not.toContain('Panel A');
   });
 
-  it('starts with empty weather boxes and "No weather entered" for any pack', () => {
+  it('starts with no paste boxes, "No weather entered" and a button offering them, for any pack', () => {
     for (const ref of PACKS) {
       const pack = packWith(ref);
       const html = renderToStaticMarkup(<AppBody state={{ status: 'ready', pack, airports: [pack.airport.icao], airportError: null }} deps={deps} />);
       const text = textOf(html);
       expect(text).toContain('No weather entered');
-      expect(html).toMatch(/<textarea id="wx-metar"[^>]*><\/textarea>/);
-      expect(html).toMatch(/<textarea id="wx-taf"[^>]*><\/textarea>/);
+      expect(html).not.toContain('<textarea');
+      expect(html).not.toContain('>Apply<');
+      expect(text).toContain('Paste your own weather');
       expect(text).toContain('No data. Cannot recommend a mode.');
       expect(html).toContain('Panel A');
     }

@@ -119,6 +119,14 @@ describe('the weather boxes with automatic fetching (OD-37)', () => {
       <WeatherEntry pack={pack} metar={null} taf={null} displayNowMs={nowOf(metar)} onApplyMetar={() => ({ ok: true, message: null, warnings: [] })} onApplyTaf={() => ({ ok: true, message: null, warnings: [] })} auto={{ metar: metarAuto, taf: tafAuto }} onResumeAutomatic={noop} />,
     );
 
+  it('hides the paste boxes and Apply until asked for', () => {
+    const html = render(NO_AUTO_REPORT);
+    expect(html).not.toContain('<textarea');
+    expect(html).not.toContain('>Apply<');
+    expect(html).toContain('aria-expanded="false"');
+    expect(html).toContain('Paste your own weather');
+  });
+
   it('names the station and the interval, and carries the credit NOAA/NWS and Datamask Aviation ask for', () => {
     const html = render(NO_AUTO_REPORT);
     expect(html).toContain(`fetched automatically every ${pack.settings.weatherPollMinutes} minutes`);
