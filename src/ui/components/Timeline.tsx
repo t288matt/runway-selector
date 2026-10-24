@@ -1,4 +1,4 @@
-// Panel B: the mode survival timeline (UI_DESIGN section 6, DB-3 to DB-7). Rows
+// Panel B: the optimal mode timeline (UI_DESIGN section 6, DB-3 to DB-7). Rows
 // are modes, columns are 30-minute slots. A cell's colour, icon and word come
 // from the engine's status through cellView() and from nothing else.
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -23,7 +23,7 @@ function DetailBody({ d }: { d: CellDetailModel }) {
         {d.title} <span className={`chip chip-${d.statusWord.toLowerCase()}`}>{d.icon} {d.statusWord}</span>
         {d.code === '' ? null : <span className="detail-code"> {d.code}</span>}
       </h3>
-      <div>{d.reason}</div>
+      {d.reason === '' ? null : <div>{d.reason}</div>}
       {d.runways.length === 0 ? null : (
         <table>
           <thead>
@@ -44,7 +44,7 @@ function DetailBody({ d }: { d: CellDetailModel }) {
           </tbody>
         </table>
       )}
-      <div>Wind used: {d.wind} (the stronger of mean and gust). {d.source}.</div>
+      <div>Wind used: {d.wind}</div>
       {d.overlays.map((o) => (
         <div key={o}>Forecast: {o}</div>
       ))}
@@ -157,9 +157,9 @@ export function Timeline({ view, model, displayNowMs, onWindowChange }: Timeline
   };
 
   return (
-    <section className="panel B" aria-label="Panel B: mode survival timeline">
+    <section className="panel B" aria-label="Panel B: optimal mode timeline">
       <h2>
-        <i>B</i>Mode survival timeline <span className="range">{model.rangeText}</span>
+        <i>B</i>Optimal mode timeline <span className="range">{model.rangeText}</span>
         <span className="sp" />
         {hiddenCount === 0 && !showHidden ? null : (
           <button type="button" className="btn small-btn" aria-pressed={showHidden} onClick={() => {
@@ -188,7 +188,7 @@ export function Timeline({ view, model, displayNowMs, onWindowChange }: Timeline
       </div>
 
       <div className="scroller" tabIndex={0} aria-label="Timeline, scrolls horizontally" ref={scroller} onScroll={updateNowVisible}>
-        <div className="inner" role="grid" aria-label="Mode survival timeline: modes by 30-minute slot" aria-rowcount={rows.length} aria-colcount={n} style={{ width, height }}>
+        <div className="inner" role="grid" aria-label="Optimal mode timeline: modes by 30-minute slot" aria-rowcount={rows.length} aria-colcount={n} style={{ width, height }}>
           <div className="row hdr" role="row" style={{ height: LAYOUT.timeStrip }}>
             <div className="lab" role="rowheader"><small>Time (UTC)</small></div>
             {slots.map((s) => (

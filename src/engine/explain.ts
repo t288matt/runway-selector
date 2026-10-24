@@ -105,23 +105,19 @@ function uncertaintyLineFor(count: number): string {
 function whyThisMode(pack: AirportPack, modeId: string, cell: Cell): string {
   if (cell.status === 'MARGINAL') {
     const reason = cell.reasons.find((r) => r.severity === 'MARGINAL');
-    return `${modeId} passes every limit, with a caution. ${reason === undefined ? 'It relies on an uncertain input.' : sentence(reason.text)}`;
+    return `${modeId} is suitable, with a caution. ${reason === undefined ? 'It relies on an uncertain input.' : sentence(reason.text)}`;
   }
   if (cell.status === 'UNKNOWN') {
     return `${modeId} is planned through, but the weather for this period is not known.`;
   }
-  if (cell.runways.length === 0) return `${modeId} meets every limit.`;
+  if (cell.runways.length === 0) return `${modeId} is suitable.`;
   const state = cell.runwayState;
   const tail = Math.max(...cell.runways.map((r) => r.tailwindKt));
   const cross = Math.max(...cell.runways.map((r) => r.crosswindKt));
-  const first = cell.runways[0];
-  const tailLimit =
-    first === undefined ? 0 : state === 'DRY' ? first.tailwindLimitDryKt : state === 'WET' ? first.tailwindLimitWetKt : Math.min(first.tailwindLimitDryKt, first.tailwindLimitWetKt);
-  const crossLimit = first?.crosswindLimitKt ?? pack.settings.defaultCrosswindKt;
   const runwayWord = state === 'DRY' ? 'dry' : state === 'WET' ? 'wet' : 'possibly wet';
   // Whole knots (owner decision 24-10-2026, amending WC-3); the numbers above keep full precision.
   const r1 = (n: number): string => Math.round(n).toString();
-  return `${modeId} meets every limit on the runways it uses (${runwayWord} runway): tailwind up to ${r1(tail)} kt against a limit of ${r1(tailLimit)} kt, crosswind up to ${r1(cross)} kt against a limit of ${r1(crossLimit)} kt.`;
+  return `${modeId} is suitable on the runways it uses (${runwayWord} runway): tailwind up to ${r1(tail)} kt, crosswind up to ${r1(cross)} kt.`;
 }
 
 function whyItLasts(modeId: string, survival: Survival | undefined, nowMs: number): string {

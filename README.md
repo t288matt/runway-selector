@@ -21,7 +21,7 @@ It advises only. It never changes anything, and the final decision is yours.
 
 1. **Paste the METAR** into the METAR box and press Apply. Paste the **TAF** into the TAF box and press Apply. Each box shows the age of the report, taken from the report's own time group. A report that cannot be read is refused with a message saying what is wrong, and the previous report stays in use. The boxes start empty each time you open the page.
 2. **Choose the current mode** from the pull-down menu in Panel A, if you want the advice to take it into account. The list has the airport's enabled modes and "Not set". The tool remembers your choice and shows when you set it. If it is older than two hours it turns amber, so a forgotten setting is visible.
-3. **Read the recommendation** in Panel A, then check the survival timeline below it.
+3. **Read the recommendation** in Panel A, then check the optimal mode timeline below it.
 4. Choose the **window** above the timeline: the full TAF (the default), or 4 or 6 hours.
 
 If you enter only a METAR, the tool judges the first hour from it and marks later slots unknown. If you enter only a TAF, the TAF is used from the first slot. With neither, it shows no recommendation and says so.
@@ -38,7 +38,7 @@ If you enter only a METAR, the tool judges the first hour from it and marks late
 - A red banner if your current mode is unsuitable now, and an amber banner, EARLY MODE CHANGE RECOMMENDED, when changing earlier avoids a forced change in busier traffic.
 - If no mode is suitable, it says so and lists, for every mode, what blocks it. It never names a "least bad" mode.
 
-**Panel B: mode survival timeline.** Rows are modes and columns are half-hour slots. The recommended path is outlined, and a dashed line marks the planned change. Cell colours:
+**Panel B: optimal mode timeline.** Rows are modes and columns are half-hour slots. The recommended path is outlined, and a dashed line marks the planned change. Cell colours:
 - Green: suitable.
 - Amber with stripes: marginal, or depends on an uncertain input (a white corner marks those).
 - Red with cross-hatching: unsuitable, with the cause (for example TW tailwind, XW crosswind, CAP capacity, PLAN operating plan).

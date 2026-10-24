@@ -1,4 +1,4 @@
-// The view model of Panel B, the survival timeline (UI_DESIGN section 6). Plain
+// The view model of Panel B, the optimal mode timeline (UI_DESIGN section 6). Plain
 // data from one engine result: rows, columns, cell views, overlays. No colour
 // is chosen here except through cellView (status.ts).
 import { trafficLevelsFor, type Cell, type TrafficLevel, type WindObservation } from '../../engine';
@@ -66,7 +66,6 @@ export function modeRows(view: ViewData): ModeRow[] {
     const allUnsuitable = cellsOfMode.length > 0 && cellsOfMode.every((c) => c.status === 'UNSUITABLE');
     const penalty = cell0 === undefined ? Number.MAX_SAFE_INTEGER : preferencePenalty(pack, cell0.bandId, mode.id);
     const cap = mode.capacity === null ? 'no capacity set' : `capacity ${mode.capacity} per hour`;
-    const status = pack.meta.modes.status === null ? '' : ` (${pack.meta.modes.status})`;
     rows.push({
       index,
       modeId: mode.id,
@@ -74,7 +73,7 @@ export function modeRows(view: ViewData): ModeRow[] {
       isCurrent,
       allUnsuitable,
       runwaysText: runwaysText(mode.arrivals, mode.departures),
-      title: `Mode ${mode.id}: ${runwaysText(mode.arrivals, mode.departures)}; ${cap}${status}; crosswind limit ${kt1(mode.maxCrosswindKt)} kt`,
+      title: `Mode ${mode.id}: ${runwaysText(mode.arrivals, mode.departures)}; ${cap}; crosswind limit ${kt1(mode.maxCrosswindKt)} kt`,
       sort: (isRecommended ? 0 : isCurrent ? 1 : 2) * 1e9 + penalty,
       order: index,
     });
@@ -133,12 +132,35 @@ export function visibleRows(model: Pick<TimelineModel, 'rows' | 'cells' | 'onPat
   return { rows: keep.map((i) => model.rows[i] as ModeRow), cells: keep.map((i) => model.cells[i] ?? []), onPath: keep.map((i) => model.onPath[i] ?? []), hiddenCount: hidden };
 }
 
-function windShiftLabel(prev: WindObservation | null, cur: WindObservation | null): string | null {
-  if (cur === null) return null;
-  if (cur.kind === 'variable') return prev !== null && prev.kind === 'variable' ? null : 'wind VRB';
-  if (prev === null) return null;
-  if (prev.kind === 'steady' && Math.round(prev.directionDegrees) === Math.round(cur.directionDegrees)) return null;
-  return `wind to ${dir3(cur.directionDegrees)}`;
+/** A wind change smaller than both of these is not worth a label in the event strip (display only). */
+export const WIND_SHIFT_MIN_DEGREES = 10;
+export const WIND_SHIFT_MIN_KT = 5;
+
+/** Wind as reported: "340/10", "020/12G22", "VRB/05". */
+export function windText(w: WindObservation): string {
+  const gust = w.gustKt === null ? '' : `G${kt1(w.gustKt)}`;
+  return `${w.kind === 'variable' ? 'VRB' : dir3(w.directionDegrees)}/${kt1(w.speedKt).padStart(2, '0')}${gust}`;
+}
+
+const turnDegrees = (a: number, b: number): number => {
+  const d = Math.abs(a - b) % 360;
+  return Math.round(d > 180 ? 360 - d : d);
+};
+
+/**
+ * The event-strip label and hover text for a wind change between two slots, or null when there is none worth
+ * showing: the direction moved by less than WIND_SHIFT_MIN_DEGREES and neither the speed nor the gust moved by
+ * WIND_SHIFT_MIN_KT. The first slot has no earlier wind to compare with, so it never has a label.
+ */
+export function windShift(prev: WindObservation | null, cur: WindObservation | null): { readonly label: string; readonly title: string } | null {
+  if (cur === null || prev === null) return null;
+  const speedMove = Math.max(Math.abs(cur.speedKt - prev.speedKt), Math.abs((cur.gustKt ?? cur.speedKt) - (prev.gustKt ?? prev.speedKt)));
+  const bothSteady = prev.kind === 'steady' && cur.kind === 'steady';
+  const turn = prev.kind === 'steady' && cur.kind === 'steady' ? turnDegrees(prev.directionDegrees, cur.directionDegrees) : null;
+  const small = turn === null ? prev.kind === cur.kind && speedMove < WIND_SHIFT_MIN_KT : turn < WIND_SHIFT_MIN_DEGREES && speedMove < WIND_SHIFT_MIN_KT;
+  if (small) return null;
+  const turnText = bothSteady && turn !== null && turn > 0 ? `, turn of ${turn} degrees` : '';
+  return { label: windText(cur), title: `Wind ${windText(prev)} to ${windText(cur)}${turnText}` };
 }
 
 function runs(flags: readonly boolean[]): (readonly [number, number])[] {
@@ -176,8 +198,19 @@ export function timelineModel(view: ViewData, displayNowMs: number): TimelineMod
     const wet = wetState === 'WET' ? 'wet' : wetState === 'WET_POSSIBLE' ? 'possible' : 'none';
     const events: string[] = [];
     const titles: string[] = [];
-    const shift = windShiftLabel(i === 0 ? null : (slotsIn[i - 1]?.weather.wind ?? null), s.weather.wind);
-    if (shift !== null) events.push(shift);
+    const shift = windShift(i === 0 ? null : (slotsIn[i - 1]?.weather.wind ?? null), s.weather.wind);
+    if (shift !== null) {
+      events.push(shift.label);
+      titles.push(shift.title);
+    }
+    if (s.weather.thunderstorm === true) {
+      events.push('TS');
+      titles.push('Thunderstorm at the airport');
+    }
+    if (s.weather.lowVisibility === true) {
+      events.push('low vis');
+      titles.push(`Visibility below ${pack.settings.lowVisibilityMetres} m`);
+    }
     const overlays = s.governedBy === 'METAR' ? (s.tafView?.overlays ?? []) : s.weather.overlays;
     const kinds = [...new Set(overlays.map((o) => o.kind))];
     for (const k of kinds) events.push(k);
@@ -284,53 +317,13 @@ export interface Tile {
   readonly value: string;
 }
 
-/** The four summary tiles (DB-6), from the engine's plan, survival and changeovers. */
+/** The summary tiles above the grid: the recommended mode and the next change, with the new mode and time (OD-49, OD-50). */
 export function summaryTiles(view: ViewData): Tile[] {
-  const { result } = view;
-  const rec = result.plan.recommendedModeId;
-  if (rec === null) {
-    return [
-      { label: 'Recommended', value: 'None' },
-      { label: 'Survives', value: '-' },
-      { label: 'Next constraint', value: '-' },
-      { label: 'Traffic at changeover', value: '-' },
-    ];
-  }
-  const recIndex = view.pack.modes.findIndex((m) => m.id === rec);
-  const survival = result.evaluation.survival[recIndex];
-  const onPath = result.plan.slots.filter((s) => s.modeId !== null);
-  const marginalOnPath = onPath.filter((s) => s.status === 'MARGINAL').length;
-  const firstMarginal = result.plan.slots.findIndex((s) => s.modeId !== null && s.status === 'MARGINAL');
-  const firstMarginalStart = view.weather.slots[firstMarginal]?.startMs;
-  // Lead with what holds (suitable until when), then say how much of it is only marginal and where that starts.
-  const marginalWords =
-    marginalOnPath === 0
-      ? ''
-      : `; marginal in ${marginalOnPath} of ${onPath.length} ${onPath.length === 1 ? 'slot' : 'slots'}${firstMarginalStart === undefined ? '' : `, first at ${hhmmZRel(firstMarginalStart, view.calcNowMs)}`}`;
-  const survives =
-    survival === undefined || survival.viableUntilMs === null
-      ? '-'
-      : `${survival.endsInFailure ? 'Suitable to' : 'Suitable to end of window,'} ${hhmmZRel(survival.viableUntilMs, view.calcNowMs)}${marginalWords}`;
-
-  const slots = view.weather.slots;
-  const missing = missingWeather(view);
-  let constraint = 'None in window';
-  for (let i = 0; i < result.plan.slots.length; i += 1) {
-    const p = result.plan.slots[i];
-    const s = slots[i];
-    if (p === undefined || s === undefined || p.modeId === null || p.status === 'SUITABLE' || p.status === null) continue;
-    const idx = view.pack.modes.findIndex((m) => m.id === p.modeId);
-    const cv = cellView(cellAt(view, idx, i), s.startMs, missing, view.calcNowMs);
-    constraint = `${hhmmZRel(s.startMs, view.calcNowMs)} ${cv.code}`.trim();
-    break;
-  }
-  const upcoming = result.changeovers.find((c) => c.change.slotIndex > 0) ?? result.changeovers[0];
-  const atChange = upcoming === undefined ? 'No change' : `${levelWord(upcoming.trafficLevel)} (${hhmmZRel(upcoming.change.startMs, view.calcNowMs)})`;
+  const change = view.result.changeovers[0];
+  const next = view.result.plan.recommendedModeId === null ? '-' : change === undefined ? 'No change planned' : `${change.change.toModeId} at ${hhmmZRel(change.change.startMs, view.calcNowMs)}`;
   return [
-    { label: 'Recommended', value: rec },
-    { label: 'Survives', value: survives },
-    { label: 'Next constraint', value: constraint },
-    { label: 'Traffic at changeover', value: atChange },
+    { label: 'Recommended', value: view.result.plan.recommendedModeId ?? 'None' },
+    { label: 'Next change', value: next },
   ];
 }
 
