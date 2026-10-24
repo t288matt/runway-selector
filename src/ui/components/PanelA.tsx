@@ -41,13 +41,9 @@ export function PanelA({ view, model, onCurrentMode, status, onConfirmCurrent }:
           <dl className="kv">
             <dt>Next change</dt>
             <dd className="big">{model.nextChange}</dd>
-            <dt>Weather</dt>
+            <dt>METAR</dt>
             <dd>
-              {model.weather === null ? 'Unknown' : (
-                <>
-                  <span className={`chip chip-${model.weather.word.toLowerCase()}`}>{model.weather.icon} {model.weather.word}</span> {model.weather.text}
-                </>
-              )}
+              {model.weather === null ? 'Unknown' : model.weather.text}
             </dd>
             <dt>Traffic</dt>
             <dd>{model.traffic}</dd>
