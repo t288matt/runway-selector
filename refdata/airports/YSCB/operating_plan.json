@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "description": "Verified by the owner, 24-10-2026. One band covers the whole day; no day/night split has been given. Order is the owner's preferred runway mode list, strict: 1 3530A35D; 2 1712A17D; 3 17A35D; 4 35AD; 5 17AD; 6 30AD; 7 12AD. The penalties (0 to 12 in steps of 2) encode that order; lower is preferred.",
+  "status": "verified",
+  "bands": [
+    {
+      "id": "all-day",
+      "allDay": true,
+      "start": "00:00",
+      "end": "00:00",
+      "rows": [
+        { "mode": "3530A35D", "allowed": true, "penalty": 0 },
+        { "mode": "1712A17D", "allowed": true, "penalty": 2 },
+        { "mode": "17A35D", "allowed": true, "penalty": 4 },
+        { "mode": "35AD", "allowed": true, "penalty": 6 },
+        { "mode": "17AD", "allowed": true, "penalty": 8 },
+        { "mode": "30AD", "allowed": true, "penalty": 10 },
+        { "mode": "12AD", "allowed": true, "penalty": 12 }
+      ]
+    }
+  ]
+}
