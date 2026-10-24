@@ -789,6 +789,27 @@ select {
 .tip td b {
   color: var(--text);
 }
+.cause {
+  margin: 4px 0 6px;
+  padding: 6px 8px;
+  border-left: 4px solid var(--muted);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  font-weight: 600;
+}
+.cause-marginal {
+  border-left-color: #f0a020;
+  background: rgba(240, 160, 32, 0.16);
+}
+.cause-unsuitable {
+  border-left-color: #e5484d;
+  background: rgba(229, 72, 77, 0.16);
+}
+.cause-trigger {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
 .detail-code {
   font-weight: 400;
   color: var(--muted);

@@ -333,6 +333,8 @@ export interface CellDetailModel {
   readonly className: string;
   readonly code: string;
   readonly reason: string;
+  /** The wind group that caused a MARGINAL or UNSUITABLE cell, e.g. "TEMPO PROB30 VRB20G30KT"; '' when the cause is not a forecast group. Drawn large at the top. */
+  readonly trigger: string;
   readonly runways: readonly { name: string; roles: string; tailwind: string; crosswind: string; tailLimit: string; crossLimit: string; overTailwind: boolean; overCrosswind: boolean }[];
   readonly wind: string;
   readonly source: string;
@@ -349,6 +351,22 @@ function windText(wind: WindObservation | null): string {
   const gust = wind.gustKt === null ? '' : `, gusting ${kt1(wind.gustKt)} kt`;
   if (wind.kind === 'variable') return `Variable at ${kt1(wind.speedKt)} kt${gust}`;
   return `${dir3(wind.directionDegrees)} degrees at ${kt1(wind.speedKt)} kt${gust}`;
+}
+
+const WIND_GROUP = /\b(?:VRB|\d{3})\d{2}(?:G\d{2,3})?KT\b/;
+
+/** The forecast group behind the first MARGINAL or FAIL reason, when that reason came from a TEMPO, PROB or similar group (owner, 24-10-2026, OD-71). */
+function triggerText(cell: Cell): string {
+  if (cell.status !== 'MARGINAL' && cell.status !== 'UNSUITABLE') return '';
+  const severity = cell.status === 'UNSUITABLE' ? 'FAIL' : 'MARGINAL';
+  const r = cell.reasons.find((x) => x.severity === severity);
+  if (r === undefined || r.code !== 'OVERLAY') return '';
+  const group = r.figures.group;
+  const wind = typeof group === 'string' ? WIND_GROUP.exec(group)?.[0] : undefined;
+  if (wind === undefined) return '';
+  const prob = r.figures.probabilityPct;
+  const kind = r.figures.overlayKind;
+  return `${typeof kind === 'string' ? kind : 'Forecast group'}${typeof prob === 'number' ? ` PROB${prob}` : ''} ${wind}`;
 }
 
 function primaryReason(cell: Cell): string {
@@ -422,6 +440,7 @@ export function cellDetailModel(view: ViewData, modeIndex: number, slotIndex: nu
     className: cv.className,
     code: code === '' ? '' : `${code}: ${CAUSE_WORDS[code] ?? code}`,
     reason: primary,
+    trigger: triggerText(cell),
     runways,
     wind: windText(slot.weather.wind),
     source,

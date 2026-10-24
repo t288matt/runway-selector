@@ -81,6 +81,7 @@ A web application that recommends the runway operating mode for Sydney Kingsford
 | OD-68 | 24-10-2026 (owner, chat): the airport ICAO entry box becomes a pull-down of the airports with a reviewed data pack (`refdata/app.json`); choosing one switches straight away, with no separate Switch button. Free typing is removed, so an unlisted code can no longer be entered and `icaoProblem` (the format check) is removed. Amends OD-37.
 | OD-69 | 24-10-2026 (owner, chat): Panel A's Weather line shows the METAR only, never the TAF, even when the TAF governs the slot, and without the airport code. With no METAR, the derived sentence is kept as a fallback. Amends OD-65. |
 | OD-70 | 24-10-2026 (owner, chat): the mode rows in the timeline list are in operating-plan priority order. The recommended and current modes keep their badges but are no longer pinned to the top. |
+| OD-71 | 24-10-2026 (owner, chat): in a timeline cell's detail, a MARGINAL or UNSUITABLE cell opens with a highlighted cause box under the title: the wind group that caused it in large type when it came from a TEMPO, PROB or similar group (e.g. "TEMPO PROB30 VRB20G30KT"), then the reason sentence. |
 | OD-9 | 23-10-2026: the app will later be used for other airports, so the code must be airport-agnostic and entirely reference-data driven. YSSY is the first dataset, not a special case. This is a key requirement and takes precedence over convenience in every design choice. |
 
 ## 3. Reference-data requirements
