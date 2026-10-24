@@ -9,7 +9,7 @@ import { AirportEntry, Header, icaoProblem } from '../../src/ui/components/Frame
 import { NO_AUTO_REPORT, type AutoReportState } from '../../src/ui/controller';
 import { WeatherEntry } from '../../src/ui/components/WeatherEntry';
 import { TEST_PACK, YSSY_PACK, readJson, toRaw, type PackRef } from '../helpers/packs';
-import { fixture, nowOf, packWith } from '../weather/helpers';
+import { fixture, packWith } from '../weather/helpers';
 
 const NOW = Date.UTC(2026, 9, 24, 3, 0, 0);
 const yssy = packWith(YSSY_PACK);
@@ -58,9 +58,9 @@ describe('the airport box on screen', () => {
   });
 
   it('is part of the header whenever the page has an airport, and absent from the loading header', () => {
-    const header = renderToStaticMarkup(<Header pack={yssy} liveTag="x" onRefresh={noop} onSettings={noop} busy={false} airport={{ icao: 'YSSY', airports: ['YSSY'], error: null, onSwitch: noop }} />);
+    const header = renderToStaticMarkup(<Header liveTag="x" onRefresh={noop} onSettings={noop} busy={false} airport={{ icao: 'YSSY', airports: ['YSSY'], error: null, onSwitch: noop }} />);
     expect(header).toContain('id="airport-icao"');
-    expect(renderToStaticMarkup(<Header pack={null} liveTag="x" onRefresh={noop} onSettings={noop} busy={false} />)).not.toContain('airport-icao');
+    expect(renderToStaticMarkup(<Header liveTag="x" onRefresh={noop} onSettings={noop} busy={false} />)).not.toContain('airport-icao');
   });
 });
 
@@ -116,7 +116,7 @@ describe('the weather boxes with automatic fetching (OD-37)', () => {
   const pack = packWith(YSSY_PACK, { weatherStation: metar.station });
   const render = (metarAuto: AutoReportState, tafAuto: AutoReportState = NO_AUTO_REPORT): string =>
     renderToStaticMarkup(
-      <WeatherEntry pack={pack} metar={null} taf={null} displayNowMs={nowOf(metar)} onApplyMetar={() => ({ ok: true, message: null, warnings: [] })} onApplyTaf={() => ({ ok: true, message: null, warnings: [] })} auto={{ metar: metarAuto, taf: tafAuto }} onResumeAutomatic={noop} />,
+      <WeatherEntry pack={pack} metar={null} taf={null} onApplyMetar={() => ({ ok: true, message: null, warnings: [] })} onApplyTaf={() => ({ ok: true, message: null, warnings: [] })} auto={{ metar: metarAuto, taf: tafAuto }} onResumeAutomatic={noop} />,
     );
 
   it('hides the paste boxes and Apply until asked for', () => {
@@ -135,7 +135,7 @@ describe('the weather boxes with automatic fetching (OD-37)', () => {
   });
 
   it('says where a report came from, and offers Resume automatic only after a paste', () => {
-    expect(render({ ...NO_AUTO_REPORT, source: 'automatic', fillText: 'x', fillSeq: 1 })).toContain('Fetched automatically.');
+    expect(render({ ...NO_AUTO_REPORT, source: 'automatic', fillText: 'x', fillSeq: 1 })).not.toContain('Fetched automatically');
     const pasted = render({ ...NO_AUTO_REPORT, source: 'pasted', paused: true });
     expect(pasted).toContain('automatic METAR updates are paused');
     expect(pasted).toContain('Resume automatic');

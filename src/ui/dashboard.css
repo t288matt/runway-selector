@@ -108,6 +108,7 @@ select {
   font: inherit;
 }
 .notice {
+  margin-top: 12px;
   background: #1a2442;
   border: 1px solid var(--line);
   border-left: 4px solid var(--accent);
@@ -704,11 +705,6 @@ select {
   display: inline-flex;
   align-items: center;
 }
-.reason {
-  margin: 10px 16px 0 0;
-  padding-top: 8px;
-  border-top: 1px solid var(--line);
-}
 .tip {
   position: fixed;
   z-index: 50;
@@ -747,7 +743,7 @@ select {
 /* lower grid */
 .grid3 {
   display: grid;
-  grid-template-columns: 1.2fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
 table.t2 {
@@ -765,14 +761,6 @@ table.t2 th {
 table.t2 td {
   padding: 3px 6px 3px 0;
   border-bottom: 1px solid #1a2a4c;
-}
-table.tableview td {
-  white-space: nowrap;
-}
-table.tableview caption {
-  text-align: left;
-  color: var(--muted);
-  padding-bottom: 4px;
 }
 .small {
   font-size: 12px;

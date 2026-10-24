@@ -263,6 +263,10 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
     const same2 = go(pack, rig, ['ok', 'badBoth', 'ok'], same(3, 'medium'));
     expect(same2.explanation.lines.join('\n')).not.toContain('No mode change is planned');
     expect(same2.plan.changes).toHaveLength(0);
+    // No change planned and no gap: no sentence about it (Panel A's Next change row says so)
+    const quiet = go(pack, rig, same(3, 'ok'), same(3, 'medium'));
+    expect(quiet.plan.changes).toHaveLength(0);
+    expect(quiet.explanation.lines.join('\n')).not.toContain('No mode change is planned');
     // A gap to the end of the window.
     const tail = go(pack, rig, ['ok', 'badBoth', 'badBoth'], same(3, 'medium'));
     expect(tail.plan.gaps[0]).toMatchObject({ startSlot: 1, endSlot: 2, beforeMode: null });
