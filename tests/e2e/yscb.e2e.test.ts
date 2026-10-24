@@ -1,6 +1,6 @@
 // End-to-end scenarios on the Canberra (YSCB) pack, expectations worked by hand from the pack files BEFORE the engine was run.
 //
-// Pack numbers (refdata/airports/YSCB, provisional 24-10-2026):
+// Pack numbers (refdata/airports/YSCB, verified by the owner 24-10-2026):
 //   headings (magnetic): 17 168, 35 348, 12 117, 30 297.
 //   Limits carried over from the other packs: tailwind dry 5 / wet 0, tolerance 0.05, calm 3, near-limit margin 3, crosswind 20 (default),
 //   marginal penalty 3, change penalties light 1 / medium 5 / busy 25 / unknown 5. No capacities.
