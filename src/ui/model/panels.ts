@@ -367,7 +367,7 @@ export function cellDetailModel(view: ViewData, modeIndex: number, slotIndex: nu
   const rank = planRank(view, modeIndex, slotIndex);
   const operatingPlan = planFail
     ? `Not allowed in time band ${band ?? 'unknown'}`
-    : `Allowed${band === null || pack.plan.find((b) => b.id === band)?.allDay === true ? '' : ` in time band ${band}`}${rank === null ? '' : `, rank ${rank}`}`;
+    : `Allowed${band === null || pack.plan.find((b) => b.id === band)?.allDay === true ? '' : ` in time band ${band}`}${rank === null ? '' : `, priority ${rank}`}`;
 
   const s = result.evaluation.survival[modeIndex];
   const parts: string[] = [];
