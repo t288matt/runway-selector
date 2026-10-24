@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "PROVISIONAL 24-10-2026. One band covers the whole day; no day/night split has been given. Order is the owner's preferred runway mode list, strict (no ties): 1 29AD36A; 2 29AD18A; 3 11AD36A; 4 11AD18A. The order is the owner's; the penalties are placeholders on the same scale as the other packs (0, 2, 5, 12; lower is preferred) for the owner to confirm.",
+  "description": "PROVISIONAL 24-10-2026. One band covers the whole day; no day/night split has been given. Order is the owner's preferred runway mode list, strict (no ties): 1 29AD36A-LAHSO (land and hold short, allowed only with ceiling A030 or higher, visibility 8 km or more and a dry surface, and allowed at night); 2 29AD36A; 3 29AD18A; 4 11AD36A; 5 11AD18A. The order is the owner's; the penalties are placeholders on the same scale as the other packs (0, 2, 5, 12, 20; lower is preferred) for the owner to confirm. Adding the LAHSO mode at the top shifted the penalties of the existing modes (29AD36A was 0, 29AD18A 2, 11AD36A 5, 11AD18A 12).",
   "status": "verified",
   "bands": [
     {
@@ -9,10 +9,11 @@
       "start": "00:00",
       "end": "00:00",
       "rows": [
-        { "mode": "29AD36A", "allowed": true, "penalty": 0 },
-        { "mode": "29AD18A", "allowed": true, "penalty": 2 },
-        { "mode": "11AD36A", "allowed": true, "penalty": 5 },
-        { "mode": "11AD18A", "allowed": true, "penalty": 12 }
+        { "mode": "29AD36A-LAHSO", "allowed": true, "penalty": 0 },
+        { "mode": "29AD36A", "allowed": true, "penalty": 2 },
+        { "mode": "29AD18A", "allowed": true, "penalty": 5 },
+        { "mode": "11AD36A", "allowed": true, "penalty": 12 },
+        { "mode": "11AD18A", "allowed": true, "penalty": 20 }
       ]
     }
   ]
