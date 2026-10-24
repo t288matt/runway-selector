@@ -15,7 +15,7 @@ export function PanelA({ view, model, onCurrentMode, status, onConfirmCurrent }:
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
       </select>
-      <div className="small">{model.currentNote}</div>
+      {model.currentNote === '' ? null : <div className="small">{model.currentNote}</div>}
       <CurrentModeStatus status={status} onConfirm={onConfirmCurrent} />
     </div>
   );
