@@ -212,7 +212,7 @@ Contents, in order:
 5. Runway assumption: DRY, WET, or "WET POSSIBLE: both evaluated".
 6. Traffic class and, where known, demand against capacity.
 7. Operating-plan eligibility (eligible, time band, provisional flag) and operating-plan rank.
-8. Survival summary for that mode: continuous viable duration from now, first marginal slot, first unsuitable slot, replacement mode.
+8. Outlook for that mode (labelled "Outlook", not "Survival", owner 24-10-2026, OD-64): continuous viable duration from now, first marginal slot, first unsuitable slot, replacement mode.
 Row-label hover shows the mode description, restrictions, capacity value and its status.
 Event-strip hover shows the TAF group in raw and decoded form.
 
