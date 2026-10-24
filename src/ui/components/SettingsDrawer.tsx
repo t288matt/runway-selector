@@ -17,7 +17,7 @@ export interface SettingsBridge {
   readonly currentModeRecord: CurrentModeRecord | null;
   readonly audit: readonly AuditEntry[];
   readonly reload: ReloadState;
-  /** Airport ids listed in app.json; the selector shows only when there is more than one. */
+  /** Airport ids listed in app.json, offered as suggestions in the header's airport box (OD-37). */
   readonly airports: readonly string[];
   readonly airportError: string | null;
   readonly notices: readonly string[];
@@ -165,20 +165,9 @@ export function SettingsDrawer({ view, displayNowMs, bridge, onCurrentMode, onWi
 
       <section aria-labelledby="drawer-data">
         <h3 id="drawer-data">Airport and data</h3>
-        {bridge.airports.length > 1 ? (
-          <div className="drawer-field">
-            <label htmlFor="airport-select">Airport</label>
-            <select id="airport-select" value={pack.airport.icao} onChange={(e) => bridge.onSwitchAirport(e.target.value)}>
-              {bridge.airports.map((id) => (
-                <option key={id} value={id}>{id}</option>
-              ))}
-            </select>
-            <p className="small">Each airport keeps its own current mode, window and audit trail.</p>
-          </div>
-        ) : null}
-        {bridge.airportError === null ? null : (
-          <p className="strip strip-bad" role="alert">The airport could not be changed; the current one stays in use. {bridge.airportError}</p>
-        )}
+        <p className="small">
+          To change airport, type its code in the Airport box at the top of the screen. Only airports with a reviewed data pack can be shown ({bridge.airports.join(', ')}). Each airport keeps its own current mode, window and audit trail.
+        </p>
         <button type="button" className="btn" onClick={bridge.onReload} disabled={reload.status === 'busy'}>Reload data</button>
         <p className="small">Reload data re-reads and re-checks the airport files. A file that fails the check is refused and the previous valid data stays in use.</p>
         {reload.status === 'busy' ? <p role="status" className="small">Reloading</p> : null}

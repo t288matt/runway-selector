@@ -224,7 +224,7 @@ export function Timeline({ view, model, displayNowMs, onWindowChange, reason }: 
               ))}
             </div>
             <div className="row hdr traf" role="row" style={{ height: LAYOUT.trafficStrip }}>
-              <div className="lab" role="rowheader"><small>Traffic class</small></div>
+              <div className="lab" role="rowheader"><small>Traffic</small></div>
               {slots.map((s) => (
                 <div key={s.index} role="columnheader" className={`t lv-${s.level ?? 'x'}`} title={`Traffic ${levelWord(s.level)}`}>
                   {s.level === 'busy' ? `${levelLetter(s.level)} ${levelWord(s.level)}` : levelLetter(s.level)}

@@ -6,6 +6,7 @@ import { NO_SUITABLE_TITLE, EARLY_CHANGE_TITLE, type EngineInput, type TrafficLe
 import { runwaysOfMode } from '../../src/engine/eligibility';
 import { AppBody, PackError } from '../../src/ui/App';
 import { FLIGHT_SIM_NOTICE, extraNoticeOf } from '../../src/ui/components/Frame';
+import { NO_AUTO_WEATHER } from '../../src/ui/controller';
 import { WeatherEntry, ApplyNote } from '../../src/ui/components/WeatherEntry';
 import { calculate, defaultWindowFor, EMPTY_FEED, type ViewData } from '../../src/ui/model/dashboard';
 import { cellDetailModel, currentWind, panelDModel, runwayComponentRows } from '../../src/ui/model/panels';
@@ -47,8 +48,8 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the screen from real repo
     if (extra !== null) expect(text).toContain(extra);
   });
 
-  it('keeps the fixed order: header, notice, chips, weather entry, A, B, C, D, F', () => {
-    const marks = ['<header', 'role="note"', 'aria-label="Data freshness"', 'aria-label="Raw METAR and TAF"', 'Panel A', 'Panel B', 'Panel C', 'Panel D', 'Panel F'].map((m) => html.indexOf(m));
+  it('keeps the fixed order: header, notice, chips, A, B, weather entry, C, D, F', () => {
+    const marks = ['<header', 'role="note"', 'aria-label="Data freshness"', 'Panel A', 'Panel B', 'aria-label="Raw METAR and TAF"', 'Panel C', 'Panel D', 'Panel F'].map((m) => html.indexOf(m));
     expect(marks.every((i) => i >= 0)).toBe(true);
     expect([...marks].sort((a, b) => a - b)).toEqual(marks);
   });
@@ -178,7 +179,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('Panel A states [%s]', (_n
   it('shows no banner when nothing is wrong and the current mode is not set', () => {
     const html = renderDashboard(viewOf(pack, rig, same<Wx>(4, 'ok')));
     expect(html).not.toContain('class="banner');
-    expect(html).toContain('Not set: no starting mode');
+    expect(html).not.toContain('Not set: no starting mode');
   });
 
   it('shows the red banner when the current mode is unsuitable now', () => {
@@ -186,7 +187,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('Panel A states [%s]', (_n
     const html = renderDashboard(view);
     const text = textOf(html);
     expect(html).toContain('banner banner-red');
-    expect(text).toContain(`Current mode ${rig.a} is unsuitable now`);
+    expect(text).toContain(`Current mode ${rig.a} is unsuitable`);
     expect(text).toContain(`Change to Mode ${view.result.plan.recommendedModeId}`);
     expect(text).not.toMatch(BANNED);
   });
@@ -364,7 +365,7 @@ describe('text safety (SEC-2)', () => {
     const ref = PACKS[0] ?? TEST1_PACK;
     const pack = packWith(ref, { weatherStation: fixture(METAR_ID).station });
     const hostileMetar: DecodedMetar = { ...decodeMetarFixture(METAR_ID, ref), raw: HOSTILE };
-    const html = renderToStaticMarkup(<WeatherEntry pack={pack} metar={hostileMetar} taf={null} displayNowMs={nowOf(fixture(METAR_ID))} onApplyMetar={() => ({ ok: true, message: null, warnings: [] })} onApplyTaf={() => ({ ok: true, message: null, warnings: [] })} />);
+    const html = renderToStaticMarkup(<WeatherEntry pack={pack} metar={hostileMetar} taf={null} displayNowMs={nowOf(fixture(METAR_ID))} onApplyMetar={() => ({ ok: true, message: null, warnings: [] })} onApplyTaf={() => ({ ok: true, message: null, warnings: [] })} auto={NO_AUTO_WEATHER} onResumeAutomatic={() => undefined} />);
     expect(html).not.toContain('<img');
     expect(html).toContain('&lt;img');
     // the real refusal of a hostile paste, rendered the way the screen renders it
@@ -396,14 +397,15 @@ describe('the application states', () => {
     expect(html).not.toContain('Panel A');
   });
 
-  it('starts with empty weather boxes and "No weather entered" for any pack', () => {
+  it('starts with no paste boxes, "No weather entered" and a button offering them, for any pack', () => {
     for (const ref of PACKS) {
       const pack = packWith(ref);
       const html = renderToStaticMarkup(<AppBody state={{ status: 'ready', pack, airports: [pack.airport.icao], airportError: null }} deps={deps} />);
       const text = textOf(html);
       expect(text).toContain('No weather entered');
-      expect(html).toMatch(/<textarea id="wx-metar"[^>]*><\/textarea>/);
-      expect(html).toMatch(/<textarea id="wx-taf"[^>]*><\/textarea>/);
+      expect(html).not.toContain('<textarea');
+      expect(html).not.toContain('>Apply<');
+      expect(text).toContain('Use my own weather');
       expect(text).toContain('No data. Cannot recommend a mode.');
       expect(html).toContain('Panel A');
     }

@@ -280,11 +280,19 @@ export function summaryTiles(view: ViewData): Tile[] {
   }
   const recIndex = view.pack.modes.findIndex((m) => m.id === rec);
   const survival = result.evaluation.survival[recIndex];
-  const marginalOnPath = result.plan.slots.filter((s) => s.modeId !== null && s.status === 'MARGINAL').length;
+  const onPath = result.plan.slots.filter((s) => s.modeId !== null);
+  const marginalOnPath = onPath.filter((s) => s.status === 'MARGINAL').length;
+  const firstMarginal = result.plan.slots.findIndex((s) => s.modeId !== null && s.status === 'MARGINAL');
+  const firstMarginalStart = view.weather.slots[firstMarginal]?.startMs;
+  // Lead with what holds (suitable until when), then say how much of it is only marginal and where that starts.
+  const marginalWords =
+    marginalOnPath === 0
+      ? ''
+      : `; marginal in ${marginalOnPath} of ${onPath.length} ${onPath.length === 1 ? 'slot' : 'slots'}${firstMarginalStart === undefined ? '' : `, first at ${hhmmZRel(firstMarginalStart, view.calcNowMs)}`}`;
   const survives =
     survival === undefined || survival.viableUntilMs === null
       ? '-'
-      : `${survival.endsInFailure ? 'To' : 'To end of window,'} ${hhmmZRel(survival.viableUntilMs, view.calcNowMs)}, ${marginalOnPath} marginal ${marginalOnPath === 1 ? 'slot' : 'slots'}`;
+      : `${survival.endsInFailure ? 'Suitable to' : 'Suitable to end of window,'} ${hhmmZRel(survival.viableUntilMs, view.calcNowMs)}${marginalWords}`;
 
   const slots = view.weather.slots;
   const missing = missingWeather(view);

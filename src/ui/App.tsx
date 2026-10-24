@@ -57,6 +57,8 @@ function Screen({ pack, deps, airport }: { pack: AirportPack; deps: AppDeps; air
       onCurrentMode={s.setCurrentMode}
       onApplyMetar={s.applyMetar}
       onApplyTaf={s.applyTaf}
+      autoWeather={s.autoWeather}
+      onResumeAutomatic={s.resumeAutomatic}
       settings={{
         currentModeRecord: s.currentModeRecord,
         audit: s.audit,
@@ -98,6 +100,20 @@ export function AppBody({ state, deps, onSwitchAirport = () => undefined }: { st
   );
 }
 
+type ReadyState = Extract<PackState, { status: 'ready' }>;
+
+/**
+ * What typing an airport code changes (OD-37), or null when nothing does. Only airports with a reviewed pack listed
+ * in app.json can be shown: any other code is refused here and nothing is generated or fetched for it (OD-5, RD-2).
+ */
+export async function switchAirportTo(current: ReadyState, icao: string, deps: AppDeps): Promise<Partial<ReadyState> | null> {
+  if (icao === current.pack.airport.icao) return current.airportError === null ? null : { airportError: null };
+  if (!current.airports.includes(icao)) return { airportError: `No data pack for ${icao} yet. Available: ${current.airports.join(', ')}.` };
+  const r = await loadPack(deps.fetch, { baseUrl: deps.baseUrl ?? './refdata', cacheBust: cacheBustToken(deps.now()), airportId: icao });
+  if (!r.ok) return { airportError: `The airport could not be changed; the current one stays in use. ${r.message}` };
+  return { pack: r.pack, airports: r.app.airports, airportError: null };
+}
+
 export function App({ deps }: { deps: AppDeps }) {
   const [state, setState] = useState<PackState>({ status: 'loading' });
   useEffect(() => {
@@ -112,12 +128,9 @@ export function App({ deps }: { deps: AppDeps }) {
   // Switching airport builds a new screen with its own controller: nothing of the old airport (weather, traffic,
   // current mode) is carried over, and its stored state stays under its own code (AG-8). A refused switch keeps the current airport.
   const switchAirport = (icao: string): void => {
-    if (state.status !== 'ready' || icao === state.pack.airport.icao) return;
-    void loadPack(deps.fetch, { baseUrl: deps.baseUrl ?? './refdata', cacheBust: cacheBustToken(deps.now()), airportId: icao }).then((r) => {
-      setState((prev) => {
-        if (prev.status !== 'ready') return prev;
-        return r.ok ? { status: 'ready', pack: r.pack, airports: r.app.airports, airportError: null } : { ...prev, airportError: r.message };
-      });
+    if (state.status !== 'ready') return;
+    void switchAirportTo(state, icao, deps).then((change) => {
+      if (change !== null) setState((prev) => (prev.status === 'ready' ? { ...prev, ...change } : prev));
     });
   };
   return <AppBody state={state} deps={deps} onSwitchAirport={switchAirport} />;

@@ -309,22 +309,23 @@ describe('airports are kept apart (AG-8)', () => {
     expect(rig(yssy, store).ctrl.getState().view.currentMode).toBeNull();
   });
 
-  it('shows the airport selector only when app.json lists more than one airport', () => {
+  it('the airport box is always visible, with one pack listed or several, and the drawer has no second control (OD-37)', () => {
     const view = calculate({ pack: yssy, nowMs: NOW, metar: null, taf: null, windowChoice: 'full', currentMode: null, feed: EMPTY_FEED });
-    const one = renderDashboard(view, EMPTY_FEED, true, testBridge({ airports: ['YSSY'] }));
-    expect(one).not.toContain('airport-select');
-    const two = renderDashboard(view, EMPTY_FEED, true, testBridge({ airports: ['YSSY', 'TEST'] }));
-    expect(two).toContain('id="airport-select"');
-    expect(two).toMatch(/<option value="TEST">TEST<\/option>/);
-    expect(two).toMatch(/<option value="YSSY" selected="">YSSY<\/option>/);
+    for (const airports of [['YSSY'], ['YSSY', 'TEST']]) {
+      for (const drawerOpen of [false, true]) {
+        const html = renderDashboard(view, EMPTY_FEED, drawerOpen, testBridge({ airports }));
+        expect(html).toMatch(/<input id="airport-icao"[^>]*value="YSSY"/);
+        expect(html).not.toContain('airport-select');
+        for (const id of airports) expect(html).toContain(`<option value="${id}"`);
+      }
+    }
   });
-
   it('the page offers the selector from a two-airport app config, and a refused switch keeps the airport in use', () => {
     const deps = { fetch: () => Promise.reject(new Error('x')), now: () => NOW, store: createMemoryStore() };
     const html = renderToStaticMarkup(<AppBody state={{ status: 'ready', pack: test, airports: ['TEST', 'YSSY'], airportError: null }} deps={deps} />);
     expect(html).toContain('Runway Mode Planner');
-    // the drawer is closed until the Settings button is pressed, so the selector is in the drawer test above
     expect(html).not.toContain('airport-select');
+    expect(html).toContain('id="airport-icao"');
   });
 });
 

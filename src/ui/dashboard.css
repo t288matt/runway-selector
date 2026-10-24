@@ -950,3 +950,62 @@ p.small {
     transition: none !important;
   }
 }
+.airport-entry {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.airport-entry label {
+  color: var(--accent-text);
+  font-weight: 600;
+}
+.airport-entry input {
+  width: 12ch;
+  min-height: 32px;
+  background: var(--panel2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font: 13px Consolas, Menlo, monospace;
+  text-transform: uppercase;
+}
+.airport-note {
+  /* out of the flow, so a message never moves Refresh and Settings */
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 5;
+  margin: 2px 0 0;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+.utc {
+  color: var(--muted);
+  font-size: 12px;
+}
+.credit {
+  margin-top: 6px;
+  color: var(--muted);
+}
+
+/* Touch targets: 44px on touch screens and narrow windows (the UX review). */
+@media (pointer: coarse), (max-width: 640px) {
+  .btn,
+  .small-btn,
+  select,
+  .airport-entry input {
+    min-height: 44px;
+  }
+  .btn,
+  .small-btn {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+  .wxbox .age,
+  .small {
+    font-size: 13px;
+  }
+}
