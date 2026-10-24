@@ -8,7 +8,7 @@ export function PanelD({ view }: { view: ViewData }) {
   const m = panelDModel(view);
   return (
     <section className="panel" aria-label="Panel D: VATSIM traffic">
-      <h2><i>D</i>VATSIM traffic</h2>
+      <h2>VATSIM traffic</h2>
       {m.state === 'none' ? (
         <p className="strip strip-warn">No traffic data.</p>
       ) : (
@@ -68,7 +68,7 @@ export function PanelF({ view }: { view: ViewData }) {
   const d = buildDiagram({ runways: pack.runways, modeRoles: rolesOf(mode), overLimit: over, wind: currentWind(view), modeLabel: mode === null ? null : `Mode ${mode.id}` });
   return (
     <section className="panel" aria-label="Panel F: runway diagram">
-      <h2><i>F</i>Runway diagram</h2>
+      <h2>Runway diagram</h2>
       <svg viewBox={`0 0 ${DIAGRAM.width} ${DIAGRAM.height}`} width="100%" role="img" aria-label={d.caption}>
         <rect width={DIAGRAM.width} height={DIAGRAM.height} rx="6" className="dg-bg" />
         {d.runways.map((r) => (

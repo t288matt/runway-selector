@@ -243,15 +243,29 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('timeline rows and tiles [
     expect(m.slots.filter((s) => s.isChange).map((s) => s.index)).toEqual([...m.changeSlots]);
   });
 
-  it('has two summary tiles, Recommended and Next change (OD-50)', () => {
+  it('has three summary tiles, Recommended, Next change and Next wet runway (OD-50, OD-59)', () => {
     const v = viewOf(pack, rig, wx);
-    expect(summaryTiles(v).map((t) => t.label)).toEqual(['Recommended', 'Next change']);
+    expect(summaryTiles(v).map((t) => t.label)).toEqual(['Recommended', 'Next change', 'Next wet runway']);
     expect(summaryTiles(v)[0]?.value).toBe(v.result.plan.recommendedModeId);
     const c = v.result.changeovers[0];
     const next = summaryTiles(v)[1]?.value ?? '';
     if (v.result.plan.recommendedModeId === null) expect(next).toBe('-');
     else if (c === undefined) expect(next).toBe('No change planned');
     else expect(next).toBe(`${c.change.toModeId} at ${hhmmZRel(c.change.startMs, v.calcNowMs)}`);
+  });
+
+  it('the Next wet runway tile says when the runway next turns wet (OD-59)', () => {
+    const v = viewOf(pack, rig, wx);
+    const slots = v.result.evaluation.slots;
+    const first = slots[0];
+    const value = summaryTiles(v)[2]?.value ?? '';
+    if (first === undefined || v.weather.slots[0]?.governedBy === 'NONE') expect(value).toBe('Unknown');
+    else if (first.runwayState !== 'DRY') expect(value).toBe('Now');
+    else {
+      const next = slots.findIndex((s, i) => i > 0 && s.runwayState !== 'DRY');
+      if (next < 0) expect(value).toBe('None in window');
+      else expect(value).toBe(hhmmZRel(slots[next]?.startMs ?? 0, v.calcNowMs));
+    }
   });
 });
 

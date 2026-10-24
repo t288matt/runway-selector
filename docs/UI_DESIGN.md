@@ -108,7 +108,7 @@ One chip each for METAR, TAF, VATSIM and when the plan last and next recalculate
 Runway state is not a separate chip: owner decision, 24-10-2026, to stop the duplication of showing it in the header and again, one line below, in Panel A. It is now stated once, in Panel A, and every timeline cell still carries its own slot-by-slot runway-state detail on hover (DB-4).
 
 ## 5. Panel specifications
-Common to all panels: a letter badge and title; a small "provisional" mark wherever a value comes from a provisional rule or placeholder band; no scrolling inside a panel except tables of more than 8 rows.
+Common to all panels: a title (the letter badge is removed, owner 24-10-2026, OD-60; panels are still called A, B, D and F in this document and in code, but the letter is no longer shown); a small "provisional" mark wherever a value comes from a provisional rule or placeholder band; no scrolling inside a panel except tables of more than 8 rows.
 
 ### Panel A: current recommendation
 **Content (DB-2).** Left block: label "MODE", the mode number at 44 px, arrival and departure runways, and the current mode with its pull-down menu (enabled modes, plus Not set). Middle: "Next change" (mode and time), weather suitability, traffic class now and expected, runway condition and wet-risk time (moved here under Traffic, owner 24-10-2026, OD-58). Right: operating-plan priority rank, an uncertainty line naming the period and reason (for example "14:00 UTC to 17:00 UTC: a chance of rain", OD-57). The capacity note is removed (owner, 24-10-2026, OD-58). Below: banner area, then a one-sentence "Why".
