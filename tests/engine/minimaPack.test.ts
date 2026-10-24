@@ -1,13 +1,18 @@
-// The real YMML pack with the minima it carries for its land-and-hold-short
-// mode, end to end: report text -> slots -> engine (issue 34).
+// The weather-minima gate end to end (report text -> slots -> engine, issue 34), on the real YMML pack with
+// minima added to one of its modes IN MEMORY: no pack carries minima today (the LAHSO note of issue 58 is not a gate).
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { evaluate, type Cell } from '../../src/engine';
 import { buildWeatherSlots, decodeMetar } from '../../src/weather';
-import { loadPackFrom } from '../helpers/packs';
+import { loadPackFrom, type PackRef } from '../helpers/packs';
+import { packWith } from './helpers';
 
-const pack = loadPackFrom({ name: 'YMML', dir: join(resolve(import.meta.dirname, '..', '..'), 'refdata', 'airports', 'YMML') });
-const MODE = '34A27AD-LAHSO';
+const YMML: PackRef = { name: 'YMML', dir: join(resolve(import.meta.dirname, '..', '..'), 'refdata', 'airports', 'YMML') };
+const MODE = '34A27AD';
+const MINIMA = { ceilingFt: 4500, visibilityMetres: 8000, requiresDrySurface: true };
+const pack = packWith(YMML, (f) => {
+  f['modes.json'].modes.find((m: { id: string }) => m.id === MODE).minima = MINIMA;
+});
 const nowMs = Date.UTC(2026, 0, 15, 2, 10);
 
 function cellFor(body: string, mode = MODE): Cell {
@@ -18,9 +23,19 @@ function cellFor(body: string, mode = MODE): Cell {
   return result.cells[pack.modes.findIndex((m) => m.id === mode)]![0]!;
 }
 
-describe('YMML land-and-hold-short mode minima', () => {
-  it('carries its minima from the pack', () => {
-    expect(pack.modes.find((m) => m.id === MODE)?.minima).toEqual({ ceilingFt: 4500, visibilityMetres: 8000, requiresDrySurface: true });
+describe('the real YMML pack carries no minima', () => {
+  const real = loadPackFrom(YMML);
+  it('no mode is gated, and 34A27AD is an ordinary mode at priority 4', () => {
+    expect(real.modes.filter((m) => m.minima !== null)).toEqual([]);
+    expect(real.modes.map((m) => m.id).slice(0, 4)).toEqual(['27AD34D', '16A27D', '09A16D', '34A27AD']);
+    const rows = real.plan[0]!.rows;
+    expect(rows.find((r) => r.mode === '34A27AD')!.penalty).toBe(12);
+  });
+});
+
+describe('a mode with minima (added in memory)', () => {
+  it('carries its minima', () => {
+    expect(pack.modes.find((m) => m.id === MODE)?.minima).toEqual(MINIMA);
     expect(pack.modes.filter((m) => m.minima !== null).map((m) => m.id)).toEqual([MODE]);
   });
   it('a ceiling of 3,000 ft makes it UNSUITABLE with cause MIN', () => {
@@ -55,38 +70,5 @@ describe('YMML land-and-hold-short mode minima', () => {
   });
   it('another mode is not gated', () => {
     expect(cellFor('34008KT 9999 -RA BKN030 Q1015', '34AD').reasons.some((r) => r.code === 'MIN')).toBe(false);
-  });
-});
-
-describe('YMML non-LAHSO twin of the land-and-hold-short mode', () => {
-  const TWIN = '34A27AD';
-  it('sits directly below the LAHSO mode in the pack', () => {
-    expect(pack.modes.map((m) => m.id)).toEqual(['27AD34D', '16A27D', '09A16D', '34A27AD-LAHSO', TWIN, '09AD', '27AD', '16AD', '34AD']);
-  });
-  it('ranks below the LAHSO mode and above 27AD, 16AD and 34AD in the operating plan', () => {
-    const rows = pack.plan[0]!.rows;
-    const penalty = (id: string) => rows.find((r) => r.mode === id)!.penalty;
-    expect(penalty(MODE)).toBeLessThan(penalty(TWIN));
-    for (const id of ['27AD', '16AD', '34AD']) expect(penalty(TWIN)).toBeLessThan(penalty(id));
-  });
-  it('has the same runways and no minima', () => {
-    const m = pack.modes.find((x) => x.id === TWIN)!;
-    expect(m.minima).toBeNull();
-    expect(m.arrivals).toEqual(['34', '27']);
-    expect(m.departures).toEqual(['27']);
-  });
-  it('a low ceiling rules out the LAHSO mode but not the twin', () => {
-    const good = cellFor('34008KT 9999 BKN045 Q1015', TWIN);
-    const low = cellFor('34008KT 9999 BKN020 Q1015', TWIN);
-    expect(cellFor('34008KT 9999 BKN020 Q1015')).toMatchObject({ status: 'UNSUITABLE', cause: 'MIN' });
-    expect(good.status).toBe('SUITABLE');
-    expect(low.status).toBe(good.status);
-    expect(low.reasons.some((r) => r.code === 'MIN')).toBe(false);
-  });
-  it('rain rules out the LAHSO mode but not the twin', () => {
-    expect(cellFor('34008KT 9999 -RA BKN045 Q1015')).toMatchObject({ status: 'UNSUITABLE', cause: 'MIN' });
-    const wet = cellFor('34008KT 9999 -RA BKN045 Q1015', TWIN);
-    expect(wet.status).toBe(cellFor('34008KT 9999 BKN045 Q1015', TWIN).status);
-    expect(wet.reasons.some((r) => r.code === 'MIN')).toBe(false);
   });
 });
