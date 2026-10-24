@@ -88,15 +88,22 @@ export interface TafHeader {
 export function parseTafHeader(tokens: readonly string[]): HeaderResult<TafHeader> {
   let i = 0;
   if (tokens[0] === 'METAR' || tokens[0] === 'SPECI') return { ok: false, message: 'This is a METAR, not a TAF. Paste it into the METAR box.' };
-  while (tokens[i] === 'TAF') i++;
+  // A relay can duplicate its own prefix ("TAF AMD TAF AMD EGLL ..."), so every leading TAF/AMD/COR run is
+  // skipped, not just one of each, until a token that could be the station is reached (owner, 24-10-2026).
   let amended = false;
   let corrected = false;
-  if (tokens[i] === 'AMD') {
-    amended = true;
-    i++;
-  } else if (tokens[i] === 'COR') {
-    corrected = true;
-    i++;
+  for (;;) {
+    if (tokens[i] === 'TAF') {
+      i++;
+    } else if (tokens[i] === 'AMD') {
+      amended = true;
+      i++;
+    } else if (tokens[i] === 'COR') {
+      corrected = true;
+      i++;
+    } else {
+      break;
+    }
   }
   const station = tokens[i];
   if (station === undefined || !STATION.test(station)) {
