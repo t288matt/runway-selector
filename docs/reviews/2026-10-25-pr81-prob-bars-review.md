@@ -15,3 +15,7 @@ Date: 25-10-2026. Reviewer: an independent agent (blind: the issue and the diff 
 | 7 | `status.ts` still maps an OVERLAY cause of kind PROB to "PROB", now unreachable | Left in place: dead but harmless |
 
 Criterion 3 of the issue (old and new differ only where a TAF holds a PROB group) was not checked by the reviewer; it was proved by the author on 99 fixture runs, see the PR body.
+
+## Re-review of the fix commit (343182c)
+
+Reviewer: a second independent agent, on the diff of that commit only. **Verdict: APPROVE WITH FIXES.** One finding: when the same group text is listed twice in one slot, the bar test `seen.end === i - 1` failed and a duplicate bar with a duplicate key was drawn. Fixed in the next commit (`>= i - 1`); the test "draws one bar when the same group text is listed twice in one slot" fails without the fix. The rest (contiguous case unchanged, lane order, gap test would fail without the gap handling, unique keys, no airport facts) was found sound. The one-operator fix itself has not had a third review.

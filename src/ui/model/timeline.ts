@@ -164,7 +164,7 @@ export function overlayBars(slots: readonly { readonly weather: { readonly overl
     for (const o of s.weather.overlays) {
       const seen = open.get(o.text);
       // A gap in coverage (a METAR-governed slot in the middle) ends the bar; the next slot starts a new one.
-      if (seen !== undefined && seen.end === i - 1) seen.end = i;
+      if (seen !== undefined && seen.end >= i - 1) seen.end = i;
       else {
         const g = { label: o.text, start: i, end: i, probability: o.probabilityPct !== null };
         open.set(o.text, g);

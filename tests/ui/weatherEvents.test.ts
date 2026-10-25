@@ -67,6 +67,12 @@ describe('TEMPO, INTER and PROB bars under the wind bars', () => {
     expect(m.overlayLanes).toBe(1);
   });
 
+  it('draws one bar when the same group text is listed twice in one slot', () => {
+    const g = group('TEMPO 2511/2513 RA', null);
+    const m = modelOf([tafSlot(g, g), tafSlot(g, g)]);
+    expect(m.overlayBars.map((b) => [b.startSlot, b.endSlot, b.lane])).toEqual([[0, 1, 0]]);
+  });
+
   it('draws the event-words line only when a slot has something to say, such as WET', () => {
     const m = modelOf([{ gov: 'METAR', precip: { prevailing: true } }]);
     expect(m.hasEventText).toBe(true);
