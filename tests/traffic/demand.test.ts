@@ -349,17 +349,18 @@ describe('prefiles count in the next slot only (owner, 25-10-2026)', () => {
       expect(r.summary.prefileDepartures).toBe(1);
     });
 
-    it('a departure filed for the current slot is not counted', () => {
+    it('a departure filed for the current slot still counts in the next slot (its take-off time is not used)', () => {
       const r = withPrefiles([prefile({ departure: icao, departureMinuteOfDay: 615 })]);
       expect(r.slots[0]?.departures).toBe(0);
-      expect(r.slots[1]?.departures).toBe(0);
-      expect(r.summary.prefileDepartures).toBe(0);
+      expect(r.slots[1]?.departures).toBe(1);
+      expect(r.summary.prefileDepartures).toBe(1);
     });
 
-    it('a departure filed after the next slot is not counted', () => {
-      const r = withPrefiles([prefile({ departure: icao, departureMinuteOfDay: 665 })]);
-      expect(r.slots[1]?.departures).toBe(0);
-      expect(r.summary.prefileDepartures).toBe(0);
+    it('a departure filed after the next slot also counts in the next slot (five prefiled departures all count there)', () => {
+      const list = [615, 665, 900, 1200, 1300].map((m) => prefile({ departure: icao, departureMinuteOfDay: m }));
+      const r = withPrefiles(list);
+      expect(r.slots[1]?.departures).toBe(5);
+      expect(r.summary.prefileDepartures).toBe(5);
     });
 
     it('an arrival here is timed by its filed departure plus time en route, and counts in the slot that time falls in', () => {
@@ -390,8 +391,8 @@ describe('prefiles count in the next slot only (owner, 25-10-2026)', () => {
       expect(withPrefiles([]).slots[1]?.departures).toBeNull();
     });
 
-    it('with prefiles in the feed but none filed for the next slot, the next slot departures are zero', () => {
-      expect(withPrefiles([prefile({ departure: icao, departureMinuteOfDay: 615 })]).slots[1]?.departures).toBe(0);
+    it('with prefiles in the feed but none departing from here, the next slot departures are zero', () => {
+      expect(withPrefiles([prefile({ departureMinuteOfDay: 615 })]).slots[1]?.departures).toBe(0);
     });
   });
 

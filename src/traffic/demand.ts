@@ -135,16 +135,17 @@ export function buildTrafficSlots(input: DemandInput): DemandResult {
       addArrival(takeOff + (g.distance / settings.assumedGroundSpeedKt) * MS_PER_HOUR);
     });
 
-  // Prefiles: counted in the next slot only, never the current one (owner, 25-10-2026). The time is the filed departure
-  // (from here) or the filed departure plus time en route (to here), nearest to now. They are not connected, so they
-  // are not in connectedArrivals or connectedDepartures.
+  // Prefiles: counted in the next slot only, never the current one (owner, 25-10-2026). Every prefiled departure from
+  // here counts there, whatever its filed take-off time (owner, 25-10-2026). An arrival here is timed by its filed
+  // departure plus time en route, nearest to now. Prefiles are not connected, so they are not in connectedArrivals or
+  // connectedDepartures.
   const nextStart = slotStartsMs[1];
   let prefileDepartures = 0;
   let prefileArrivals = 0;
   if (nextStart !== undefined && known[1]) {
     const inNext = (t: number): boolean => t >= nextStart && t < nextStart + slotMs;
     for (const p of prefiles) {
-      if (p.departure === icao && inNext(nearestUtc(nowMs, p.departureMinuteOfDay))) prefileDepartures += 1;
+      if (p.departure === icao) prefileDepartures += 1;
       // A plan from here to here is one movement, counted as the departure only.
       if (p.arrival === icao && p.departure !== icao && inNext(nearestUtc(nowMs, p.departureMinuteOfDay + p.enrouteMinutes))) prefileArrivals += 1;
     }
