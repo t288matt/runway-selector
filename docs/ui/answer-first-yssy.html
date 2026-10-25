@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Runway Mode Planner: answer-first mockup</title>
+<style>
+:root{--bg:#0b1426;--panel:#111d36;--panel2:#16254a;--line:#223356;--text:#e6ecf7;--muted:#9db0cf;--accent:#3b82f6;--accent-text:#6aa6ff;--ok:#1b7f46;--ok-text:#5fd68a;--warn:#c98a00;--warn-text:#ffc94d;--bad:#c0392b;--bad-text:#ff8a80;--unk:#66728a;--state:var(--ok);--state-text:var(--ok-text)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.35 system-ui,"Segoe UI",Arial,sans-serif}
+a{color:inherit;text-decoration:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.mono{font:12px/1.35 Consolas,Menlo,monospace}
+/* ---------- page: one screen ---------- */
+.app{max-width:1280px;margin:0 auto;padding:8px 12px 6px;display:grid;gap:8px}
+.bar{display:flex;align-items:center;gap:10px;height:36px}
+.bar h1{font-size:13px;margin:0;font-weight:650;color:var(--muted);letter-spacing:.02em}
+.bar .sp{flex:1}
+.bar select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font:inherit;min-height:32px}
+.utc{color:var(--muted);font-size:12px}
+.btn{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;color:var(--text);font-weight:600}
+.burger{display:inline-block;width:16px;height:2px;background:currentColor;box-shadow:0 5px currentColor,0 -5px currentColor}
+.hero{display:grid;grid-template-columns:340px 1fr 360px;gap:12px;align-items:stretch;background:linear-gradient(90deg,color-mix(in srgb,var(--state) 28%,var(--panel)),var(--panel) 55%);border:1px solid var(--line);border-left:8px solid var(--state);border-radius:10px;padding:12px 14px}
+.answer{display:flex;flex-direction:column;gap:6px;justify-content:center}
+.state{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;background:var(--state);color:#fff;font-weight:800;letter-spacing:.06em;border-radius:6px;padding:4px 10px;font-size:14px}
+.state svg{width:16px;height:16px}
+.mode{font-size:84px;line-height:.95;font-weight:800;letter-spacing:-.02em}
+.next{font-size:16px;font-weight:650}
+.rw{color:var(--muted);font-size:13px}
+.rw b{color:var(--text);font-weight:600}
+.cur{display:flex;align-items:center;gap:8px;margin-top:2px;flex-wrap:wrap}
+.cur label{color:var(--muted);font-size:12px}
+.cur select{background:var(--panel2);color:var(--text);border:1px solid var(--accent);border-radius:6px;padding:4px 6px;font:inherit;min-height:32px}
+.cur .st{color:var(--muted);font-size:12px}
+.pic{display:flex;align-items:center;justify-content:center;min-height:0}
+.pic svg{width:100%;max-width:330px;height:auto;max-height:290px}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:center}
+.fact{background:rgba(11,20,38,.55);border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:3px;min-height:64px}
+.fact.wide{grid-column:1/3}
+.fact .k{display:flex;align-items:center;gap:6px;font-size:18px;font-weight:700}
+.fact .k svg{width:22px;height:22px;flex:none}
+.fact small{color:var(--muted);font-size:12px}
+.fact .mono{word-break:break-word}
+.bars{display:inline-flex;gap:2px;align-items:flex-end;height:18px}
+.bars i{display:block;width:6px;background:var(--line);border-radius:1px}
+.bars i.on{background:var(--ok-text)}
+.dryline{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--line);margin-top:2px}
+.dryline i{display:block;height:100%}
+/* ---------- forecast bar ---------- */
+.fc{display:block;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px 6px}
+.fc .row{display:grid;grid-template-columns:44px 1fr;align-items:center;gap:8px;min-height:20px}
+.fc .lab{color:var(--muted);font-size:11px}
+.track{position:relative;display:grid;grid-template-columns:repeat(12,1fr);height:20px;gap:0}
+.track.s{height:16px}
+.seg{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;border-right:1px solid rgba(11,20,38,.6);overflow:hidden;white-space:nowrap}
+.seg.ok{background:var(--ok)}
+.seg.mg{background:var(--warn);color:#0b1426}
+.seg.bd{background:var(--bad)}
+.seg.un{background:var(--unk)}
+.axis{position:relative;height:14px;color:var(--muted);font-size:11px}
+.axis span{position:absolute;transform:translateX(-50%)}
+.nowm{position:absolute;top:-2px;bottom:-2px;width:2px;background:#fff;left:4%}
+.ev{position:relative;height:18px}
+.ev b{position:absolute;top:0;height:16px;border-radius:3px;font-size:11px;font-weight:600;padding:0 5px;white-space:nowrap;overflow:hidden;display:flex;align-items:center;gap:4px}
+.ev .wet{background:rgba(91,184,232,.25);border:1px solid #5bb8e8;color:#bfe6fa}
+.ev .tempo{background:rgba(232,163,58,.18);border:1px dashed #e8a33a;color:var(--warn-text)}
+.ev .wnd{background:var(--panel2);color:var(--text)}
+.tl{display:grid;grid-template-columns:repeat(12,1fr);gap:1px;height:12px}
+.tl i{display:block;background:var(--ok);height:100%;border-radius:1px}
+.tl i.m{height:60%;margin-top:auto}
+.tl i.x{background:repeating-linear-gradient(45deg,var(--unk) 0 3px,transparent 3px 6px);border:1px dashed var(--unk)}
+/* ---------- trust strip ---------- */
+.trust{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{position:relative;display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;background:var(--panel);border:1px solid var(--line);border-radius:999px;font-size:12px;cursor:default}
+.chip b{font-weight:700}
+.chip .pop,.fact .pop,[data-tip]::after{display:none}
+.chip:hover .pop,.chip:focus .pop,.fact:hover .pop,.fact:focus .pop{display:block}
+.fact .pop{display:none;bottom:auto;top:calc(100% + 6px);left:0}
+.pop{position:absolute;bottom:calc(100% + 6px);left:0;z-index:5;width:240px;background:#0a1020;border:1px solid var(--accent);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--text);white-space:normal;box-shadow:0 4px 18px rgba(0,0,0,.5)}
+.sh{display:inline-block;width:11px;text-align:center;font-weight:800}
+.sh.ok{color:var(--ok-text)}.sh.st{color:var(--warn-text)}.sh.bd{color:var(--bad-text)}.sh.no{color:var(--muted)}
+.notice{margin-left:auto;font-size:11px;font-weight:700;color:var(--text);opacity:.95}
+/* ---------- drawer (CSS only, :target) ---------- */
+.drawer{display:none;position:fixed;inset:0 0 0 auto;width:min(780px,100%);background:#0d172d;border-left:1px solid var(--accent);z-index:20;flex-direction:column;box-shadow:-10px 0 40px rgba(0,0,0,.6)}
+body:has(.drawer :target) .drawer,.drawer:target{display:flex}
+.dh{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.dh nav{display:flex;gap:6px;flex-wrap:wrap}
+.dh nav a{min-height:32px;display:inline-flex;align-items:center;padding:0 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);font-size:12px;font-weight:600}
+.dh .sp{flex:1}
+.db{overflow:auto;padding:0 14px 20px}
+.db section{padding:12px 0;border-bottom:1px solid var(--line)}
+.db h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.db p{margin:4px 0}
+.small{font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:96px repeat(12,minmax(40px,1fr));gap:2px;align-items:center;min-width:640px}
+.gw{overflow-x:auto}
+.grid .rl{font-size:12px;font-weight:700;display:flex;flex-direction:column;line-height:1.15}
+.grid .rl small{font-weight:400;color:var(--muted);font-size:10px}
+.grid .h{font-size:11px;text-align:center;color:var(--muted)}
+.rt{font-size:10px;border-radius:999px;padding:0 5px;background:var(--accent);color:#fff;margin-left:4px}
+.c{position:relative;height:30px;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;line-height:1}
+.c small{font-size:10px;font-weight:700}
+.c.ok{background:var(--ok)}.c.mg{background:var(--warn);color:#0b1426}.c.bd{background:repeating-linear-gradient(45deg,var(--bad) 0 4px,#9c2d22 4px 8px)}
+.c.rec{outline:3px solid var(--accent-text);outline-offset:-1px}
+.c[data-tip]:hover::after,.c[data-tip]:focus::after{display:block;content:attr(data-tip);position:absolute;top:calc(100% + 4px);left:0;z-index:6;width:230px;background:#0a1020;border:1px solid var(--accent);border-radius:6px;padding:6px 8px;font-size:12px;font-weight:400;color:var(--text);text-align:left;white-space:normal}
+.g2{display:grid;grid-template-columns:96px 1fr;gap:6px;align-items:center;margin:2px 0}
+.tb{width:100%;border-collapse:collapse;font-size:13px}
+.tb th,.tb td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left}
+.tb th{color:var(--muted);font-weight:500;font-size:12px}
+.lv{display:inline-block;border:1px solid var(--ok);color:var(--ok-text);border-radius:4px;padding:0 6px;font-size:11px;font-weight:700}
+.keyline{display:flex;flex-wrap:wrap;gap:10px 16px;font-size:12px}
+.sw{display:inline-block;width:22px;height:14px;border-radius:3px;vertical-align:-3px;margin-right:6px}
+.states{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.states div{padding:6px 8px;border-radius:6px;font-weight:700;font-size:12px;color:#fff}
+details{margin:4px 0}
+summary{cursor:pointer;font-weight:600;min-height:32px;display:flex;align-items:center}
+.rawbox{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px}
+.lbl{color:var(--accent-text);font-weight:700;font-size:12px}
+.act{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+dl.v{display:grid;grid-template-columns:1fr auto;gap:2px 12px;margin:0}
+dl.v dt{color:var(--muted)}dl.v dd{margin:0;text-align:right}
+.demo{max-width:1280px;margin:0 auto;padding:10px 12px 40px}
+.demo h3{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+/* ---------- phone ---------- */
+@media (max-width:640px){
+  .app{padding:6px 10px 6px;gap:6px}
+  .bar h1{display:none}
+  .hero{grid-template-columns:1fr 150px;padding:10px;gap:8px;border-left-width:6px}
+  .mode{font-size:62px}
+  .pic{grid-column:2;grid-row:1}
+  .pic svg{max-height:170px}
+  .answer{grid-column:1;grid-row:1}
+  .facts{grid-column:1/3;grid-row:2;gap:6px}
+  .fact{min-height:0;padding:6px 8px}
+  .fact .k{font-size:16px}
+  .notice{margin-left:0;flex-basis:100%}
+  .fc .row{grid-template-columns:30px 1fr}
+  .chip{min-height:32px;padding:0 8px}
+}
+</style>
+</head>
+<body>
+<a class="sr" href="#more">Open details</a>
+
+<div class="app" id="top">
+  <!-- bar: identity and the only control that opens everything else -->
+  <header class="bar">
+    <h1>Runway Mode Planner</h1>
+    <select aria-label="Airport"><option>YSSY</option></select>
+    <span class="sp"></span>
+    <span class="utc">UTC 17:49Z</span>
+    <a class="btn" href="#more" aria-label="Open details: forecast, reports, traffic, reasons, settings"><span class="burger" aria-hidden="true"></span>More</a>
+  </header>
+
+  <!-- the answer -->
+  <main class="hero" style="--state:var(--ok)" aria-label="Runway mode recommendation">
+    <div class="answer">
+      <span class="state" role="status">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.6"/></svg>
+        HOLD
+      </span>
+      <div class="mode" aria-label="Recommended mode 16AD">16AD</div>
+      <div class="next">No change planned</div>
+      <div class="rw">Arr <b>16L, 16R</b> &middot; Dep <b>16L, 16R</b></div>
+      <div class="cur">
+        <label for="cm">I am on</label>
+        <select id="cm"><option>Not set</option><option>16AD</option><option>25A16D</option><option>25AD</option></select>
+      </div>
+    </div>
+
+    <figure class="pic" style="margin:0">
+      <svg viewBox="0 0 300 260" role="img" aria-labelledby="dg-t">
+        <title id="dg-t">Runway ends 16L, 16R, 34L, 34R, 07, 25. Wind from 190 degrees at 23 knots. Mode 16AD uses 16L and 16R for arrivals and departures. Ends 07, 34L and 34R would have a tailwind.</title>
+        <rect width="300" height="260" rx="8" fill="#0b1426" stroke="#223356"/>
+        <!-- 07/25 (not used) -->
+        <line x1="72" y1="158" x2="228" y2="102" stroke="#6b7794" stroke-width="7" stroke-linecap="round"/>
+        <!-- 16L / 16R (used) -->
+        <line x1="130.7" y1="35.9" x2="195.7" y2="214.5" stroke="#3b82f6" stroke-width="10" stroke-linecap="round"/>
+        <line x1="104.3" y1="45.5" x2="169.3" y2="224.1" stroke="#3b82f6" stroke-width="10" stroke-linecap="round"/>
+        <g font-family="system-ui,Segoe UI,Arial" font-size="13" fill="#e6ecf7">
+          <text x="212" y="232" font-weight="700">16L</text>
+          <text x="104" y="244" font-weight="700" text-anchor="end">16R</text>
+          <text x="134" y="24" fill="#9db0cf">34R <tspan fill="#ff8a80">&#x2715;</tspan></text>
+          <text x="92" y="38" fill="#9db0cf" text-anchor="end">34L <tspan fill="#ff8a80">&#x2715;</tspan></text>
+          <text x="62" y="176" fill="#9db0cf" text-anchor="end">07 <tspan fill="#ff8a80">&#x2715;</tspan></text>
+          <text x="236" y="98" fill="#9db0cf">25</text>
+          <text x="152" y="128" font-size="10" fill="#fff" text-anchor="start" font-weight="700" transform="rotate(70 152 128)">ARR/DEP</text>
+        </g>
+        <!-- wind arrow: from 190, so it blows towards 010 -->
+        <g stroke="#ffb454" fill="#ffb454">
+          <line x1="40" y1="236" x2="58" y2="186" stroke-width="5" stroke-linecap="round"/>
+          <path d="M58 172 L68 192 L49 186 Z" stroke="none"/>
+        </g>
+        <text x="46" y="254" font-family="system-ui,Segoe UI,Arial" font-size="15" font-weight="800" fill="#ffb454">190&#176; 23 kt</text>
+        <text x="290" y="16" text-anchor="end" font-family="system-ui,Segoe UI,Arial" font-size="11" fill="#9db0cf">N up</text>
+      </svg>
+    </figure>
+
+    <div class="facts">
+      <a class="fact" href="#traffic-rows" aria-label="Traffic LOW. 5 inbound, 2 of them on the ground elsewhere, 1 on the ground here. Open traffic per slot." style="position:relative">
+        <span class="pop" role="tooltip">Connected now: 5 inbound, 2 of them on the ground elsewhere, and 1 on the ground here. Tap for every slot.</span>
+        <span class="k"><span class="bars" aria-hidden="true"><i class="on" style="height:6px"></i><i style="height:12px"></i><i style="height:18px"></i></span>LOW</span>
+        <small>Traffic &middot; 5 in &middot; 1 out</small>
+      </a>
+      <div class="fact" tabindex="0" aria-label="Ceiling 4,800 feet">
+        <span class="k"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18h12a4 4 0 0 0 0-8 6 6 0 0 0-11.5 1.5A3.4 3.4 0 0 0 6 18z" fill="none" stroke="#9db0cf" stroke-width="2"/></svg>4,800 ft</span>
+        <small>Ceiling</small>
+      </div>
+      <div class="fact wide" tabindex="0" aria-label="Runway dry now. Wet from 18:30 to 23:30 Z">
+        <span class="k"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3C8 9 6 12 6 15a6 6 0 0 0 12 0c0-3-2-6-6-12z" fill="none" stroke="#5bb8e8" stroke-width="2"/></svg>DRY <span style="font-weight:500;color:var(--muted);font-size:14px">&nbsp;wet 18:30 to 23:30Z</span></span>
+        <span class="dryline" aria-hidden="true"><i style="width:17%;background:#c9d4ea"></i><i style="width:83%;background:#5bb8e8"></i></span>
+        <small>Runway now, and when it turns wet (17:30Z to 23:30Z)</small>
+      </div>
+      <div class="fact wide" tabindex="0">
+        <span class="mono">251735Z AUTO 19023KT 9999 // FEW010 SCT019 BKN048 19/17 Q1007</span>
+        <small>METAR</small>
+      </div>
+    </div>
+  </main>
+
+  <!-- the forecast: one slim bar, tap for the full grid -->
+  <a class="fc" href="#forecast" aria-label="Forecast 17:30Z to 23:30Z. Recommended mode 16AD holds for the whole period; crosswind near the limit from 18:00Z; wet from 18:30Z. Open the full forecast.">
+    <div class="row"><span class="lab">UTC</span>
+      <div class="axis" aria-hidden="true">
+        <span style="left:4.2%">NOW</span><span style="left:12.5%">18</span><span style="left:29.2%">19</span><span style="left:45.8%">20</span><span style="left:62.5%">21</span><span style="left:79.2%">22</span><span style="left:95.8%">23</span>
+      </div></div>
+    <div class="row"><span class="lab">16AD</span>
+      <div style="position:relative">
+        <div class="track" aria-hidden="true">
+          <span class="seg ok" style="grid-column:1/3">&#x2713;</span>
+          <span class="seg mg" style="grid-column:3/13">&#9650; XW near limit</span>
+        </div>
+        <span class="nowm" aria-hidden="true"></span>
+      </div></div>
+    <div class="row"><span class="lab">Wind</span>
+      <div class="ev" aria-hidden="true">
+        <b class="wnd" style="left:0;width:8%">190/23</b>
+        <b class="wnd" style="left:8.4%;width:91%">190/24G34 &middot; 17020KT from 02Z</b>
+      </div></div>
+    <div class="row"><span class="lab">Risk</span>
+      <div class="ev" aria-hidden="true">
+        <b class="wet" style="left:16.7%;width:83%">&#9660; wet</b>
+      </div></div>
+    <div class="row"><span class="lab">Traf.</span>
+      <div class="tl" aria-hidden="true"><i class="m"></i><i class="m"></i><i class="m"></i><i class="m"></i><i class="m"></i><i class="m"></i><i class="m"></i><i class="m"></i><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i></div></div>
+  </a>
+
+  <!-- trust strip + fixed notice -->
+  <footer class="trust">
+    <span class="chip" tabindex="0"><span class="sh ok" aria-hidden="true">&#9679;</span>METAR <b>14m</b><span class="pop" role="tooltip">METAR 17:35Z, 14 min old. Fetched automatically every 5 minutes. Not stored.</span></span>
+    <span class="chip" tabindex="0"><span class="sh ok" aria-hidden="true">&#9679;</span>TAF <b>30m</b><span class="pop" role="tooltip">TAF issued 17:19Z, valid to 00:00Z, 30 min old.</span></span>
+    <span class="chip" tabindex="0"><span class="sh ok" aria-hidden="true">&#9679;</span>VATSIM <b>0s</b><span class="pop" role="tooltip">VATSIM traffic 17:49:43Z, 0 s old.</span></span>
+    <span class="chip" tabindex="0"><span class="sh ok" aria-hidden="true">&#8635;</span><b>17:49</b> &rarr; 18:00<span class="pop" role="tooltip">Plan recalculated at 17:49Z. Next recalculation 18:00Z.</span></span>
+    <span class="notice" role="note">Flight simulation only. Never for real-world navigation, flight planning or operations.</span>
+  </footer>
+</div>
+
+<!-- ======================= drawer: everything else ======================= -->
+<aside class="drawer" id="more" aria-label="Details">
+  <div class="dh">
+    <nav aria-label="Details sections">
+      <a href="#forecast">Forecast</a><a href="#reports">Reports</a><a href="#why">Why</a><a href="#key">Key</a><a href="#settings">Settings</a>
+    </nav>
+    <span class="sp"></span>
+    <a class="btn" href="#top">Close</a>
+  </div>
+  <div class="db">
+
+    <section id="forecast">
+      <h2>Forecast, traffic and every mode <span class="small" style="text-transform:none;letter-spacing:0">17:30Z to 23:30Z</span></h2>
+      <div class="act" style="margin:0 0 8px;align-items:center"><span class="small">Window</span><select aria-label="Window" style="background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;min-height:32px;padding:0 6px"><option>6 hours</option><option>4 hours</option><option>Full TAF</option></select><span class="small">6 unsuitable modes hidden</span><a class="btn" style="min-height:32px" href="#forecast">Show them</a></div>
+      <div class="gw"><div class="grid" role="grid" aria-label="Modes by 30-minute slot">
+        <span class="h">UTC</span><span class="h">17:30</span><span class="h">18:00</span><span class="h">18:30</span><span class="h">19:00</span><span class="h">19:30</span><span class="h">20:00</span><span class="h">20:30</span><span class="h">21:00</span><span class="h">21:30</span><span class="h">22:00</span><span class="h">22:30</span><span class="h">23:00</span>
+        <span class="rl">Wind</span>
+        <span class="mono" style="grid-column:2/4;background:var(--panel2);border-radius:3px;padding:2px 4px;font-size:11px">190/23</span>
+        <span class="mono" style="grid-column:4/14;background:var(--panel2);border-radius:3px;padding:2px 4px;font-size:11px">190/24G34</span>
+        <span class="rl">Groups</span>
+        <span class="mono" style="grid-column:3/14;border:1px dashed #e8a33a;border-radius:3px;padding:2px 4px;font-size:11px;color:var(--warn-text)" tabindex="0" title="TEMPO 2518/2600 3000 DZ BKN008">TEMPO 3000 DZ BKN008</span>
+        <span class="rl">Wet</span>
+        <span style="grid-column:2/3"></span>
+        <span style="grid-column:4/14;background:rgba(91,184,232,.25);border:1px solid #5bb8e8;border-radius:3px;font-size:11px;padding:0 4px">&#9660; WET 18:30Z to 23:30Z</span>
+        <span class="rl" id="traffic-rows">Class</span>
+        <span style="grid-column:2/10;font-size:11px;color:var(--ok-text)">LOW all slots to 21:00</span>
+        <span style="grid-column:10/14;font-size:11px;color:var(--muted)">? unknown from 21:30Z</span>
+        <span class="rl">Arr</span><span class="h">0</span><span class="h">0</span><span class="h">0</span><span class="h">1</span><span class="h" style="grid-column:6/14;text-align:left">demand unknown beyond the horizon: nothing is estimated</span>
+        <span class="rl">Dep</span><span class="h" tabindex="0" title="Connected aircraft on the ground here">1</span><span class="h" title="Prefiled plans only">0*</span><span class="h">&ndash;</span><span class="h">&ndash;</span>
+        <span class="rl">Moves</span><span class="h">1</span><span class="h">0</span><span class="h" title="Arrivals only">0&dagger;</span><span class="h" title="Arrivals only">1&dagger;</span>
+        <span class="small" style="grid-column:1/14">Per 30 min, slots 17:30Z, 18:00Z, 18:30Z, 19:00Z. * prefiled plans only. &dagger; arrivals only. &ndash; departures not estimated. Connected now: 5 inbound, 2 of them on the ground elsewhere, and 1 on the ground here.</span>
+
+        <span class="rl">25A16D<small>Arr 25; Dep 16L 16R</small></span>
+        <span class="c mg" tabindex="0" data-tip="25A16D 17:30Z to 18:00Z. Marginal: crosswind near the limit on 25."><span aria-hidden="true">&#9650;</span><small>XW</small></span>
+        <span class="c mg" tabindex="0" data-tip="25A16D 18:00Z to 18:30Z. Marginal: crosswind near the limit on 25."><span aria-hidden="true">&#9650;</span><small>XW</small></span>
+        <span class="c bd" tabindex="0" data-tip="25A16D 18:30Z to 19:00Z. Unsuitable: crosswind over the limit."><span aria-hidden="true">&#x2715;</span><small>XW</small></span><span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span><span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span><span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span><span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span><span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span><span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span><span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span><span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span><span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span>
+
+        <span class="rl">16AD<span><span class="rt">REC</span></span><small>Arr 16L 16R; Dep 16L 16R</small></span>
+        <span class="c ok rec" tabindex="0" data-tip="16AD 17:30Z to 18:00Z. Suitable."><span aria-hidden="true">&#x2713;</span></span>
+        <span class="c ok rec" tabindex="0" data-tip="16AD 18:00Z to 18:30Z. Suitable."><span aria-hidden="true">&#x2713;</span></span>
+        <span class="c mg rec" tabindex="0" data-tip="16AD 18:30Z to 19:00Z. Marginal: crosswind 17 kt on 16L (limit 20), gusting 34. Dry or wet both evaluated. Uncertain: TEMPO group."><span aria-hidden="true">&#9650;</span><small>XW</small></span><span class="c mg rec"><span aria-hidden="true">&#9650;</span><small>XW</small></span><span class="c mg rec"><span aria-hidden="true">&#9650;</span><small>XW</small></span><span class="c mg rec"><span aria-hidden="true">&#9650;</span><small>XW</small></span><span class="c mg rec"><span aria-hidden="true">&#9650;</span><small>XW</small></span><span class="c mg rec"><span aria-hidden="true">&#9650;</span><small>XW</small></span><span class="c mg rec"><span aria-hidden="true">&#9650;</span><small>XW</small></span><span class="c mg rec"><span aria-hidden="true">&#9650;</span><small>XW</small></span><span class="c mg rec"><span aria-hidden="true">&#9650;</span><small>XW</small></span><span class="c mg rec"><span aria-hidden="true">&#9650;</span><small>XW</small></span>
+
+        <span class="rl">25AD<small>Arr 25; Dep 25</small></span>
+        <span class="c mg"><span aria-hidden="true">&#9650;</span><small>XW</small></span><span class="c mg"><span aria-hidden="true">&#9650;</span><small>XW</small></span>
+        <span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span><span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span><span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span><span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span><span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span><span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span><span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span><span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span><span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span><span class="c bd"><span aria-hidden="true">&#x2715;</span><small>XW</small></span>
+      </div></div>
+      <p class="small">Traffic figures are the Class, Arr, Dep and Moves rows. Focus or tap a cell for its detail: wind used, runway table, traffic against capacity, plan, outlook. The blue outline is the recommended path. Amber cells pass but carry a word (caution).</p>
+    </section>
+
+    <section id="reports">
+      <h2>Reports</h2>
+      <div class="rawbox"><span class="lbl">METAR</span><div class="mono">YSSY 251735Z AUTO 19023KT 9999 // FEW010 SCT019 BKN048 19/17 Q1007</div></div>
+      <div class="rawbox" style="margin-top:6px"><span class="lbl">TAF</span><div class="mono">TAF AMD YSSY 251719Z 2518/2700 19024G34KT 9999 -DZ BKN018 FM260200 17020KT CAVOK FM260900 14010KT 9999 -SHRA BKN040 FM261800 28006KT 9999 NSW BKN040 TEMPO 2518/2600 3000 DZ BKN008 INTER 2610/2618 5000 SHRA SCT015</div></div>
+      <p class="small">Fetched automatically every 5 minutes for YSSY. Not stored. Courtesy of NOAA/NWS via Datamask Aviation; METAR from VATSIM.</p>
+      <details><summary>Use my own weather</summary>
+        <p class="small">Replaces the fetched report until you resume.</p>
+        <div class="rawbox"><label class="lbl" for="pm">METAR</label><br><textarea id="pm" rows="2" style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:6px" placeholder="Paste your own METAR here"></textarea></div>
+        <div class="rawbox" style="margin-top:6px"><label class="lbl" for="pt">TAF</label><br><textarea id="pt" rows="3" style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:6px" placeholder="Paste your own TAF here"></textarea></div>
+        <div class="act"><a class="btn" href="#reports">Apply</a><a class="btn" href="#reports">Resume automatic</a></div>
+      </details>
+    </section>
+
+
+    <section id="why">
+      <h2>Why 16AD <span class="small" style="text-transform:none;letter-spacing:0">illustrative wording</span></h2>
+      <p>16AD is suitable on the runways it uses (dry runway): tailwind up to 0 kt, crosswind up to 12 kt.</p>
+      <p>16AD stays viable for the whole window, to 23:30Z.</p>
+      <p class="small">Banners (current mode unsuitable, early change, no suitable mode, conditions met) appear in the state label on the main screen and are written out in full here.</p>
+    </section>
+
+    <section id="key">
+      <h2>Key</h2>
+      <div class="states"><div style="background:var(--ok)">&#x2713; HOLD: stay on this mode</div><div style="background:var(--warn);color:#0b1426">&#9650; CHANGE SOON: planned change or early change advised</div><div style="background:var(--bad)">&#x2715; CHANGE NOW: current mode unsuitable, or no mode fits</div></div>
+      <div class="keyline" style="margin-top:8px">
+        <span><i class="sw" style="background:var(--ok)"></i>&#x2713; Suitable</span>
+        <span><i class="sw" style="background:var(--warn)"></i>&#9650; Marginal: passes with a caution word</span>
+        <span><i class="sw" style="background:var(--bad)"></i>&#x2715; Unsuitable</span>
+        <span><i class="sw" style="background:var(--unk)"></i>? Unknown</span>
+        <span><i class="sw" style="outline:3px solid var(--accent-text);outline-offset:-2px"></i>Recommended path</span>
+        <span>Dashed line: planned change</span>
+        <span>Amber band: HIGH traffic</span>
+        <span>White corner: depends on an uncertain input</span>
+        <span>&#x2715; on a runway end: tailwind</span>
+      </div>
+      <p class="small">Cause words: TW tailwind; XW crosswind; MIN weather minima; CAP capacity; PLAN operating plan; VRB variable wind; TEMPO, INTER, PROB forecast groups; WET? runway may be wet; TAF forecast would make it worse; NO TAF no forecast coverage; NO MET no weather entered; MODE mode not enabled.</p>
+    </section>
+
+    <section id="settings">
+      <h2>Settings <span class="small" style="text-transform:none;letter-spacing:0">read only, edited in the airport files</span></h2>
+      <details open><summary>Limits (simulation settings)</summary>
+        <dl class="v"><dt>Tailwind, dry runway</dt><dd>5 kt</dd><dt>Tailwind, wet runway</dt><dd>0 kt</dd><dt>Crosswind, every mode</dt><dd>20 kt</dd><dt>Calm wind</dt><dd>3 kt</dd><dt>Limit tolerance</dt><dd>0.05 kt</dd><dt>Near-limit margin</dt><dd>3 kt</dd></dl></details>
+      <details><summary>Operating plan priorities (simulation settings)</summary><p class="small">Priority 1 (all equal): 16AD, 25A16D, 25AD and the other enabled modes.</p></details>
+      <details><summary>Time zone</summary><p class="small">Times are UTC only.</p></details>
+      <details><summary>Airport and data</summary>
+        <p class="small">Choose the airport at the top of the screen. Each airport keeps its own current mode, window and audit trail.</p>
+        <div class="act"><a class="btn" href="#settings">Reload data</a></div></details>
+      <details><summary>Audit trail <span class="small">&nbsp;local record, not tamper-proof</span></summary>
+        <p class="small">No changes yet. Change the current mode or the window to see an entry.</p>
+        <div class="act"><a class="btn" href="#settings">Export audit trail</a><a class="btn" href="#settings">Clear audit trail</a></div></details>
+    </section>
+  </div>
+</aside>
+</body>
+</html>
