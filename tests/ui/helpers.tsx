@@ -30,6 +30,8 @@ export function viewFromInput(pack: AirportPack, input: EngineInput): ViewData {
             connectedDepartures: 0,
             connectedArrivals: 0,
             groundElsewhere: 0,
+            prefileDepartures: 0,
+            prefileArrivals: 0,
             arrivalsBeyondHorizon: 0,
             movementsPerSlot: input.traffic.map((t) => (t.arrivals === null ? null : t.arrivals)),
             levels: input.traffic.map(() => null),

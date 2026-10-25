@@ -2,11 +2,11 @@
 // pack's own airport, and expected slots are worked from that pack's values.
 // One hand-worked table at the end uses the YSSY pack's literal numbers.
 import { describe, expect, it } from 'vitest';
-import { buildTrafficSlots } from '../../src/traffic/demand';
+import { buildTrafficSlots, nearestUtc } from '../../src/traffic/demand';
 import type { Aircraft } from '../../src/traffic/parseFeed';
 import type { AirportPack } from '../../src/refdata';
 import { TEST1_PACK, YSSY_PACK, describeForEachPack, loadPackFrom, PACKS } from '../helpers/packs';
-import { MIN, NOW, SLOT_STARTS, T0, aircraft, counts, inbound, parked, slotOf, waiting } from './helpers';
+import { MIN, NOW, SLOT_MS, SLOT_STARTS, T0, aircraft, counts, inbound, parked, slotOf, waiting } from './helpers';
 
 const build = (pack: AirportPack, list: readonly Aircraft[]) => buildTrafficSlots({ pack, nowMs: NOW, aircraft: list, slotStartsMs: SLOT_STARTS });
 const total = (r: ReturnType<typeof build>) => r.slots.reduce((n, s) => n + (s.arrivals ?? 0), 0);
@@ -35,10 +35,11 @@ describeForEachPack('demand model', (pack) => {
   });
 
   describe('departures (on the ground at the airport, origin here)', () => {
-    it('count in slot 0 only; later slots are null', () => {
+    it('count in slot 0 only; the next slot holds prefile departures (zero here); later slots are null', () => {
       const r = build(pack, [parked(pack), parked(pack, { nm: 1 }), parked(pack, { nm: 2 })]);
       expect(r.slots[0]?.departures).toBe(3);
-      for (const slot of r.slots.slice(1)) expect(slot.departures).toBeNull();
+      expect(r.slots[1]?.departures).toBe(0);
+      for (const slot of r.slots.slice(2)) expect(slot.departures).toBeNull();
       expect(r.summary.connectedDepartures).toBe(3);
       expect(total(r)).toBe(0);
     });
@@ -326,5 +327,78 @@ describe('all packs together', () => {
     expect(new Set(packs.map((p) => p.settings.assumedGroundSpeedKt)).size).toBeGreaterThan(1);
     expect(new Set(packs.map((p) => p.airport.arrivalSpeedFloorKt)).size).toBeGreaterThan(1);
     expect(packs.some((p) => p.airport.elevationFt === null || p.airport.elevationFt === undefined)).toBe(true);
+  });
+});
+
+describe('prefiles count in the next slot only (owner, 25-10-2026)', () => {
+  // NOW is 10:10 UTC, so slot 0 is 10:00 to 10:30 and the next slot (slot 1) is 10:30 to 11:00.
+  // Minutes after 00:00 UTC: 615 is 10:15, 640 is 10:40, 665 is 11:05.
+  describeForEachPack('next-slot rule', (pack) => {
+    const icao = pack.airport.icao;
+    const prefile = (o: { departure?: string; arrival?: string; departureMinuteOfDay: number; enrouteMinutes?: number }) => ({
+      departure: o.departure ?? 'ZZZA',
+      arrival: o.arrival ?? 'ZZZB',
+      departureMinuteOfDay: o.departureMinuteOfDay,
+      enrouteMinutes: o.enrouteMinutes ?? 60,
+    });
+    const withPrefiles = (list: ReturnType<typeof prefile>[]) => buildTrafficSlots({ pack, nowMs: NOW, aircraft: [], prefiles: list, slotStartsMs: SLOT_STARTS });
+
+    it('a departure from here filed for the next slot counts there, not in the current slot', () => {
+      const r = withPrefiles([prefile({ departure: icao, departureMinuteOfDay: 640 })]);
+      expect(r.slots[1]?.departures).toBe(1);
+      expect(r.slots[0]?.departures).toBe(0);
+      expect(r.summary.prefileDepartures).toBe(1);
+    });
+
+    it('a departure filed for the current slot is not counted', () => {
+      const r = withPrefiles([prefile({ departure: icao, departureMinuteOfDay: 615 })]);
+      expect(r.slots[0]?.departures).toBe(0);
+      expect(r.slots[1]?.departures).toBe(0);
+      expect(r.summary.prefileDepartures).toBe(0);
+    });
+
+    it('a departure filed after the next slot is not counted', () => {
+      const r = withPrefiles([prefile({ departure: icao, departureMinuteOfDay: 665 })]);
+      expect(r.slots[1]?.departures).toBe(0);
+      expect(r.summary.prefileDepartures).toBe(0);
+    });
+
+    it('an arrival here is timed by its filed departure plus time en route, and counts in the slot that time falls in', () => {
+      // Departs 10:15 (current slot) and lands 10:45 (next slot): counted by its landing time.
+      const r = withPrefiles([prefile({ arrival: icao, departureMinuteOfDay: 615, enrouteMinutes: 30 })]);
+      expect(r.slots[0]?.arrivals).toBe(0);
+      expect(r.slots[1]?.arrivals).toBe(1);
+      expect(r.summary.prefileArrivals).toBe(1);
+    });
+
+    it('prefiles are not connected traffic', () => {
+      const r = withPrefiles([prefile({ departure: icao, departureMinuteOfDay: 640 }), prefile({ arrival: icao, departureMinuteOfDay: 615, enrouteMinutes: 30 })]);
+      expect(r.summary).toMatchObject({ connectedDepartures: 0, connectedArrivals: 0 });
+    });
+
+    it('a prefile between two other airports counts nowhere', () => {
+      const r = withPrefiles([prefile({ departureMinuteOfDay: 640 })]);
+      expect(r.slots[1]).toMatchObject({ arrivals: 0, departures: 0 });
+    });
+
+    it('with no prefiles, the next slot has a departure count of zero, not unknown', () => {
+      expect(withPrefiles([]).slots[1]?.departures).toBe(0);
+    });
+  });
+
+  describe('time of day', () => {
+    it('nearestUtc picks the same day, or the day either side, whichever is nearest now', () => {
+      expect(nearestUtc(NOW, 640)).toBe(Date.UTC(2026, 9, 23, 10, 40));
+      const justAfterMidnight = Date.UTC(2026, 9, 24, 0, 10);
+      expect(nearestUtc(justAfterMidnight, 1435)).toBe(Date.UTC(2026, 9, 23, 23, 55));
+      expect(nearestUtc(justAfterMidnight, 40)).toBe(Date.UTC(2026, 9, 24, 0, 40));
+    });
+
+    it('a departure filed for 00:40 counts in the next slot just after midnight', () => {
+      const pack = loadPackFrom(YSSY_PACK);
+      const starts = Array.from({ length: 4 }, (_, i) => Date.UTC(2026, 9, 24, 0, 0) + i * SLOT_MS);
+      const r = buildTrafficSlots({ pack, nowMs: Date.UTC(2026, 9, 24, 0, 10), aircraft: [], prefiles: [{ departure: pack.airport.icao, arrival: 'ZZZB', departureMinuteOfDay: 40, enrouteMinutes: 60 }], slotStartsMs: starts });
+      expect(r.slots[1]?.departures).toBe(1);
+    });
   });
 });

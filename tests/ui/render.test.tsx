@@ -35,7 +35,7 @@ function realView(pack: AirportPack, ref: (typeof PACKS)[number], aircraft: bool
     taf: decodeTafFixture(TAF_ID, ref),
     windowChoice: 'full',
     currentMode: null,
-    feed: aircraft ? { aircraft: [], fetchedAtMs: nowOf(fixture(TAF_ID)), error: null, errorAtMs: null } : EMPTY_FEED,
+    feed: aircraft ? { aircraft: [], prefiles: [], fetchedAtMs: nowOf(fixture(TAF_ID)), error: null, errorAtMs: null } : EMPTY_FEED,
   });
 }
 
@@ -356,7 +356,7 @@ describe('the cell detail operating-plan line', () => {
 });
 
 describe('Panel D', () => {
-  it('shows four slots, departures for the first only, unknown demand beyond the horizon, and no trend', () => {
+  it('shows four slots, departures for the first two (the second prefiled only), unknown demand beyond the horizon, and no trend', () => {
     const ref = PACKS[0];
     if (ref === undefined) throw new Error('no pack');
     const pack = packWith(ref, { weatherStation: fixture(METAR_ID).station });
@@ -365,16 +365,17 @@ describe('Panel D', () => {
     expect(m.columns).toHaveLength(4);
     expect(m.columns.map((c) => c.label)).toEqual(['Next 30 mins', '+30 min', '+60 min', '+90 min']);
     expect(m.columns[0]?.departures).toBe('0');
-    expect(m.columns.slice(1).every((c) => c.departures === 'not est.')).toBe(true);
+    expect(m.columns[1]?.departures).toBe('0 (prefiled)');
+    expect(m.columns.slice(2).every((c) => c.departures === 'not est.')).toBe(true);
     expect(m.unknownFrom).not.toBeNull();
     // movements: the raw 30-minute count, never doubled to an hourly rate, never a lower bound (OD-63, amending OD-41 and OD-61)
     for (const c of m.columns) {
       expect(c.movements).not.toContain('\u2265');
       if (c.arrivals === 'Unknown') expect(c.movements).toBe('Unknown');
       else if (c.departures === 'not est.') expect(c.movements).toBe(`${c.arrivals} (arrivals only)`);
-      else expect(c.movements).toBe(String(Number(c.arrivals) + Number(c.departures)));
+      else expect(c.movements).toBe(String(Number(c.arrivals) + Number(c.departures.replace(' (prefiled)', ''))));
     }
-    const text = textOf(renderDashboard(view, { aircraft: [], fetchedAtMs: view.calcNowMs, error: null, errorAtMs: null }));
+    const text = textOf(renderDashboard(view, { aircraft: [], prefiles: [], fetchedAtMs: view.calcNowMs, error: null, errorAtMs: null }));
     expect(text).toContain('Demand unknown from');
     expect(text).toContain('on the ground here.');
     expect(text).not.toContain('Connected aircraft are not movements');

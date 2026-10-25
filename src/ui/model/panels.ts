@@ -324,12 +324,13 @@ export function panelDModel(view: ViewData): PanelDModel {
   for (let i = 0; i < count; i += 1) {
     const t = slots[i];
     const arrivals = t?.arrivals ?? null;
-    const departures = t?.departures ?? null;
+    // Departures are known for the current slot (connected aircraft) and the next slot (prefiled plans only).
+    const departures = i <= 1 ? (t?.departures ?? null) : null;
     const label = i === 0 ? 'Next 30 mins' : `+${i * 30} min`;
     columns.push({
       label,
       arrivals: arrivals === null ? 'Unknown' : String(arrivals),
-      departures: departures === null ? 'not est.' : String(departures),
+      departures: departures === null ? 'not est.' : i === 1 ? `${departures} (prefiled)` : String(departures),
       // The raw count for this 30-minute slot, never doubled to an hourly rate (owner, 24-10-2026, OD-63,
       // amending OD-41 and OD-61, which still doubled the known case).
       movements: arrivals === null ? 'Unknown' : departures === null ? `${arrivals} (arrivals only)` : String(arrivals + departures),

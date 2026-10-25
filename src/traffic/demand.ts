@@ -5,7 +5,7 @@ import type { TrafficLevel, TrafficSlot } from '../engine/inputs';
 import type { AirportPack } from '../refdata';
 import { SLOT_MINUTES } from './config';
 import { classifyLevel } from './level';
-import type { Aircraft } from './parseFeed';
+import type { Aircraft, Prefile } from './parseFeed';
 
 const MS_PER_MINUTE = 60_000;
 const MS_PER_HOUR = 3_600_000;
@@ -28,6 +28,10 @@ export interface DemandSummary {
   readonly groundElsewhere: number;
   /** Connected arrivals whose estimated arrival falls beyond the known slots (counted nowhere else: demand beyond the horizon is not invented). */
   readonly arrivalsBeyondHorizon: number;
+  /** Prefiles counted as departures in the next slot (the one after the slot containing now). */
+  readonly prefileDepartures: number;
+  /** Prefiles counted as arrivals in the next slot. */
+  readonly prefileArrivals: number;
   /** Per slot: arrivals plus departures where arrivals are known (missing departures count as zero), else null. */
   readonly movementsPerSlot: readonly (number | null)[];
   /** Per slot: the traffic level (higher of arrivals and departures), or null when unknown. */
@@ -38,6 +42,8 @@ export interface DemandInput {
   readonly pack: AirportPack;
   readonly nowMs: number;
   readonly aircraft: readonly Aircraft[];
+  /** Filed plans not yet connected. They count only in the next slot (owner, 25-10-2026). */
+  readonly prefiles?: readonly Prefile[];
   /** Start of each 30-minute slot, in order. The first contains now. */
   readonly slotStartsMs: readonly number[];
 }
@@ -61,8 +67,21 @@ interface GroundElsewhere {
   readonly order: number;
 }
 
+const MS_PER_DAY = 24 * MS_PER_HOUR;
+
+/**
+ * The instant a UTC time of day (minutes after 00:00, may exceed a day for a plan that ends after midnight) falls
+ * nearest to now: the same day, the day before or the day after, whichever is closest.
+ */
+export function nearestUtc(nowMs: number, minuteOfDay: number): number {
+  const dayStart = Math.floor(nowMs / MS_PER_DAY) * MS_PER_DAY;
+  const at = dayStart + minuteOfDay * MS_PER_MINUTE;
+  return [at - MS_PER_DAY, at, at + MS_PER_DAY].reduce((best, t) => (Math.abs(t - nowMs) < Math.abs(best - nowMs) ? t : best));
+}
+
 export function buildTrafficSlots(input: DemandInput): DemandResult {
   const { pack, nowMs, aircraft, slotStartsMs } = input;
+  const prefiles = input.prefiles ?? [];
   const { airport, settings } = pack;
   const slotMs = SLOT_MINUTES * MS_PER_MINUTE;
   const icao = airport.icao.toUpperCase();
@@ -116,10 +135,25 @@ export function buildTrafficSlots(input: DemandInput): DemandResult {
       addArrival(takeOff + (g.distance / settings.assumedGroundSpeedKt) * MS_PER_HOUR);
     });
 
+  // Prefiles: counted in the next slot only, never the current one (owner, 25-10-2026). The time is the filed departure
+  // (from here) or the filed departure plus time en route (to here), nearest to now. They are not connected, so they
+  // are not in connectedArrivals or connectedDepartures.
+  const nextStart = slotStartsMs[1];
+  let prefileDepartures = 0;
+  let prefileArrivals = 0;
+  if (nextStart !== undefined && known[1]) {
+    const inNext = (t: number): boolean => t >= nextStart && t < nextStart + slotMs;
+    for (const p of prefiles) {
+      if (p.departure === icao && inNext(nearestUtc(nowMs, p.departureMinuteOfDay))) prefileDepartures += 1;
+      if (p.arrival === icao && inNext(nearestUtc(nowMs, p.departureMinuteOfDay + p.enrouteMinutes))) prefileArrivals += 1;
+    }
+    arrivals[1] = (arrivals[1] ?? 0) + prefileArrivals;
+  }
+
   const slots: TrafficSlot[] = slotStartsMs.map((startMs, i) => ({
     startMs,
     arrivals: known[i] ? (arrivals[i] ?? 0) : null,
-    departures: i === 0 ? departures : null,
+    departures: i === 0 ? departures : i === 1 && known[1] ? prefileDepartures : null,
   }));
 
   return {
@@ -129,6 +163,8 @@ export function buildTrafficSlots(input: DemandInput): DemandResult {
       connectedDepartures: departures,
       connectedArrivals,
       groundElsewhere: n,
+      prefileDepartures,
+      prefileArrivals,
       arrivalsBeyondHorizon,
       movementsPerSlot: slots.map((s) => (s.arrivals === null ? null : s.arrivals + (s.departures ?? 0))),
       levels: slots.map((s) => classifyLevel(pack, s.arrivals, s.departures)),

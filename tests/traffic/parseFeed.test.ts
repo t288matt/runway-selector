@@ -10,6 +10,7 @@ import { parseFeed, type Aircraft } from '../../src/traffic/parseFeed';
 
 const fixture = readFileSync(join(import.meta.dirname, '..', 'fixtures', 'traffic', 'synthetic-feed.json'), 'utf8');
 const ALLOWED_KEYS = ['altitude', 'arrival', 'departure', 'groundspeed', 'latitude', 'longitude'];
+const PREFILE_KEYS = ['arrival', 'departure', 'departureMinuteOfDay', 'enrouteMinutes'];
 
 function ok(text: string) {
   const r = parseFeed(text);
@@ -38,12 +39,12 @@ describe('parseFeed keeps only the allowed fields (SEC-6)', () => {
   });
 
   it('every aircraft has exactly the six allowed keys and the result has no others', () => {
-    expect(Object.keys(feed).sort()).toEqual(['aircraft', 'feedTimestampMs', 'skippedPilots']);
+    expect(Object.keys(feed).sort()).toEqual(['aircraft', 'feedTimestampMs', 'prefiles', 'skippedPilots']);
     for (const a of feed.aircraft) expect(Object.keys(a).sort()).toEqual(ALLOWED_KEYS);
   });
 
   it('walks the whole output: no key anywhere outside the allowed set', () => {
-    const allowed = new Set([...ALLOWED_KEYS, 'aircraft', 'feedTimestampMs', 'skippedPilots']);
+    const allowed = new Set([...ALLOWED_KEYS, ...PREFILE_KEYS, 'aircraft', 'feedTimestampMs', 'prefiles', 'skippedPilots']);
     const walk = (node: unknown): void => {
       if (node === null || typeof node !== 'object') return;
       for (const [k, v] of Object.entries(node)) {
@@ -174,3 +175,37 @@ describe('the result is plain data', () => {
     expect(Object.getPrototypeOf(f.aircraft[0])).toBe(Object.prototype);
   });
 });
+
+describe('prefiles: filed plans that have not connected', () => {
+  const prefile = (plan: Record<string, unknown> | null) => ({ cid: 1, name: 'PERSON', callsign: 'CALL1', flight_plan: plan });
+  const withPrefiles = (...list: unknown[]) => JSON.stringify({ general: { update_timestamp: '2026-10-23T10:00:00Z' }, pilots: [], prefiles: list });
+  const plan = { departure: 'ZZZA', arrival: 'ZZZB', deptime: '0930', enroute_time: '0130', route: 'DCT', remarks: 'x' };
+
+  it('keeps the filed ends and the times as minutes, and nothing else', () => {
+    const f = ok(withPrefiles(prefile(plan)));
+    expect(f.prefiles).toEqual([{ departure: 'ZZZA', arrival: 'ZZZB', departureMinuteOfDay: 570, enrouteMinutes: 90 }]);
+    for (const p of f.prefiles) expect(Object.keys(p).sort()).toEqual(PREFILE_KEYS);
+    expect(f.aircraft).toEqual([]);
+  });
+
+  it('ignores a prefile with a missing or malformed time, or no plan, without counting it as a bad pilot', () => {
+    const f = ok(withPrefiles(prefile(null), prefile({ ...plan, deptime: '' }), prefile({ ...plan, deptime: '2499' }), prefile({ ...plan, enroute_time: '0160' }), prefile({ ...plan, deptime: 930 })));
+    expect(f.prefiles).toEqual([]);
+    expect(f.skippedPilots).toBe(0);
+  });
+
+  it('no prefiles key gives an empty list', () => {
+    expect(ok(feedOf([])).prefiles).toEqual([]);
+  });
+
+  it('refuses a feed with more prefiles than the pilot limit', () => {
+    const many = Array.from({ length: FEED_MAX_PILOTS + 1 }, () => prefile(plan));
+    expect(parseFeed(withPrefiles(...many))).toMatchObject({ ok: false });
+  });
+
+  it('keeps no personal value from a prefile', () => {
+    const text = JSON.stringify(parseFeed(withPrefiles(prefile(plan))));
+    for (const canary of ['PERSON', 'CALL1', 'DCT']) expect(text, canary).not.toContain(canary);
+  });
+});
+
