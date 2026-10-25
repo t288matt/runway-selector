@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { YSSY_PACK } from '../helpers/packs';
 import { DAY_START_MS, inputFor, packFrom } from '../engine/helpers';
-import { LAYOUT, eventStripHeight, timelineModel } from '../../src/ui/model/timeline';
+import { LAYOUT, eventStripHeight, overlayDisplayLabel, timelineModel } from '../../src/ui/model/timeline';
 import { viewFromInput } from './helpers';
 
 describe('weather events row', () => {
@@ -41,7 +41,7 @@ describe('TEMPO, INTER and PROB bars under the wind bars', () => {
   it('draws one bar for a group over the slots it covers, never as a word in the event line', () => {
     const g = group('PROB30 TEMPO 2511/2519 VRB30G40KT 1000 TSRA', 30);
     const m = modelOf([tafSlot(), tafSlot(g), tafSlot(g), tafSlot(g), tafSlot()]);
-    expect(m.overlayBars).toEqual([{ startSlot: 1, endSlot: 3, lane: 0, label: g.text, probability: true }]);
+    expect(m.overlayBars).toEqual([{ startSlot: 1, endSlot: 3, lane: 0, label: g.text, displayLabel: 'PROB30 TEMPO VRB30G40KT 1000 TSRA', probability: true }]);
     expect(m.overlayLanes).toBe(1);
     expect(m.slots.flatMap((s) => s.events)).not.toContain('TEMPO');
     expect(eventStripHeight(m)).toBe(LAYOUT.eventBase + LAYOUT.eventLine);
@@ -71,6 +71,22 @@ describe('TEMPO, INTER and PROB bars under the wind bars', () => {
     const g = group('TEMPO 2511/2513 RA', null);
     const m = modelOf([tafSlot(g, g), tafSlot(g, g)]);
     expect(m.overlayBars.map((b) => [b.startSlot, b.endSlot, b.lane])).toEqual([[0, 1, 0]]);
+  });
+
+  it('leaves the validity period off the bar text for TEMPO, INTER, PROB and PROB TEMPO, keeping the full group text as hover text', () => {
+    const groups = [group('TEMPO 2513/2516 VRB20G30KT 1000 TSRA BKN010', null), group('INTER 2513/2516 RA', null, 'INTER'), group('PROB40 2516/2519 TSRA', 40, 'PROB'), group('PROB30 TEMPO 2516/2519 VRB30G40KT 1000 TSRA', 30)];
+    const m = modelOf(groups.map((g) => tafSlot(g)));
+    expect(m.overlayBars.map((b) => b.displayLabel)).toEqual(['TEMPO VRB20G30KT 1000 TSRA BKN010', 'INTER RA', 'PROB40 TSRA', 'PROB30 TEMPO VRB30G40KT 1000 TSRA']);
+    for (const b of m.overlayBars) {
+      expect(b.displayLabel).not.toMatch(/\d{4}\/\d{4}/);
+      expect(b.label).toMatch(/\d{4}\/\d{4}/);
+    }
+  });
+
+  it('removes only the validity token, and only the first one, from a group text', () => {
+    expect(overlayDisplayLabel('TEMPO 2513/2516 RA')).toBe('TEMPO RA');
+    expect(overlayDisplayLabel('PROB30 TEMPO 2516/2519 VRB30G40KT 1000 TSRA BKN010')).toBe('PROB30 TEMPO VRB30G40KT 1000 TSRA BKN010');
+    expect(overlayDisplayLabel('TEMPO 2513/2516 RA 1200/1500')).toBe('TEMPO RA 1200/1500');
   });
 
   it('draws the event-words line only when a slot has something to say, such as WET', () => {

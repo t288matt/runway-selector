@@ -118,8 +118,10 @@ export interface OverlayBar {
   readonly endSlot: number;
   /** Which line of bars it sits on, from 0; groups that overlap in time take separate lines. */
   readonly lane: number;
-  /** The group's own text, e.g. "PROB30 TEMPO 2511/2519 VRB30G40KT 1000 TSRA BKN010". */
+  /** The group's own text, e.g. "PROB30 TEMPO 2511/2519 VRB30G40KT 1000 TSRA BKN010". Identity and hover text. */
   readonly label: string;
+  /** The text drawn on the bar: the group text without its validity token, e.g. "PROB30 TEMPO VRB30G40KT 1000 TSRA BKN010". */
+  readonly displayLabel: string;
   /** True when the group is a probability group, which is shown but never changes a cell. */
   readonly probability: boolean;
 }
@@ -152,6 +154,11 @@ export function eventStripHeight(model: Pick<TimelineModel, 'overlayLanes' | 'ha
   return LAYOUT.eventBase + LAYOUT.eventLine * (model.overlayLanes + (model.hasEventText ? 1 : 0));
 }
 
+/** The group text with its validity token (DDHH/DDHH) removed: the bar's length and position already show the period. */
+export function overlayDisplayLabel(text: string): string {
+  return text.replace(/\b\d{4}\/\d{4}\b/, '').replace(/\s{2,}/g, ' ').trim();
+}
+
 /**
  * The TEMPO, INTER and PROB groups over the slots as bars. One bar per distinct group text, from the first slot it
  * covers to the last; a METAR-governed slot carries no overlays, so a bar starts after it. Overlapping groups go on
@@ -179,7 +186,7 @@ export function overlayBars(slots: readonly { readonly weather: { readonly overl
     let lane = laneEnds.findIndex((end) => end < g.start);
     if (lane < 0) lane = laneEnds.length;
     laneEnds[lane] = g.end;
-    bars.push({ startSlot: g.start, endSlot: g.end, lane, label, probability: g.probability });
+    bars.push({ startSlot: g.start, endSlot: g.end, lane, label, displayLabel: overlayDisplayLabel(label), probability: g.probability });
   }
   return { bars, lanes: laneEnds.length };
 }
