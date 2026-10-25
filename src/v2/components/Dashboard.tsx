@@ -1,0 +1,50 @@
+// The closed state of the answer screen below the header: store notices, the
+// answer band with the picture and the tiles, the slim forecast bar, and the
+// trust strip with the fixed flight-simulation notice. A fragment: its parts are
+// the rows of the page grid.
+import type { AirportPack } from '../../refdata';
+import type { ScreenModel } from '../model/screen';
+import { Answer } from './Answer';
+import { Chips } from './Chips';
+import { ForecastBar } from './ForecastBar';
+import { Notice } from './Notice';
+import { Picture } from './Picture';
+import { CeilingTileView, MetarTileView, RunwayTileView, TrafficTileView } from './Tiles';
+
+export interface DashboardProps {
+  readonly model: ScreenModel;
+  readonly pack: AirportPack;
+  readonly onCurrentMode: (id: string | null) => void;
+  readonly onDismissNotice: (index: number) => void;
+}
+
+export function Dashboard({ model, pack, onCurrentMode, onDismissNotice }: DashboardProps) {
+  const tone = model.answer.band.tone;
+  return (
+    <>
+      {model.notices.map((text, i) => (
+        <div key={text} className="toast" role="status">
+          <span>{text}</span>
+          <button type="button" className="btn small" onClick={() => onDismissNotice(i)}>
+            Dismiss
+          </button>
+        </div>
+      ))}
+      <main className={`hero tone-${tone}`} aria-label="Runway mode recommendation">
+        <Answer model={model.answer} onCurrentMode={onCurrentMode} />
+        <Picture model={model.picture} />
+        <div className="facts">
+          <TrafficTileView tile={model.traffic} />
+          <CeilingTileView tile={model.ceiling} />
+          <RunwayTileView tile={model.runway} />
+          <MetarTileView tile={model.metar} />
+        </div>
+      </main>
+      <ForecastBar model={model.bar} />
+      <footer className="trust" aria-label="Data freshness">
+        <Chips chips={model.chips} />
+        <Notice pack={pack} />
+      </footer>
+    </>
+  );
+}

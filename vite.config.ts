@@ -59,6 +59,12 @@ function refdata(): Plugin {
 export default defineConfig({
   base: './',
   plugins: [react(), tailwindcss(), refdata()],
+  // Two page entries: v1 (index.html) and the v2 front end (v2.html). refdata/ is still copied once, by the plugin above.
+  build: {
+    rollupOptions: {
+      input: { main: resolve(import.meta.dirname, 'index.html'), v2: resolve(import.meta.dirname, 'v2.html') },
+    },
+  },
   test: {
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
     exclude: ['tests/lint-fixtures/**', 'node_modules/**'],
