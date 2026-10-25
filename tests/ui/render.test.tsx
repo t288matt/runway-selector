@@ -10,6 +10,7 @@ import { NO_AUTO_WEATHER } from '../../src/ui/controller';
 import { WeatherEntry, ApplyNote } from '../../src/ui/components/WeatherEntry';
 import { calculate, defaultWindowFor, EMPTY_FEED, type ViewData } from '../../src/ui/model/dashboard';
 import { cellDetailModel, currentWind, panelDModel, runwayComponentRows } from '../../src/ui/model/panels';
+import { causeCode } from '../../src/ui/model/status';
 import { FORECAST_GREEN_LEGEND, modeRows, timelineModel, visibleRows } from '../../src/ui/model/timeline';
 
 /** The rows the screen draws by default: fully red rows are hidden until the user asks (OD-39). */
@@ -191,8 +192,9 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('a cell is green only when
           expect(cls).toContain('cs-suitable');
           expect(cls).not.toContain('cs-marginal');
           expect(cls.includes('unc')).toBe(c.uncertain);
-          const cause = c.reasons.find((r) => r.severity === 'MARGINAL')?.code ?? '';
-          expect(textOf(parts[k]?.slice(0, parts[k]?.indexOf('</div>') ?? 0) ?? '')).toContain(cause === '' ? 'x' : cause.slice(0, 2));
+          const word = causeCode(c, 'NO TAF');
+          expect(word).not.toBe('');
+          expect(parts[k]).toContain(`<small aria-hidden="true">${word}</small>`);
           expect(parts[k]).toContain('aria-label="Mode ');
           expect(parts[k]).toContain(', marginal');
         }

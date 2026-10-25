@@ -80,14 +80,12 @@ export interface CellView {
 
 export function cellView(cell: Cell, slotStartMs: number, missing: MissingWeather, refMs: number = slotStartMs): CellView {
   const style = STATUS_STYLE[cell.status];
-  // OD-81: a MARGINAL cell takes the plain suitable green; its word, corner and screen-reader text still say marginal.
-  const className = cell.status === 'MARGINAL' ? STATUS_STYLE.SUITABLE.className : style.className;
   const code = causeCode(cell, missing);
   const cause = code === '' ? '' : `, cause ${CAUSE_WORDS[code] ?? code}`;
   const uncertain = cell.uncertain ? ', depends on an uncertain input' : '';
   return {
     status: cell.status,
-    className,
+    className: style.className,
     icon: style.icon,
     word: style.word,
     code,
