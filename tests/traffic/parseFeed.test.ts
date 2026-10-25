@@ -198,9 +198,16 @@ describe('prefiles: filed plans that have not connected', () => {
     expect(ok(feedOf([])).prefiles).toEqual([]);
   });
 
-  it('refuses a feed with more prefiles than the pilot limit', () => {
-    const many = Array.from({ length: FEED_MAX_PILOTS + 1 }, () => prefile(plan));
-    expect(parseFeed(withPrefiles(...many))).toMatchObject({ ok: false });
+  it('keeps the first prefiles up to the limit and drops the rest, without refusing the feed', () => {
+    const many = Array.from({ length: FEED_MAX_PILOTS + 5 }, () => prefile(plan));
+    const r = parseFeed(withPrefiles(...many));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.feed.prefiles).toHaveLength(FEED_MAX_PILOTS);
+  });
+
+  it('ignores a prefile whose time en route is longer than a day', () => {
+    expect(ok(withPrefiles(prefile({ ...plan, enroute_time: '2401' }))).prefiles).toEqual([]);
+    expect(ok(withPrefiles(prefile({ ...plan, enroute_time: '0030' }))).prefiles).toHaveLength(1);
   });
 
   it('keeps no personal value from a prefile', () => {

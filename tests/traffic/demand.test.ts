@@ -375,6 +375,12 @@ describe('prefiles count in the next slot only (owner, 25-10-2026)', () => {
       expect(r.summary).toMatchObject({ connectedDepartures: 0, connectedArrivals: 0 });
     });
 
+    it('a plan from here to here counts once, as a departure', () => {
+      const r = withPrefiles([prefile({ departure: icao, arrival: icao, departureMinuteOfDay: 640, enrouteMinutes: 30 })]);
+      expect(r.slots[1]).toMatchObject({ arrivals: 0, departures: 1 });
+      expect(r.summary).toMatchObject({ prefileDepartures: 1, prefileArrivals: 0 });
+    });
+
     it('a prefile between two other airports counts nowhere', () => {
       const r = withPrefiles([prefile({ departureMinuteOfDay: 640 })]);
       expect(r.slots[1]).toMatchObject({ arrivals: 0, departures: 0 });

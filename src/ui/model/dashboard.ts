@@ -59,7 +59,9 @@ export const EMPTY_FEED: FeedState = { aircraft: null, prefiles: [], fetchedAtMs
 /** Fold one fetch result into the feed state. On failure the previous aircraft and prefiles are kept and the failure is flagged (UP-3). */
 export function applyFeedResult(previous: FeedState, result: FetchFeedResult, nowMs: number): FeedState {
   if (result.ok) return { aircraft: result.aircraft, prefiles: result.prefiles, fetchedAtMs: result.fetchedAtMs, error: null, errorAtMs: null };
-  return { ...previous, error: result.error.message, errorAtMs: nowMs };
+  // A failed fetch keeps the last aircraft (UP-3) but not the prefiles: a prefile has no date, so an old one would
+  // count again at the same time of day. Without prefiles the next slot's departures are unknown, not zero.
+  return { ...previous, prefiles: [], error: result.error.message, errorAtMs: nowMs };
 }
 
 // ------------------------------------------------------------ calculation

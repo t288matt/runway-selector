@@ -145,7 +145,8 @@ export function buildTrafficSlots(input: DemandInput): DemandResult {
     const inNext = (t: number): boolean => t >= nextStart && t < nextStart + slotMs;
     for (const p of prefiles) {
       if (p.departure === icao && inNext(nearestUtc(nowMs, p.departureMinuteOfDay))) prefileDepartures += 1;
-      if (p.arrival === icao && inNext(nearestUtc(nowMs, p.departureMinuteOfDay + p.enrouteMinutes))) prefileArrivals += 1;
+      // A plan from here to here is one movement, counted as the departure only.
+      if (p.arrival === icao && p.departure !== icao && inNext(nearestUtc(nowMs, p.departureMinuteOfDay + p.enrouteMinutes))) prefileArrivals += 1;
     }
     arrivals[1] = (arrivals[1] ?? 0) + prefileArrivals;
   }

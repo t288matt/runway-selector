@@ -69,7 +69,7 @@ function readPrefile(p: unknown): Prefile | null {
   const arrival = icao(plan['arrival']);
   const departureMinuteOfDay = hhmm(plan['deptime']);
   const enrouteMinutes = hhmm(plan['enroute_time']);
-  if (departure === null || arrival === null || departureMinuteOfDay === null || departureMinuteOfDay >= 1440 || enrouteMinutes === null) return null;
+  if (departure === null || arrival === null || departureMinuteOfDay === null || departureMinuteOfDay >= 1440 || enrouteMinutes === null || enrouteMinutes > 1440) return null;
   return { departure, arrival, departureMinuteOfDay, enrouteMinutes };
 }
 
@@ -127,8 +127,8 @@ export function parseFeed(text: string): ParseResult {
   const prefiles: Prefile[] = [];
   const rawPrefiles = raw['prefiles'];
   if (Array.isArray(rawPrefiles)) {
-    if (rawPrefiles.length > FEED_MAX_PILOTS) return refuse(`it lists more than ${FEED_MAX_PILOTS} prefiles`);
-    for (const p of rawPrefiles) {
+    // Prefiles beyond the limit are dropped, not a reason to refuse the whole feed: they carry no position.
+    for (const p of rawPrefiles.slice(0, FEED_MAX_PILOTS)) {
       const f = readPrefile(p);
       if (f !== null) prefiles.push(f);
     }
