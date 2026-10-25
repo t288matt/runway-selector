@@ -215,7 +215,7 @@ export function Timeline({ view, model, displayNowMs, onWindowChange }: Timeline
               {Array.from({ length: model.overlayLanes }, (_, lane) => (
                 <div key={lane} className="evw" role="group" aria-label="TEMPO, INTER and PROB groups">
                   {model.overlayBars.filter((b) => b.lane === lane).map((b) => (
-                    <div key={`${b.label}@${b.startSlot}`} className={`obar${b.probability ? ' prob' : ''}`} title={b.label} style={{ left: b.startSlot * LAYOUT.column, width: (b.endSlot - b.startSlot + 1) * LAYOUT.column - 2 }}>{b.label}</div>
+                    <div key={`${b.label}@${b.startSlot}`} className={`obar${b.probability ? ' prob' : ''}`} title={b.label} style={{ left: b.startSlot * LAYOUT.column, width: (b.endSlot - b.startSlot + 1) * LAYOUT.column - 2 }}>{b.displayLabel}</div>
                   ))}
                 </div>
               ))}
