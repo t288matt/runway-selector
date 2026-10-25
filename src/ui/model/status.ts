@@ -18,7 +18,8 @@ export interface StatusStyle {
 
 export const STATUS_STYLE: Readonly<Record<Status, StatusStyle>> = {
   SUITABLE: { className: 'cs-suitable', icon: '\u2713', word: 'suitable' },
-  MARGINAL: { className: 'cs-marginal', icon: '', word: 'marginal' },
+  // OD-81: marginal takes the suitable green; the cause word and the corner tell it apart.
+  MARGINAL: { className: 'cs-suitable', icon: '', word: 'marginal' },
   UNSUITABLE: { className: 'cs-unsuitable', icon: '\u2715', word: 'unsuitable' },
   UNKNOWN: { className: 'cs-unknown', icon: '?', word: 'unknown' },
 };

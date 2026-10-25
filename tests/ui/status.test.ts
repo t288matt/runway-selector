@@ -26,7 +26,7 @@ function cell(status: Status, reasons: Reason[] = [], uncertain = false): Cell {
 describe('the cell to colour, icon and word mapping', () => {
   it('maps each status to its own class, icon and word', () => {
     expect(STATUS_STYLE.SUITABLE).toEqual({ className: 'cs-suitable', icon: '✓', word: 'suitable' });
-    expect(STATUS_STYLE.MARGINAL).toEqual({ className: 'cs-marginal', icon: '', word: 'marginal' });
+    expect(STATUS_STYLE.MARGINAL).toEqual({ className: 'cs-suitable', icon: '', word: 'marginal' });
     expect(STATUS_STYLE.UNSUITABLE).toEqual({ className: 'cs-unsuitable', icon: '✕', word: 'unsuitable' });
     expect(STATUS_STYLE.UNKNOWN).toEqual({ className: 'cs-unknown', icon: '?', word: 'unknown' });
   });
@@ -42,7 +42,8 @@ describe('the cell to colour, icon and word mapping', () => {
   it('gives each status a distinct icon and class, so colour is never the only signal', () => {
     const styles = Object.values(STATUS_STYLE);
     expect(new Set(styles.map((s) => s.icon)).size).toBe(4);
-    expect(new Set(styles.map((s) => s.className)).size).toBe(4);
+    // marginal shares the suitable green (OD-81): three colour classes; icons and words stay distinct
+    expect(new Set(styles.map((s) => s.className)).size).toBe(3);
     expect(new Set(styles.map((s) => s.word)).size).toBe(4);
   });
 

@@ -183,7 +183,7 @@ Each cell holds an icon, and below it a 9 px cause code only when status is not 
 | MARGINAL | green (the suitable green, OD-81) | solid | none; the cause word is the cue | TW, XW, TEMPO, WET, WET?, VRB (variable wind above calm, OD-33) |
 | UNSUITABLE | red | dense crosshatch | cross | TW, XW, CAP, PLAN (operating plan) |
 | UNKNOWN | grey | dots | question mark | NO TAF, NO MET |
-The colour comes straight from the engine's matrix. The UI has no logic of its own that can turn a cell green: it renders the status field only, and a cell is green when the engine said SUITABLE or MARGINAL (owner, 25-10-2026, OD-81). A MARGINAL cell keeps its cause word, the white uncertainty corner and the hover cause box, and its accessible name still says marginal; the engine status is unchanged. UNSUITABLE and UNKNOWN are drawn as before.
+The colour comes straight from the engine's matrix. The UI has no logic of its own that can turn a cell green: it renders the status field only, and a cell is green when the engine said SUITABLE or MARGINAL (owner, 25-10-2026, OD-81). A MARGINAL cell keeps its cause word, the white uncertainty corner and the hover cause box, and its accessible name still says marginal; the engine status is unchanged. The Panel A weather line takes the same class from the same table, so it is green for a marginal slot too. UNSUITABLE and UNKNOWN are drawn as before.
 
 A white triangle in the top-right corner marks a cell whose status depends on an uncertain input (TEMPO or INTER group, wet-possible runway state, demand estimate). This is the "uncertainty overlay". It can appear on any status.
 
@@ -262,7 +262,7 @@ The palette follows the VATPAC tools look: dark navy surfaces and a blue accent.
 | `--accent` | `#3b82f6` | Accent fills, REC tag, outline | 4.6 : 1 |
 | `--accent-text` | `#6aa6ff` | Accent text and the recommended outline | 6.8 : 1 |
 | `--ok` | `#1b7f46` | SUITABLE and MARGINAL cell (OD-81) | 3.3 : 1 (graphic); white icon on it 5.0 : 1 |
-| `--warn` | `#c98a00` | Warning borders and strips, and the amber stripes of the Panel A weather chip for a marginal slot (a MARGINAL timeline cell is now the `--ok` green, OD-81) | 5.7 : 1; dark icon `#0b1426` on it 6.2 : 1 |
+| `--warn` | `#c98a00` | Warning borders and strips (the amber stripes of a marginal cell are gone: a MARGINAL cell is now the `--ok` green, OD-81) | 5.7 : 1; dark icon `#0b1426` on it 6.2 : 1 |
 | `--bad` | `#c0392b` | UNSUITABLE cell | 3.1 : 1 (graphic); white icon on it 5.4 : 1 |
 | `--unk` | `#66728a` | UNKNOWN cell | 3.5 : 1 (graphic); white icon on it 4.8 : 1 |
 | `--ok-text` | `#5fd68a` | Status text on dark | 9.2 : 1 |
