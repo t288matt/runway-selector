@@ -135,17 +135,20 @@ export function buildTrafficSlots(input: DemandInput): DemandResult {
       addArrival(takeOff + (g.distance / settings.assumedGroundSpeedKt) * MS_PER_HOUR);
     });
 
-  // Prefiles: counted in the next slot only, never the current one (owner, 25-10-2026). The time is the filed departure
-  // (from here) or the filed departure plus time en route (to here), nearest to now. They are not connected, so they
-  // are not in connectedArrivals or connectedDepartures.
+  // Prefiles: counted in the next slot only, never the current one (owner, 25-10-2026). Every prefiled departure from
+  // here counts there, whatever its filed take-off time (owner, 25-10-2026). An arrival here is timed by its filed
+  // departure plus time en route, nearest to now. Prefiles are not connected, so they are not in connectedArrivals or
+  // connectedDepartures.
   const nextStart = slotStartsMs[1];
   let prefileDepartures = 0;
   let prefileArrivals = 0;
   if (nextStart !== undefined && known[1]) {
     const inNext = (t: number): boolean => t >= nextStart && t < nextStart + slotMs;
     for (const p of prefiles) {
-      if (p.departure === icao && inNext(nearestUtc(nowMs, p.departureMinuteOfDay))) prefileDepartures += 1;
-      if (p.arrival === icao && inNext(nearestUtc(nowMs, p.departureMinuteOfDay + p.enrouteMinutes))) prefileArrivals += 1;
+      if (p.departure === icao) prefileDepartures += 1;
+      // A plan from here to here is one movement, counted as the departure only.
+      // An arrival needs both times; without them its time is unknown and it is not counted.
+      if (p.arrival === icao && p.departure !== icao && p.departureMinuteOfDay !== null && p.enrouteMinutes !== null && inNext(nearestUtc(nowMs, p.departureMinuteOfDay + p.enrouteMinutes))) prefileArrivals += 1;
     }
     arrivals[1] = (arrivals[1] ?? 0) + prefileArrivals;
   }
@@ -153,7 +156,8 @@ export function buildTrafficSlots(input: DemandInput): DemandResult {
   const slots: TrafficSlot[] = slotStartsMs.map((startMs, i) => ({
     startMs,
     arrivals: known[i] ? (arrivals[i] ?? 0) : null,
-    departures: i === 0 ? departures : i === 1 && known[1] ? prefileDepartures : null,
+    // The next slot's departures are known only when the feed carries prefiles; with none, they stay unknown (not zero).
+    departures: i === 0 ? departures : i === 1 && known[1] && prefiles.length > 0 ? prefileDepartures : null,
   }));
 
   return {

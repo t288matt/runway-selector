@@ -35,11 +35,10 @@ describeForEachPack('demand model', (pack) => {
   });
 
   describe('departures (on the ground at the airport, origin here)', () => {
-    it('count in slot 0 only; the next slot holds prefile departures (zero here); later slots are null', () => {
+    it('count in slot 0 only; with no prefiles in the feed, every later slot is null (unknown)', () => {
       const r = build(pack, [parked(pack), parked(pack, { nm: 1 }), parked(pack, { nm: 2 })]);
       expect(r.slots[0]?.departures).toBe(3);
-      expect(r.slots[1]?.departures).toBe(0);
-      for (const slot of r.slots.slice(2)) expect(slot.departures).toBeNull();
+      for (const slot of r.slots.slice(1)) expect(slot.departures).toBeNull();
       expect(r.summary.connectedDepartures).toBe(3);
       expect(total(r)).toBe(0);
     });
@@ -335,11 +334,11 @@ describe('prefiles count in the next slot only (owner, 25-10-2026)', () => {
   // Minutes after 00:00 UTC: 615 is 10:15, 640 is 10:40, 665 is 11:05.
   describeForEachPack('next-slot rule', (pack) => {
     const icao = pack.airport.icao;
-    const prefile = (o: { departure?: string; arrival?: string; departureMinuteOfDay: number; enrouteMinutes?: number }) => ({
+    const prefile = (o: { departure?: string; arrival?: string; departureMinuteOfDay: number | null; enrouteMinutes?: number | null }) => ({
       departure: o.departure ?? 'ZZZA',
       arrival: o.arrival ?? 'ZZZB',
       departureMinuteOfDay: o.departureMinuteOfDay,
-      enrouteMinutes: o.enrouteMinutes ?? 60,
+      enrouteMinutes: o.enrouteMinutes === undefined ? 60 : o.enrouteMinutes,
     });
     const withPrefiles = (list: ReturnType<typeof prefile>[]) => buildTrafficSlots({ pack, nowMs: NOW, aircraft: [], prefiles: list, slotStartsMs: SLOT_STARTS });
 
@@ -350,17 +349,18 @@ describe('prefiles count in the next slot only (owner, 25-10-2026)', () => {
       expect(r.summary.prefileDepartures).toBe(1);
     });
 
-    it('a departure filed for the current slot is not counted', () => {
+    it('a departure filed for the current slot still counts in the next slot (its take-off time is not used)', () => {
       const r = withPrefiles([prefile({ departure: icao, departureMinuteOfDay: 615 })]);
       expect(r.slots[0]?.departures).toBe(0);
-      expect(r.slots[1]?.departures).toBe(0);
-      expect(r.summary.prefileDepartures).toBe(0);
+      expect(r.slots[1]?.departures).toBe(1);
+      expect(r.summary.prefileDepartures).toBe(1);
     });
 
-    it('a departure filed after the next slot is not counted', () => {
-      const r = withPrefiles([prefile({ departure: icao, departureMinuteOfDay: 665 })]);
-      expect(r.slots[1]?.departures).toBe(0);
-      expect(r.summary.prefileDepartures).toBe(0);
+    it('a departure filed after the next slot also counts in the next slot (five prefiled departures all count there)', () => {
+      const list = [615, 665, 900, 1200, 1300].map((m) => prefile({ departure: icao, departureMinuteOfDay: m }));
+      const r = withPrefiles(list);
+      expect(r.slots[1]?.departures).toBe(5);
+      expect(r.summary.prefileDepartures).toBe(5);
     });
 
     it('an arrival here is timed by its filed departure plus time en route, and counts in the slot that time falls in', () => {
@@ -376,13 +376,32 @@ describe('prefiles count in the next slot only (owner, 25-10-2026)', () => {
       expect(r.summary).toMatchObject({ connectedDepartures: 0, connectedArrivals: 0 });
     });
 
+    it('a departure from here counts even when its times are unknown; an arrival with unknown times does not', () => {
+      const r = withPrefiles([
+        { departure: icao, arrival: 'ZZZB', departureMinuteOfDay: null, enrouteMinutes: null },
+        { departure: 'ZZZA', arrival: icao, departureMinuteOfDay: null, enrouteMinutes: 30 },
+      ]);
+      expect(r.slots[1]).toMatchObject({ arrivals: 0, departures: 1 });
+      expect(r.summary).toMatchObject({ prefileDepartures: 1, prefileArrivals: 0 });
+    });
+
+    it('a plan from here to here counts once, as a departure', () => {
+      const r = withPrefiles([prefile({ departure: icao, arrival: icao, departureMinuteOfDay: 640, enrouteMinutes: 30 })]);
+      expect(r.slots[1]).toMatchObject({ arrivals: 0, departures: 1 });
+      expect(r.summary).toMatchObject({ prefileDepartures: 1, prefileArrivals: 0 });
+    });
+
     it('a prefile between two other airports counts nowhere', () => {
       const r = withPrefiles([prefile({ departureMinuteOfDay: 640 })]);
       expect(r.slots[1]).toMatchObject({ arrivals: 0, departures: 0 });
     });
 
-    it('with no prefiles, the next slot has a departure count of zero, not unknown', () => {
-      expect(withPrefiles([]).slots[1]?.departures).toBe(0);
+    it('with no prefiles in the feed, the next slot departures are unknown, not zero', () => {
+      expect(withPrefiles([]).slots[1]?.departures).toBeNull();
+    });
+
+    it('with prefiles in the feed but none departing from here, the next slot departures are zero', () => {
+      expect(withPrefiles([prefile({ departureMinuteOfDay: 615 })]).slots[1]?.departures).toBe(0);
     });
   });
 

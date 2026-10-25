@@ -22,12 +22,12 @@ export interface Aircraft {
 export interface Prefile {
   /** Filed origin, upper case. */
   readonly departure: string;
-  /** Filed destination, upper case. */
+  /** Filed destination, upper case, or empty when missing or malformed. */
   readonly arrival: string;
-  /** Filed departure time, in minutes after 00:00 UTC (0 to 1439). */
-  readonly departureMinuteOfDay: number;
-  /** Filed time en route, in minutes. */
-  readonly enrouteMinutes: number;
+  /** Filed departure time, in minutes after 00:00 UTC (0 to 1439), or null when missing or malformed. */
+  readonly departureMinuteOfDay: number | null;
+  /** Filed time en route, in minutes (at most one day), or null when missing or malformed. */
+  readonly enrouteMinutes: number | null;
 }
 
 export interface ParsedFeed {
@@ -67,10 +67,14 @@ function readPrefile(p: unknown): Prefile | null {
   const plan = p['flight_plan'];
   const departure = icao(plan['departure']);
   const arrival = icao(plan['arrival']);
-  const departureMinuteOfDay = hhmm(plan['deptime']);
-  const enrouteMinutes = hhmm(plan['enroute_time']);
-  if (departure === null || arrival === null || departureMinuteOfDay === null || departureMinuteOfDay >= 1440 || enrouteMinutes === null) return null;
-  return { departure, arrival, departureMinuteOfDay, enrouteMinutes };
+  // An unknown arrival is kept as '' (it can never match this airport); a departure from here still counts.
+  if (departure === null) return null;
+  // A bad time does not drop the plan: a departure from here still counts (its take-off time is not used).
+  const deptime = hhmm(plan['deptime']);
+  const enroute = hhmm(plan['enroute_time']);
+  const departureMinuteOfDay = deptime !== null && deptime < 1440 ? deptime : null;
+  const enrouteMinutes = enroute !== null && enroute <= 1440 ? enroute : null;
+  return { departure, arrival: arrival ?? '', departureMinuteOfDay, enrouteMinutes };
 }
 
 /** null = no flight plan (ignored); 'bad' = malformed (skipped and counted). */
@@ -127,8 +131,8 @@ export function parseFeed(text: string): ParseResult {
   const prefiles: Prefile[] = [];
   const rawPrefiles = raw['prefiles'];
   if (Array.isArray(rawPrefiles)) {
-    if (rawPrefiles.length > FEED_MAX_PILOTS) return refuse(`it lists more than ${FEED_MAX_PILOTS} prefiles`);
-    for (const p of rawPrefiles) {
+    // Prefiles beyond the limit are dropped, not a reason to refuse the whole feed: they carry no position.
+    for (const p of rawPrefiles.slice(0, FEED_MAX_PILOTS)) {
       const f = readPrefile(p);
       if (f !== null) prefiles.push(f);
     }

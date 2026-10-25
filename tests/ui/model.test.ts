@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PACKS, YSSY_PACK } from '../helpers/packs';
+import { PACKS, YSSY_PACK, loadPackFrom } from '../helpers/packs';
 import { decodeMetar, decodeTaf } from '../../src/weather';
 import { preferencePenalty } from '../../src/engine/optimiser';
 import { cellDetailModel, panelAModel } from '../../src/ui/model/panels';
@@ -151,6 +151,23 @@ describe('the traffic feed keeps its previous data on failure (UP-3)', () => {
   it('replaces the data on success and clears the error', () => {
     const next = applyFeedResult({ ...good, error: 'old' }, { ok: true, aircraft: [], prefiles: [], fetchedAtMs: 2000, feedTimestampMs: null, skippedPilots: 0 }, 2000);
     expect(next).toEqual({ aircraft: [], prefiles: [], fetchedAtMs: 2000, error: null, errorAtMs: null });
+  });
+
+  it('a good fetch brings its prefiles in; a failed fetch clears them (a prefile has no date, so an old one must not count again)', () => {
+    const plan = { departure: 'YSSY', arrival: 'YMML', departureMinuteOfDay: 640, enrouteMinutes: 90 };
+    const fetched = applyFeedResult(EMPTY_FEED, { ok: true, aircraft: [], prefiles: [plan], fetchedAtMs: 1000, feedTimestampMs: null, skippedPilots: 0 }, 1000);
+    expect(fetched.prefiles).toEqual([plan]);
+    const failed = applyFeedResult(fetched, { ok: false, error: { kind: 'network', message: 'down' } }, 2000);
+    expect(failed.prefiles).toEqual([]);
+    expect(failed.aircraft).toEqual([]);
+  });
+
+  it('the feed reaches the demand model: a prefile filed for the next slot counts there', () => {
+    const plan = { departure: 'YSSY', arrival: 'YMML', departureMinuteOfDay: 640, enrouteMinutes: 90 };
+    const feed: FeedState = { aircraft: [], prefiles: [plan], fetchedAtMs: 1000, error: null, errorAtMs: null };
+    const v = calculate({ pack: loadPackFrom(YSSY_PACK), nowMs: Date.UTC(2026, 9, 23, 10, 10), metar: null, taf: null, windowChoice: '4h', currentMode: null, feed });
+    expect(v.demand?.slots[1]?.departures).toBe(1);
+    expect(v.demand?.slots[0]?.departures).toBe(0);
   });
 
   it('keeps the aircraft and the time of the last good data on failure, and records the failure', () => {

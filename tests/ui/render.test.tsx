@@ -356,6 +356,25 @@ describe('the cell detail operating-plan line', () => {
 });
 
 describe('Panel D', () => {
+  it('labels a prefiled departure in the next column "(prefiled)", and the later columns stay not est.', () => {
+    const ref = PACKS[0];
+    if (ref === undefined) throw new Error('no pack');
+    const pack = packWith(ref, { weatherStation: fixture(METAR_ID).station });
+    const view = calculate({
+      pack,
+      nowMs: nowOf(fixture(TAF_ID)),
+      metar: decodeMetarFixture(METAR_ID, ref),
+      taf: decodeTafFixture(TAF_ID, ref),
+      windowChoice: 'full',
+      currentMode: null,
+      feed: { aircraft: [], prefiles: [{ departure: pack.airport.icao, arrival: 'ZZZB', departureMinuteOfDay: null, enrouteMinutes: null }], fetchedAtMs: nowOf(fixture(TAF_ID)), error: null, errorAtMs: null },
+    });
+    const m = panelDModel(view);
+    expect(m.columns[1]?.departures).toBe('1 (prefiled)');
+    expect(m.columns[0]?.departures).not.toContain('prefiled');
+    expect(m.columns.slice(2).every((c) => c.departures === 'not est.')).toBe(true);
+  });
+
   it('shows four slots, departures for the first two (the second prefiled only), unknown demand beyond the horizon, and no trend', () => {
     const ref = PACKS[0];
     if (ref === undefined) throw new Error('no pack');
@@ -365,8 +384,7 @@ describe('Panel D', () => {
     expect(m.columns).toHaveLength(4);
     expect(m.columns.map((c) => c.label)).toEqual(['Next 30 mins', '+30 min', '+60 min', '+90 min']);
     expect(m.columns[0]?.departures).toBe('0');
-    expect(m.columns[1]?.departures).toBe('0 (prefiled)');
-    expect(m.columns.slice(2).every((c) => c.departures === 'not est.')).toBe(true);
+    expect(m.columns.slice(1).every((c) => c.departures === 'not est.')).toBe(true);
     expect(m.unknownFrom).not.toBeNull();
     // movements: the raw 30-minute count, never doubled to an hourly rate, never a lower bound (OD-63, amending OD-41 and OD-61)
     for (const c of m.columns) {
