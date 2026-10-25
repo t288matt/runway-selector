@@ -8,7 +8,8 @@
 //    Otherwise it is DRY, even when a TAF governs it (WC-12).
 //  - A later slot: prevailing precipitation is WET; a PROB group (not on a
 //    TEMPO/INTER) at or above wetRunwayProbabilityPct is WET; a PROB below it,
-//    or any TEMPO/INTER precipitation, is WET_POSSIBLE; otherwise DRY.
+//    or any TEMPO/INTER precipitation that is not itself a PROB30/PROB40 group,
+//    is WET_POSSIBLE; otherwise DRY.
 //  - Drying: after a genuinely WET slot the runway stays WET until
 //    dryingTimeMinutes after that slot's END. A slot is held WET while its
 //    START is before that instant. WET_POSSIBLE slots never start the clock.

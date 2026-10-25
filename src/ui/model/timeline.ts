@@ -158,17 +158,24 @@ export function eventStripHeight(model: Pick<TimelineModel, 'overlayLanes' | 'ha
  * separate lanes.
  */
 export function overlayBars(slots: readonly { readonly weather: { readonly overlays: readonly { readonly text: string; readonly probabilityPct: number | null }[] } }[]): { bars: OverlayBar[]; lanes: number } {
-  const found = new Map<string, { start: number; end: number; probability: boolean }>();
+  const open = new Map<string, { label: string; start: number; end: number; probability: boolean }>();
+  const found: { label: string; start: number; end: number; probability: boolean }[] = [];
   slots.forEach((s, i) => {
     for (const o of s.weather.overlays) {
-      const seen = found.get(o.text);
-      if (seen === undefined) found.set(o.text, { start: i, end: i, probability: o.probabilityPct !== null });
-      else seen.end = i;
+      const seen = open.get(o.text);
+      // A gap in coverage (a METAR-governed slot in the middle) ends the bar; the next slot starts a new one.
+      if (seen !== undefined && seen.end === i - 1) seen.end = i;
+      else {
+        const g = { label: o.text, start: i, end: i, probability: o.probabilityPct !== null };
+        open.set(o.text, g);
+        found.push(g);
+      }
     }
   });
   const laneEnds: number[] = [];
   const bars: OverlayBar[] = [];
-  for (const [label, g] of [...found].sort((a, b) => a[1].start - b[1].start || b[1].end - a[1].end)) {
+  for (const g of [...found].sort((a, b) => a.start - b.start || b.end - a.end)) {
+    const label = g.label;
     let lane = laneEnds.findIndex((end) => end < g.start);
     if (lane < 0) lane = laneEnds.length;
     laneEnds[lane] = g.end;

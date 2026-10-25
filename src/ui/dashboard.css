@@ -684,6 +684,9 @@ select {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.obar.prob {
+  border-style: dashed;
+}
 .evm {
   display: flex;
   height: 18px;

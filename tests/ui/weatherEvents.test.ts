@@ -60,6 +60,13 @@ describe('TEMPO, INTER and PROB bars under the wind bars', () => {
     expect(m.overlayBars.find((x) => x.label === c.text)?.probability).toBe(false);
   });
 
+  it('starts a new bar after a gap in coverage, not one bar across the gap', () => {
+    const g = group('TEMPO 2511/2513 RA', null);
+    const m = modelOf([tafSlot(g), { gov: 'METAR' }, tafSlot(g)]);
+    expect(m.overlayBars.map((b) => [b.startSlot, b.endSlot])).toEqual([[0, 0], [2, 2]]);
+    expect(m.overlayLanes).toBe(1);
+  });
+
   it('draws the event-words line only when a slot has something to say, such as WET', () => {
     const m = modelOf([{ gov: 'METAR', precip: { prevailing: true } }]);
     expect(m.hasEventText).toBe(true);
