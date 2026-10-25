@@ -10,7 +10,7 @@ import { NO_AUTO_WEATHER } from '../../src/ui/controller';
 import { WeatherEntry, ApplyNote } from '../../src/ui/components/WeatherEntry';
 import { calculate, defaultWindowFor, EMPTY_FEED, type ViewData } from '../../src/ui/model/dashboard';
 import { cellDetailModel, currentWind, panelDModel, runwayComponentRows } from '../../src/ui/model/panels';
-import { modeRows, timelineModel, visibleRows } from '../../src/ui/model/timeline';
+import { FORECAST_GREEN_LEGEND, modeRows, timelineModel, visibleRows } from '../../src/ui/model/timeline';
 
 /** The rows the screen draws by default: fully red rows are hidden until the user asks (OD-39). */
 const drawnRows = (view: ViewData) => visibleRows(timelineModel(view, view.calcNowMs), false);
@@ -64,6 +64,22 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the screen from real repo
     expect(text).not.toContain('Taken from the time group in the report');
   });
 
+  it('draws every MARGINAL cell green and keeps the white corner on the uncertain ones', () => {
+    const classes = gridCellClasses(html);
+    let k = 0;
+    drawnRows(view).rows.forEach((row) => {
+      view.weather.slots.forEach((_s, i) => {
+        const c = view.result.evaluation.cells[row.index]?.[i];
+        if (c?.status === 'MARGINAL') {
+          const cls = (classes[k] ?? '').split(' ');
+          expect(cls).toContain('cs-suitable');
+          expect(cls.includes('unc')).toBe(c.uncertain);
+        }
+        k += 1;
+      });
+    });
+  });
+
   it('draws one row per enabled mode and one cell per mode and slot', () => {
     const drawn = drawnRows(view);
     expect(drawn.rows.length + drawn.hiddenCount).toBe(pack.modes.filter((m) => m.enabled).length);
@@ -101,6 +117,8 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the screen from real repo
 
   it('shows the legend, the now marker and the summary tiles', () => {
     expect(html).toContain('aria-label="Legend"');
+    expect(text).toContain(FORECAST_GREEN_LEGEND);
+    expect(text).not.toContain('Marginal or uncertain');
     expect(html).toContain('class="ov now"');
     expect(text).toContain('Recommended');
     expect(text).toContain('Next change');
@@ -122,7 +140,7 @@ describe('the single-runway pack renders the diagram and the timeline', () => {
   });
 });
 
-describe.each(PACKS.map((p) => [p.name, p] as const))('a cell is green only when the engine says SUITABLE [%s]', (_n, ref) => {
+describe.each(PACKS.map((p) => [p.name, p] as const))('a cell is green only when the engine says SUITABLE or MARGINAL [%s]', (_n, ref) => {
   const rig = rigFor(ref);
   const pack = packOf(rig);
   const scenarios: [string, Wx[]][] = [
@@ -153,6 +171,35 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('a cell is green only when
     });
     expect(k).toBe(classes.length);
     expect(classes.filter((c) => c.split(' ').includes('cs-suitable'))).toHaveLength(suitable);
+  });
+
+  it('a MARGINAL cell is drawn green and keeps its cause word and its white corner', () => {
+    const wx: Wx[] = ['ok', 'marginalA', 'badA', 'badB', 'badBoth', 'ok', 'none', 'marginalA'];
+    const levels: (TrafficLevel | null)[] = wx.map(() => null);
+    const view = viewOf(pack, rig, wx, levels);
+    const html = renderDashboard(view);
+    const classes = gridCellClasses(html);
+    const parts = html.split('role="gridcell"').slice(1);
+    let k = 0;
+    let marginal = 0;
+    drawnRows(view).rows.forEach((row) => {
+      view.weather.slots.forEach((_s, i) => {
+        const c = view.result.evaluation.cells[row.index]?.[i];
+        if (c?.status === 'MARGINAL') {
+          marginal += 1;
+          const cls = (classes[k] ?? '').split(' ');
+          expect(cls).toContain('cs-suitable');
+          expect(cls).not.toContain('cs-marginal');
+          expect(cls.includes('unc')).toBe(c.uncertain);
+          const cause = c.reasons.find((r) => r.severity === 'MARGINAL')?.code ?? '';
+          expect(textOf(parts[k]?.slice(0, parts[k]?.indexOf('</div>') ?? 0) ?? '')).toContain(cause === '' ? 'x' : cause.slice(0, 2));
+          expect(parts[k]).toContain('aria-label="Mode ');
+          expect(parts[k]).toContain(', marginal');
+        }
+        k += 1;
+      });
+    });
+    expect(marginal).toBeGreaterThan(0);
   });
 
   it('a tailwind just over the dry limit is never drawn green and carries the cause TW', () => {

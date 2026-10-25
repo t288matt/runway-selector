@@ -41,7 +41,7 @@ If only a METAR is available, the tool judges the first hour from it and marks l
 
 **Panel B: optimal mode timeline.** Its header has the Recommended, Next change and Next wet runway summary tiles, and the window selector (full TAF, 4 hours or 6 hours). Rows are modes and columns are half-hour slots. The recommended path is outlined, and a dashed line marks the planned change. Cell colours:
 - Green: suitable.
-- Amber with stripes: marginal, or depends on an uncertain input (a white corner marks those).
+- Green with a word (TEMPO, TW, VRB and so on): marginal. It passes, but see the word. A white corner marks a cell that depends on an uncertain input.
 - Red with cross-hatching: unsuitable, with the cause (for example TW tailwind, XW crosswind, CAP capacity, PLAN operating plan).
 - Grey with dots: unknown, for example after the TAF ends.
 

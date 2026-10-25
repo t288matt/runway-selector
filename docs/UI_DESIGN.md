@@ -63,7 +63,7 @@ Content width capped at 1440 px, centred, 16 px gutters. C, D and F sit side by 
 | Mode 12 REC       [S][S][S][S][S][S][M][M] ...  scrolls ->                                               |
 | Mode 10 CURRENT   [S][S][S][S][S][S][M][M] ...                                                           |
 | ... one row per enabled mode ...                                                                         |
-| Legend: tick suitable, green with a word marginal, cross unsuitable, ? unknown; outline, change line, bands          |
+| Legend: tick suitable, green with a word marginal, cross, ?; outline, change line, bands                |
 | Reason line                                                                                              |
 +----------------------------------------------------------------------------------------------------------+
 | C Weather                | D VATSIM traffic            | F Runway diagram                                |
@@ -261,8 +261,8 @@ The palette follows the VATPAC tools look: dark navy surfaces and a blue accent.
 | `--muted` | `#9db0cf` | Secondary text | 7.6 : 1 |
 | `--accent` | `#3b82f6` | Accent fills, REC tag, outline | 4.6 : 1 |
 | `--accent-text` | `#6aa6ff` | Accent text and the recommended outline | 6.8 : 1 |
-| `--ok` | `#1b7f46` | SUITABLE cell | 3.3 : 1 (graphic); white icon on it 5.0 : 1 |
-| `--warn` | `#c98a00` | MARGINAL cell | 5.7 : 1; dark icon `#0b1426` on it 6.2 : 1 |
+| `--ok` | `#1b7f46` | SUITABLE and MARGINAL cell (OD-81) | 3.3 : 1 (graphic); white icon on it 5.0 : 1 |
+| `--warn` | `#c98a00` | Warning borders and strips, and the amber stripes of the Panel A weather chip for a marginal slot (a MARGINAL timeline cell is now the `--ok` green, OD-81) | 5.7 : 1; dark icon `#0b1426` on it 6.2 : 1 |
 | `--bad` | `#c0392b` | UNSUITABLE cell | 3.1 : 1 (graphic); white icon on it 5.4 : 1 |
 | `--unk` | `#66728a` | UNKNOWN cell | 3.5 : 1 (graphic); white icon on it 4.8 : 1 |
 | `--ok-text` | `#5fd68a` | Status text on dark | 9.2 : 1 |

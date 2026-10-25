@@ -10,7 +10,7 @@ import { hhmmZRel } from '../format';
 export interface StatusStyle {
   /** CSS class that carries colour and pattern. */
   readonly className: string;
-  /** Text icon: tick, cross, question mark; none for marginal (its stripes say it). */
+  /** Text icon: tick, cross, question mark; none for marginal (a marginal cell is the suitable green; its cause word says it, OD-81). */
   readonly icon: string;
   /** The status in a word, lower case. */
   readonly word: string;

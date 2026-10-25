@@ -197,7 +197,7 @@ A web application that recommends the runway operating mode for Sydney Kingsford
 ### Example of the survival timeline (owner's illustration)
 Supplied by the owner on 22-10-2026 as the intended look and purpose of panel B. It is illustrative and not live data; the mode names and times are placeholders.
 
-![Illustrative mode forecast: three modes against hourly time columns, green suitable, amber marginal, red unsuitable; Mode B recommended because it stays suitable across the whole period](images/survival-timeline-example.png)
+![Illustrative mode forecast: three modes against hourly time columns, green suitable, amber marginal, red unsuitable (an early illustration, before OD-81 drew marginal cells green); Mode B recommended because it stays suitable across the whole period](images/survival-timeline-example.png)
 
 What it shows, and what the real timeline must keep:
 - The timeline is the main feature of the dashboard, not an extra. It makes the central decision visible: why the recommended mode is expected to last longer than the alternatives.
