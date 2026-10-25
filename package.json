@@ -11,7 +11,7 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
-    "lint": "oxlint -c .oxlintrc.json --deny-warnings src tests scripts vite.config.ts && node scripts/check-banned-imports.mjs",
+    "lint": "oxlint -c .oxlintrc.json --deny-warnings src tests scripts vite.config.ts && node scripts/check-banned-imports.mjs && node scripts/check-ui-boundary.mjs",
     "check-literals": "node scripts/check-no-airport-literals.mjs",
     "test": "vitest run && npm run check-literals"
   },

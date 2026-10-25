@@ -1,0 +1,180 @@
+/* v2 front end styles. Own stylesheet: nothing from src/ui or src/index.css is imported.
+   The tokens, spacing and type follow docs/ui/answer-first-ypph-expand.html. */
+:root {
+  --bg: #0b1426;
+  --panel: #111d36;
+  --panel2: #16254a;
+  --line: #223356;
+  --text: #e6ecf7;
+  --muted: #9db0cf;
+  --accent: #3b82f6;
+  --accent-text: #6aa6ff;
+  --ok: #1b7f46;
+  --ok-text: #5fd68a;
+  --warn: #c98a00;
+  --warn-text: #ffc94d;
+  --bad: #c0392b;
+  --bad-text: #ff8a80;
+  --unk: #66728a;
+  --state: var(--ok);
+  --state-text: var(--ok-text);
+  --wet: #5bb8e8;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.35 system-ui, 'Segoe UI', Arial, sans-serif;
+}
+:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 1px;
+}
+.mono {
+  font: 12px/1.35 Consolas, Menlo, monospace;
+}
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- page ---------- */
+.app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 8px 12px 6px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+}
+.bar h1 {
+  font-size: 13px;
+  margin: 0;
+  font-weight: 650;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+.bar .sp,
+.dh .sp {
+  flex: 1;
+}
+.bar select {
+  background: var(--panel2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font: inherit;
+  min-height: 36px;
+}
+.utc {
+  color: var(--muted);
+  font-size: 12px;
+}
+.stamp {
+  font-size: 11px;
+  color: var(--warn-text);
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.burger {
+  display: inline-block;
+  width: 16px;
+  height: 2px;
+  background: currentColor;
+  box-shadow: 0 5px currentColor, 0 -5px currentColor;
+}
+.fatal {
+  max-width: 720px;
+  margin: 10vh auto;
+  padding: 0 16px;
+}
+.fatal pre {
+  white-space: pre-wrap;
+  background: var(--panel);
+  border: 1px solid var(--bad);
+  border-radius: 6px;
+  padding: 10px;
+}
+.loading {
+  color: var(--muted);
+}
+
+/* ---------- trust strip and notice ---------- */
+.trust {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.notice {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  opacity: 0.95;
+}
+
+/* ---------- drawer (phase 1: an empty shell) ---------- */
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 19;
+}
+.drawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(780px, 100%);
+  background: #0d172d;
+  border-left: 1px solid var(--accent);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.6);
+}
+.dh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.dh h2 {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.db {
+  overflow: auto;
+  padding: 0 14px 20px;
+  flex: 1;
+}
