@@ -24,10 +24,10 @@ export interface Prefile {
   readonly departure: string;
   /** Filed destination, upper case. */
   readonly arrival: string;
-  /** Filed departure time, in minutes after 00:00 UTC (0 to 1439). */
-  readonly departureMinuteOfDay: number;
-  /** Filed time en route, in minutes. */
-  readonly enrouteMinutes: number;
+  /** Filed departure time, in minutes after 00:00 UTC (0 to 1439), or null when missing or malformed. */
+  readonly departureMinuteOfDay: number | null;
+  /** Filed time en route, in minutes (at most one day), or null when missing or malformed. */
+  readonly enrouteMinutes: number | null;
 }
 
 export interface ParsedFeed {
@@ -67,9 +67,12 @@ function readPrefile(p: unknown): Prefile | null {
   const plan = p['flight_plan'];
   const departure = icao(plan['departure']);
   const arrival = icao(plan['arrival']);
-  const departureMinuteOfDay = hhmm(plan['deptime']);
-  const enrouteMinutes = hhmm(plan['enroute_time']);
-  if (departure === null || arrival === null || departureMinuteOfDay === null || departureMinuteOfDay >= 1440 || enrouteMinutes === null || enrouteMinutes > 1440) return null;
+  if (departure === null || arrival === null) return null;
+  // A bad time does not drop the plan: a departure from here still counts (its take-off time is not used).
+  const deptime = hhmm(plan['deptime']);
+  const enroute = hhmm(plan['enroute_time']);
+  const departureMinuteOfDay = deptime !== null && deptime < 1440 ? deptime : null;
+  const enrouteMinutes = enroute !== null && enroute <= 1440 ? enroute : null;
   return { departure, arrival, departureMinuteOfDay, enrouteMinutes };
 }
 

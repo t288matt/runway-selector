@@ -188,9 +188,14 @@ describe('prefiles: filed plans that have not connected', () => {
     expect(f.aircraft).toEqual([]);
   });
 
-  it('ignores a prefile with a missing or malformed time, or no plan, without counting it as a bad pilot', () => {
+  it('ignores a prefile with no plan; keeps one with a missing or malformed time, with that time null, and does not count it as a bad pilot', () => {
     const f = ok(withPrefiles(prefile(null), prefile({ ...plan, deptime: '' }), prefile({ ...plan, deptime: '2499' }), prefile({ ...plan, enroute_time: '0160' }), prefile({ ...plan, deptime: 930 })));
-    expect(f.prefiles).toEqual([]);
+    expect(f.prefiles.map((p) => [p.departureMinuteOfDay, p.enrouteMinutes])).toEqual([
+      [null, 90],
+      [null, 90],
+      [570, null],
+      [null, 90],
+    ]);
     expect(f.skippedPilots).toBe(0);
   });
 
@@ -206,7 +211,7 @@ describe('prefiles: filed plans that have not connected', () => {
   });
 
   it('ignores a prefile whose time en route is longer than a day', () => {
-    expect(ok(withPrefiles(prefile({ ...plan, enroute_time: '2401' }))).prefiles).toEqual([]);
+    expect(ok(withPrefiles(prefile({ ...plan, enroute_time: '2401' }))).prefiles.map((p) => p.enrouteMinutes)).toEqual([null]);
     expect(ok(withPrefiles(prefile({ ...plan, enroute_time: '0030' }))).prefiles).toHaveLength(1);
   });
 
