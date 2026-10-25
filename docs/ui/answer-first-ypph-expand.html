@@ -216,7 +216,7 @@ dl.v dt{color:var(--muted)}dl.v dd{margin:0;text-align:right}
   .cell:nth-last-child(-n+5)[data-tip]:hover::before,.cell:nth-last-child(-n+5)[data-tip]:focus::before{left:8px;right:8px}
   .tlx .lab{font-size:13px}
 }
-</style></head><body>
+.trend{font-size:22px;font-weight:700;line-height:1;margin-left:2px}.t-flat{color:var(--muted)}.t-up{color:var(--warn-text)}.t-down{color:var(--accent-text)}</style></head><body>
 <a class="sr" href="#more">Open details</a>
 <div class="app" id="top">
 <header class="bar"><h1>Runway Mode Planner</h1><select aria-label="Airport"><option>YPPH</option></select><span class="sp"></span>
@@ -247,8 +247,8 @@ dl.v dt{color:var(--muted)}dl.v dd{margin:0;text-align:right}
 <text x="290" y="16" text-anchor="end" font-family="system-ui,Segoe UI,Arial" font-size="11" fill="#9db0cf">N up</text>
 </svg></figure>
 <div class="facts">
-<a class="fact" href="#evaluation" aria-label="Traffic LOW. 1 inbound, 0 on the ground elsewhere, 0 on the ground here. Open traffic per slot." style="position:relative"><span class="pop" role="tooltip">Connected now: 1 inbound, 0 of them on the ground elsewhere, and 0 on the ground here. Tap for every slot.</span>
-<span class="k"><span class="bars" aria-hidden="true"><i class="on" style="height:6px"></i><i style="height:12px"></i><i style="height:18px"></i></span>LOW</span><small>Traffic &middot; 1 in &middot; 0 out</small></a>
+<a class="fact" href="#evaluation" aria-label="Traffic LOW, steady to 22:30Z, unknown after. 1 inbound, 0 on the ground elsewhere, 0 on the ground here. Open traffic per slot." style="position:relative"><span class="pop" role="tooltip">Trend: steady to 22:30Z, unknown after. Connected now: 1 inbound, 0 of them on the ground elsewhere, and 0 on the ground here. Tap for every slot.</span>
+<span class="k"><span class="bars" aria-hidden="true"><i class="on" style="height:6px"></i><i style="height:12px"></i><i style="height:18px"></i></span>LOW<span class="trend t-flat" aria-hidden="true">&#8594;</span></span><small>Traffic &middot; 1 in &middot; 0 out</small></a>
 <div class="fact" tabindex="0" aria-label="Ceiling 3,200 feet, visibility 9000 metres"><span class="k"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18h12a4 4 0 0 0 0-8 6 6 0 0 0-11.5 1.5A3.4 3.4 0 0 0 6 18z" fill="none" stroke="#9db0cf" stroke-width="2"/></svg>3,200 ft</span><small>Ceiling &middot; vis 9000 m</small></div>
 <div class="fact wide" tabindex="0" aria-label="Runway wet now, wet for the whole forecast window"><span class="k"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3C8 9 6 12 6 15a6 6 0 0 0 12 0c0-3-2-6-6-12z" fill="#5bb8e8" stroke="#5bb8e8" stroke-width="2"/></svg>WET <span style="font-weight:500;color:var(--muted);font-size:14px">&nbsp;now, all through 19:00Z to 01:00Z</span></span>
 <span class="dryline" aria-hidden="true"><i style="width:100%;background:#5bb8e8"></i></span><small>Runway now (no dry period in the window)</small></div>
