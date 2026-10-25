@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "description": "Preferred runway modes, owner-supplied 24-10-2026, equal priority (order in this file is the tie-break): 27AD, 09AD. Both have a 28 kt crosswind limit (owner, 24-10-2026). No capacity has been supplied for either mode.",
+  "description": "Preferred runway modes, owner-supplied 24-10-2026, equal priority (order in this file is the tie-break): 27AD, 09AD. Each mode takes arrivals and departures on both parallel runways in its direction, with no pairing between them (owner, 25-10-2026). Both have a 28 kt crosswind limit (owner, 24-10-2026). No capacity has been supplied for either mode.",
   "status": "verified",
   "modes": [
-    { "id": "27AD", "description": "Arrivals and departures 27", "enabled": true, "arrivals": ["27"], "departures": ["27"], "maxCrosswindKt": 28 },
-    { "id": "09AD", "description": "Arrivals and departures 09", "enabled": true, "arrivals": ["09"], "departures": ["09"], "maxCrosswindKt": 28 }
+    { "id": "27AD", "description": "Arrivals and departures 27L and 27R", "enabled": true, "arrivals": ["27L", "27R"], "departures": ["27L", "27R"], "maxCrosswindKt": 28 },
+    { "id": "09AD", "description": "Arrivals and departures 09L and 09R", "enabled": true, "arrivals": ["09L", "09R"], "departures": ["09L", "09R"], "maxCrosswindKt": 28 }
   ]
 }
