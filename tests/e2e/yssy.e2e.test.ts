@@ -158,7 +158,8 @@ describe('E03 wet runway from the METAR (WC-12, WC-1, WC-10)', () => {
 describe('E04 TEMPO / PROB / INTER showers (WC-9, WC-5, WC-10)', () => {
   // Wind 150/04 all period (LIGHT_TAIL). Mode 25AD tailwind 0.14: dry SUITABLE, wet UNSUITABLE.
   // Overlay 2305/2307 covers the slots starting 05:00, 05:30, 06:00, 06:30.
-  //   TEMPO, PROB30 TEMPO, PROB40 TEMPO, INTER, PROB30 (plain, 30 < 40): WET POSSIBLE -> mode 25AD MARGINAL (passes dry only). No drying clock.
+  //   TEMPO, INTER, PROB30 (plain, 30 < 40): WET POSSIBLE -> mode 25AD MARGINAL (passes dry only). No drying clock.
+  //   PROB30 TEMPO and PROB40 TEMPO: nothing changes, the runway stays DRY and 25AD SUITABLE (owner, 25-10-2026).
   //   PROB40 (plain, 40 >= 40): WET -> mode 25AD UNSUITABLE in 05:00-06:30, and WET while drying 07:00 and 07:30
   //   (last wet slot ends 07:00, +60 min = 08:00) -> DRY from 08:00.
   // Mode 16AD (hdg 155): 150 is 5 degrees off -> 3.98 kt headwind, SUITABLE wet or dry.
@@ -170,7 +171,7 @@ describe('E04 TEMPO / PROB / INTER showers (WC-9, WC-5, WC-10)', () => {
   const base = LIGHT_TAIL + ' 9999 SCT020';
   const m = metar(LIGHT_TAIL);
   const wp = ['05:00', '05:30', '06:00', '06:30'];
-  it.each([['TEMPO'], ['PROB30 TEMPO'], ['PROB40 TEMPO'], ['INTER'], ['PROB30']])(
+  it.each([['TEMPO'], ['INTER'], ['PROB30']])(
     '%s 2305/2307 SHRA is WET POSSIBLE: mode 25AD MARGINAL there, SUITABLE after, and the drying clock never starts',
     (group) => {
       const r = go({ metar: m, taf: taf(`${base} ${group} 2305/2307 4000 SHRA`), windowMinutes: 360 });
@@ -200,10 +201,19 @@ describe('E04 TEMPO / PROB / INTER showers (WC-9, WC-5, WC-10)', () => {
     expect(r.out.plan.recommendedModeId).toBe('07A16D');
     expect(r.out.plan.changes).toHaveLength(0);
   });
-  it('a PROB30 TEMPO with heavy thunderstorm text and its own wind keeps the same runway-state behaviour', () => {
+  it.each([['PROB30 TEMPO'], ['PROB40 TEMPO']])('%s 2305/2307 SHRA changes nothing: DRY and 25AD SUITABLE throughout', (group) => {
+    const r = go({ metar: m, taf: taf(`${base} ${group} 2305/2307 4000 SHRA`), windowMinutes: 360 });
+    for (const t of [...wp, '07:00']) {
+      expect(r.out.evaluation.slots[at(r, t)]!.runwayState).toBe('DRY');
+      expect(cell(r, '25AD', t).status).toBe('SUITABLE');
+    }
+  });
+  it('a PROB30 TEMPO with heavy thunderstorm text and its own wind changes nothing', () => {
     const r = go({ metar: m, taf: taf(`${base} PROB30 TEMPO 2305/2307 01020G30KT 1000 +TSRA BKN005`), windowMinutes: 360 });
-    expect(r.out.evaluation.slots[at(r, '05:30')]!.runwayState).toBe('WET_POSSIBLE');
-    expect(r.out.evaluation.slots[at(r, '07:00')]!.runwayState).toBe('DRY');
+    for (const t of [...wp, '07:00']) {
+      expect(r.out.evaluation.slots[at(r, t)]!.runwayState).toBe('DRY');
+      expect(cell(r, '25AD', t).status).toBe('SUITABLE');
+    }
   });
 });
 

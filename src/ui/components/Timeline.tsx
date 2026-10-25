@@ -6,7 +6,7 @@ import { hhmmZ } from '../format';
 import { WINDOW_OPTIONS, type ViewData, type WindowChoice, isWindowChoice, levelWord, levelShortWord } from '../model/dashboard';
 import { cellDetailModel, type CellDetailModel } from '../model/panels';
 import { STATUS_STYLE } from '../model/status';
-import { LAYOUT, LEGEND, moveFocus, summaryTiles, visibleRows, type TimelineModel } from '../model/timeline';
+import { LAYOUT, LEGEND, eventStripHeight, moveFocus, summaryTiles, visibleRows, type TimelineModel } from '../model/timeline';
 
 interface Anchor {
   readonly row: number;
@@ -86,7 +86,8 @@ export function Timeline({ view, model, displayNowMs, onWindowChange }: Timeline
   const scroller = useRef<HTMLDivElement | null>(null);
 
   const width = LAYOUT.label + n * LAYOUT.column;
-  const top = LAYOUT.timeStrip + LAYOUT.eventStrip + LAYOUT.trafficStrip;
+  const eventStrip = eventStripHeight(model);
+  const top = LAYOUT.timeStrip + eventStrip + LAYOUT.trafficStrip;
   const height = top + rows.length * LAYOUT.rowHeight;
   const nowLeft = LAYOUT.label + model.nowSlotFraction * LAYOUT.column;
   const showNow = model.nowSlotFraction >= 0 && model.nowSlotFraction < n;
@@ -203,7 +204,7 @@ export function Timeline({ view, model, displayNowMs, onWindowChange }: Timeline
               </div>
             ))}
           </div>
-          <div className="row hdr" role="row" style={{ height: LAYOUT.eventStrip }}>
+          <div className="row hdr" role="row" style={{ height: eventStrip }}>
             <div className="lab" role="rowheader"><small>Weather events</small></div>
             <div className="evs" style={{ width: n * LAYOUT.column }}>
               <div className="evw" aria-label="Wind">
@@ -211,11 +212,20 @@ export function Timeline({ view, model, displayNowMs, onWindowChange }: Timeline
                   <div key={w.startSlot} className="wbar" title={w.title} style={{ left: w.startSlot * LAYOUT.column, width: (w.endSlot - w.startSlot + 1) * LAYOUT.column - 2 }}>{w.label}</div>
                 ))}
               </div>
-              <div className="evm">
-                {slots.map((s) => (
-                  <div key={s.index} role="columnheader" className="ic" title={s.eventTitle}>{s.events.join(' ')}</div>
-                ))}
-              </div>
+              {Array.from({ length: model.overlayLanes }, (_, lane) => (
+                <div key={lane} className="evw" aria-label="TEMPO, INTER and PROB groups">
+                  {model.overlayBars.filter((b) => b.lane === lane).map((b) => (
+                    <div key={b.label} className={`obar${b.probability ? ' prob' : ''}`} title={b.label} style={{ left: b.startSlot * LAYOUT.column, width: (b.endSlot - b.startSlot + 1) * LAYOUT.column - 2 }}>{b.label}</div>
+                  ))}
+                </div>
+              ))}
+              {model.hasEventText ? (
+                <div className="evm">
+                  {slots.map((s) => (
+                    <div key={s.index} role="columnheader" className="ic" title={s.eventTitle}>{s.events.join(' ')}</div>
+                  ))}
+                </div>
+              ) : null}
             </div>
           </div>
           <div className="row hdr traf" role="row" style={{ height: LAYOUT.trafficStrip }}>
@@ -271,7 +281,7 @@ export function Timeline({ view, model, displayNowMs, onWindowChange }: Timeline
           ))}
 
           {model.busyRuns.map(([a, b]) => (
-            <div key={`b${a}`} className="ov busyband" aria-hidden="true" style={{ left: LAYOUT.label + a * LAYOUT.column, width: (b - a + 1) * LAYOUT.column, top: LAYOUT.timeStrip + LAYOUT.eventStrip, height: height - LAYOUT.timeStrip - LAYOUT.eventStrip }} />
+            <div key={`b${a}`} className="ov busyband" aria-hidden="true" style={{ left: LAYOUT.label + a * LAYOUT.column, width: (b - a + 1) * LAYOUT.column, top: LAYOUT.timeStrip + eventStrip, height: height - LAYOUT.timeStrip - eventStrip }} />
           ))}
           {model.changeSlots.map((c) => (
             <div key={`c${c}`} className="ov chg" aria-hidden="true" style={{ left: LAYOUT.label + c * LAYOUT.column, top: LAYOUT.timeStrip, height: height - LAYOUT.timeStrip }} />

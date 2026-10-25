@@ -317,11 +317,17 @@ describeEachPack('TEMPO, INTER and PROB overlays', (pack) => {
     expect(r?.figures.tailwindKt).toBeGreaterThan(s.tailwindDryKt);
   });
 
-  it('INTER and PROB overlays are judged the same way', () => {
-    for (const kind of ['INTER', 'PROB'] as const) {
-      const c = runMode(pack, id, [{ overlays: [overlay({ kind, probabilityPct: kind === 'PROB' ? 30 : null })] }]).cell(0);
-      expect(c.status).toBe('MARGINAL');
-      expect(c.cause).toBe('OVERLAY');
+  it('an INTER overlay is judged the same way', () => {
+    const c = runMode(pack, id, [{ overlays: [overlay({ kind: 'INTER' })] }]).cell(0);
+    expect(c.status).toBe('MARGINAL');
+    expect(c.cause).toBe('OVERLAY');
+  });
+
+  it('a probability group never changes the cell: PROB, PROB30 TEMPO and PROB40 INTER all leave it SUITABLE', () => {
+    for (const [kind, pct] of [['PROB', 30], ['PROB', 40], ['TEMPO', 30], ['INTER', 40]] as const) {
+      const c = runMode(pack, id, [{ overlays: [overlay({ kind, probabilityPct: pct })] }]).cell(0);
+      expect(c.status, `${kind} ${pct}`).toBe('SUITABLE');
+      expect(c.uncertain).toBe(false);
     }
   });
 

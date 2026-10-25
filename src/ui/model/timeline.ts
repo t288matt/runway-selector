@@ -8,7 +8,7 @@ import { SLOT_MS, levelWord, type ViewData } from './dashboard';
 import { cellView, type CellView, type MissingWeather } from './status';
 
 /** Layout constants, in pixels. They match the mockup and the CSS. */
-export const LAYOUT = { label: 176, column: 56, rowHeight: 36, timeStrip: 34, eventStrip: 42, trafficStrip: 26 } as const;
+export const LAYOUT = { label: 176, column: 56, rowHeight: 36, timeStrip: 34, eventBase: 22, eventLine: 20, trafficStrip: 26 } as const;
 
 export interface ModeRow {
   /** Index into pack.modes (and into the engine's cells). */
@@ -112,9 +112,27 @@ export interface WindRun {
   readonly title: string;
 }
 
+/** One TEMPO, INTER or PROB group drawn as a bar under the wind bars, over the slots its window covers. */
+export interface OverlayBar {
+  readonly startSlot: number;
+  readonly endSlot: number;
+  /** Which line of bars it sits on, from 0; groups that overlap in time take separate lines. */
+  readonly lane: number;
+  /** The group's own text, e.g. "PROB30 TEMPO 2511/2519 VRB30G40KT 1000 TSRA BKN010". */
+  readonly label: string;
+  /** True when the group is a probability group, which is shown but never changes a cell. */
+  readonly probability: boolean;
+}
+
 export interface TimelineModel {
   /** The wind bars of the event strip's first line. */
   readonly windRuns: readonly WindRun[];
+  /** The TEMPO, INTER and PROB bars; empty when the window has none, and then no line is drawn. */
+  readonly overlayBars: readonly OverlayBar[];
+  /** How many lines the overlay bars need (0 when there are none). */
+  readonly overlayLanes: number;
+  /** True when any slot has an event word to show (WET, TS, no TAF and so on); when false that line is not drawn. */
+  readonly hasEventText: boolean;
   readonly rows: readonly ModeRow[];
   readonly slots: readonly TimelineSlot[];
   /** cells[rowIndex][slotIndex] */
@@ -127,6 +145,36 @@ export interface TimelineModel {
   readonly changeSlots: readonly number[];
   readonly nowSlotFraction: number;
   readonly rangeText: string;
+}
+
+/** Height of the weather events strip: the wind line, plus a line for each overlay lane and one for the event words, only when they have something to show. */
+export function eventStripHeight(model: Pick<TimelineModel, 'overlayLanes' | 'hasEventText'>): number {
+  return LAYOUT.eventBase + LAYOUT.eventLine * (model.overlayLanes + (model.hasEventText ? 1 : 0));
+}
+
+/**
+ * The TEMPO, INTER and PROB groups over the slots as bars. One bar per distinct group text, from the first slot it
+ * covers to the last; a METAR-governed slot carries no overlays, so a bar starts after it. Overlapping groups go on
+ * separate lanes.
+ */
+export function overlayBars(slots: readonly { readonly weather: { readonly overlays: readonly { readonly text: string; readonly probabilityPct: number | null }[] } }[]): { bars: OverlayBar[]; lanes: number } {
+  const found = new Map<string, { start: number; end: number; probability: boolean }>();
+  slots.forEach((s, i) => {
+    for (const o of s.weather.overlays) {
+      const seen = found.get(o.text);
+      if (seen === undefined) found.set(o.text, { start: i, end: i, probability: o.probabilityPct !== null });
+      else seen.end = i;
+    }
+  });
+  const laneEnds: number[] = [];
+  const bars: OverlayBar[] = [];
+  for (const [label, g] of [...found].sort((a, b) => a[1].start - b[1].start || b[1].end - a[1].end)) {
+    let lane = laneEnds.findIndex((end) => end < g.start);
+    if (lane < 0) lane = laneEnds.length;
+    laneEnds[lane] = g.end;
+    bars.push({ startSlot: g.start, endSlot: g.end, lane, label, probability: g.probability });
+  }
+  return { bars, lanes: laneEnds.length };
 }
 
 /**
@@ -260,12 +308,8 @@ export function timelineModel(view: ViewData, displayNowMs: number): TimelineMod
       events.push('low vis');
       titles.push(`Visibility below ${pack.settings.lowVisibilityMetres} m`);
     }
-    // A METAR-governed slot shows only what the METAR itself says (owner, 24-10-2026): the
-    // TAF's TEMPO/PROB overlays play no part here, matching runwayCondition.ts.
-    const overlays = s.weather.overlays;
-    const kinds = [...new Set(overlays.map((o) => o.kind))];
-    for (const k of kinds) events.push(k);
-    for (const o of overlays) titles.push(o.text);
+    // The TEMPO, INTER and PROB groups are drawn as bars (overlayBars), not as words here. A METAR-governed
+    // slot carries none (owner, 24-10-2026), matching runwayCondition.ts.
     if (wet === 'possible') events.push('wet risk');
     if (wet === 'wet') events.push('WET');
     if (s.governedBy === 'NONE') events.push(missing === 'NO MET' ? 'no weather' : 'no TAF');
@@ -299,8 +343,12 @@ export function timelineModel(view: ViewData, displayNowMs: number): TimelineMod
   const onPath = rows.map((row) => slotsIn.map((_s, i) => path[i] === row.modeId));
   const first = slotsIn[0];
   const last = slotsIn[slotsIn.length - 1];
+  const drawn = overlayBars(slotsIn);
   return {
     windRuns: windRuns(slotsIn.map((s) => s.weather.wind)),
+    overlayBars: drawn.bars,
+    overlayLanes: drawn.lanes,
+    hasEventText: slots.some((sl) => sl.events.length > 0),
     rows,
     slots,
     cells,

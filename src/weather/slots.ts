@@ -109,7 +109,8 @@ function tafWeather(taf: DecodedTaf, startMs: number, endMs: number, codes: Read
       visibilityMetres: visibilityMetres === undefined ? visibilityMetresOf(period) : visibilityMetres,
       text: o.text,
     });
-    if (precipitation && (o.kind === 'TEMPO' || o.kind === 'INTER')) temporary = true;
+    // A PROB30 or PROB40 TEMPO or INTER is shown on the screen but never makes the runway WET POSSIBLE (owner, 25-10-2026).
+    if (precipitation && (o.kind === 'TEMPO' || o.kind === 'INTER') && o.probabilityPct === null) temporary = true;
     if (precipitation && o.kind === 'PROB' && o.probabilityPct !== null && (probable === null || o.probabilityPct > probable)) probable = o.probabilityPct;
   }
   return {

@@ -323,6 +323,8 @@ function weatherPart(pack: AirportPack, mode: Mode, used: readonly UsedRunway[],
   const minima = mode.minima;
   const mainBreaks = minima === null ? [] : minimaFindings(minima, sw.ceilingFt, sw.visibilityMetres, state).filter((f) => f.severity === 'FAIL');
   for (const o of sw.overlays) {
+    // A probability group (PROB30 or PROB40, with or without TEMPO or INTER) is shown on the screen but never changes a cell (owner, 25-10-2026).
+    if (o.probabilityPct !== null) continue;
     if (minima !== null) {
       // A group that would break a minimum the prevailing weather keeps is MARGINAL; rain in the group wets the runway.
       for (const f of minimaFindings(minima, o.ceilingFt, o.visibilityMetres, o.precipitation ? 'WET' : state)) {

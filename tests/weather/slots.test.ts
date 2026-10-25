@@ -312,11 +312,11 @@ describeForEachPack('slot builder', (pack, ref) => {
       expect(at('2026-10-23T20:00:00Z').weather.precipitation.prevailing).toBe(codes.includes('RA'));
     });
 
-    it('PROB40 TEMPO with rain is temporary, never probable, never prevailing; listed as a TEMPO overlay with its probability', () => {
+    it('PROB40 TEMPO with rain is never temporary, never probable, never prevailing; listed as a TEMPO overlay with its probability', () => {
       const { nowMs, taf } = reports(ref, '2026-10-23T12:10:00Z', { taf: 'taf-limc-prob40-tempo' }); // 2312/2316 RA
       const r = build(pack, nowMs, null, taf, 360);
       const inside = r.slots.find((x) => x.startMs === utc('2026-10-23T13:00:00Z'))!;
-      expect(inside.weather.precipitation).toEqual({ prevailing: false, probable: null, temporary: codes.includes('RA'), recent: false });
+      expect(inside.weather.precipitation).toEqual({ prevailing: false, probable: null, temporary: false, recent: false });
       expect(inside.weather.overlays).toMatchObject([{ kind: 'TEMPO', probabilityPct: 40, precipitation: codes.includes('RA') }]);
       expect(inside.weather.overlays[0]!.text).toBe('PROB40 TEMPO 2312/2316 RA');
       const lastCovered = r.slots.find((x) => x.startMs === utc('2026-10-23T15:30:00Z'))!;
@@ -353,15 +353,15 @@ describeForEachPack('slot builder', (pack, ref) => {
       }
     });
 
-    it('PROB40 INTER and PROB30 TEMPO are temporary, not probable', () => {
+    it('PROB40 INTER and PROB30 TEMPO are neither temporary nor probable (shown as overlays only)', () => {
       const a = reports(ref, '2026-10-23T12:10:00Z', { taf: 'taf-nvss-prob40-inter' });
       const ra = build(pack, a.nowMs, null, a.taf, 60).slots[0]!.weather.precipitation;
       expect(ra.probable).toBeNull();
-      expect(ra.temporary).toBe(codes.includes('SH') || codes.includes('RA'));
+      expect(ra.temporary).toBe(false);
       const b = reports(ref, '2026-10-23T12:10:00Z', { taf: 'taf-edhi-prob30-tempo' });
       const rb = build(pack, b.nowMs, null, b.taf, 60).slots[0]!.weather.precipitation;
       expect(rb.probable).toBeNull();
-      expect(rb.temporary).toBe(codes.includes('RA'));
+      expect(rb.temporary).toBe(false);
     });
 
     it('the highest probability wins when two PROB groups with precipitation cover one slot (SYNTHETIC overlays)', () => {
