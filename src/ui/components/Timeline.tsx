@@ -6,7 +6,7 @@ import { hhmmZ } from '../format';
 import { WINDOW_OPTIONS, type ViewData, type WindowChoice, isWindowChoice, levelWord, levelShortWord } from '../model/dashboard';
 import { cellDetailModel, type CellDetailModel } from '../model/panels';
 import { STATUS_STYLE } from '../model/status';
-import { LAYOUT, LEGEND, eventStripHeight, moveFocus, summaryTiles, visibleRows, type TimelineModel } from '../model/timeline';
+import { LAYOUT, FORECAST_GREEN_LEGEND, LEGEND, eventStripHeight, moveFocus, summaryTiles, visibleRows, type TimelineModel } from '../model/timeline';
 
 interface Anchor {
   readonly row: number;
@@ -304,6 +304,7 @@ export function Timeline({ view, model, displayNowMs, onWindowChange }: Timeline
             </span>
           );
         })}
+        <span><b className={`cell ${STATUS_STYLE.SUITABLE.className}`} style={{ width: 'auto', padding: '0 4px' }} aria-hidden="true"><small>TEMPO</small></b>{FORECAST_GREEN_LEGEND}</span>
         <span><b className="cell rec" style={{ marginRight: 8, background: 'var(--panel2)', border: '1px solid var(--line)' }} aria-hidden="true" />Recommended path</span>
         <span>Dashed blue line: planned change</span>
         <span>Amber band: HIGH traffic</span>

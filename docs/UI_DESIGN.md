@@ -63,7 +63,7 @@ Content width capped at 1440 px, centred, 16 px gutters. C, D and F sit side by 
 | Mode 12 REC       [S][S][S][S][S][S][M][M] ...  scrolls ->                                               |
 | Mode 10 CURRENT   [S][S][S][S][S][S][M][M] ...                                                           |
 | ... one row per enabled mode ...                                                                         |
-| Legend: tick suitable, tilde marginal, cross unsuitable, ? unknown; outline, change line, bands          |
+| Legend: tick suitable, green with a word marginal, cross, ?; outline, change line, bands                |
 | Reason line                                                                                              |
 +----------------------------------------------------------------------------------------------------------+
 | C Weather                | D VATSIM traffic            | F Runway diagram                                |
@@ -180,10 +180,10 @@ Each cell holds an icon, and below it a 9 px cause code only when status is not 
 | Status | Colour | Pattern | Icon | Cause codes |
 |---|---|---|---|---|
 | SUITABLE | green | solid | tick | none |
-| MARGINAL | amber | diagonal stripes | tilde | TW, XW, TEMPO, WET, WET?, VRB (variable wind above calm, OD-33) |
+| MARGINAL | green (the suitable green, OD-81) | solid | none; the cause word is the cue | TW, XW, TEMPO, WET, WET?, VRB (variable wind above calm, OD-33) |
 | UNSUITABLE | red | dense crosshatch | cross | TW, XW, CAP, PLAN (operating plan) |
 | UNKNOWN | grey | dots | question mark | NO TAF, NO MET |
-The colour comes straight from the engine's matrix. The UI has no logic that can turn a cell green; it renders the status field only (DB-3, DESIGN section 8).
+The colour comes straight from the engine's matrix. The UI has no logic of its own that can turn a cell green: it renders the status field only, and a cell is green when the engine said SUITABLE or MARGINAL (owner, 25-10-2026, OD-81). A MARGINAL cell keeps its cause word, the white uncertainty corner and the hover cause box, and its accessible name still says marginal; the engine status is unchanged. The Panel A weather line takes the same class from the same table, so it is green for a marginal slot too. UNSUITABLE and UNKNOWN are drawn as before.
 
 A white triangle in the top-right corner marks a cell whose status depends on an uncertain input (TEMPO or INTER group, wet-possible runway state, demand estimate). This is the "uncertainty overlay". It can appear on any status.
 
@@ -229,7 +229,7 @@ Event-strip hover shows the TAF group in raw and decoded form.
 Two tiles above the grid: Recommended, and Next change (the new mode and its time, for example "34A25D at 14:00Z", or "No change planned"). The Survives, Next constraint and Traffic at changeover tiles are removed (OD-49). Below the legend, a one-line reason in the style of the owner's illustration: "Mode 12 is recommended because it is the only mode with no unsuitable slot until 07:30Z..." The reason is a template sentence filled from the engine, never hand-written text.
 
 ### 6.7 Legend
-Always visible under the grid: each status with its icon, pattern and word, plus the overlay keys (recommended outline, change line, busy band, wet band, uncertainty corner).
+Always visible under the grid: the suitable and unsuitable and unknown statuses with their icon, pattern and word, one entry "Green with a word: passes, but see the word (forecast change, near a limit, variable wind)" for marginal cells (OD-81), plus the overlay keys (recommended outline, change line, busy band, wet band, uncertainty corner).
 
 ## 7. States
 | State | Panel A | Panel B | Elsewhere |
@@ -261,8 +261,8 @@ The palette follows the VATPAC tools look: dark navy surfaces and a blue accent.
 | `--muted` | `#9db0cf` | Secondary text | 7.6 : 1 |
 | `--accent` | `#3b82f6` | Accent fills, REC tag, outline | 4.6 : 1 |
 | `--accent-text` | `#6aa6ff` | Accent text and the recommended outline | 6.8 : 1 |
-| `--ok` | `#1b7f46` | SUITABLE cell | 3.3 : 1 (graphic); white icon on it 5.0 : 1 |
-| `--warn` | `#c98a00` | MARGINAL cell | 5.7 : 1; dark icon `#0b1426` on it 6.2 : 1 |
+| `--ok` | `#1b7f46` | SUITABLE and MARGINAL cell (OD-81) | 3.3 : 1 (graphic); white icon on it 5.0 : 1 |
+| `--warn` | `#c98a00` | Warning borders and strips (the amber stripes of a marginal cell are gone: a MARGINAL cell is now the `--ok` green, OD-81) | 5.7 : 1; dark icon `#0b1426` on it 6.2 : 1 |
 | `--bad` | `#c0392b` | UNSUITABLE cell | 3.1 : 1 (graphic); white icon on it 5.4 : 1 |
 | `--unk` | `#66728a` | UNKNOWN cell | 3.5 : 1 (graphic); white icon on it 4.8 : 1 |
 | `--ok-text` | `#5fd68a` | Status text on dark | 9.2 : 1 |
@@ -300,7 +300,7 @@ Minimum text size is 11 px, used only for time labels and secondary notes; the c
 | Focus ring | 2 px white, 1 px offset |
 
 ## 9. Accessibility
-1. **Colour is never the only signal.** Each status has a distinct icon (tick, tilde, cross, question mark), a distinct pattern (solid, stripes, crosshatch, dots), and a text cause code for everything except SUITABLE. The legend names all four.
+1. **Colour is never the only signal.** Suitable, unsuitable and unknown have a distinct icon (tick, cross, question mark) and pattern (solid, crosshatch, dots); a marginal cell is the same green as a suitable one, so its text cause code is what tells them apart, and its accessible name says marginal (OD-81). Every cell except SUITABLE has a text cause code. The legend names all of them.
 2. **Overlays have text too.** Busy bands carry "H HIGH" in the traffic strip; wet risk carries the words "wet risk"; the changeover is the dashed line, with the hover text and the Next change tile; the uncertainty corner is explained in the hover and listed in the legend.
 3. **Contrast.** Body text at least 4.5 : 1 (actual 7.6 to 14.1). Cell icons at least 4.5 : 1 on their cell. Cell fills at least 3 : 1 against the panel (graphics). Banners: coloured text on a darkened tint at 7 : 1 or more.
 4. **Keyboard use of the timeline.** The timeline is a grid with roving tabindex: one Tab stop enters it, the arrow keys move between cells (up and down between modes, left and right between slots), Home and End go to the first and last slot of the row, Page Up and Page Down jump 4 slots (2 hours), Enter or Space pins the detail panel, Escape closes it. Focus scrolls the cell into view and the detail opens on focus. A visible 2 px white focus ring is drawn above the recommended outline. N moves focus to the now column; C moves it to the planned changeover.
@@ -315,7 +315,7 @@ Minimum text size is 11 px, used only for time labels and secondary notes; the c
 |---|---|---|
 | UD-1 | The timeline sits directly under A and is the largest element; A is kept to the four first-read answers. | The owner's brief makes the timeline the main feature; the controller must read mode, duration, next change and why in two seconds. |
 | UD-2 | Status is shown by colour, pattern, icon and a cause code. | The controller may be colour-blind, the screen may be dim or small, and a red cell must say why without a hover. |
-| UD-3 | Overlays are drawn behind or around cells and never recolour them. | Cell colour must come only from the engine matrix, so a cell can never be green over a tailwind limit (anti-goal in DESIGN section 1). |
+| UD-3 | Overlays are drawn behind or around cells and never recolour them. | Cell colour must come only from the engine matrix: green when the engine said SUITABLE or MARGINAL (the word and the corner mark the difference, OD-81), so a cell can never be green over a tailwind limit (anti-goal in DESIGN section 1). |
 | UD-4 | Recommended and current modes are separate on screen (tags, outline, underline). | UP-4 requires them to stay distinct; the operator enters the current mode and the tool never does (OD-21). |
 | UD-5 | Warnings are inline banners, not pop-ups or sounds. | A controller in a busy session must not lose focus to a dialog. |
 | UD-6 | Settings open in a drawer beside the dashboard. | A settings change triggers a new recommendation (DB-9); the effect is seen at once without leaving the page. |

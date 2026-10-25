@@ -1,14 +1,16 @@
 // The one mapping from an engine cell to what is drawn (UI_DESIGN section 6.2,
 // DESIGN section 8). Colour comes from `cell.status` and from nothing else: no
-// other function in the UI may choose a status class, so a cell can never be
-// drawn green unless the engine said SUITABLE (DB-3, UD-3).
+// other function in the UI may choose a status class, so a cell is drawn green
+// only when the engine said SUITABLE or MARGINAL (DB-3, UD-3, OD-81). A MARGINAL
+// cell is green but keeps its cause word, the white uncertain corner and the
+// hover box; the engine status stays MARGINAL.
 import type { Cell, Status } from '../../engine';
 import { hhmmZRel } from '../format';
 
 export interface StatusStyle {
   /** CSS class that carries colour and pattern. */
   readonly className: string;
-  /** Text icon: tick, cross, question mark; none for marginal (its stripes say it). */
+  /** Text icon: tick, cross, question mark; none for marginal (a marginal cell is the suitable green; its cause word says it, OD-81). */
   readonly icon: string;
   /** The status in a word, lower case. */
   readonly word: string;
@@ -16,7 +18,8 @@ export interface StatusStyle {
 
 export const STATUS_STYLE: Readonly<Record<Status, StatusStyle>> = {
   SUITABLE: { className: 'cs-suitable', icon: '\u2713', word: 'suitable' },
-  MARGINAL: { className: 'cs-marginal', icon: '', word: 'marginal' },
+  // OD-81: marginal takes the suitable green; the cause word and the corner tell it apart.
+  MARGINAL: { className: 'cs-suitable', icon: '', word: 'marginal' },
   UNSUITABLE: { className: 'cs-unsuitable', icon: '\u2715', word: 'unsuitable' },
   UNKNOWN: { className: 'cs-unknown', icon: '?', word: 'unknown' },
 };

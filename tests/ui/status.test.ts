@@ -26,15 +26,15 @@ function cell(status: Status, reasons: Reason[] = [], uncertain = false): Cell {
 describe('the cell to colour, icon and word mapping', () => {
   it('maps each status to its own class, icon and word', () => {
     expect(STATUS_STYLE.SUITABLE).toEqual({ className: 'cs-suitable', icon: '✓', word: 'suitable' });
-    expect(STATUS_STYLE.MARGINAL).toEqual({ className: 'cs-marginal', icon: '', word: 'marginal' });
+    expect(STATUS_STYLE.MARGINAL).toEqual({ className: 'cs-suitable', icon: '', word: 'marginal' });
     expect(STATUS_STYLE.UNSUITABLE).toEqual({ className: 'cs-unsuitable', icon: '✕', word: 'unsuitable' });
     expect(STATUS_STYLE.UNKNOWN).toEqual({ className: 'cs-unknown', icon: '?', word: 'unknown' });
   });
 
-  it('draws the green class for SUITABLE and for nothing else', () => {
+  it('draws the green class for SUITABLE and MARGINAL and for nothing else', () => {
     for (const status of ['SUITABLE', 'MARGINAL', 'UNSUITABLE', 'UNKNOWN'] as const) {
       const v = cellView(cell(status, status === 'SUITABLE' ? [] : [reason('TW', status === 'UNSUITABLE' ? 'FAIL' : 'MARGINAL')]), T0, 'NO TAF');
-      expect(v.className === 'cs-suitable').toBe(status === 'SUITABLE');
+      expect(v.className === 'cs-suitable').toBe(status === 'SUITABLE' || status === 'MARGINAL');
       expect(v.status).toBe(status);
     }
   });
@@ -42,7 +42,8 @@ describe('the cell to colour, icon and word mapping', () => {
   it('gives each status a distinct icon and class, so colour is never the only signal', () => {
     const styles = Object.values(STATUS_STYLE);
     expect(new Set(styles.map((s) => s.icon)).size).toBe(4);
-    expect(new Set(styles.map((s) => s.className)).size).toBe(4);
+    // marginal shares the suitable green (OD-81): three colour classes; icons and words stay distinct
+    expect(new Set(styles.map((s) => s.className)).size).toBe(3);
     expect(new Set(styles.map((s) => s.word)).size).toBe(4);
   });
 
@@ -79,5 +80,35 @@ describe('the cell to colour, icon and word mapping', () => {
 
   it('marks a later UTC day in the accessible name', () => {
     expect(cellView(cell('SUITABLE'), T0 + 86_400_000, 'NO TAF', T0).label).toBe('Mode M1, 00:30Z (+1 day), suitable');
+  });
+
+  describe('every MARGINAL cell is drawn plain green but keeps its word (OD-81)', () => {
+    const marginalCases: [string, Reason, string][] = [
+      ['TEMPO', reason('OVERLAY', 'MARGINAL', { overlayKind: 'TEMPO', uncertain: true }), 'TEMPO'],
+      ['WET?', reason('TW', 'MARGINAL', { case: 'wet', uncertain: true }), 'WET?'],
+      ['near-limit tailwind', reason('TW', 'MARGINAL', { case: 'dry', near: true }), 'TW'],
+      ['variable wind', reason('VRB', 'MARGINAL', { uncertain: true }), 'VRB'],
+      ['TAF', reason('TAF', 'MARGINAL'), 'TAF'],
+    ];
+
+    for (const [name, r, word] of marginalCases) {
+      it(`draws a ${name} cell green, keeping the word, the corner and the marginal name`, () => {
+        const unc = r.figures.uncertain === true;
+        const c = cell('MARGINAL', [r], unc);
+        const v = cellView(c, T0, 'NO TAF');
+        expect(v.className).toBe('cs-suitable');
+        expect(v.code).toBe(word);
+        expect(v.uncertain).toBe(unc);
+        expect(v.status).toBe('MARGINAL');
+        expect(v.word).toBe('marginal');
+        expect(v.label).toContain('marginal');
+        expect(c.status).toBe('MARGINAL');
+      });
+    }
+
+    it('leaves the UNSUITABLE and UNKNOWN styles unchanged', () => {
+      expect(cellView(cell('UNSUITABLE', [reason('TW', 'FAIL')]), T0, 'NO TAF').className).toBe('cs-unsuitable');
+      expect(cellView(cell('UNKNOWN', [reason('NO_WIND', 'UNKNOWN')]), T0, 'NO TAF').className).toBe('cs-unknown');
+    });
   });
 });
