@@ -28,7 +28,7 @@
   "shortStayPenalty":         { "value": 25,   "description": "Score for each stay in a mode shorter than minimumStayMinutes, so a plan does not change mode and change again soon after." },
   "changeoverPreparationMinutes": { "value": 30, "description": "Warning time shown before a planned change. Set to 30 by the owner on 24-10-2026; preparation for a runway change should start 30 minutes before." },
   "metarStaleMinutes":        { "value": 60,   "description": "METAR older than this is flagged stale." },
-  "tafStaleMinutes":          { "value": 480,  "description": "TAF older than this is flagged stale." },
+  "tafStaleMinutes":          { "value": 180,  "description": "TAF older than this is flagged stale." },
   "vatsimStaleMinutes":       { "value": 10,   "description": "Traffic data older than this is flagged stale." },
   "weatherPollMinutes":       { "value": 5,    "description": "How often weather is fetched." },
   "vatsimPollSeconds":        { "value": 300,  "description": "How often traffic is fetched." },
