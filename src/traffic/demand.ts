@@ -153,7 +153,8 @@ export function buildTrafficSlots(input: DemandInput): DemandResult {
   const slots: TrafficSlot[] = slotStartsMs.map((startMs, i) => ({
     startMs,
     arrivals: known[i] ? (arrivals[i] ?? 0) : null,
-    departures: i === 0 ? departures : i === 1 && known[1] ? prefileDepartures : null,
+    // The next slot's departures are known only when the feed carries prefiles; with none, they stay unknown (not zero).
+    departures: i === 0 ? departures : i === 1 && known[1] && prefiles.length > 0 ? prefileDepartures : null,
   }));
 
   return {

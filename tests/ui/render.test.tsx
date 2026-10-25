@@ -365,8 +365,7 @@ describe('Panel D', () => {
     expect(m.columns).toHaveLength(4);
     expect(m.columns.map((c) => c.label)).toEqual(['Next 30 mins', '+30 min', '+60 min', '+90 min']);
     expect(m.columns[0]?.departures).toBe('0');
-    expect(m.columns[1]?.departures).toBe('0 (prefiled)');
-    expect(m.columns.slice(2).every((c) => c.departures === 'not est.')).toBe(true);
+    expect(m.columns.slice(1).every((c) => c.departures === 'not est.')).toBe(true);
     expect(m.unknownFrom).not.toBeNull();
     // movements: the raw 30-minute count, never doubled to an hourly rate, never a lower bound (OD-63, amending OD-41 and OD-61)
     for (const c of m.columns) {

@@ -35,11 +35,10 @@ describeForEachPack('demand model', (pack) => {
   });
 
   describe('departures (on the ground at the airport, origin here)', () => {
-    it('count in slot 0 only; the next slot holds prefile departures (zero here); later slots are null', () => {
+    it('count in slot 0 only; with no prefiles in the feed, every later slot is null (unknown)', () => {
       const r = build(pack, [parked(pack), parked(pack, { nm: 1 }), parked(pack, { nm: 2 })]);
       expect(r.slots[0]?.departures).toBe(3);
-      expect(r.slots[1]?.departures).toBe(0);
-      for (const slot of r.slots.slice(2)) expect(slot.departures).toBeNull();
+      for (const slot of r.slots.slice(1)) expect(slot.departures).toBeNull();
       expect(r.summary.connectedDepartures).toBe(3);
       expect(total(r)).toBe(0);
     });
@@ -381,8 +380,12 @@ describe('prefiles count in the next slot only (owner, 25-10-2026)', () => {
       expect(r.slots[1]).toMatchObject({ arrivals: 0, departures: 0 });
     });
 
-    it('with no prefiles, the next slot has a departure count of zero, not unknown', () => {
-      expect(withPrefiles([]).slots[1]?.departures).toBe(0);
+    it('with no prefiles in the feed, the next slot departures are unknown, not zero', () => {
+      expect(withPrefiles([]).slots[1]?.departures).toBeNull();
+    });
+
+    it('with prefiles in the feed but none filed for the next slot, the next slot departures are zero', () => {
+      expect(withPrefiles([prefile({ departure: icao, departureMinuteOfDay: 615 })]).slots[1]?.departures).toBe(0);
     });
   });
 
