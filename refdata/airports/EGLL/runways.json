@@ -1,10 +1,12 @@
 {
   "schemaVersion": 1,
-  "description": "Runway ends. PROVISIONAL DRAFT 24-10-2026: Heathrow's parallel pair, modelled here as a single runway without an L/R suffix, per the owner's priorities (the second parallel runway is not in this pack). Headings are magnetic, the same reference as the other packs and the weather reports, from SkyVector and Flight Plan Database (089/269). Not checked against the UK AIP.",
+  "description": "Runway ends. PROVISIONAL DRAFT 24-10-2026: Heathrow's two parallel pairs, 09L/27R and 09R/27L, modelled as four runway ends. Headings are magnetic, the same reference as the other packs and the weather reports, from SkyVector and Flight Plan Database (089/269). The parallels share the same heading. Not checked against the UK AIP.",
   "status": "verified",
   "source": "SkyVector and Flight Plan Database, 24-10-2026",
   "runways": [
-    { "name": "09", "headingDegrees": 89 },
-    { "name": "27", "headingDegrees": 269 }
+    { "name": "09L", "headingDegrees": 89 },
+    { "name": "09R", "headingDegrees": 89 },
+    { "name": "27L", "headingDegrees": 269 },
+    { "name": "27R", "headingDegrees": 269 }
   ]
 }

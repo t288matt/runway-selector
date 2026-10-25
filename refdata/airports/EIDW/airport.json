@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "Dublin Airport, Ireland. PROVISIONAL DRAFT 24-10-2026: coordinates and elevation (242 ft) are from public aggregator sites, not checked against the Irish AIP. Dublin now has two parallel runways on the 10/28 alignment (10L/28R, opened 2022, and 10R/28L); by the same convention used for Tamworth (YSTW), this pack models 10/28 as a single runway without an L/R suffix, since the owner's priorities did not name a side. Other simulation assumptions carry over from the Australian packs.",
+  "description": "Dublin Airport, Ireland. PROVISIONAL DRAFT 24-10-2026: coordinates and elevation (242 ft) are from public aggregator sites, not checked against the Irish AIP. Dublin now has two parallel runways on the 10/28 alignment (10L/28R, opened 2022, and 10R/28L), modelled here as four runway ends, 10L, 10R, 28L and 28R. Other simulation assumptions carry over from the Australian packs.",
   "icao": "EIDW",
   "name": "Dublin",
   "latitude": 53.4213,

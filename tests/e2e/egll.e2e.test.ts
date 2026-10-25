@@ -1,7 +1,7 @@
 // End-to-end scenarios on the Heathrow (EGLL) pack, expectations worked by hand from the pack files BEFORE the engine was run.
 //
 // Pack numbers (refdata/airports/EGLL, provisional 24-10-2026):
-//   headings (magnetic): 09 89, 27 269 (modelled as a single runway, no L/R suffix; Heathrow's second parallel runway is not in this pack).
+//   headings (magnetic): 09L 89, 09R 89, 27L 269, 27R 269 (two parallel pairs, four runway ends; each mode covers both parallels in its direction, no pairing).
 //   Limits carried over from the other packs: tailwind dry 5 / wet 0, tolerance 0.05, calm 3, near-limit margin 3.
 //   27AD and 09AD both have a 28 kt crosswind limit (owner, 24-10-2026), not the 20 kt pack default.
 //   marginal penalty 3, change penalties light 1 / medium 5 / busy 25 / unknown 5. No capacities.
@@ -21,10 +21,10 @@ const MODES = ['27AD', '09AD'];
 
 describe('EGLL pack loads with the owner\'s two equal-priority modes', () => {
   const r = go(kt(90, 10));
-  it('has the one runway and the two modes', () => {
+  it('has the four parallel runway ends and the two modes', () => {
     expect(r.pack.airport.icao).toBe('EGLL');
     expect(r.pack.airport.timeZone).toBe('Europe/London');
-    expect(r.pack.runways.map((x) => `${x.name}:${x.headingDegrees}`)).toEqual(['09:89', '27:269']);
+    expect(r.pack.runways.map((x) => `${x.name}:${x.headingDegrees}`)).toEqual(['09L:89', '09R:89', '27L:269', '27R:269']);
     expect(r.pack.modes.map((m) => m.id)).toEqual(MODES);
   });
 });
