@@ -22,7 +22,7 @@ export interface Rig {
   advance: (ms: number) => Promise<void>;
 }
 
-function feedBody(pack: AirportPack, parked: number): string {
+export function feedBody(pack: AirportPack, parked: number): string {
   const pilots = Array.from({ length: parked }, (_v, i) => ({
     cid: 1000 + i,
     callsign: `TST${i}`,

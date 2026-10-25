@@ -6,7 +6,7 @@
 //
 // It reads every import, export-from, dynamic import(), require() and CSS
 // @import specifier written as a string literal, resolves relative ones against
-// the importing file, and fails when the result lies inside the other front end.
+// the importing file (the whole text, so a specifier may sit on another line from its keyword), and fails when the result lies inside the other front end.
 //
 // LIMITS (by design): this is a static text check, like check-banned-imports.mjs.
 // It cannot see a specifier that is built at run time (concatenation, a template
@@ -29,7 +29,7 @@ const PAIRS = [
   ['src/ui', 'src/v2'],
 ];
 
-const SPECIFIER = /(?:\bfrom\s*|\bimport\s*\(?\s*|\brequire\s*\(\s*|@import\s+(?:url\(\s*)?)(['"`])([^'"`\n]+)\1/g;
+const SPECIFIER = /(?:\bfrom\s*|\bimport\s*\(?\s*|\brequire\s*\(\s*|\bglob\s*\(\s*|@import\s+(?:url\(\s*)?)(['"`])([^'"`\n]+)\1/g;
 
 function* walk(dir) {
   for (const name of readdirSync(dir)) {
@@ -51,17 +51,13 @@ export function checkUiBoundary(root) {
     const pair = PAIRS.find(([own]) => inside(rel, own));
     if (pair === undefined) continue;
     const other = pair[1];
-    stripComments(readFileSync(file, 'utf8'), extname(file))
-      .split('\n')
-      .forEach((line, i) => {
-        for (const m of line.matchAll(SPECIFIER)) {
-          const spec = m[2] ?? '';
-          const target = spec.startsWith('.')
-            ? relative(root, resolve(dirname(file), spec)).split(sep).join('/')
-            : spec.replace(/^\/+/, '');
-          if (inside(target, other)) found.push(`${rel}:${i + 1} imports ${spec}`);
-        }
-      });
+    // The whole text is scanned, not line by line, so a specifier on a different line from its keyword is still seen.
+    const text = stripComments(readFileSync(file, 'utf8'), extname(file));
+    for (const m of text.matchAll(SPECIFIER)) {
+      const spec = m[2] ?? '';
+      const target = spec.startsWith('.') ? relative(root, resolve(dirname(file), spec)).split(sep).join('/') : spec.replace(/^\/+/, '');
+      if (inside(target, other)) found.push(`${rel}:${text.slice(0, m.index).split('\n').length} imports ${spec}`);
+    }
   }
   return found;
 }

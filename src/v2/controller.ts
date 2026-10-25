@@ -137,14 +137,23 @@ export function createController(deps: ControllerDeps): Controller {
       }
       // The traffic shown moves on; the plan inside the view is left exactly as calculated.
       publish(build({ ...state.view, liveDemand: liveDemandFor(state.view, feed, now) }, now));
-    } finally {
-      pollInFlight = null;
+    } catch (e) {
+      // A failure while handling the answer is shown as a failed fetch, like any other (UP-3): the last traffic is kept.
+      if (running) {
+        const now = deps.now();
+        feed = applyFeedResult(feed, { ok: false, error: { kind: 'invalid', message: e instanceof Error ? e.message : 'unknown error' } }, now);
+        publish(build(state.view, now));
+      }
     }
   };
 
   const poll = (): void => {
     if (pollInFlight !== null) return;
-    pollInFlight = runPoll();
+    // Cleared when it ends, even if it ended before this line ran (a synchronous throw), so polling never sticks.
+    const p: Promise<void> = runPoll().finally(() => {
+      if (pollInFlight === p) pollInFlight = null;
+    });
+    pollInFlight = p;
   };
 
   const setAuto = (kind: WeatherKind, change: Partial<AutoReportState>): void => {
@@ -156,7 +165,7 @@ export function createController(deps: ControllerDeps): Controller {
    * pasted text (applyMetarText, applyTafText). A failure or a refusal keeps the
    * report in use and records why. Returns true when the report in use changed.
    */
-  const fetchOne = async (kind: WeatherKind): Promise<boolean> => {
+  const fetchOneUnguarded = async (kind: WeatherKind): Promise<boolean> => {
     const station = pack.airport.weatherStation;
     const fetched: WeatherFetchResult = await (kind === 'metar' ? fetchMetarText : fetchTafText)(station, { fetch: deps.fetch });
     if (!running) return false;
@@ -178,6 +187,16 @@ export function createController(deps: ControllerDeps): Controller {
     return !unchanged;
   };
 
+  /** A throw while handling one report is that report's failure; the other report is not lost. */
+  const fetchOne = async (kind: WeatherKind): Promise<boolean> => {
+    try {
+      return await fetchOneUnguarded(kind);
+    } catch (e) {
+      if (running) setAuto(kind, { error: e instanceof Error ? e.message : 'unknown error' });
+      return false;
+    }
+  };
+
   const runWeatherPoll = async (): Promise<void> => {
     try {
       const changed = await Promise.all((['metar', 'taf'] as const).map(fetchOne));
@@ -185,14 +204,22 @@ export function createController(deps: ControllerDeps): Controller {
       // A new METAR or TAF recalculates the plan (UP-1); an unchanged one, or a failure, only updates what is shown about the fetch.
       if (changed.some(Boolean)) recalculate(deps.now());
       else republish();
-    } finally {
-      weatherInFlight = null;
+    } catch (e) {
+      // A failure while handling a report is shown as a failed fetch of that report; the report in use is unchanged.
+      if (running) {
+        const message = e instanceof Error ? e.message : 'unknown error';
+        for (const kind of ['metar', 'taf'] as const) if (auto[kind].error === null) setAuto(kind, { error: message });
+        republish();
+      }
     }
   };
 
   const pollWeather = (): void => {
     if (weatherInFlight !== null) return;
-    weatherInFlight = runWeatherPoll();
+    const p: Promise<void> = runWeatherPoll().finally(() => {
+      if (weatherInFlight === p) weatherInFlight = null;
+    });
+    weatherInFlight = p;
   };
 
   const tick = (): void => {
