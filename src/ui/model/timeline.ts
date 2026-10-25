@@ -446,7 +446,9 @@ export function summaryTiles(view: ViewData): Tile[] {
 /** The legend entries, in order. Icon and pattern come from STATUS_STYLE. */
 export const LEGEND: readonly { readonly status: 'SUITABLE' | 'MARGINAL' | 'UNSUITABLE' | 'UNKNOWN'; readonly text: string }[] = [
   { status: 'SUITABLE', text: 'Suitable' },
-  { status: 'MARGINAL', text: 'Marginal or uncertain' },
   { status: 'UNSUITABLE', text: 'Unsuitable' },
   { status: 'UNKNOWN', text: 'Unknown' },
 ];
+
+/** The legend entry for a green cell that keeps a word (OD-81). */
+export const FORECAST_GREEN_LEGEND = 'Green with a word: passes, but see the word (forecast change, near a limit, variable wind)';

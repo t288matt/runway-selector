@@ -142,10 +142,12 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('a cell is green only when
       view.weather.slots.forEach((_s, i) => {
         const status = view.result.evaluation.cells[row.index]?.[i]?.status;
         const cls = (classes[k] ?? '').split(' ');
-        expect(cls.includes('cs-suitable')).toBe(status === 'SUITABLE');
+        // Green means SUITABLE or MARGINAL (OD-81).
+        const green = status === 'SUITABLE' || status === 'MARGINAL';
+        expect(cls.includes('cs-suitable')).toBe(green);
         const colours = cls.filter((c) => c.startsWith('cs-'));
         expect(colours).toHaveLength(1);
-        if (status === 'SUITABLE') suitable += 1;
+        if (green) suitable += 1;
         k += 1;
       });
     });

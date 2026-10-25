@@ -1,7 +1,9 @@
 // The one mapping from an engine cell to what is drawn (UI_DESIGN section 6.2,
 // DESIGN section 8). Colour comes from `cell.status` and from nothing else: no
-// other function in the UI may choose a status class, so a cell can never be
-// drawn green unless the engine said SUITABLE (DB-3, UD-3).
+// other function in the UI may choose a status class, so a cell is drawn green
+// only when the engine said SUITABLE or MARGINAL (DB-3, UD-3, OD-81). A MARGINAL
+// cell is green but keeps its cause word, the white uncertain corner and the
+// hover box; the engine status stays MARGINAL.
 import type { Cell, Status } from '../../engine';
 import { hhmmZRel } from '../format';
 
@@ -77,12 +79,14 @@ export interface CellView {
 
 export function cellView(cell: Cell, slotStartMs: number, missing: MissingWeather, refMs: number = slotStartMs): CellView {
   const style = STATUS_STYLE[cell.status];
+  // OD-81: a MARGINAL cell takes the plain suitable green; its word, corner and screen-reader text still say marginal.
+  const className = cell.status === 'MARGINAL' ? STATUS_STYLE.SUITABLE.className : style.className;
   const code = causeCode(cell, missing);
   const cause = code === '' ? '' : `, cause ${CAUSE_WORDS[code] ?? code}`;
   const uncertain = cell.uncertain ? ', depends on an uncertain input' : '';
   return {
     status: cell.status,
-    className: style.className,
+    className,
     icon: style.icon,
     word: style.word,
     code,
