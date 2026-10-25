@@ -1,11 +1,13 @@
 {
   "schemaVersion": 1,
-  "description": "Runway ends. PROVISIONAL DRAFT 24-10-2026: 10/28 (the original east-west runway, modelled here as a single runway without an L/R suffix, per the owner's priorities) and 16/34 (the crosswind runway). Headings are magnetic, the same reference as the other packs and the weather reports, from SkyVector (098/278 and 159/339). Not checked against the Irish AIP.",
+  "description": "Runway ends. PROVISIONAL DRAFT 24-10-2026: 10/28 is modelled as two parallel runways, 10L/28R and 10R/28L (four runway ends), and 16/34 is the crosswind runway. Headings are magnetic, the same reference as the other packs and the weather reports, from SkyVector (098/278 and 159/339). The parallels share the same heading. Not checked against the Irish AIP.",
   "status": "verified",
   "source": "SkyVector, 24-10-2026",
   "runways": [
-    { "name": "10", "headingDegrees": 98 },
-    { "name": "28", "headingDegrees": 278 },
+    { "name": "10L", "headingDegrees": 98 },
+    { "name": "10R", "headingDegrees": 98 },
+    { "name": "28L", "headingDegrees": 278 },
+    { "name": "28R", "headingDegrees": 278 },
     { "name": "16", "headingDegrees": 159 },
     { "name": "34", "headingDegrees": 339 }
   ]

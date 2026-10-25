@@ -1,8 +1,8 @@
 // End-to-end scenarios on the Dublin (EIDW) pack, expectations worked by hand from the pack files BEFORE the engine was run.
 //
 // Pack numbers (refdata/airports/EIDW, provisional 24-10-2026):
-//   headings (magnetic): 10 98, 28 278, 16 159, 34 339. 10/28 is modelled as a single runway (no L/R suffix); Dublin's second,
-//   parallel 10/28 runway is not in this pack.
+//   headings (magnetic): 10L 98, 10R 98, 28L 278, 28R 278, 16 159, 34 339. 10/28 is two parallel runways (four ends); each 10AD or 28AD
+//   mode covers both parallels in its direction, with no pairing.
 //   Limits carried over from the other packs: tailwind dry 5 / wet 0, tolerance 0.05, calm 3, near-limit margin 3, crosswind 20 (default).
 //   28AD and 10AD have their own 28 kt crosswind limit (owner, 24-10-2026); 16AD and 34AD use the 20 kt default.
 //   marginal penalty 3, change penalties light 1 / medium 5 / busy 25 / unknown 5. No capacities.
@@ -22,10 +22,10 @@ const MODES = ['28AD', '10AD', '16AD', '34AD'];
 
 describe('EIDW pack loads with the owner\'s four modes in order', () => {
   const r = go(kt(100, 10));
-  it('has the four runway ends and the four modes', () => {
+  it('has the six runway ends and the four modes', () => {
     expect(r.pack.airport.icao).toBe('EIDW');
     expect(r.pack.airport.timeZone).toBe('Europe/Dublin');
-    expect(r.pack.runways.map((x) => `${x.name}:${x.headingDegrees}`)).toEqual(['10:98', '28:278', '16:159', '34:339']);
+    expect(r.pack.runways.map((x) => `${x.name}:${x.headingDegrees}`)).toEqual(['10L:98', '10R:98', '28L:278', '28R:278', '16:159', '34:339']);
     expect(r.pack.modes.map((m) => m.id)).toEqual(MODES);
   });
 });
