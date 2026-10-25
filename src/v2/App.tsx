@@ -5,10 +5,13 @@
 import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
 import { loadPack, type AirportPack } from '../refdata';
 import { cacheBustToken } from './clock';
+import { Dashboard } from './components/Dashboard';
 import { Drawer } from './components/Drawer';
 import { APP_TITLE, Header } from './components/Header';
 import { Notice } from './components/Notice';
 import type { AppDeps } from './deps';
+import { screenModel } from './model/screen';
+import { useController } from './useController';
 
 export type { AppDeps } from './deps';
 
@@ -53,6 +56,8 @@ interface AirportSwitch {
 }
 
 function Screen({ pack, deps, airport }: { pack: AirportPack; deps: AppDeps; airport: AirportSwitch }) {
+  const screen = useController(pack, deps);
+  const model = screenModel(screen);
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLButtonElement>(null);
   return (
@@ -69,10 +74,7 @@ function Screen({ pack, deps, airport }: { pack: AirportPack; deps: AppDeps; air
           onMore={() => setMoreOpen(true)}
           moreRef={moreRef}
         />
-        <main className="hero" aria-label="Runway mode recommendation" />
-        <footer className="trust">
-          <Notice pack={pack} />
-        </footer>
+        <Dashboard model={model} pack={pack} onCurrentMode={screen.setCurrentMode} onDismissNotice={screen.dismissNotice} />
       </div>
       <Drawer open={moreOpen} onClose={() => setMoreOpen(false)} returnFocusTo={moreRef} />
     </>
