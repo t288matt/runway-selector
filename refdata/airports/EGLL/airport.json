@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "London Heathrow Airport. PROVISIONAL DRAFT 24-10-2026: coordinates and elevation (83 ft) are from public aggregator sites, not checked against the UK AIP. Heathrow has two parallel runways on the 09/27 alignment (09L/27R and 09R/27L); the owner's priorities did not name a side, so following the same convention as Tamworth (YSTW) and Dublin (EIDW), this pack models 09/27 as a single runway without an L/R suffix. Other simulation assumptions carry over from the Australian packs.",
+  "description": "London Heathrow Airport. PROVISIONAL DRAFT 24-10-2026: coordinates and elevation (83 ft) are from public aggregator sites, not checked against the UK AIP. Heathrow has two parallel runways on the 09/27 alignment (09L/27R and 09R/27L), modelled as four runway ends. Other simulation assumptions carry over from the Australian packs.",
   "icao": "EGLL",
   "name": "Heathrow",
   "latitude": 51.4775,
