@@ -334,11 +334,11 @@ describe('prefiles count in the next slot only (owner, 25-10-2026)', () => {
   // Minutes after 00:00 UTC: 615 is 10:15, 640 is 10:40, 665 is 11:05.
   describeForEachPack('next-slot rule', (pack) => {
     const icao = pack.airport.icao;
-    const prefile = (o: { departure?: string; arrival?: string; departureMinuteOfDay: number; enrouteMinutes?: number }) => ({
+    const prefile = (o: { departure?: string; arrival?: string; departureMinuteOfDay: number | null; enrouteMinutes?: number | null }) => ({
       departure: o.departure ?? 'ZZZA',
       arrival: o.arrival ?? 'ZZZB',
       departureMinuteOfDay: o.departureMinuteOfDay,
-      enrouteMinutes: o.enrouteMinutes ?? 60,
+      enrouteMinutes: o.enrouteMinutes === undefined ? 60 : o.enrouteMinutes,
     });
     const withPrefiles = (list: ReturnType<typeof prefile>[]) => buildTrafficSlots({ pack, nowMs: NOW, aircraft: [], prefiles: list, slotStartsMs: SLOT_STARTS });
 

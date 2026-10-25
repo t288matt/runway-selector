@@ -89,3 +89,37 @@ That a prefiled plan's filed take-off time has no bearing on whether it counts i
 - The engine's response to next-slot departures, beyond the `levels` values in the summary.
 - Mutation results. Every revert claim above is from reading the code and tests.
 - That PR #93 on GitHub targets `origin/main` as stated. I took the base from `gh pr view 93`.
+
+## Re-review of commit 0c3e4da (25-10-2026)
+
+Scope: the diff of 0c3e4da alone, and the files it names (src/traffic/parseFeed.ts, src/traffic/demand.ts, tests/traffic/parseFeed.test.ts, tests/traffic/demand.test.ts).
+
+### Checks
+
+| Check | Result |
+|---|---|
+| `npx vitest run` | 52 test files passed; 2047 tests passed, 0 failed |
+| `npm run typecheck` | exit 1: 3 errors, all in tests/traffic/demand.test.ts lines 381-382 (`null` assigned to a `number` field of the test helper's type) |
+| `npm run lint` | exit 0 |
+
+### Finding 0 (new, blocks a clean typecheck): test helper type not widened
+
+The new test at demand.test.ts:378-386 passes `null` times through `withPrefiles`, whose parameter type comes from the `prefile` helper at demand.test.ts:337-342, which still types `departureMinuteOfDay` and `enrouteMinutes` as `number`. Vitest does not typecheck, so the suite passes. Fix: widen the helper's option and field types to `number | null`. This is a test-only change.
+
+### Original high finding: fixed
+
+A bad `enroute_time` or `deptime` no longer drops a YSSY departure. parseFeed.ts:70-74 keeps the plan with that time set to null, and demand.ts:148 counts the departure whatever its times. Checked by reading: a YSSY departure with enroute "2401" now counts 1 in the next slot. The arrival rule (demand.ts:150) requires both times, so an arrival with an unknown time is not counted. The test at demand.test.ts:378-386 covers both sides.
+
+### Remaining gap (low)
+
+parseFeed.ts:69 still returns null when the arrival fails the ICAO shape check or is not a string, so a YSSY departure with a malformed arrival field is still dropped. The owner rule says every prefiled departure from here counts. Fix: keep the departure when only the arrival is bad, and store the arrival as unknown.
+
+### Other checks
+
+- The `null` times reach `nearestUtc` only behind the `!== null` guards at demand.ts:150, so no NaN arithmetic occurs.
+- Nothing outside parseFeed.ts and demand.ts reads the two time fields (grep of src/).
+- The parser test at parseFeed.test.ts:191-201 now expects the kept plans with null times; the assertions match the new code.
+
+### Verdict
+
+Approve with fixes. The high finding is fixed. Before merge: widen the test helper type so typecheck passes (finding 0), and decide whether a malformed arrival should keep the departure (remaining gap).

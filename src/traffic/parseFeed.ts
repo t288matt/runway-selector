@@ -22,7 +22,7 @@ export interface Aircraft {
 export interface Prefile {
   /** Filed origin, upper case. */
   readonly departure: string;
-  /** Filed destination, upper case. */
+  /** Filed destination, upper case, or empty when missing or malformed. */
   readonly arrival: string;
   /** Filed departure time, in minutes after 00:00 UTC (0 to 1439), or null when missing or malformed. */
   readonly departureMinuteOfDay: number | null;
@@ -67,13 +67,14 @@ function readPrefile(p: unknown): Prefile | null {
   const plan = p['flight_plan'];
   const departure = icao(plan['departure']);
   const arrival = icao(plan['arrival']);
-  if (departure === null || arrival === null) return null;
+  // An unknown arrival is kept as '' (it can never match this airport); a departure from here still counts.
+  if (departure === null) return null;
   // A bad time does not drop the plan: a departure from here still counts (its take-off time is not used).
   const deptime = hhmm(plan['deptime']);
   const enroute = hhmm(plan['enroute_time']);
   const departureMinuteOfDay = deptime !== null && deptime < 1440 ? deptime : null;
   const enrouteMinutes = enroute !== null && enroute <= 1440 ? enroute : null;
-  return { departure, arrival, departureMinuteOfDay, enrouteMinutes };
+  return { departure, arrival: arrival ?? '', departureMinuteOfDay, enrouteMinutes };
 }
 
 /** null = no flight plan (ignored); 'bad' = malformed (skipped and counted). */

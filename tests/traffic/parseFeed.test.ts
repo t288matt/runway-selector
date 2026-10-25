@@ -203,6 +203,11 @@ describe('prefiles: filed plans that have not connected', () => {
     expect(ok(feedOf([])).prefiles).toEqual([]);
   });
 
+  it('keeps a departure whose arrival is malformed, with the arrival empty', () => {
+    const f = ok(withPrefiles(prefile({ ...plan, arrival: 'not an airport!' })));
+    expect(f.prefiles.map((p) => [p.departure, p.arrival])).toEqual([['ZZZA', '']]);
+  });
+
   it('keeps the first prefiles up to the limit and drops the rest, without refusing the feed', () => {
     const many = Array.from({ length: FEED_MAX_PILOTS + 5 }, () => prefile(plan));
     const r = parseFeed(withPrefiles(...many));
