@@ -32,8 +32,8 @@ export function Picture({ model }: { model: PictureModel }) {
         {d.arrow === null ? null : (
           <g fill="#ffb454" stroke="#ffb454">
             <defs>
-              <marker id={markerId} markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-                <path d="M0,0 L8,4 L0,8 z" stroke="none" />
+              <marker id={markerId} markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="10" refY="7" orient="auto">
+                <path d="M0,0 L14,7 L0,14 z" stroke="none" />
               </marker>
             </defs>
             <line x1={d.arrow.x1} y1={d.arrow.y1} x2={d.arrow.x2} y2={d.arrow.y2} strokeWidth="5" strokeLinecap="round" markerEnd={`url(#${markerId})`} />

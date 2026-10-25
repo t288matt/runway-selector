@@ -100,13 +100,13 @@ npm ci --ignore-scripts
 npm run dev
 ```
 
-Open the address shown in the terminal. To make a static copy that any web host can serve:
+Open the address shown in the terminal. The current screen is `index.html`; the new answer-first screen (v2) is a second page, `v2.html`, in the same folder (for example `http://localhost:5173/v2.html`). Both read the same airport packs. To make a static copy that any web host can serve:
 
 ```bash
 npm run build
 ```
 
-The built files go in `dist/`. Serve them over HTTP; opening the page by double-clicking the file does not work, because browsers do not let a page read its data files that way.
+The built files go in `dist/`: `index.html` and `v2.html`, with one copy of the airport data. Serve them over HTTP; opening the page by double-clicking the file does not work, because browsers do not let a page read its data files that way.
 
 ## Limits
 

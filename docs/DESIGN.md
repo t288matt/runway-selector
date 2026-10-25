@@ -273,6 +273,14 @@ Result per cell: SUITABLE, MARGINAL, UNSUITABLE or UNKNOWN. MARGINAL means it pa
 ## 8. Dashboard
 Panels A to D and F (Panels E and G were removed, OD-20). The runway diagram, weather runway table and timeline rows are generated from the pack's runway and mode lists, and all airport wording comes from `airport.json`. Layout order: weather text (the pasted METAR and TAF) under the freshness chips, recommendation (A), the survival timeline (B) directly below it, then weather components (C), traffic (D) and the runway diagram (F). The timeline has modes as rows and 30-minute slots as columns, scrolls horizontally, marks now, the recommended sequence and planned changes, and has a background band over every row for busy periods. Green is never drawn for a cell that fails a tailwind limit, because colour comes straight from the matrix.
 
+### 8a. The v2 front end (issue 94, phase 1)
+A second, answer-first screen runs beside the one described above (v1). It has its own page and its own screen code, and shares everything else.
+- **Where it lives.** `v2.html` at the repository root, beside `index.html`, loads `src/v2/main.tsx`. The code is in `src/v2/`: the shell (`App.tsx`), the controller (`controller.ts`, its own copy of the v1 scheduling and data flow), the view model (`src/v2/model/`: state band, tiles, chips, runway picture, forecast bar) and the components. Its stylesheet is `src/v2/v2.css`; it does not use v1's.
+- **The import rule.** `src/v2` imports nothing from `src/ui`, and `src/ui` imports nothing from `src/v2`. Both may import `src/engine`, `src/weather`, `src/traffic`, `src/refdata`, `src/store` and `src/net`. Copying v1 logic into v2 files is allowed; importing it is not. `scripts/check-ui-boundary.mjs` enforces this and runs in `npm run lint`; `tests/ui-boundary.test.ts` proves it fails when either direction is crossed. Tests may import both (the parity test does). The text-only rendering rule (SEC-2), the banned-import check and the airport-literal check apply to `src/v2` like the rest of `src/`.
+- **State rule (provisional, owner, 25-10-2026).** The state band uses v1's own conditions: CHANGE NOW where v1 shows "CURRENT MODE UNSUITABLE", CHANGE SOON where v1 shows "EARLY MODE CHANGE RECOMMENDED", otherwise HOLD. Issue 96 refines it.
+- **Opening it.** `npm run dev`, then `/v2.html` on the address shown. `npm run build` produces both pages in `dist/` with one copy of `refdata/` (the Vite config has two page entries).
+- **Phase 1 scope.** The closed screen only; the "More" drawer is an empty shell and the forecast bar does not yet expand (phase 2).
+
 ## 9. Testing and verification
 # Runway Mode Planner (first airport: Sydney, YSSY): design and architecture
 
