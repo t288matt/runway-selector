@@ -4,7 +4,7 @@
 import type { AirportPack } from '../refdata';
 import { FEED_MAX_BYTES, FEED_TIMEOUT_MS, VATSIM_FEED_URL } from './config';
 import { Oversize, readLimited } from '../net/readLimited';
-import { parseFeed, type Aircraft } from './parseFeed';
+import { parseFeed, type Aircraft, type Prefile } from './parseFeed';
 
 export type FeedFetch = (input: string, init?: RequestInit) => Promise<Response>;
 
@@ -28,6 +28,7 @@ export type FetchFeedResult =
   | {
       readonly ok: true;
       readonly aircraft: readonly Aircraft[];
+      readonly prefiles: readonly Prefile[];
       readonly fetchedAtMs: number;
       readonly feedTimestampMs: number | null;
       readonly skippedPilots: number;
@@ -70,7 +71,7 @@ export async function fetchFeed(options: FetchFeedOptions): Promise<FetchFeedRes
   const fetchedAtMs = options.now();
   const parsed = parseFeed(text);
   if (!parsed.ok) return fail('invalid', parsed.message);
-  return { ok: true, aircraft: parsed.feed.aircraft, fetchedAtMs, feedTimestampMs: parsed.feed.feedTimestampMs, skippedPilots: parsed.feed.skippedPilots };
+  return { ok: true, aircraft: parsed.feed.aircraft, prefiles: parsed.feed.prefiles, fetchedAtMs, feedTimestampMs: parsed.feed.feedTimestampMs, skippedPilots: parsed.feed.skippedPilots };
 }
 
 /** True when the data is older than the pack's limit (UP-3, UP-5). Exactly at the limit is not stale. */

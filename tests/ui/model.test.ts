@@ -93,7 +93,7 @@ describe('freshness and stale flags', () => {
 
     it('flags traffic stale from vatsimStaleMinutes and failed when the last fetch failed', () => {
       const fetched = nowMs;
-      const feed: FeedState = { aircraft: [], fetchedAtMs: fetched, error: null, errorAtMs: null };
+      const feed: FeedState = { aircraft: [], prefiles: [], fetchedAtMs: fetched, error: null, errorAtMs: null };
       const limit = pack.settings.vatsimStaleMinutes * MIN;
       expect(chip('vatsim', fetched + limit, feed)?.flag).toBeNull();
       expect(chip('vatsim', fetched + limit + 1000, feed)?.flag).toBe('Stale');
@@ -138,7 +138,7 @@ describe('notices for missing and stale data (WX-9, UI_DESIGN section 7)', () =>
     const later = metar.observedAtMs + (pack.settings.metarStaleMinutes + 2) * MIN;
     const stale = dataNotices(view, EMPTY_FEED, later).find((n) => n.id === 'metar-stale');
     expect(stale?.text).toContain(`${pack.settings.metarStaleMinutes + 2} min old`);
-    const failed = dataNotices(view, { aircraft: [], fetchedAtMs: nowMs, error: 'HTTP 503', errorAtMs: nowMs }, nowMs).find((n) => n.id === 'vatsim-failed');
+    const failed = dataNotices(view, { aircraft: [], prefiles: [], fetchedAtMs: nowMs, error: 'HTTP 503', errorAtMs: nowMs }, nowMs).find((n) => n.id === 'vatsim-failed');
     expect(failed?.tone).toBe('bad');
     expect(failed?.text).toContain('HTTP 503');
     expect(failed?.text).toContain('last good traffic data');
@@ -146,11 +146,11 @@ describe('notices for missing and stale data (WX-9, UI_DESIGN section 7)', () =>
 });
 
 describe('the traffic feed keeps its previous data on failure (UP-3)', () => {
-  const good: FeedState = { aircraft: [{ latitude: 0, longitude: 0, altitude: 0, groundspeed: 0, departure: 'AAAA', arrival: 'BBBB' }], fetchedAtMs: 1000, error: null, errorAtMs: null };
+  const good: FeedState = { aircraft: [{ latitude: 0, longitude: 0, altitude: 0, groundspeed: 0, departure: 'AAAA', arrival: 'BBBB' }], prefiles: [], fetchedAtMs: 1000, error: null, errorAtMs: null };
 
   it('replaces the data on success and clears the error', () => {
-    const next = applyFeedResult({ ...good, error: 'old' }, { ok: true, aircraft: [], fetchedAtMs: 2000, feedTimestampMs: null, skippedPilots: 0 }, 2000);
-    expect(next).toEqual({ aircraft: [], fetchedAtMs: 2000, error: null, errorAtMs: null });
+    const next = applyFeedResult({ ...good, error: 'old' }, { ok: true, aircraft: [], prefiles: [], fetchedAtMs: 2000, feedTimestampMs: null, skippedPilots: 0 }, 2000);
+    expect(next).toEqual({ aircraft: [], prefiles: [], fetchedAtMs: 2000, error: null, errorAtMs: null });
   });
 
   it('keeps the aircraft and the time of the last good data on failure, and records the failure', () => {

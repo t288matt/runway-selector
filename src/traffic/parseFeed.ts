@@ -1,5 +1,5 @@
-// Parses the VATSIM data feed (SEC-3, SEC-6). Only six fields of each pilot are
-// kept. The output type has no field for a name, member number, callsign or
+// Parses the VATSIM data feed (SEC-3, SEC-6). Only six fields of each pilot and
+// four of each prefile are kept. The output type has no field for a name, member number, callsign or
 // anything else, so personal data cannot survive the parse.
 import { checkDepth, checkSize, findForbiddenKeys } from '../refdata/guards';
 import { FEED_MAX_BYTES, FEED_MAX_DEPTH, FEED_MAX_PILOTS, ICAO_MAX_LENGTH } from './config';
@@ -18,8 +18,21 @@ export interface Aircraft {
   readonly arrival: string;
 }
 
+/** A filed plan that has not connected yet. The complete list of what is kept; it has no position. */
+export interface Prefile {
+  /** Filed origin, upper case. */
+  readonly departure: string;
+  /** Filed destination, upper case. */
+  readonly arrival: string;
+  /** Filed departure time, in minutes after 00:00 UTC (0 to 1439). */
+  readonly departureMinuteOfDay: number;
+  /** Filed time en route, in minutes. */
+  readonly enrouteMinutes: number;
+}
+
 export interface ParsedFeed {
   readonly aircraft: readonly Aircraft[];
+  readonly prefiles: readonly Prefile[];
   /** The feed's own update time (UTC ms), or null when it is missing or unreadable. */
   readonly feedTimestampMs: number | null;
   /** Pilot entries skipped because they were malformed (a count only). */
@@ -38,6 +51,26 @@ function icao(v: unknown): string | null {
   if (typeof v !== 'string') return null;
   const s = v.trim().toUpperCase();
   return s.length <= ICAO_MAX_LENGTH && ICAO_SHAPE.test(s) ? s : null;
+}
+
+/** A VATSIM time such as "0930" (hours and minutes), as minutes; null when it is not that shape. */
+function hhmm(v: unknown): number | null {
+  if (typeof v !== 'string' || !/^\d{4}$/.test(v)) return null;
+  const hours = Number(v.slice(0, 2));
+  const minutes = Number(v.slice(2));
+  return minutes < 60 ? hours * 60 + minutes : null;
+}
+
+/** A prefile with a usable filed time and ends; anything else is ignored (no count: prefiles are not pilots). */
+function readPrefile(p: unknown): Prefile | null {
+  if (!isRecord(p) || !isRecord(p['flight_plan'])) return null;
+  const plan = p['flight_plan'];
+  const departure = icao(plan['departure']);
+  const arrival = icao(plan['arrival']);
+  const departureMinuteOfDay = hhmm(plan['deptime']);
+  const enrouteMinutes = hhmm(plan['enroute_time']);
+  if (departure === null || arrival === null || departureMinuteOfDay === null || departureMinuteOfDay >= 1440 || enrouteMinutes === null) return null;
+  return { departure, arrival, departureMinuteOfDay, enrouteMinutes };
 }
 
 /** null = no flight plan (ignored); 'bad' = malformed (skipped and counted). */
@@ -91,5 +124,14 @@ export function parseFeed(text: string): ParseResult {
     if (a === 'bad') skippedPilots += 1;
     else if (a !== null) aircraft.push(a);
   }
-  return { ok: true, feed: { aircraft, feedTimestampMs: readTimestamp(raw['general']), skippedPilots } };
+  const prefiles: Prefile[] = [];
+  const rawPrefiles = raw['prefiles'];
+  if (Array.isArray(rawPrefiles)) {
+    if (rawPrefiles.length > FEED_MAX_PILOTS) return refuse(`it lists more than ${FEED_MAX_PILOTS} prefiles`);
+    for (const p of rawPrefiles) {
+      const f = readPrefile(p);
+      if (f !== null) prefiles.push(f);
+    }
+  }
+  return { ok: true, feed: { aircraft, prefiles, feedTimestampMs: readTimestamp(raw['general']), skippedPilots } };
 }

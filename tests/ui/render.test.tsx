@@ -35,7 +35,7 @@ function realView(pack: AirportPack, ref: (typeof PACKS)[number], aircraft: bool
     taf: decodeTafFixture(TAF_ID, ref),
     windowChoice: 'full',
     currentMode: null,
-    feed: aircraft ? { aircraft: [], fetchedAtMs: nowOf(fixture(TAF_ID)), error: null, errorAtMs: null } : EMPTY_FEED,
+    feed: aircraft ? { aircraft: [], prefiles: [], fetchedAtMs: nowOf(fixture(TAF_ID)), error: null, errorAtMs: null } : EMPTY_FEED,
   });
 }
 
@@ -374,7 +374,7 @@ describe('Panel D', () => {
       else if (c.departures === 'not est.') expect(c.movements).toBe(`${c.arrivals} (arrivals only)`);
       else expect(c.movements).toBe(String(Number(c.arrivals) + Number(c.departures)));
     }
-    const text = textOf(renderDashboard(view, { aircraft: [], fetchedAtMs: view.calcNowMs, error: null, errorAtMs: null }));
+    const text = textOf(renderDashboard(view, { aircraft: [], prefiles: [], fetchedAtMs: view.calcNowMs, error: null, errorAtMs: null }));
     expect(text).toContain('Demand unknown from');
     expect(text).toContain('on the ground here.');
     expect(text).not.toContain('Connected aircraft are not movements');

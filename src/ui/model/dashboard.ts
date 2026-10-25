@@ -5,7 +5,7 @@ import { plan, type PlanResult, type TrafficLevel } from '../../engine';
 import type { AirportPack } from '../../refdata';
 import { buildTrafficSlots } from '../../traffic/demand';
 import type { FetchFeedResult } from '../../traffic/fetchFeed';
-import type { Aircraft } from '../../traffic/parseFeed';
+import type { Aircraft, Prefile } from '../../traffic/parseFeed';
 import { buildWeatherSlots, SLOT_MINUTES, type BuildWeatherSlotsResult, type DecodedMetar, type DecodedTaf } from '../../weather';
 import { ageText, hhmmssZ, hhmmZ, utcAndLocal } from '../format';
 
@@ -48,16 +48,17 @@ export function isWindowChoice(value: string): value is WindowChoice {
 /** The traffic feed as the page holds it. Previous data is kept when a fetch fails (UP-3). */
 export interface FeedState {
   readonly aircraft: readonly Aircraft[] | null;
+  readonly prefiles: readonly Prefile[];
   readonly fetchedAtMs: number | null;
   /** The last fetch failed with this message, or null. */
   readonly error: string | null;
   readonly errorAtMs: number | null;
 }
-export const EMPTY_FEED: FeedState = { aircraft: null, fetchedAtMs: null, error: null, errorAtMs: null };
+export const EMPTY_FEED: FeedState = { aircraft: null, prefiles: [], fetchedAtMs: null, error: null, errorAtMs: null };
 
-/** Fold one fetch result into the feed state. On failure the previous aircraft are kept and the failure is flagged (UP-3). */
+/** Fold one fetch result into the feed state. On failure the previous aircraft and prefiles are kept and the failure is flagged (UP-3). */
 export function applyFeedResult(previous: FeedState, result: FetchFeedResult, nowMs: number): FeedState {
-  if (result.ok) return { aircraft: result.aircraft, fetchedAtMs: result.fetchedAtMs, error: null, errorAtMs: null };
+  if (result.ok) return { aircraft: result.aircraft, prefiles: result.prefiles, fetchedAtMs: result.fetchedAtMs, error: null, errorAtMs: null };
   return { ...previous, error: result.error.message, errorAtMs: nowMs };
 }
 
@@ -93,7 +94,7 @@ export function calculate(input: CalcInput): ViewData {
   const { pack, nowMs } = input;
   const weather = buildWeatherSlots({ pack, nowMs, metar: input.metar, taf: input.taf, windowMinutes: windowMinutes(input.windowChoice) });
   const starts = weather.slots.map((s) => s.startMs);
-  const demand = input.feed.aircraft === null ? null : buildTrafficSlots({ pack, nowMs, aircraft: input.feed.aircraft, slotStartsMs: starts });
+  const demand = input.feed.aircraft === null ? null : buildTrafficSlots({ pack, nowMs, aircraft: input.feed.aircraft, prefiles: input.feed.prefiles, slotStartsMs: starts });
   const currentMode = pack.modes.some((m) => m.enabled && m.id === input.currentMode) ? input.currentMode : null;
   const result = plan(pack, { nowMs, weather: weather.slots, traffic: demand?.slots ?? [], currentMode });
   return { pack, calcNowMs: nowMs, metar: input.metar, taf: input.taf, weather, demand, liveDemand: demand, result, currentMode, windowChoice: input.windowChoice };
@@ -102,7 +103,7 @@ export function calculate(input: CalcInput): ViewData {
 /** The latest traffic on the slots the plan was calculated over (Panel D). Does not touch the plan. */
 export function liveDemandFor(view: ViewData, feed: FeedState, nowMs: number): ViewData['liveDemand'] {
   if (feed.aircraft === null) return null;
-  return buildTrafficSlots({ pack: view.pack, nowMs, aircraft: feed.aircraft, slotStartsMs: view.weather.slots.map((s) => s.startMs) });
+  return buildTrafficSlots({ pack: view.pack, nowMs, aircraft: feed.aircraft, prefiles: feed.prefiles, slotStartsMs: view.weather.slots.map((s) => s.startMs) });
 }
 
 /** Full recalculation every 30 minutes, aligned to the clock half-hour (UP-1, OP-9). */

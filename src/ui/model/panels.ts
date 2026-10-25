@@ -324,7 +324,8 @@ export function panelDModel(view: ViewData): PanelDModel {
   for (let i = 0; i < count; i += 1) {
     const t = slots[i];
     const arrivals = t?.arrivals ?? null;
-    const departures = t?.departures ?? null;
+    // Departures are shown for the first column only. Prefile departures in the next slot feed the plan but are not shown here.
+    const departures = i === 0 ? (t?.departures ?? null) : null;
     const label = i === 0 ? 'Next 30 mins' : `+${i * 30} min`;
     columns.push({
       label,
