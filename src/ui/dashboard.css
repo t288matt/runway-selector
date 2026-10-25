@@ -666,6 +666,27 @@ select {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.obar {
+  position: absolute;
+  top: 0;
+  height: 18px;
+  line-height: 16px;
+  box-sizing: border-box;
+  margin-left: 1px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--warn-text);
+  background: rgba(201, 138, 0, 0.18);
+  border: 1px solid rgba(201, 138, 0, 0.55);
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.obar.prob {
+  border-style: dashed;
+}
 .evm {
   display: flex;
   height: 18px;

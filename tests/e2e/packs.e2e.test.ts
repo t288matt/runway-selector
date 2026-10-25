@@ -183,7 +183,8 @@ describe('P4 forecast wet threshold and drying time follow the pack (WC-9, WC-10
   // Overlay 2317/2319 covers slots starting 17:00, 17:30, 18:00, 18:30 (Z). Calm wind everywhere, so only runwayState is read.
   //   PROB30 (no TEMPO), rain: WET on TEST (30 >= 30), WET POSSIBLE on YSSY and TEST1 (30 < 40).
   //   PROB40 (no TEMPO): WET on all three (40 >= 40 and 40 >= 30).
-  //   PROB30 TEMPO and TEMPO: WET POSSIBLE on all three.
+  //   TEMPO: WET POSSIBLE on all three.
+  //   PROB30 TEMPO and PROB40 TEMPO: DRY on all three, because a probability group never changes the runway state (owner, 25-10-2026).
   const calmWind = '00000KT';
   const state = (ref: PackRef, group: string) => {
     const res = go(ref, { wind: calmWind, tafBody: `${calmWind} 9999 SCT020 ${group} 2317/2319 4000 RA`, windowMinutes: 360 });
@@ -192,8 +193,8 @@ describe('P4 forecast wet threshold and drying time follow the pack (WC-9, WC-10
   it.each([
     ['PROB30', { YSSY: 'WET_POSSIBLE', TEST: 'WET', TEST1: 'WET_POSSIBLE' }],
     ['PROB40', { YSSY: 'WET', TEST: 'WET', TEST1: 'WET' }],
-    ['PROB30 TEMPO', { YSSY: 'WET_POSSIBLE', TEST: 'WET_POSSIBLE', TEST1: 'WET_POSSIBLE' }],
-    ['PROB40 TEMPO', { YSSY: 'WET_POSSIBLE', TEST: 'WET_POSSIBLE', TEST1: 'WET_POSSIBLE' }],
+    ['PROB30 TEMPO', { YSSY: 'DRY', TEST: 'DRY', TEST1: 'DRY' }],
+    ['PROB40 TEMPO', { YSSY: 'DRY', TEST: 'DRY', TEST1: 'DRY' }],
     ['TEMPO', { YSSY: 'WET_POSSIBLE', TEST: 'WET_POSSIBLE', TEST1: 'WET_POSSIBLE' }],
   ] as const)('%s 2317/2319 RA: runway state at 17:30Z', (group, want) => {
     for (const ref of PACKS) expect(state(ref, group), `${ref.name} ${group}`).toBe(want[ref.name as 'YSSY' | 'TEST' | 'TEST1']);

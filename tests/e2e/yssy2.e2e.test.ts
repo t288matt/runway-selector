@@ -141,10 +141,10 @@ describe('E23 other behaviours worked from the requirements', () => {
   });
   it('a wet spell ends, dries for 60 minutes, and a later WET POSSIBLE overlay does not restart the drying clock', () => {
     // Base -RA until FM 04:30. Slots 03:00 and 03:30 are METAR (dry) ; the TAF-governed 04:00 slot is WET (last wet slot, ends 04:30).
-    // Drying: 04:30 and 05:00 WET, 05:30 DRY at the earliest. PROB30 TEMPO 2305/2306 (05:00, 05:30): WET inside the drying period (05:00), WET POSSIBLE at 05:30.
+    // Drying: 04:30 and 05:00 WET, 05:30 DRY at the earliest. TEMPO 2305/2306 (05:00, 05:30): WET inside the drying period (05:00), WET POSSIBLE at 05:30.
     const r = go({
       metar: metar(kt(158, 4)),
-      taf: taf(`${kt(158, 4)} 9999 -RA SCT020 FM230430 ${kt(158, 4)} 9999 SCT020 PROB30 TEMPO 2305/2306 4000 SHRA`),
+      taf: taf(`${kt(158, 4)} 9999 -RA SCT020 FM230430 ${kt(158, 4)} 9999 SCT020 TEMPO 2305/2306 4000 SHRA`),
       windowMinutes: 360,
     });
     const state = (t: string) => r.out.evaluation.slots[at(r, t)]!.runwayState;

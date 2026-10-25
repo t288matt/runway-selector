@@ -12,7 +12,7 @@ export type RunwayStateCause =
   | 'FORECAST' // prevailing precipitation in a later slot
   | 'PROBABLE' // PROB group at or above the wet threshold
   | 'POSSIBLE_PROBABLE' // PROB group below the wet threshold
-  | 'POSSIBLE_TEMPORARY' // TEMPO or INTER precipitation
+  | 'POSSIBLE_TEMPORARY' // TEMPO or INTER precipitation, not a PROB30 or PROB40 TEMPO or INTER
   | 'DRYING'; // within the drying time after a wet slot
 
 /**

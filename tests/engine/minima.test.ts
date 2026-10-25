@@ -162,8 +162,12 @@ const overlay = (o: Partial<WeatherOverlay>): WeatherOverlay => ({
 });
 
 describe('rule MIN: TEMPO, INTER and PROB groups', () => {
-  it.each(['TEMPO', 'INTER', 'PROB'] as const)('a %s group below the ceiling minimum makes the cell MARGINAL', (kind) => {
-    const c = first({ ...good, overlays: [overlay({ kind, probabilityPct: kind === 'PROB' ? 30 : null, ceilingFt: 1200, visibilityMetres: 9999 })] }, pack, { gov: 'TAF' });
+  it('a PROB group below the ceiling minimum leaves the cell SUITABLE (a probability group never changes a cell)', () => {
+    const c = first({ ...good, overlays: [overlay({ kind: 'PROB', probabilityPct: 30, ceilingFt: 1200, visibilityMetres: 9999 })] }, pack, { gov: 'TAF' });
+    expect(c.status).toBe('SUITABLE');
+  });
+  it.each(['TEMPO', 'INTER'] as const)('a %s group below the ceiling minimum makes the cell MARGINAL', (kind) => {
+    const c = first({ ...good, overlays: [overlay({ kind, probabilityPct: null, ceilingFt: 1200, visibilityMetres: 9999 })] }, pack, { gov: 'TAF' });
     expect(c.status).toBe('MARGINAL');
     expect(c.uncertain).toBe(true);
     const r = c.reasons.find((x) => x.code === 'OVERLAY');

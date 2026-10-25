@@ -169,7 +169,7 @@ Two text boxes, METAR and TAF, each with the raw text the user pasted and an App
 | Row height | 36 px (cell 32 px plus a 2 px margin each side). |
 | Columns | One per 30-minute slot, 56 px pitch (cell 54 px wide). Slots are clock-aligned half-hours; there are no extra columns at TAF change times (OD-24). |
 | Row header | 176 px, sticky at the left. Line 1: the mode id ("12", with no "Mode" before it) plus tags REC and CURRENT. Line 2: runways in small text. |
-| Column header | Three sticky-top strips: time (HH:MM, hour labels in bold), weather events (BECMG, TEMPO, wet risk, change marker, no TAF), traffic class chips (L, M, H HIGH). |
+| Column header | Three sticky-top strips: time (HH:MM, hour labels in bold), weather events (wind bars, then one bar for each TEMPO, INTER or PROB group, then the event words: wet risk, WET, TS, low vis, no TAF), traffic class chips (L, M, H HIGH). |
 | Default span | The full TAF validity by default (OD-31), with options of 4 hours and 6 hours. The timeline shows the slots of the chosen window, as the mockup does. |
 | Window selector | Pull-down in the B header: Full TAF (default), 4 h, 6 h (OD-31). It sets the forecast window (OD-26) and the slots the timeline shows, as in the mockup. |
 
@@ -180,12 +180,12 @@ Each cell holds an icon, and below it a 9 px cause code only when status is not 
 | Status | Colour | Pattern | Icon | Cause codes |
 |---|---|---|---|---|
 | SUITABLE | green | solid | tick | none |
-| MARGINAL | amber | diagonal stripes | tilde | TW, XW, TEMPO, WET, PROB, WET?, VRB (variable wind above calm, OD-33) |
+| MARGINAL | amber | diagonal stripes | tilde | TW, XW, TEMPO, WET, WET?, VRB (variable wind above calm, OD-33) |
 | UNSUITABLE | red | dense crosshatch | cross | TW, XW, CAP, PLAN (operating plan) |
 | UNKNOWN | grey | dots | question mark | NO TAF, NO MET |
 The colour comes straight from the engine's matrix. The UI has no logic that can turn a cell green; it renders the status field only (DB-3, DESIGN section 8).
 
-A white triangle in the top-right corner marks a cell whose status depends on an uncertain input (TEMPO or PROB group, wet-possible runway state, demand estimate). This is the "uncertainty overlay". It can appear on any status.
+A white triangle in the top-right corner marks a cell whose status depends on an uncertain input (TEMPO or INTER group, wet-possible runway state, demand estimate). This is the "uncertainty overlay". It can appear on any status.
 
 ### 6.3 Overlays (all drawn from the same plan object)
 | Overlay | Drawing | Notes |
@@ -199,6 +199,7 @@ A white triangle in the top-right corner marks a cell whose status depends on an
 | Tailwind exceedance | Cause code TW in the cell; the hover shows the figure. Cells over the limit are never green. | |
 | Current mode | Row label tag CURRENT (outlined) and a 2 px white underline of the row label | Separate from the recommendation (UP-4). |
 | Wet-risk | The word "wet risk" in the event strip. The pale blue band across the rows is removed (owner, 24-10-2026, OD-62): the events strip already names it, so the band was redundant. | It does not recolour cells; the status already reflects the runway state. |
+| Group bars | Each TEMPO, INTER or PROB group is a bar in the event strip, under the wind bars, over the slots its window covers, labelled with the group's own text (full text on hover). Groups that overlap in time take separate lines. A PROB bar has a dashed border. The bar line is not drawn when the window has no such group, and the event-words line is not drawn when no slot has a word (owner, 25-10-2026, OD-80). | A PROB30 or PROB40 group (on its own or on a TEMPO or INTER) is shown only; it never recolours a cell. A plain TEMPO or INTER does. |
 | Uncertainty | White corner triangle (6.2); UNKNOWN cells are grey with dots | |
 
 Overlay layering from back to front: wet band, busy band, cells, recommended outline, now and changeover lines, labels. The sticky row labels sit above everything except the now label.
