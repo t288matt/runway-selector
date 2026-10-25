@@ -3,21 +3,14 @@
 // section 4c, "First load"). This is v2's own copy of the v1 shell logic; v2
 // imports nothing from src/ui.
 import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
-import { loadPack, type AirportPack, type FetchLike } from '../refdata';
-import type { Store } from '../store';
-import { cacheBustToken, type Clock } from './clock';
+import { loadPack, type AirportPack } from '../refdata';
+import { cacheBustToken } from './clock';
 import { Drawer } from './components/Drawer';
 import { APP_TITLE, Header } from './components/Header';
 import { Notice } from './components/Notice';
+import type { AppDeps } from './deps';
 
-export interface AppDeps {
-  readonly fetch: FetchLike;
-  readonly now: Clock;
-  /** Where the pack is served from; defaults to ./refdata. */
-  readonly baseUrl?: string;
-  /** Where the current mode, the window and the audit trail are kept. */
-  readonly store: Store;
-}
+export type { AppDeps } from './deps';
 
 export type PackState =
   | { readonly status: 'loading' }
