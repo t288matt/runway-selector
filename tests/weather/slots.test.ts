@@ -170,7 +170,8 @@ describeForEachPack('slot builder', (pack, ref) => {
 
     it('TAF only: the TAF governs from slot 0, with no METAR flags', () => {
       const { nowMs, taf } = reports(ref, '2026-10-23T14:10:00Z', { taf: 'taf-yssy-multiline-fm-tempo' });
-      const r = build(pack, nowMs, null, taf, 240);
+      // Staleness is not under test here (the stale-TAF test below covers it), and the fixture TAF is hours old, so the limit is lifted to keep the banners about the missing METAR only.
+      const r = build(packWith(ref, { settings: { tafStaleMinutes: 1440 } }), nowMs, null, taf, 240);
       expect(r.slots.every((x) => x.governedBy === 'TAF' && x.tafView === null)).toBe(true);
       expect(r.slots[0]!.weather.wind).toMatchObject({ directionDegrees: 40, speedKt: 10 });
       expect(r.slots.every((x) => x.weather.precipitation.recent === false)).toBe(true);
