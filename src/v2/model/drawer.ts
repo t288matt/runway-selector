@@ -3,12 +3,12 @@
 // drawer model (v2 imports nothing from src/ui). Every string is shown as a text
 // node (SEC-2). The words penalty, cost, points and score never appear: the
 // operating plan is shown as a rank derived from the pack numbers.
-import { conditionalOperationCheck } from '../../engine';
 import type { AirportPack, PlanBand, SettingName } from '../../refdata';
 import { formatClock } from '../../refdata';
 import type { AuditEntry, AuditValue } from '../../store';
-import { hhmmZ, hhmmZRel, kt1, minimaText } from '../format';
+import { hhmmZ, kt1, minimaText } from '../format';
 import { BANDS, type Band } from './answer';
+import { conditionalBanner, type WhyBanner } from './conditional';
 import { WINDOW_OPTIONS, type ViewData } from './dashboard';
 import { LEGEND, type LegendItem } from './evaluation';
 import { CAUSE_WORDS } from './status';
@@ -190,11 +190,7 @@ export function auditRows(entries: readonly AuditEntry[]): AuditRowModel[] {
 }
 
 // ---------------------------------------------------------------------- why
-export interface WhyBanner {
-  readonly tone: 'red' | 'amber' | 'ok';
-  readonly title: string;
-  readonly text: string;
-}
+export type { WhyBanner };
 
 export interface WhyModel {
   readonly kind: 'recommended' | 'no-suitable' | 'no-data';
@@ -206,31 +202,6 @@ export interface WhyModel {
   readonly noSuitable: { readonly title: string; readonly perMode: readonly { readonly modeId: string; readonly text: string; readonly restoreText: string }[] } | null;
   /** What is missing, for the no-data state. */
   readonly missing: readonly string[];
-}
-
-/**
- * The conditional-operation note: "<name> conditions met" for the recommended mode, when it has a conditional operation,
- * along the recommended path, on slots where its cell is SUITABLE and the check is MET. "until HH:MMZ" when the first
- * slot qualifies, "from HH:MMZ" when only a later one does, else none. Advisory only.
- */
-function conditionalBanner(view: ViewData, modeIndex: number): WhyBanner | null {
-  const op = view.pack.modes[modeIndex]?.conditionalOperation ?? null;
-  const recId = view.result.plan.recommendedModeId;
-  if (op === null || recId === null) return null;
-  const { evaluation, plan } = view.result;
-  const qualifies = (i: number): boolean => {
-    const slot = view.weather.slots[i];
-    return slot !== undefined && plan.slots[i]?.modeId === recId && evaluation.cells[modeIndex]?.[i]?.status === 'SUITABLE' && conditionalOperationCheck(op, slot, evaluation.slots[i]?.runwayState ?? 'DRY') === 'MET';
-  };
-  const count = Math.min(plan.slots.length, view.weather.slots.length);
-  const title = `${op.name} conditions met`;
-  if (count > 0 && qualifies(0)) {
-    let last = 0;
-    while (last + 1 < count && qualifies(last + 1)) last += 1;
-    return { tone: 'ok', title, text: `until ${hhmmZRel(view.weather.slots[last]?.endMs ?? 0, view.calcNowMs)}` };
-  }
-  for (let i = 1; i < count; i += 1) if (qualifies(i)) return { tone: 'ok', title, text: `from ${hhmmZRel(view.weather.slots[i]?.startMs ?? 0, view.calcNowMs)}` };
-  return null;
 }
 
 export function whyModel(view: ViewData): WhyModel {

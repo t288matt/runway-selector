@@ -82,6 +82,11 @@ export function Answer({ model }: { model: AnswerModel }) {
           </div>
         </div>
       )}
+      {model.conditional === null ? null : (
+        <p className="banner banner-ok cond" role="status" data-testid="conditional-note">
+          <b>&#10003; {model.conditional.title}</b> {model.conditional.text}
+        </p>
+      )}
     </div>
   );
 }

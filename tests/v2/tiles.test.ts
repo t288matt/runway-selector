@@ -3,7 +3,8 @@
 import { describe, expect, it } from 'vitest';
 import type { TrafficLevel } from '../../src/engine';
 import { chipModels } from '../../src/v2/model/chips';
-import { EMPTY_FEED, type FeedState } from '../../src/v2/model/dashboard';
+import { calculate, EMPTY_FEED, type FeedState } from '../../src/v2/model/dashboard';
+import { decodeMetar } from '../../src/weather';
 import { ceilingTile, conditionWords, levelWord, metarTile, runwayTile, TREND_HORIZON_MS, trafficTile, trafficTrend } from '../../src/v2/model/tiles';
 import { NO_AUTO_WEATHER } from '../../src/v2/controller';
 import { PACKS, YSSY_PACK } from '../helpers/packs';
@@ -170,9 +171,29 @@ describe('v2 tiles from the real METAR and TAF', () => {
 
   it('ceiling reads the governing report: feet with a thousands comma, or the no-ceiling words', () => {
     const t = ceilingTile(view);
-    expect(t.value).toMatch(/^(\d{1,3}(,\d{3})* ft|No ceiling|CAVOK \(no ceiling\)|Unknown)$/);
+    expect(t.value).toMatch(/^(\d{1,3}(,\d{3})* ft|No ceiling|CAVOK|Unknown)$/);
     expect(t.visibility).toMatch(/^vis (\d+ m|10 km or more|unknown)$/);
     expect(t.aria).toMatch(/^Ceiling .+, visibility .+/);
+  });
+});
+
+describe('v2 ceiling tile words', () => {
+  const pack = packWith(PACKS[0]!, { weatherStation: 'YSSY' });
+  const now = Date.parse('2026-10-24T10:00:00Z');
+  const tileFor = (body: string) => {
+    const metar = decodeMetar(`YSSY 241000Z ${body}`, { pack, nowMs: now });
+    if (metar.kind !== 'ok') throw new Error('bad fixture METAR');
+    return ceilingTile(calculate({ pack, nowMs: now, metar: metar.report, taf: null, windowChoice: 'full', currentMode: null, feed: EMPTY_FEED }));
+  };
+
+  it('CAVOK reads just "CAVOK" (the words "no ceiling" are redundant)', () => {
+    const t = tileFor('03010KT CAVOK 24/15 Q1013');
+    expect(t.value).toBe('CAVOK');
+    expect(t.visibility).toBe('vis 10 km or more');
+  });
+
+  it('only FEW or SCT cloud still reads "No ceiling"', () => {
+    expect(tileFor('03010KT 9999 FEW005 SCT010 24/15 Q1013').value).toBe('No ceiling');
   });
 });
 

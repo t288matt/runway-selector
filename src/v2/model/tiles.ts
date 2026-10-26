@@ -168,7 +168,7 @@ export function currentConditions(view: ViewData): DecodedConditions | null {
 }
 
 export interface CeilingTile {
-  /** "3,200 ft", "No ceiling", "CAVOK (no ceiling)" or "Unknown". */
+  /** "3,200 ft", "No ceiling", "CAVOK" or "Unknown". */
   readonly value: string;
   /** "vis 9000 m", "vis 10 km or more" or "vis unknown". */
   readonly visibility: string;
@@ -180,7 +180,7 @@ export function ceilingTile(view: ViewData): CeilingTile {
   let value = 'Unknown';
   let visibility = 'vis unknown';
   if (c !== null) {
-    if (c.cavok) value = 'CAVOK (no ceiling)';
+    if (c.cavok) value = 'CAVOK';
     else {
       const ft = ceilingOf(c);
       value = ft === null || ft === undefined ? 'No ceiling' : `${thousands(ft)} ft`;
