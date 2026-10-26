@@ -68,7 +68,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer screen states [
     expect(textOf(html)).toContain('CHANGE SOON');
     expect(html).toContain('M8 2l7 12H1z');
     expect(textOf(html)).toContain(view.result.explanation.earlyChange?.text ?? 'missing');
-    expect(textOf(html)).toMatch(/Forecasting: \S+ at \d{4}Z/);
+    expect(textOf(html)).toMatch(/Recommend: \S+ at \d{4}Z/);
   });
 
   it('shows the info mark and no alternatives block, with no P-numbers on screen; the ranking is in the popover (issue 122)', () => {
