@@ -16,8 +16,6 @@ export function ForecastBar({ model, evaluation }: { model: ForecastSummary; eva
         <span className="sumhead">
           <span className="chev" aria-hidden="true" />
           {EVALUATION_TITLE}
-          <span className="sp" />
-          <span className="hint">{model.rangeText}</span>
         </span>
       </summary>
       <Evaluation model={evaluation} />
