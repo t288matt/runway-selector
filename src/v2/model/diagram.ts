@@ -95,15 +95,40 @@ export function endBox(e: Pick<DiagramEnd, 'name' | 'x' | 'y' | 'anchor' | 'role
   return { x0, y0: e.y - 8, x1: x0 + w, y1: e.y + 8 };
 }
 
-/** Does the segment pass through (or within `pad` of) the box? Sampled, which is exact enough for a drawing. */
+/**
+ * Does the segment pass through (or within `pad` of, on each axis) the box? Exact (Liang-Barsky
+ * segment-vs-rectangle clipping), not sampled: a sampled version missed a strip whenever the
+ * crossing fell in a narrow gap between sample points (found testing issue 146's fix).
+ */
 function segmentHits(box: Box, x1: number, y1: number, x2: number, y2: number, pad: number): boolean {
-  for (let i = 0; i <= 24; i += 1) {
-    const t = i / 24;
-    const x = x1 + (x2 - x1) * t;
-    const y = y1 + (y2 - y1) * t;
-    if (x > box.x0 - pad && x < box.x1 + pad && y > box.y0 - pad && y < box.y1 + pad) return true;
+  const bx0 = box.x0 - pad;
+  const bx1 = box.x1 + pad;
+  const by0 = box.y0 - pad;
+  const by1 = box.y1 + pad;
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  let tmin = 0;
+  let tmax = 1;
+  for (const [p, q] of [
+    [-dx, x1 - bx0],
+    [dx, bx1 - x1],
+    [-dy, y1 - by0],
+    [dy, by1 - y1],
+  ] as const) {
+    if (p === 0) {
+      if (q < 0) return false;
+      continue;
+    }
+    const r = q / p;
+    if (p < 0) {
+      if (r > tmax) return false;
+      if (r > tmin) tmin = r;
+    } else {
+      if (r < tmin) return false;
+      if (r < tmax) tmax = r;
+    }
   }
-  return false;
+  return tmin <= tmax;
 }
 
 /**
@@ -145,6 +170,122 @@ export function placeWindLabel(text: string, arrow: Pick<WindArrow, 'x1' | 'y1' 
   const cy = Math.max(EDGE + h / 2, Math.min(DIAGRAM.height - EDGE - h / 2, f.cy));
   return { text, x: cx, y: cy, anchor: 'middle', place: 'arrow' };
 }
+/** How far beyond the threshold a runway end's name is placed, in line with the runway, before the clearance search (below) nudges it. */
+const END_LABEL_BASE_OFFSET = 11;
+
+/**
+ * Put a runway end's name (with its ARR/DEP roles) just beyond the threshold, in line with the
+ * runway, the way it always has been -- but search further out, and swing round that direction
+ * (as far as a right angle: a crowded crossing, such as two pairs meeting at a shallow angle,
+ * can leave nothing clear closer in or more in line), for a spot whose horizontal text box
+ * clears every runway strip. The fixed offset alone cleared the old 10-unit line; it does not
+ * reliably clear the wider asphalt strips (issue 141). `anchor` is fixed (it is what keeps
+ * parallel runways' names from colliding with each other); only the distance and the angle round
+ * the outward direction are searched. Falls back to the least-bad candidate tried, the way
+ * `placeWindLabel` does, if nothing is fully clear (never worse than the plain fixed offset).
+ */
+function placeEndLabel(threshold: { x: number; y: number }, outward: { x: number; y: number }, anchor: DiagramEnd['anchor'], name: string, roles: readonly Role[], runwayLines: readonly { x1: number; y1: number; x2: number; y2: number }[]): { x: number; y: number } {
+  const outAngle = Math.atan2(outward.y, outward.x);
+  const inside = (b: Box): boolean => b.x0 >= EDGE && b.x1 <= DIAGRAM.width - EDGE && b.y0 >= EDGE && b.y1 <= DIAGRAM.height - EDGE;
+  const clear = (b: Box): boolean => inside(b) && !runwayLines.some((l) => segmentHits(b, l.x1, l.y1, l.x2, l.y2, RUNWAY_CLEARANCE));
+  let best: { x: number; y: number; score: number } | null = null;
+  for (const dist of [END_LABEL_BASE_OFFSET, 14, 17, 20, 24, 28, 34, 40, 48, 56, 65]) {
+    for (const turn of [0, 12, -12, 22, -22, 35, -35, 50, -50, 70, -70, 90, -90, 110, -110]) {
+      const a = outAngle + turn * RAD;
+      const x = threshold.x + Math.cos(a) * dist;
+      const y = threshold.y + Math.sin(a) * dist;
+      const b = endBox({ name, x, y, anchor, roles });
+      if (clear(b)) return { x, y };
+      const hits = runwayLines.filter((l) => segmentHits(b, l.x1, l.y1, l.x2, l.y2, RUNWAY_CLEARANCE)).length;
+      const bad = (inside(b) ? 0 : 1000) + hits * 100 + dist * 0.01;
+      if (best === null || bad < best.score) best = { x, y, score: bad };
+    }
+  }
+  return best ?? { x: threshold.x + outward.x * END_LABEL_BASE_OFFSET, y: threshold.y + outward.y * END_LABEL_BASE_OFFSET };
+}
+
+/** Point-to-segment distance: how close a point comes to a runway's line. */
+function distToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len2 = dx * dx + dy * dy;
+  const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / len2));
+  return Math.hypot(px - (x1 + dx * t), py - (y1 + dy * t));
+}
+
+const ARROW_MIN_LENGTH_FRACTION = 0.3;
+/** The SVG arrowhead marker's tip sits a little beyond the line's own end point (Picture.tsx's
+ *  marker: refX 10 of 14, so about 4 units past (x2,y2) in the direction the line points). */
+const ARROW_MARKER_OVERSHOOT = 4.5;
+/** A little more than RUNWAY_CLEARANCE itself, so the 1-unit radial search step never leaves a
+ *  sliver under it (found on YPAD: 12.25 against a clearance of 12.28). */
+const ARROW_SAFETY_MARGIN = 2;
+
+/**
+ * The wind arrow runs along one fixed direction (the wind's -- never nudged, so the arrow still
+ * points exactly where the wind is from), from a tail at `baseR` out from the picture centre to
+ * a head 55% of the way in. When the wind blows straight down a runway's own heading -- not a
+ * rare case: a headwind is often why that runway is recommended, and for a single-runway
+ * airport it is the only case there is -- the fixed radii can land the head, or even the tail,
+ * on a runway's own (now much wider) asphalt strip; a "real", coordinate-based layout can even
+ * run a runway almost exactly along that same line for most of its length, so no point along
+ * that one line clears it for any useful distance. Keep the angle fixed (it must still point
+ * exactly where the wind is from) but let the whole arrow slide sideways, perpendicular to that
+ * angle, in small steps either way, and at each sideways position walk the line by distance from
+ * there to find a clear stretch. Prefers no sideways move and the usual length and position;
+ * falls back to the original fixed radii, unmoved, only if nothing anywhere clears (never worse
+ * than before).
+ */
+function placeArrow(cx: number, cy: number, from: number, baseR: number, runwayLines: readonly { x1: number; y1: number; x2: number; y2: number }[]): { x1: number; y1: number; x2: number; y2: number } {
+  const perp = { x: Math.cos(from), y: Math.sin(from) };
+  const minLength = baseR * ARROW_MIN_LENGTH_FRACTION;
+  const findRun = (pcx: number, pcy: number): { lo: number; hi: number } | null => {
+    const at = (r: number): { x: number; y: number } => ({ x: pcx + Math.sin(from) * r, y: pcy - Math.cos(from) * r * 0.95 });
+    const safe = (r: number): boolean => {
+      const p = at(r);
+      return p.x >= EDGE && p.x <= DIAGRAM.width - EDGE && p.y >= EDGE && p.y <= DIAGRAM.height - EDGE && runwayLines.every((l) => distToSegment(p.x, p.y, l.x1, l.y1, l.x2, l.y2) >= RUNWAY_CLEARANCE + ARROW_SAFETY_MARGIN);
+    };
+    const runs: { lo: number; hi: number }[] = [];
+    let open: number | null = null;
+    for (let r = 0; r <= baseR * 1.3; r += 1) {
+      if (safe(r)) {
+        if (open === null) open = r;
+      } else if (open !== null) {
+        runs.push({ lo: open, hi: r - 1 });
+        open = null;
+      }
+    }
+    if (open !== null) runs.push({ lo: open, hi: baseR * 1.3 });
+    let best: { lo: number; hi: number } | null = null;
+    let bestScore = Infinity;
+    for (const run of runs) {
+      if (run.hi - run.lo < minLength) continue;
+      const score = Math.abs(run.hi - baseR) + Math.abs(run.lo - baseR * 0.55);
+      if (score < bestScore) {
+        bestScore = score;
+        best = run;
+      }
+    }
+    return best;
+  };
+  for (const off of [0, 8, -8, 16, -16, 24, -24, 32, -32, 42, -42, 55, -55, 70, -70]) {
+    const pcx = cx + perp.x * off;
+    const pcy = cy + perp.y * off;
+    const run = findRun(pcx, pcy);
+    if (run === null) continue;
+    const r1 = run.hi;
+    const r2 = Math.max(run.lo + ARROW_MARKER_OVERSHOOT, r1 - Math.max(minLength, baseR * 0.37));
+    const at = (r: number): { x: number; y: number } => ({ x: pcx + Math.sin(from) * r, y: pcy - Math.cos(from) * r * 0.95 });
+    const p1 = at(r1);
+    const p2 = at(r2);
+    return { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y };
+  }
+  const at = (r: number): { x: number; y: number } => ({ x: cx + Math.sin(from) * r, y: cy - Math.cos(from) * r * 0.95 });
+  const p1 = at(baseR);
+  const p2 = at(baseR * 0.55);
+  return { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y };
+}
+
 const LENGTH = 130;
 const GAP = 22;
 
@@ -284,7 +425,15 @@ export function buildDiagram(input: DiagramInput): Diagram {
     else home.push(g);
   }
 
-  const runways: DiagramRunway[] = [];
+  interface RawEnd {
+    readonly runwayIndex: number;
+    readonly end: RunwayEnd;
+    readonly threshold: { x: number; y: number };
+    readonly outward: { x: number; y: number };
+    readonly anchor: DiagramEnd['anchor'];
+  }
+  const lines: { x1: number; y1: number; x2: number; y2: number }[] = [];
+  const rawEnds: RawEnd[] = [];
   const draw = (g: readonly RunwayEnd[], centreX: number, centreY: number, side: number): void => {
     const a = g[0];
     if (a === undefined) return;
@@ -307,19 +456,14 @@ export function buildDiagram(input: DiagramInput): Diagram {
         by = pb.y;
       }
     }
-    const label = (end: RunwayEnd, x: number, y: number, outward: { x: number; y: number }): DiagramEnd => ({
-      name: end.name,
-      x: x + outward.x * 11,
-      y: y + outward.y * 11,
-      anchor: side < 0 ? 'end' : side > 0 ? 'start' : 'middle',
-      roles: input.modeRoles.get(end.name) ?? [],
-    });
     const len = Math.hypot(bx - ax, by - ay) || 1;
     const dx = (bx - ax) / len;
     const dy = (by - ay) / len;
-    const ends: DiagramEnd[] = [label(a, ax, ay, { x: -dx, y: -dy })];
-    if (b !== undefined) ends.push(label(b, bx, by, { x: dx, y: dy }));
-    runways.push({ x1: ax, y1: ay, x2: bx, y2: by, ends, used: ends.some((e) => e.roles.length > 0) });
+    const anchor: DiagramEnd['anchor'] = side < 0 ? 'end' : side > 0 ? 'start' : 'middle';
+    const runwayIndex = lines.length;
+    lines.push({ x1: ax, y1: ay, x2: bx, y2: by });
+    rawEnds.push({ runwayIndex, end: a, threshold: { x: ax, y: ay }, outward: { x: -dx, y: -dy }, anchor });
+    if (b !== undefined) rawEnds.push({ runwayIndex, end: b, threshold: { x: bx, y: by }, outward: { x: dx, y: dy }, anchor });
   };
 
   for (const cluster of clusters) {
@@ -334,17 +478,36 @@ export function buildDiagram(input: DiagramInput): Diagram {
     });
   }
 
+  // Labels are placed once every runway's line is known, so a label can be pushed clear of ANY
+  // strip -- not just its own -- which matters for a crossing runway close to an active end.
+  const endsByRunway = new Map<number, DiagramEnd[]>();
+  for (const raw of rawEnds) {
+    const roles = input.modeRoles.get(raw.end.name) ?? [];
+    const pos =
+      roles.length === 0
+        ? { x: raw.threshold.x + raw.outward.x * END_LABEL_BASE_OFFSET, y: raw.threshold.y + raw.outward.y * END_LABEL_BASE_OFFSET }
+        : placeEndLabel(raw.threshold, raw.outward, raw.anchor, raw.end.name, roles, lines);
+    const list = endsByRunway.get(raw.runwayIndex) ?? [];
+    list.push({ name: raw.end.name, x: pos.x, y: pos.y, anchor: raw.anchor, roles });
+    endsByRunway.set(raw.runwayIndex, list);
+  }
+  const runways: DiagramRunway[] = lines.map((line, i) => {
+    const ends = endsByRunway.get(i) ?? [];
+    return { ...line, ends, used: ends.some((e) => e.roles.length > 0) };
+  });
+
   let arrow: WindArrow | null = null;
   let windPart = 'Wind unknown.';
   const w = input.wind;
   if (w !== null && w.kind === 'steady') {
     const from = w.directionDegrees * RAD;
     const r = 92;
+    const { x1, y1, x2, y2 } = placeArrow(cx, cy, from, r, runways);
     arrow = {
-      x1: cx + Math.sin(from) * r,
-      y1: cy - Math.cos(from) * r * 0.95,
-      x2: cx + Math.sin(from) * r * 0.55,
-      y2: cy - Math.cos(from) * r * 0.55 * 0.95,
+      x1,
+      y1,
+      x2,
+      y2,
       label: `${Math.round(w.speedKt)}${w.gustKt === null ? '' : `G${Math.round(w.gustKt)}`} kt`,
       labelX: cx + Math.sin(from) * r + (Math.sin(from) < 0 ? -8 : 8),
       labelY: cy - Math.cos(from) * r * 0.95 + 4,
