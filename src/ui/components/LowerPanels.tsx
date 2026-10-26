@@ -94,7 +94,6 @@ export function PanelF({ view }: { view: ViewData }) {
             <text x={d.arrow.labelX} y={d.arrow.labelY} textAnchor={d.arrow.labelAnchor} className="dg-windspeed">{d.arrow.label}</text>
           </g>
         )}
-        <text x="290" y="14" textAnchor="end" className="dg-north">N up</text>
       </svg>
       <p className="small" data-testid="diagram-caption">{d.caption}</p>
       <p className="small">Blue runways are used by the recommended mode; ARR is arrivals and DEP is departures.</p>

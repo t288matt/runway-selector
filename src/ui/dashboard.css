@@ -887,10 +887,6 @@ p.small {
   fill: var(--text);
   font-weight: 700;
 }
-.dg-north {
-  fill: var(--muted);
-  font-size: 10px;
-}
 .dg-wind line {
   stroke: var(--warn-text);
   stroke-width: 3;

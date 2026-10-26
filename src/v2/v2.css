@@ -812,10 +812,6 @@ body {
   cursor: default;
   flex-direction: row;
 }
-.legend .cell.wide {
-  width: auto;
-  padding: 0 4px;
-}
 .legend .cell.swatch {
   background: var(--panel2);
   border: 1px solid var(--line);
