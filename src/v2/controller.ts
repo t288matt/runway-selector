@@ -10,7 +10,7 @@
 // the traffic shown and the freshness chip but never the plan: the plan keeps
 // the traffic it was calculated with.
 import { reloadPack, type AirportPack, type FetchLike } from '../refdata';
-import { clearAudit, exportAudit, loadAudit, loadCurrentMode, loadWindowChoice, recordCurrentMode, type AuditEntry, type AuditExport, type CurrentModeRecord, type Store } from '../store';
+import { clearAudit, exportAudit, loadAudit, loadWindowChoice, type AuditEntry, type AuditExport, type Store } from '../store';
 import { fetchFeed } from '../traffic/fetchFeed';
 import type { DecodedMetar, DecodedTaf } from '../weather';
 import { fetchMetarText, fetchTafText, type WeatherFetchResult } from '../weather/fetchWeather';
@@ -67,8 +67,6 @@ export interface ControllerState {
   readonly view: ViewData;
   readonly feed: FeedState;
   readonly displayNowMs: number;
-  /** The stored current mode (with its set time), or null. */
-  readonly currentModeRecord: CurrentModeRecord | null;
   /** Messages about stored values that were cleared or discarded; each is shown until dismissed. */
   /** The audit trail, oldest first, as stored. */
   readonly audit: readonly AuditEntry[];
@@ -87,7 +85,6 @@ export interface Controller {
   /** Resolves when the poll in flight (if any) has finished; for tests. */
   readonly settled: () => Promise<void>;
   readonly refresh: () => void;
-  readonly setCurrentMode: (id: string | null) => void;
   readonly dismissNotice: (index: number) => void;
   /** Use pasted text for a report. A refused text leaves the report in use (and its automatic updates) as they were. */
   readonly applyMetar: (text: string) => ApplyOutcome;
@@ -125,9 +122,8 @@ export function createController(deps: ControllerDeps): Controller {
   };
 
   // Stored state is read once, here (OD-30). A value that was cleared or discarded is reported once (SEC-3).
-  const storedMode = loadCurrentMode(store, pack);
-  notify(storedMode.message);
-  let record: CurrentModeRecord | null = storedMode.record;
+  // v2 has no current mode (owner decision, issue 104): it never reads or writes one, and a mode saved by v1 in the shared
+  // storage is ignored, so a stale saved mode can never make the screen say CHANGE NOW or CHANGE SOON.
   const storedWindow = loadWindowChoice(store, pack.airport.icao, windowIds);
   notify(storedWindow.message);
   const windowChoice: WindowChoice = (storedWindow.choice as WindowChoice | null) ?? defaultWindowFor(pack);
@@ -136,11 +132,9 @@ export function createController(deps: ControllerDeps): Controller {
   notify(storedAudit.message);
   let audit: readonly AuditEntry[] = storedAudit.entries;
 
-  const currentModeId = (): string | null => record?.modeId ?? null;
-
   const first = deps.now();
-  const build = (view: ViewData, displayNowMs: number): ControllerState => ({ view, feed, displayNowMs, currentModeRecord: record, audit, notices, reload, autoWeather: auto });
-  let state: ControllerState = build(calculate({ pack, nowMs: first, metar, taf, windowChoice, currentMode: currentModeId(), feed }), first);
+  const build = (view: ViewData, displayNowMs: number): ControllerState => ({ view, feed, displayNowMs, audit, notices, reload, autoWeather: auto });
+  let state: ControllerState = build(calculate({ pack, nowMs: first, metar, taf, windowChoice, currentMode: null, feed }), first);
 
   const publish = (next: ControllerState): void => {
     state = next;
@@ -158,7 +152,7 @@ export function createController(deps: ControllerDeps): Controller {
 
   /** A full recalculation with everything held now, including the latest traffic. */
   const recalculate = (nowMs: number): void => {
-    publish(build(calculate({ pack, nowMs, metar, taf, windowChoice, currentMode: currentModeId(), feed }), nowMs));
+    publish(build(calculate({ pack, nowMs, metar, taf, windowChoice, currentMode: null, feed }), nowMs));
   };
 
   const runPoll = async (): Promise<void> => {
@@ -306,10 +300,6 @@ export function createController(deps: ControllerDeps): Controller {
       }
       const pollChanged = result.pack.settings.vatsimPollSeconds !== pack.settings.vatsimPollSeconds || result.pack.settings.weatherPollMinutes !== pack.settings.weatherPollMinutes;
       pack = result.pack;
-      // A stored current mode that the new pack no longer enables is cleared, with a message (DESIGN section 4c).
-      const reread = loadCurrentMode(store, pack);
-      record = reread.record;
-      notify(reread.message);
       refreshAudit();
       if (running && pollChanged) {
         stopTimers();
@@ -351,15 +341,6 @@ export function createController(deps: ControllerDeps): Controller {
       recalculate(deps.now());
       poll();
       pollWeather();
-    },
-    setCurrentMode: (id) => {
-      const now = deps.now();
-      const change = recordCurrentMode(store, pack, now, id);
-      notify(change.message);
-      record = change.record;
-      refreshAudit();
-      if (change.changed) recalculate(now);
-      else republish();
     },
     dismissNotice: (index) => {
       notices = notices.filter((_n, i) => i !== index);

@@ -294,26 +294,6 @@ body {
   color: var(--text);
   font-weight: 600;
 }
-.cur {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 2px;
-  flex-wrap: wrap;
-}
-.cur label {
-  color: var(--muted);
-  font-size: 12px;
-}
-.cur select {
-  background: var(--panel2);
-  color: var(--text);
-  border: 1px solid var(--accent);
-  border-radius: 6px;
-  padding: 4px 6px;
-  font: inherit;
-  min-height: 44px;
-}
 .pic {
   display: flex;
   align-items: center;
@@ -465,7 +445,6 @@ body {
   padding: 0 12px 8px;
   min-width: 0;
   max-width: 100%;
-  --lab: 100px;
 }
 .fcx > summary {
   list-style: none;
@@ -494,12 +473,8 @@ body {
   transform: rotate(-135deg);
   margin-top: 4px;
 }
-.fcx[open] .fc2,
 .fcx[open] > summary .tip-pop {
   display: none;
-}
-.fc2 {
-  display: block;
 }
 .sumhead {
   display: flex;
@@ -517,150 +492,6 @@ body {
 }
 .sumhead .sp {
   flex: 1;
-}
-.fc2 .row {
-  display: grid;
-  grid-template-columns: var(--lab) 1fr;
-  align-items: center;
-  min-height: 20px;
-}
-.fc2 .lab {
-  color: var(--muted);
-  font-size: 11px;
-  padding-right: 8px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.axis {
-  position: relative;
-  display: block;
-  height: 14px;
-  color: var(--muted);
-  font-size: 11px;
-}
-.axis span {
-  position: absolute;
-  transform: translateX(-50%);
-}
-.pathwrap {
-  position: relative;
-  display: block;
-}
-.track {
-  position: relative;
-  display: grid;
-  height: 20px;
-}
-.seg {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  color: #fff;
-  border-right: 1px solid rgba(11, 20, 38, 0.6);
-  overflow: hidden;
-  white-space: nowrap;
-}
-.seg.ok {
-  background: var(--ok);
-}
-.seg.mg {
-  background: var(--warn);
-  color: #0b1426;
-}
-.seg.bd {
-  background: var(--bad);
-}
-.seg.un {
-  background: var(--unk);
-}
-.seg.unc::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  border-style: solid;
-  border-width: 0 7px 7px 0;
-  border-color: transparent #fff transparent transparent;
-}
-.nowm {
-  position: absolute;
-  top: -2px;
-  bottom: -2px;
-  width: 2px;
-  background: #fff;
-}
-.chgline {
-  position: absolute;
-  top: -3px;
-  bottom: -3px;
-  border-left: 2px dashed var(--accent-text);
-}
-.ev {
-  position: relative;
-  display: block;
-  height: 18px;
-}
-.ev b {
-  position: absolute;
-  top: 0;
-  height: 16px;
-  border-radius: 3px;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 0 5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-  line-height: 14px;
-}
-.ev .wet {
-  background: rgba(91, 184, 232, 0.25);
-  border: 1px solid var(--wet);
-  color: #bfe6fa;
-}
-.ev .wet.possible {
-  border-style: dashed;
-}
-.ev .tempo {
-  background: rgba(232, 163, 58, 0.18);
-  border: 1px dashed #e8a33a;
-  color: var(--warn-text);
-}
-.ev .wnd {
-  background: var(--panel2);
-  color: var(--text);
-}
-.tl {
-  display: grid;
-  gap: 1px;
-  height: 12px;
-}
-.tl i {
-  display: block;
-  height: 100%;
-  border-radius: 1px;
-}
-.tl i.l {
-  background: var(--ok);
-  height: 35%;
-  margin-top: auto;
-}
-.tl i.m {
-  background: var(--warn);
-  height: 65%;
-  margin-top: auto;
-}
-.tl i.h {
-  background: var(--warn);
-}
-.tl i.x {
-  background: repeating-linear-gradient(45deg, var(--unk) 0 3px, transparent 3px 6px);
-  border: 1px dashed var(--unk);
 }
 
 /* ---------- trust chips ---------- */
@@ -1032,7 +863,6 @@ body {
 .app:has(.fcx[open]) .hero .pic,
 .app:has(.fcx[open]) .hero .facts,
 .app:has(.fcx[open]) .why1,
-.app:has(.fcx[open]) .cur,
 .app:has(.fcx[open]) .rw {
   display: none;
 }
@@ -1312,9 +1142,6 @@ dl.v dd {
   .notice {
     margin-left: 0;
     flex-basis: 100%;
-  }
-  .fcx {
-    --lab: 50px;
   }
   .sumhead .hint {
     display: none;

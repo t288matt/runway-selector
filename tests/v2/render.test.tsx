@@ -23,11 +23,11 @@ import { FIXTURE_NOW, FIXTURE_STATION, realView, viewOf } from './helpers';
 const BANNED_WORDS = /\b(penalty|penalties|cost|costs|points?|scores?|least[- ]bad)\b/i;
 
 function stateOf(view: ViewData, feed: FeedState = EMPTY_FEED, notices: string[] = [], displayNowMs: number = view.calcNowMs + 60_000): ControllerState {
-  return { view, feed, displayNowMs, currentModeRecord: null, audit: [], notices, reload: { status: 'idle', message: null }, autoWeather: NO_AUTO_WEATHER };
+  return { view, feed, displayNowMs, audit: [], notices, reload: { status: 'idle', message: null }, autoWeather: NO_AUTO_WEATHER };
 }
 
 function render(view: ViewData, feed: FeedState = EMPTY_FEED, notices: string[] = []): string {
-  return renderToStaticMarkup(<Dashboard model={screenModel(stateOf(view, feed, notices))} pack={view.pack} onCurrentMode={() => undefined} onDismissNotice={() => undefined} />);
+  return renderToStaticMarkup(<Dashboard model={screenModel(stateOf(view, feed, notices))} pack={view.pack} onDismissNotice={() => undefined} />);
 }
 
 const textOf = (markup: string): string =>
@@ -46,16 +46,19 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer screen states [
   const early: (TrafficLevel | null)[] = [...med];
   early[4] = 'busy';
 
-  it('HOLD: a tick and the word, the mode with its accessible name, "No change planned", and the I am on selector', () => {
+  it('RECOMMENDED (id HOLD): a tick and the word, the mode with its accessible name, "No change planned", and NO current-mode selector', () => {
     const view = viewOf(pack, rig, same<Wx>(4, 'ok'), same(4, 'light'));
     const html = render(view);
     const mode = view.result.plan.recommendedModeId ?? 'missing';
     expect(stateAttr(html)).toBe('HOLD');
-    expect(textOf(html)).toContain('HOLD');
+    expect(textOf(html)).toContain('RECOMMENDED');
+    expect(textOf(html)).not.toContain('HOLD');
     expect(html).toContain(`aria-label="Recommended mode ${mode}"`);
     expect(textOf(html)).toContain('No change planned');
-    expect(html).toMatch(/<label for="[^"]+">I am on<\/label><select id="/);
-    expect(html).toMatch(/<option value=""[^>]*>Not set<\/option>/);
+    // the answer band has no selector and no "I am on" (issue 104)
+    expect(html).not.toContain('I am on');
+    expect(html).not.toContain('<select');
+    expect(html).not.toContain('Not set');
   });
 
   it('CHANGE SOON: a triangle and the words, with the engine text of the early change under the mode', () => {
@@ -66,15 +69,6 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer screen states [
     expect(html).toContain('M8 2l7 12H1z');
     expect(textOf(html)).toContain(view.result.explanation.earlyChange?.text ?? 'missing');
     expect(textOf(html)).toMatch(/Next: \S+ at \d\d:\d\dZ/);
-  });
-
-  it('CHANGE NOW: a cross and the words, with the v1 sentence about the current mode', () => {
-    const view = viewOf(pack, rig, ['badA', 'badA', 'ok'], same(3, 'medium'), rig.a);
-    const html = render(view);
-    expect(stateAttr(html)).toBe('CHANGE_NOW');
-    expect(textOf(html)).toContain('CHANGE NOW');
-    expect(textOf(html)).toContain(`Current mode ${rig.a} is unsuitable`);
-    expect(html).toContain('M3 3l10 10M13 3L3 13');
   });
 
   it('no suitable mode: the red label replaces the mode and no mode is named as recommended', () => {
@@ -95,7 +89,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer screen states [
     expect(html).toContain('tone-unk');
   });
 
-  it('draws the whole closed state in the fixed order: header-less answer, picture, tiles, forecast bar, chips, notice', () => {
+  it('draws the whole closed state in the fixed order: header-less answer, picture, tiles, Evaluation and TAF toggle, chips, notice', () => {
     const html = render(viewOf(pack, rig, same<Wx>(4, 'ok'), same(4, 'light')));
     const marks = ['class="state ', 'data-testid="picture"', 'data-testid="tile-traffic"', 'data-testid="tile-metar"', 'data-testid="forecast-bar"', 'data-testid="chip-metar"', 'role="note"'].map((m) => html.indexOf(m));
     expect(marks.every((i) => i >= 0)).toBe(true);
@@ -154,10 +148,14 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 tiles and picture [%s]
     for (const r of pack.runways) expect(textOf(html)).toContain(r.name);
   });
 
-  it('forecast bar: the closed summary has the summary in words as its name', () => {
+  it('the slim forecast bar is gone; the closed screen has the Evaluation and TAF toggle row in its place', () => {
     const html = render(viewOf(pack, rig, ['ok', 'ok', 'badA', 'badA'], same(4, 'light')));
     expect(html).toMatch(/<summary[^>]*aria-label="Evaluation and TAF: open or close\. Forecast \d\d:\d\dZ to \d\d:\d\dZ\. Path: /);
-    expect(html).toContain('data-testid="path-seg"');
+    expect(textOf(html)).toMatch(/Evaluation and TAF \d\d:\d\dZ to \d\d:\d\dZ/);
+    expect(html).not.toContain('class="fc2"');
+    expect(html).not.toContain('data-testid="path-seg"');
+    expect(html).not.toContain('class="track"');
+    expect(html).not.toContain('class="pathwrap"');
   });
 });
 
@@ -167,7 +165,7 @@ describe('v2 chips, notice and failure states on real reports', () => {
 
   it('shows METAR, TAF, VATSIM and the plan chip, each with a shape and a hover text', () => {
     const html = renderToStaticMarkup(
-      <Dashboard model={screenModel(stateOf(view, { aircraft: [], prefiles: [], fetchedAtMs: FIXTURE_NOW - 30_000, error: null, errorAtMs: null }, [], FIXTURE_NOW))} pack={real} onCurrentMode={() => undefined} onDismissNotice={() => undefined} />,
+      <Dashboard model={screenModel(stateOf(view, { aircraft: [], prefiles: [], fetchedAtMs: FIXTURE_NOW - 30_000, error: null, errorAtMs: null }, [], FIXTURE_NOW))} pack={real} onDismissNotice={() => undefined} />,
     );
     for (const id of ['metar', 'taf', 'vatsim', 'plan']) expect(html).toContain(`data-testid="chip-${id}"`);
     expect(html).toContain('data-shape="dot"');
@@ -186,7 +184,7 @@ describe('v2 chips, notice and failure states on real reports', () => {
     files['airport.json'].labels = { extraNotice: 'A pack line.' };
     files['airport.json'].weatherStation = FIXTURE_STATION;
     const pack = parsePack(toRaw(files));
-    const html = renderToStaticMarkup(<Dashboard model={screenModel(stateOf({ ...view, pack }))} pack={pack} onCurrentMode={() => undefined} onDismissNotice={() => undefined} />);
+    const html = renderToStaticMarkup(<Dashboard model={screenModel(stateOf({ ...view, pack }))} pack={pack} onDismissNotice={() => undefined} />);
     expect(html).toContain(FLIGHT_SIM_NOTICE);
     expect(textOf(html)).toContain('A pack line.');
   });

@@ -1,5 +1,4 @@
-// The answer band: the state rule, the mode, the next change and the "I am on"
-// choices, on every pack; and the PARITY test that v2 shows the same recommended
+// The answer band: the state rule, the mode and the next change, on every pack; and the PARITY test that v2 shows the same recommended
 // mode, next change and state as v1's own model on the same inputs.
 import { describe, expect, it } from 'vitest';
 import { type TrafficLevel } from '../../src/engine';
@@ -23,10 +22,11 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 state band [%s]', (_n,
   const rig = rigFor(ref);
   const pack = packOf(rig);
 
-  it('is HOLD when nothing is wrong and no mode is set', () => {
+  it('is RECOMMENDED (internal id HOLD) when nothing is wrong and no mode is set', () => {
     const view = viewOf(pack, rig, same<Wx>(4, 'ok'), same(4, 'light'));
     expect(bandOf(view)).toBe(BANDS.HOLD);
-    expect(bandOf(view).word).toBe('HOLD');
+    expect(bandOf(view).word).toBe('RECOMMENDED');
+    expect(bandOf(view).id).toBe('HOLD');
   });
 
   it('is CHANGE NOW when the mode the operator is on is unsuitable now (v1 red banner)', () => {
@@ -105,12 +105,10 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer values [%s]', (
     expect(a.next).toMatch(/^Next: \S+ at \d\d:\d\dZ$/);
   });
 
-  it('offers Not set and then every enabled mode, and shows the mode the operator is on', () => {
-    const view = viewOf(pack, rig, same<Wx>(2, 'ok'), [], rig.b);
-    const a = answerModel(view);
-    expect(a.choices[0]).toEqual({ value: '', label: 'Not set' });
-    expect(a.choices.slice(1).map((c) => c.value)).toEqual(pack.modes.filter((m) => m.enabled).map((m) => m.id));
-    expect(a.current).toBe(view.currentMode ?? '');
+  it('has no current-mode choices: the answer model carries neither a list of modes to pick nor a chosen mode', () => {
+    const a = answerModel(viewOf(pack, rig, same<Wx>(2, 'ok')));
+    expect('choices' in a).toBe(false);
+    expect('current' in a).toBe(false);
   });
 });
 
@@ -160,7 +158,8 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('PARITY: v2 shows what v1 
     const m1 = panelAModel(v1);
     const a2 = answerModel(v2);
     expect(a2.modeId).toBe(m1.modeId);
-    expect(a2.band.id).toBe(v1State(v1));
+    // OWNER DECISION (issue 104): v2 has no current mode, so its state is compared with v1's only for the no-current-mode case.
+    if (current === null) expect(a2.band.id).toBe(v1State(v1));
     if (a2.nextChange === null) {
       expect(m1.nextChange === 'No change planned' || a2.modeId === null).toBe(true);
       if (a2.modeId !== null) expect(a2.next).toBe('No change planned');
@@ -180,7 +179,8 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('PARITY: v2 shows what v1 
       const m1 = panelAModel(v1);
       const a2 = answerModel(v2);
       expect(a2.modeId, `current ${current}`).toBe(m1.modeId);
-      expect(a2.band.id, `current ${current}`).toBe(v1State(v1));
+      // OWNER DECISION (issue 104): v2 has no current mode, so its state is compared with v1's only for the no-current-mode case.
+      if (current === null) expect(a2.band.id, `current ${current}`).toBe(v1State(v1));
       const up = v1.result.changeovers.find((c) => c.change.slotIndex > 0);
       expect(a2.nextChange?.modeId ?? null, `current ${current}`).toBe(up?.change.toModeId ?? null);
     }

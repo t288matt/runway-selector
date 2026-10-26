@@ -1,5 +1,5 @@
 // The answer band of the v2 screen: the state (a glyph AND a word), the mode,
-// the next change and the "I am on" choices. Pure: plain data from one view.
+// and the next change. Pure: plain data from one view.
 // Wording about the recommendation comes from the engine's explanation or from
 // the pack; no airport fact is written here.
 //
@@ -9,7 +9,8 @@
 //                (the mode the operator is on fails a mandatory rule now);
 //   CHANGE SOON  when v1 would show the amber banner "EARLY MODE CHANGE
 //                RECOMMENDED" (the engine's explanation carries an early change);
-//   HOLD         otherwise.
+//   HOLD         otherwise (shown as RECOMMENDED).
+// v2 has no current mode (owner, 26-10-2026, issue 104), so CHANGE NOW is not reachable from the screen; the rule stays.
 // A plain planned change ("Next: ... at ...") does not make the state CHANGE SOON.
 import { NO_SUITABLE_TITLE } from '../../engine';
 import { hhmmZRel } from '../format';
@@ -28,7 +29,8 @@ export interface Band {
 }
 
 export const BANDS: Readonly<Record<BandId, Band>> = {
-  HOLD: { id: 'HOLD', word: 'HOLD', glyph: 'tick', tone: 'ok' },
+  // The internal id stays HOLD; the word shown is RECOMMENDED (owner, 26-10-2026, issue 104).
+  HOLD: { id: 'HOLD', word: 'RECOMMENDED', glyph: 'tick', tone: 'ok' },
   CHANGE_SOON: { id: 'CHANGE_SOON', word: 'CHANGE SOON', glyph: 'triangle', tone: 'warn' },
   CHANGE_NOW: { id: 'CHANGE_NOW', word: 'CHANGE NOW', glyph: 'cross', tone: 'bad' },
   NO_SUITABLE: { id: 'NO_SUITABLE', word: NO_SUITABLE_TITLE, glyph: 'cross', tone: 'bad' },
@@ -55,11 +57,6 @@ export function bandOf(view: ViewData): Band {
   return BANDS.HOLD;
 }
 
-export interface ModeChoice {
-  readonly value: string;
-  readonly label: string;
-}
-
 export interface AnswerModel {
   readonly band: Band;
   readonly modeId: string | null;
@@ -74,9 +71,6 @@ export interface AnswerModel {
   readonly nextChange: { readonly modeId: string; readonly atMs: number } | null;
   /** The short line under the mode: the v1 banner text for CHANGE NOW and CHANGE SOON, what is missing for NO DATA. */
   readonly why: string | null;
-  readonly choices: readonly ModeChoice[];
-  /** The operator's mode ('' for Not set). */
-  readonly current: string;
 }
 
 /** Longer mode ids use a smaller type so they stay inside the answer column. A display rule, not an airport fact. */
@@ -89,8 +83,6 @@ export function answerModel(view: ViewData): AnswerModel {
   const { pack, result } = view;
   const { plan, explanation } = result;
   const band = bandOf(view);
-  const choices: ModeChoice[] = [{ value: '', label: 'Not set' }, ...pack.modes.filter((m) => m.enabled).map((m) => ({ value: m.id, label: m.id }))];
-  const current = view.currentMode ?? '';
   const recId = plan.recommendedModeId;
 
   if (recId === null) {
@@ -98,7 +90,7 @@ export function answerModel(view: ViewData): AnswerModel {
       band.id === 'NO_DATA'
         ? [explanation.headline, ...view.weather.banners.filter((b) => b.code === 'no-weather' || b.code === 'no-metar' || b.code === 'no-taf' || b.code === 'taf-ended' || b.code === 'metar-outside-window').map((b) => b.message)].join(' ')
         : null;
-    return { band, modeId: null, modeSize: 'normal', modeLabel: 'No recommended mode', arrivals: null, departures: null, next: '', nextChange: null, why: missing, choices, current };
+    return { band, modeId: null, modeSize: 'normal', modeLabel: 'No recommended mode', arrivals: null, departures: null, next: '', nextChange: null, why: missing };
   }
 
   const mode = pack.modes.find((m) => m.id === recId);
@@ -113,7 +105,5 @@ export function answerModel(view: ViewData): AnswerModel {
     next: upcoming === undefined ? 'No change planned' : `Next: ${upcoming.change.toModeId} at ${hhmmZRel(upcoming.change.startMs, view.calcNowMs)}`,
     nextChange: upcoming === undefined ? null : { modeId: upcoming.change.toModeId, atMs: upcoming.change.startMs },
     why: band.id === 'CHANGE_NOW' ? currentModeUnsuitableText(view) : band.id === 'CHANGE_SOON' ? (explanation.earlyChange?.text ?? null) : null,
-    choices,
-    current,
   };
 }

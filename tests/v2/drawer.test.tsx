@@ -12,7 +12,7 @@ import { DrawerContent, DRAWER_SECTIONS, type DrawerBridge } from '../../src/v2/
 import { NO_AUTO_WEATHER } from '../../src/v2/controller';
 import type { ViewData } from '../../src/v2/model/dashboard';
 import { evaluationModel } from '../../src/v2/model/evaluation';
-import { auditRows, keyModel, planBandModel, settingsModel, whyModel } from '../../src/v2/model/drawer';
+import { auditRows, keyModel, REACHABLE_STATES, planBandModel, settingsModel, whyModel } from '../../src/v2/model/drawer';
 import { CAUSE_WORDS } from '../../src/v2/model/status';
 import { packOf, rigFor, same, type Wx } from '../engine/planHelpers';
 import { PACKS, YSSY_PACK } from '../helpers/packs';
@@ -120,7 +120,11 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the drawer sections [%s]'
 
   it('Key: the state words, the cell legend, the cause words and the runway picture key', () => {
     const k = keyModel();
-    expect(k.states.map((s) => s.band.word)).toEqual(expect.arrayContaining(['HOLD', 'CHANGE SOON', 'CHANGE NOW', 'NO DATA']));
+    // only states that can appear: no current mode in v2, so no CHANGE NOW; HOLD is worded RECOMMENDED
+    expect(k.states.map((s) => s.band.word)).toEqual(['RECOMMENDED', 'CHANGE SOON', 'NO SUITABLE STANDARD MODE IDENTIFIED', 'NO DATA']);
+    expect(k.states.map((s) => s.band.id)).toEqual([...REACHABLE_STATES]);
+    expect(textOf(render(view))).not.toContain('CHANGE NOW');
+    expect(textOf(render(view))).not.toContain('HOLD');
     const t = textOf(render(view));
     for (const s of k.states) expect(t).toContain(s.band.word);
     for (const [code, word] of Object.entries(CAUSE_WORDS)) {

@@ -283,18 +283,24 @@ export interface KeyModel {
 }
 
 const STATE_MEANING: Readonly<Record<Band['id'], string>> = {
-  HOLD: 'stay on this mode',
+  HOLD: 'this mode is advised',
   CHANGE_SOON: 'an early change is advised',
   CHANGE_NOW: 'the current mode is unsuitable now',
   NO_SUITABLE: 'no standard mode fits',
   NO_DATA: 'there is not enough weather to say',
 };
 
+/**
+ * The states the v2 screen can show. v2 has no current mode (issue 104), so CHANGE NOW (the operator's mode is unsuitable)
+ * cannot appear; the Key does not list it. CHANGE SOON can, because the engine's own planned early change needs no current mode.
+ */
+export const REACHABLE_STATES = ['HOLD', 'CHANGE_SOON', 'NO_SUITABLE', 'NO_DATA'] as const;
+
 export function keyModel(): KeyModel {
   return {
-    states: (['HOLD', 'CHANGE_SOON', 'CHANGE_NOW', 'NO_SUITABLE', 'NO_DATA'] as const).map((id) => ({ band: BANDS[id], meaning: STATE_MEANING[id] })),
+    states: (REACHABLE_STATES).map((id) => ({ band: BANDS[id], meaning: STATE_MEANING[id] })),
     legend: LEGEND,
     causes: Object.entries(CAUSE_WORDS).map(([code, word]) => ({ code, word })),
-    runwayKey: ['Blue runways are used by the recommended mode; ARR is arrivals and DEP is departures.', 'A cross on a runway end: that end would have a tailwind over the limit.', 'N up: north is at the top of the picture.'],
+    runwayKey: ['Blue runways are used by the recommended mode; ARR is arrivals and DEP is departures.', 'N up: north is at the top of the picture.'],
   };
 }

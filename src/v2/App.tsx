@@ -77,7 +77,7 @@ function Screen({ pack, deps, airport }: { pack: AirportPack; deps: AppDeps; air
           onMore={() => setMoreOpen(true)}
           moreRef={moreRef}
         />
-        <Dashboard model={model} pack={livePack} onCurrentMode={screen.setCurrentMode} onDismissNotice={screen.dismissNotice} />
+        <Dashboard model={model} pack={livePack} onDismissNotice={screen.dismissNotice} />
       </div>
       <Drawer open={moreOpen} onClose={() => setMoreOpen(false)} returnFocusTo={moreRef}>
         <DrawerContent

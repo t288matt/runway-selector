@@ -21,10 +21,10 @@ import { FIXTURE_NOW, FIXTURE_STATION, realView, viewFromInput, viewOf } from '.
 const BANNED_WORDS = /\b(penalty|penalties|cost|costs|points?|scores?|least[- ]bad)\b/i;
 
 function stateOf(view: ViewData, displayNowMs: number = view.calcNowMs + 60_000): ControllerState {
-  return { view, feed: EMPTY_FEED, displayNowMs, currentModeRecord: null, audit: [], notices: [], reload: { status: 'idle', message: null }, autoWeather: NO_AUTO_WEATHER };
+  return { view, feed: EMPTY_FEED, displayNowMs, audit: [], notices: [], reload: { status: 'idle', message: null }, autoWeather: NO_AUTO_WEATHER };
 }
 function render(view: ViewData, displayNowMs?: number): string {
-  return renderToStaticMarkup(<Dashboard model={screenModel(stateOf(view, displayNowMs))} pack={view.pack} onCurrentMode={() => undefined} onDismissNotice={() => undefined} />);
+  return renderToStaticMarkup(<Dashboard model={screenModel(stateOf(view, displayNowMs))} pack={view.pack} onDismissNotice={() => undefined} />);
 }
 const textOf = (markup: string): string => markup.replace(/<[^>]*>/g, ' ').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/\s+/g, ' ');
 /** Just the expansion's markup. */
@@ -155,10 +155,11 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the Evaluation and TAF se
     expect(render(viewOf(pack, rig, same<Wx>(4, 'ok'), same(4, 'light')))).not.toContain('data-testid="group-bar"');
   });
 
-  it('keeps the slim bar rows for the closed state', () => {
+  it('has no slim bar rows: the toggle row is all the closed state shows of the forecast', () => {
     const html = render(viewOf(pack, rig, wx, levels));
-    expect(html).toContain('data-testid="path-seg"');
-    expect(html).toMatch(/class="fc2" aria-hidden="true"/);
+    expect(html).not.toContain('data-testid="path-seg"');
+    expect(html).not.toContain('class="fc2"');
+    expect(html).toContain('class="sumhead"');
   });
 });
 
@@ -233,7 +234,8 @@ describe('the stylesheet', () => {
     expect(css).toMatch(/\.tlx\s*\{[^}]*overflow-x: auto/);
     expect(css).toMatch(/\.tlx \.lab\s*\{[^}]*position: sticky/);
   });
-  it('closes the slim bar rows when open, so the expansion replaces the bar', () => {
-    expect(css).toMatch(/\.fcx\[open\] \.fc2,[\s\S]*?\{\s*display: none/);
+  it('has no rules left for the removed slim bar or the selector', () => {
+    for (const gone of ['fc2', 'pathwrap', 'track', 'nowm', 'chgline', 'axis', 'cur']) expect(new RegExp(String.raw`\.${gone}[\s{,.:]`).test(css), gone).toBe(false);
+    expect(/\.seg[\s{,.:]/.test(css)).toBe(false);
   });
 });
