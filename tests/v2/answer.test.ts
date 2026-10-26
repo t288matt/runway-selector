@@ -96,13 +96,39 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer values [%s]', (
     expect(a.next).toBe('No change planned');
   });
 
-  it('shows "Next: <mode> at HH:MMZ" for the first change after now', () => {
+  it('shows "Forecasting: <mode> at HH:MMZ" for the first change after now', () => {
     const view = viewOf(pack, rig, ['ok', 'ok', 'badA', 'badA', 'badA'], same(5, 'light'));
     const a = answerModel(view);
     const upcoming = view.result.changeovers.find((c) => c.change.slotIndex > 0);
     expect(upcoming).toBeDefined();
-    expect(a.next).toBe(`Next: ${upcoming?.change.toModeId} at ${hhmmZRel(upcoming?.change.startMs ?? 0, view.calcNowMs)}`);
-    expect(a.next).toMatch(/^Next: \S+ at \d\d:\d\dZ$/);
+    expect(a.next).toBe(`Forecasting: ${upcoming?.change.toModeId} at ${hhmmZRel(upcoming?.change.startMs ?? 0, view.calcNowMs)}`);
+    expect(a.next).toMatch(/^Forecasting: \S+ at \d\d:\d\dZ$/);
+  });
+
+  it('lists alternatives (issue 122): suitable in both of the next two slots, never the recommended mode, most preferred first', () => {
+    const view = viewOf(pack, rig, ['ok', 'ok', 'badA', 'badA'], same(4, 'light'));
+    const a = answerModel(view);
+    const ids = a.alternatives.map((x) => x.modeId);
+    expect(ids).not.toContain(a.modeId);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (let i = 1; i < a.alternatives.length; i++) expect(a.alternatives[i]!.rank).toBeGreaterThanOrEqual(a.alternatives[i - 1]!.rank);
+    for (const alt of a.alternatives) {
+      const k = pack.modes.findIndex((m) => m.id === alt.modeId);
+      expect(pack.modes[k]?.enabled).toBe(true);
+      for (const slot of [0, 1]) expect(view.result.evaluation.cells[k]?.[slot]?.status).toBe('SUITABLE');
+    }
+    expect(a.rank).not.toBeNull();
+  });
+
+  it('lists no alternative that fails in the second slot, and none when no mode is recommended', () => {
+    const early = viewOf(pack, rig, ['ok', 'badA', 'badA', 'badA'], same(4, 'light'));
+    for (const alt of answerModel(early).alternatives) {
+      const k = pack.modes.findIndex((m) => m.id === alt.modeId);
+      expect(early.result.evaluation.cells[k]?.[1]?.status).toBe('SUITABLE');
+    }
+    const none = answerModel(viewOf(pack, rig, ['badBoth', 'badBoth'], same(2, 'medium')));
+    expect(none.alternatives).toEqual([]);
+    expect(none.rank).toBeNull();
   });
 
   it('has no current-mode choices: the answer model carries neither a list of modes to pick nor a chosen mode', () => {
@@ -166,7 +192,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('PARITY: v2 shows what v1 
     } else {
       const up = v1.result.changeovers.find((c) => c.change.slotIndex > 0);
       expect(m1.nextChange).toBe(`${up?.change.fromModeId} to ${a2.nextChange.modeId} at ${hhmmZRel(a2.nextChange.atMs, v1.calcNowMs)}`);
-      expect(a2.next).toBe(`Next: ${a2.nextChange.modeId} at ${hhmmZRel(a2.nextChange.atMs, v2.calcNowMs)}`);
+      expect(a2.next).toBe(`Forecasting: ${a2.nextChange.modeId} at ${hhmmZRel(a2.nextChange.atMs, v2.calcNowMs)}`);
     }
   });
 

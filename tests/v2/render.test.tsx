@@ -68,7 +68,18 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer screen states [
     expect(textOf(html)).toContain('CHANGE SOON');
     expect(html).toContain('M8 2l7 12H1z');
     expect(textOf(html)).toContain(view.result.explanation.earlyChange?.text ?? 'missing');
-    expect(textOf(html)).toMatch(/Next: \S+ at \d\d:\d\dZ/);
+    expect(textOf(html)).toMatch(/Forecasting: \S+ at \d\d:\d\dZ/);
+  });
+
+  it('shows the priority tag with its hover text, and the alternatives as chips when there are any (issue 122)', () => {
+    const view = viewOf(pack, rig, same<Wx>(4, 'ok'), same(4, 'light'));
+    const html = render(view);
+    expect(html).toContain('title="Runway mode priority"');
+    expect(textOf(html)).toMatch(/P\d+/);
+    const alts = screenModel(stateOf(view)).answer.alternatives;
+    expect(html.includes('data-testid="alternatives"')).toBe(alts.length > 0);
+    expect(html.split('data-testid="alt-chip"').length - 1).toBe(alts.length);
+    if (alts.length > 0) expect(textOf(html)).toContain('Also valid for the next hour');
   });
 
   it('no suitable mode: the red label replaces the mode and no mode is named as recommended', () => {

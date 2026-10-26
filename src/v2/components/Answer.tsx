@@ -3,6 +3,16 @@
 import type { AnswerModel } from '../model/answer';
 import { StateGlyph } from './Icons';
 
+/** The small "P2" tag: the mode's rank in the operating plan. */
+function PriorityTag({ rank }: { rank: number | null }) {
+  if (rank === null) return null;
+  return (
+    <span className="prio" title="Runway mode priority" tabIndex={0} data-testid="priority">
+      P{rank}
+    </span>
+  );
+}
+
 export function Answer({ model }: { model: AnswerModel }) {
   const { band } = model;
   return (
@@ -18,6 +28,7 @@ export function Answer({ model }: { model: AnswerModel }) {
       ) : (
         <div className={`mode ${model.modeSize === 'normal' ? '' : model.modeSize}`.trim()} aria-label={model.modeLabel} data-testid="mode">
           {model.modeId}
+          <PriorityTag rank={model.rank} />
         </div>
       )}
       {model.next === '' ? null : (
@@ -33,6 +44,19 @@ export function Answer({ model }: { model: AnswerModel }) {
       {model.arrivals === null || model.departures === null ? null : (
         <div className="rw">
           Arr <b>{model.arrivals}</b> &middot; Dep <b>{model.departures}</b>
+        </div>
+      )}
+      {model.alternatives.length === 0 ? null : (
+        <div className="alt" data-testid="alternatives">
+          <div className="alt-label">Also valid for the next hour</div>
+          <div className="alt-chips">
+            {model.alternatives.map((a) => (
+              <span className="alt-chip" key={a.modeId} data-testid="alt-chip">
+                {a.modeId}
+                <PriorityTag rank={a.rank} />
+              </span>
+            ))}
+          </div>
         </div>
       )}
     </div>
