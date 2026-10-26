@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "Western Sydney International (Nancy-Bird Walton) Airport. PROVISIONAL DRAFT 24-10-2026: coordinates are the centre of the runway from the airport's environmental impact statement, elevation (262 ft, 80 m) is from Wikipedia; neither is checked against the AIP, and sources disagree on elevation (236 to 308 ft). The airport was not yet open when this was written. Other simulation assumptions carry over from the other Australian packs.",
+  "description": "Western Sydney International (Nancy-Bird Walton) Airport. Coordinates are the centre of the runway from the airport's environmental impact statement, elevation (262 ft, 80 m) is from Wikipedia; neither is checked against the AIP, and sources disagree on elevation (236 to 308 ft). The airport was not yet open when this was written. Other simulation assumptions carry over from the other Australian packs.",
   "icao": "YSWS",
   "name": "Western Sydney",
   "latitude": -33.8833,

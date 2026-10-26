@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "description": "Runway ends. Headings supplied by the owner, 23-10-2026, replacing the earlier placeholders. Wind direction and heading share one reference (OD-11), so headings are entered in the reference the weather reports use. Each end has a threshold latitude and longitude (decimal degrees) so the runway picture can be drawn to scale.",
-  "source": "headings: owner, 23-10-2026. Threshold coordinates: OurAirports open data (community data), retrieved 26-10-2026, verified by the owner on 26-10-2026.",
+  "source": "headings: owner, 23-10-2026. Threshold coordinates: OurAirports open data (community data), retrieved 26-10-2026.",
   "runways": [
     { "name": "16L", "headingDegrees": 155, "threshold": { "latitude": -33.94960, "longitude": 151.18800 } },
     { "name": "16R", "headingDegrees": 155, "threshold": { "latitude": -33.92940, "longitude": 151.17200 } },

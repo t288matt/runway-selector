@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "Cairns Airport. PROVISIONAL DRAFT 24-10-2026: coordinates and elevation (10 ft) are from public aggregator sites, not checked against the AIP. Other simulation assumptions carry over from the other Australian packs.",
+  "description": "Cairns Airport. Coordinates and elevation (10 ft) are from public aggregator sites, not checked against the AIP. Other simulation assumptions carry over from the other Australian packs.",
   "icao": "YBCS",
   "name": "Cairns",
   "latitude": -16.8864,

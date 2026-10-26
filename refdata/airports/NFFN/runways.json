@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "Runway ends. PROVISIONAL DRAFT 24-10-2026: Nadi has two runways, 02/20 (the main runway) and 09/27. Headings are magnetic, the same reference as the other packs and the weather reports, from SkyVector (025/205 and 092/272). Not checked against the Fiji AIP.",
+  "description": "Runway ends. Nadi has two runways, 02/20 (the main runway) and 09/27. Headings are magnetic, the same reference as the other packs and the weather reports, from SkyVector (025/205 and 092/272). Not checked against the Fiji AIP.",
   "source": "SkyVector, 24-10-2026. Threshold coordinates (latitude and longitude, decimal degrees): OurAirports open data (community data), retrieved 26-10-2026, applied at the owner's instruction; not checked against the AIP.",
   "runways": [
     { "name": "02", "headingDegrees": 25, "threshold": { "latitude": -17.77370, "longitude": 177.42799 } },

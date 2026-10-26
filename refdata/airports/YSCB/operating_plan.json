@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "Verified by the owner, 24-10-2026. One band covers the whole day; no day/night split has been given. Order is the owner's preferred runway mode list, strict: 1 3530A35D; 2 1712A17D; 3 17A35D; 4 35AD; 5 17AD; 6 30AD; 7 12AD. The penalties (0 to 12 in steps of 2) encode that order; lower is preferred.",
+  "description": "One band covers the whole day; no day/night split has been given. Order is the owner's preferred runway mode list, strict: 1 3530A35D; 2 1712A17D; 3 17A35D; 4 35AD; 5 17AD; 6 30AD; 7 12AD. The penalties (0 to 12 in steps of 2) encode that order; lower is preferred.",
   "bands": [
     {
       "id": "all-day",

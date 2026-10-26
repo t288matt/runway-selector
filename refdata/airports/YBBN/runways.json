@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "Runway ends. PROVISIONAL DRAFT 24-10-2026: headings from a public source (SkyVector), not yet checked against the AIP, in the reference the weather reports use (magnetic). Brisbane has two parallel runways: 01L/19R (3,300 m, the western one) and 01R/19L (3,560 m, the eastern one). The old crossing runway 14/32 is not listed by the source and is not used.",
+  "description": "Runway ends. Headings from a public source (SkyVector), not yet checked against the AIP, in the reference the weather reports use (magnetic). Brisbane has two parallel runways: 01L/19R (3,300 m, the western one) and 01R/19L (3,560 m, the eastern one). The old crossing runway 14/32 is not listed by the source and is not used.",
   "source": "SkyVector, 24-10-2026. Threshold coordinates (latitude and longitude, decimal degrees): OurAirports open data (community data), retrieved 26-10-2026, applied at the owner's instruction; not checked against the AIP.",
   "runways": [
     { "name": "01L", "headingDegrees": 16, "threshold": { "latitude": -27.38310, "longitude": 153.10699 } },

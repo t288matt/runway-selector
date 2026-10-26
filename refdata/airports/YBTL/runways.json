@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "Runway ends. PROVISIONAL DRAFT 24-10-2026: Townsville has two runways, 01/19 (the main runway) and 07/25 (the crosswind runway). Headings are magnetic, the same reference as the other packs and the weather reports. 01/19 (017/197) is confirmed by the RAAF obstacle chart (23-02-2024) and agrees with SkyVector and Flight Plan Database; 07/25 (067/247) is SkyVector only, not cross-checked against a second source. Not checked against the AIP.",
+  "description": "Runway ends. Townsville has two runways, 01/19 (the main runway) and 07/25 (the crosswind runway). Headings are magnetic, the same reference as the other packs and the weather reports. 01/19 (017/197) is confirmed by the RAAF obstacle chart (23-02-2024) and agrees with SkyVector and Flight Plan Database; 07/25 (067/247) is SkyVector only, not cross-checked against a second source. Not checked against the AIP.",
   "source": "RAAF obstacle chart (01/19) and SkyVector (07/25), 24-10-2026. Threshold coordinates (latitude and longitude, decimal degrees): OurAirports open data (community data), retrieved 26-10-2026, applied at the owner's instruction; not checked against the AIP.",
   "runways": [
     { "name": "01", "headingDegrees": 17, "threshold": { "latitude": -19.25830, "longitude": 146.76500 } },

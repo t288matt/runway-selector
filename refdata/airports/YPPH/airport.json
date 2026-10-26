@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "Perth Airport. PROVISIONAL DRAFT 24-10-2026: coordinates and elevation from a public source (SkyVector), not yet checked against the AIP. Other simulation assumptions carry over from the Sydney, Melbourne and Adelaide packs.",
+  "description": "Perth Airport. Coordinates and elevation from a public source (SkyVector), not yet checked against the AIP. Other simulation assumptions carry over from the Sydney, Melbourne and Adelaide packs.",
   "icao": "YPPH",
   "name": "Perth",
   "latitude": -31.9403,

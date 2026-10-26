@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "PROVISIONAL (23-10-2026). One band covers the whole day: the owner removed the curfew mode and confirmed every remaining mode is usable at any time, so there is no longer a day/night split. The order is the owner's Sydney priority picture (sydney-mode-priority-order.png): 1 SODPROPS; 2 modes 07A16D, 34AD25, 34A25D, 25A16D (equal); 3 modes 34AD, 16AD (equal); 4 modes 07AD, 25AD (equal). The picture gives an order only, so the penalties are placeholders on the design example scale (0, 2, 5, 12) for the owner to confirm; lower is preferred, equal numbers are equal priority. Replace with the current LTOP when supplied.",
+  "description": "One band covers the whole day: the owner removed the curfew mode and confirmed every remaining mode is usable at any time, so there is no longer a day/night split. The order is the owner's Sydney priority picture (sydney-mode-priority-order.png): 1 SODPROPS; 2 modes 07A16D, 34AD25, 34A25D, 25A16D (equal); 3 modes 34AD, 16AD (equal); 4 modes 07AD, 25AD (equal). The picture gives an order only, so the penalties are placeholders on the design example scale (0, 2, 5, 12) for the owner to confirm; lower is preferred, equal numbers are equal priority. Replace with the current LTOP when supplied.",
   "bands": [
     {
       "id": "all-day",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "PROVISIONAL 24-10-2026. One band covers the whole day; no day/night split has been given. Order is the owner's preferred runway mode list, strict (no ties): 1 2312A23D; 2 0512A05D; 3 23AD; 4 05AD; 5 12AD; 6 30AD. The order is the owner's; the penalties are placeholders on the same scale as the Sydney and Melbourne packs (0, 2, 5, 12, 20, 30; lower is preferred) for the owner to confirm.",
+  "description": "One band covers the whole day; no day/night split has been given. Order is the owner's preferred runway mode list, strict (no ties): 1 2312A23D; 2 0512A05D; 3 23AD; 4 05AD; 5 12AD; 6 30AD. The order is the owner's; the penalties are placeholders on the same scale as the Sydney and Melbourne packs (0, 2, 5, 12, 20, 30; lower is preferred) for the owner to confirm.",
   "bands": [
     {
       "id": "all-day",

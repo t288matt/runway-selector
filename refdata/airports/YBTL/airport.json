@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "Townsville Airport (joint RAAF/civil). PROVISIONAL DRAFT 24-10-2026: coordinates and elevation (18 ft) are from public aggregator sites, not checked against the AIP. Other simulation assumptions carry over from the other Australian packs.",
+  "description": "Townsville Airport (joint RAAF/civil). Coordinates and elevation (18 ft) are from public aggregator sites, not checked against the AIP. Other simulation assumptions carry over from the other Australian packs.",
   "icao": "YBTL",
   "name": "Townsville",
   "latitude": -19.2525,

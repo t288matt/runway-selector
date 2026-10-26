@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "Adelaide Airport. PROVISIONAL DRAFT 24-10-2026: coordinates and elevation from public sources (SkyVector, airport-data.com), not yet checked against the AIP. Other simulation assumptions carry over from the Sydney and Melbourne packs.",
+  "description": "Adelaide Airport. Coordinates and elevation from public sources (SkyVector, airport-data.com), not yet checked against the AIP. Other simulation assumptions carry over from the Sydney and Melbourne packs.",
   "icao": "YPAD",
   "name": "Adelaide",
   "latitude": -34.9450,
