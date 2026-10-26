@@ -23,7 +23,7 @@ export function ForecastBar({ model, evaluation }: { model: ForecastBarModel; ev
   ));
   return (
     <details className="fcx" id="evaluation" data-testid="forecast-bar">
-      <summary ref={pop.triggerRef} aria-label={`${EVALUATION_TITLE}: open or close. ${model.summary}`} {...pop.handlers}>
+      <summary aria-label={`${EVALUATION_TITLE}: open or close. ${model.summary}`} {...pop.handlers}>
         <span className="sumhead">
           <span className="chev" aria-hidden="true" />
           {EVALUATION_TITLE}

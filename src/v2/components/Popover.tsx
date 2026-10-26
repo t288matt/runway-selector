@@ -6,16 +6,13 @@
 // as the eye. It is fixed to the viewport so a scrolling grid cannot clip it, and
 // on a phone the stylesheet turns it into a strip at the bottom of the screen.
 // Text nodes only (SEC-2).
-import { useCallback, useEffect, useId, useLayoutEffect, useReducer, useRef, useState, type CSSProperties, type HTMLAttributes, type ReactNode } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useReducer, type HTMLAttributes, type ReactNode } from 'react';
 import { isOpen, placePopover, popoverReducer, POPOVER_CLOSED } from '../model/popover';
 
 export interface PopoverBinding {
   readonly id: string;
   readonly open: boolean;
-  readonly style: CSSProperties | undefined;
-  readonly triggerRef: (el: HTMLElement | null) => void;
-  readonly popRef: (el: HTMLElement | null) => void;
-  /** Handlers for the trigger. `tap` is left out for a trigger whose click already does something (a summary). */
+  /** Handlers for the trigger. `onClick` (the tap) is left out for a trigger whose click already does something (a summary). */
   readonly handlers: {
     readonly onMouseEnter: () => void;
     readonly onMouseLeave: () => void;
@@ -26,24 +23,25 @@ export interface PopoverBinding {
   };
 }
 
-/** The popover behaviour for one trigger. `text` is what is shown; a change of text re-places it. */
+/**
+ * The popover behaviour for one trigger. The popover element is the trigger's child (see PopoverText), so the
+ * script finds both from the popover's id and no element is kept in React state or in a ref.
+ */
 export function usePopover(text: string, options: { tap?: boolean } = {}): PopoverBinding {
   const tap = options.tap ?? true;
   const [state, dispatch] = useReducer(popoverReducer, POPOVER_CLOSED);
   const id = useId();
-  const trigger = useRef<HTMLElement | null>(null);
-  const pop = useRef<HTMLElement | null>(null);
-  const [style, setStyle] = useState<CSSProperties | undefined>(undefined);
   const open = isOpen(state);
 
   const place = useCallback((): void => {
-    const t = trigger.current;
-    const p = pop.current;
-    if (t === null || p === null) return;
-    const r = t.getBoundingClientRect();
-    const at = placePopover(r, { width: p.offsetWidth, height: p.offsetHeight }, { width: window.innerWidth, height: window.innerHeight });
-    setStyle((prev) => (prev !== undefined && prev.left === at.left && prev.top === at.top ? prev : { left: at.left, top: at.top }));
-  }, []);
+    const p = document.getElementById(id);
+    const t = p?.parentElement;
+    if (p === null || t === null || t === undefined) return;
+    const at = placePopover(t.getBoundingClientRect(), { width: p.offsetWidth, height: p.offsetHeight }, { width: window.innerWidth, height: window.innerHeight });
+    // Placed on the element itself: the position follows the page as it scrolls and is not React state.
+    p.style.left = `${at.left}px`;
+    p.style.top = `${at.top}px`;
+  }, [id]);
 
   useLayoutEffect(() => {
     if (!open) return undefined;
@@ -59,23 +57,17 @@ export function usePopover(text: string, options: { tap?: boolean } = {}): Popov
   useEffect(() => {
     if (!state.pinned) return undefined;
     const away = (e: Event): void => {
-      if (e.target instanceof Node && (trigger.current?.contains(e.target) ?? false)) return;
+      const trigger = document.getElementById(id)?.parentElement;
+      if (e.target instanceof Node && (trigger?.contains(e.target) ?? false)) return;
       dispatch('outside');
     };
     document.addEventListener('pointerdown', away);
     return () => document.removeEventListener('pointerdown', away);
-  }, [state.pinned]);
+  }, [state.pinned, id]);
 
   return {
     id,
     open,
-    style,
-    triggerRef: (el) => {
-      trigger.current = el;
-    },
-    popRef: (el) => {
-      pop.current = el;
-    },
     handlers: {
       onMouseEnter: () => dispatch('enter'),
       onMouseLeave: () => dispatch('leave'),
@@ -96,7 +88,7 @@ export function usePopover(text: string, options: { tap?: boolean } = {}): Popov
 /** The popover itself. Always in the page (so it can describe its trigger), hidden until opened. */
 export function PopoverText({ binding, text }: { binding: PopoverBinding; text: string }) {
   return (
-    <span ref={binding.popRef} id={binding.id} role="tooltip" className="tip-pop" hidden={!binding.open} style={binding.style}>
+    <span id={binding.id} role="tooltip" className="tip-pop" hidden={!binding.open}>
       {text}
     </span>
   );
@@ -120,10 +112,7 @@ export function Tip({ text, tag = 'span', elRef, children, onKeyDown, onMouseEnt
   return (
     <Tag
       {...rest}
-      ref={(el: HTMLElement | null) => {
-        p.triggerRef(el);
-        elRef?.(el);
-      }}
+      ref={elRef}
       className={`${className ?? ''}${p.open ? ' tip-open' : ''}`.trim()}
       aria-describedby={p.id}
       onMouseEnter={(e) => {
