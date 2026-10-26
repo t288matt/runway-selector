@@ -103,7 +103,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer screen states [
     expect(html).toContain('tone-unk');
   });
 
-  it('draws the whole closed state in the fixed order: header-less answer, picture, tiles, Evaluation and TAF toggle, chips, notice', () => {
+  it('draws the whole closed state in the fixed order: header-less answer, picture, tiles, Detail toggle, chips, notice', () => {
     const html = render(viewOf(pack, rig, same<Wx>(4, 'ok'), same(4, 'light')));
     const marks = ['class="state ', 'data-testid="picture"', 'data-testid="tile-traffic"', 'data-testid="tile-metar"', 'data-testid="forecast-bar"', 'data-testid="chip-metar"', 'role="note"'].map((m) => html.indexOf(m));
     expect(marks.every((i) => i >= 0)).toBe(true);
@@ -162,10 +162,10 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 tiles and picture [%s]
     for (const r of pack.runways) expect(textOf(html)).toContain(r.name);
   });
 
-  it('the slim forecast bar is gone; the closed screen has the Evaluation and TAF toggle row in its place', () => {
+  it('the slim forecast bar is gone; the closed screen has the Detail toggle row in its place', () => {
     const html = render(viewOf(pack, rig, ['ok', 'ok', 'badA', 'badA'], same(4, 'light')));
-    expect(html).toMatch(/<summary[^>]*aria-label="Evaluation and TAF: open or close\. Forecast \d\d:\d\dZ to \d\d:\d\dZ\. Path: /);
-    expect(textOf(html)).toMatch(/Evaluation and TAF \d\d:\d\dZ to \d\d:\d\dZ/);
+    expect(html).toMatch(/<summary[^>]*aria-label="Detail: open or close\. Forecast \d\d:\d\dZ to \d\d:\d\dZ\. Path: /);
+    expect(textOf(html)).toMatch(/Detail \d\d:\d\dZ to \d\d:\d\dZ/);
     expect(html).not.toContain('class="fc2"');
     expect(html).not.toContain('data-testid="path-seg"');
     expect(html).not.toContain('class="track"');

@@ -1,4 +1,4 @@
-// The Evaluation and TAF section. Closed it is one row: a chevron, the label and the
+// The Detail section. Closed it is one row: a chevron, the label and the
 // time range, with the forecast in words as its accessible name and, on hover and
 // focus, in the shared popover. It is a native details element, so it opens and
 // closes with no script and a keyboard (Enter or Space on the summary). Open, it holds
@@ -9,7 +9,7 @@ import type { ForecastSummary } from '../model/forecastBar';
 import { Evaluation } from './Evaluation';
 import { PopoverText, usePopover } from './Popover';
 
-export const EVALUATION_TITLE = 'Evaluation and TAF';
+export const EVALUATION_TITLE = 'Detail';
 
 export function ForecastBar({ model, evaluation }: { model: ForecastSummary; evaluation: EvaluationModel }) {
   const pop = usePopover(model.summary, { tap: false });

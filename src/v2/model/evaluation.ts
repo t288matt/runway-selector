@@ -1,4 +1,4 @@
-// The view model of the expanded "Evaluation and TAF" section: v1's timeline
+// The view model of the expanded "Detail" section: v1's timeline
 // block as plain data, from one engine result. v2's own copy of v1's timeline
 // model (v2 imports nothing from src/ui); tests/v2/evaluationParity.test.ts
 // proves it matches v1's on the same fixtures: which rows are hidden, every cell

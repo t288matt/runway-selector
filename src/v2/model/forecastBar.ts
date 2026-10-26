@@ -1,4 +1,4 @@
-// The wind rules shared by the Evaluation and TAF grid, and the forecast in words that names the Evaluation and TAF toggle.
+// The wind rules shared by the Detail grid, and the forecast in words that names the Detail toggle.
 // (The slim bar this file once modelled was removed, issue 104.) The wind-change threshold and the group handling are v2's
 // own copy of v1's timeline rules (OD-43, OD-51).
 import { trafficLevelsFor, type TrafficLevel, type WindObservation } from '../../engine';

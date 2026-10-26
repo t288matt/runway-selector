@@ -40,7 +40,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 runway picture [%s]', 
   });
 });
 
-describe.each(PACKS.map((p) => [p.name, p] as const))('v2 forecast in words (the Evaluation and TAF toggle) [%s]', (_n, ref) => {
+describe.each(PACKS.map((p) => [p.name, p] as const))('v2 forecast in words (the Detail toggle) [%s]', (_n, ref) => {
   const rig = rigFor(ref);
   const pack = packOf(rig);
 

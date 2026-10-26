@@ -1,4 +1,4 @@
-// What the "Evaluation and TAF" section holds when it is open, and nothing else:
+// What the "Detail" section holds when it is open, and nothing else:
 // v1's timeline block (the UTC time row with the NOW marker; the weather events
 // row with the wind bars and the TEMPO, INTER and PROB bars; the event words; the
 // traffic row; one row per mode with its REC tag and runways; the cells; the

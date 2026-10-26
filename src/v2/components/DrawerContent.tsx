@@ -3,7 +3,7 @@
 // behaviour and wording); the Settings section is v2's own copy of v1's settings
 // drawer. There is no Data section: the per-slot arrival, departure and movement
 // figures are not shown in v2 (owner, 26-10-2026); the traffic tile, its popover
-// and the Traffic row of the Evaluation and TAF section carry the traffic.
+// and the Traffic row of the Detail section carry the traffic.
 import { useState } from 'react';
 import type { AirportPack } from '../../refdata';
 import type { AuditEntry, AuditExport } from '../../store';

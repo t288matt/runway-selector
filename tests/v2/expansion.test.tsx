@@ -1,4 +1,4 @@
-// The expandable Evaluation and TAF section and the shared popover, as static
+// The expandable Detail section and the shared popover, as static
 // markup (like render.test.tsx; there is no DOM test library, so the open and
 // close, which the browser does natively, and the pinned answer band, which is
 // CSS, are checked in a real browser and by the stylesheet tests below).
@@ -31,18 +31,18 @@ const textOf = (markup: string): string => markup.replace(/<[^>]*>/g, ' ').repla
 const expansionOf = (html: string): string => html.slice(html.indexOf('data-testid="evaluation"'), html.indexOf('</details>'));
 const count = (html: string, needle: string): number => html.split(needle).length - 1;
 
-describe.each(PACKS.map((p) => [p.name, p] as const))('the Evaluation and TAF section [%s]', (_n, ref) => {
+describe.each(PACKS.map((p) => [p.name, p] as const))('the Detail section [%s]', (_n, ref) => {
   const rig = rigFor(ref);
   const pack = packOf(rig);
   const levels: (TrafficLevel | null)[] = ['light', 'busy', 'busy', 'medium', 'light', 'light', 'medium', 'light'];
   const wx: Wx[] = ['ok', 'ok', 'ok', 'ok', 'badA', 'badA', 'marginalA', 'ok'];
 
-  it('is a native details element with a summary labelled "Evaluation and TAF", a chevron and the time range, closed to begin with', () => {
+  it('is a native details element with a summary labelled "Detail", a chevron and the time range, closed to begin with', () => {
     const html = render(viewOf(pack, rig, wx, levels));
     expect(html).toMatch(/<details class="fcx"[^>]*data-testid="forecast-bar">\s*<summary /);
     expect(html).not.toMatch(/<details[^>]*\sopen/);
-    expect(html).toMatch(/<summary[^>]*aria-label="Evaluation and TAF: open or close\./);
-    expect(textOf(html)).toMatch(/Evaluation and TAF \d\d:\d\dZ to \d\d:\d\dZ/);
+    expect(html).toMatch(/<summary[^>]*aria-label="Detail: open or close\./);
+    expect(textOf(html)).toMatch(/Detail \d\d:\d\dZ to \d\d:\d\dZ/);
     expect(html).toContain('class="chev"');
   });
 
@@ -163,7 +163,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the Evaluation and TAF se
   });
 });
 
-describe('Evaluation and TAF with the real reports', () => {
+describe('Detail with the real reports', () => {
   const real = packWith(YSSY_PACK, { weatherStation: FIXTURE_STATION });
   const view = realView(real, YSSY_PACK);
 
@@ -211,7 +211,7 @@ describe('the shared popover', () => {
       expect(html).toContain(`id="${id}" role="tooltip"`);
     });
     it('the slim bar has the summary as its tooltip and in its name', () => {
-      const summary = /<summary[^>]*aria-label="Evaluation and TAF: open or close\. ([^"]*)"/.exec(html)?.[1] ?? 'missing';
+      const summary = /<summary[^>]*aria-label="Detail: open or close\. ([^"]*)"/.exec(html)?.[1] ?? 'missing';
       expect(html).toContain(`role="tooltip" class="tip-pop" hidden="">${summary}</span>`);
     });
   });

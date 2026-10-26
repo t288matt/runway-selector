@@ -61,7 +61,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the drawer sections [%s]'
     const t = textOf(render(view));
     expect(t.match(/.{0,50}(Arrivals|Departures|Movements).{0,50}/)?.[0] ?? '').toBe('');
     expect(t).not.toContain('(prefiled)');
-    // the same holds for the cell popovers of the Evaluation and TAF section
+    // the same holds for the cell popovers of the Detail section
     const popovers = evaluationModel(view, view.calcNowMs).rows.flatMap((r) => r.cells.map((c) => c.detail)).join(' ');
     expect(popovers.match(/known demand|in the slot|capacity \d|per hour|demand unknown|arrivals only|movements/i)?.[0] ?? '').toBe('');
     expect(t).not.toContain('arrivals only');

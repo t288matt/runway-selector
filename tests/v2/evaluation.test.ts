@@ -1,4 +1,4 @@
-// The view model of the expanded Evaluation and TAF section, rule by rule. (The
+// The view model of the expanded Detail section, rule by rule. (The
 // match with v1's timeline model is in evaluationParity.test.ts.)
 import { describe, expect, it } from 'vitest';
 import type { EngineInput, TrafficLevel, WeatherOverlay } from '../../src/engine';
