@@ -181,7 +181,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('stale amber and Still cur
 
   it('states the set time in UTC (OD-36: no local time)', () => {
     const s = currentModeStatus(record, NOW, pack);
-    expect(s.setText).toBe('set 10:00 UTC');
+    expect(s.setText).toBe('set 1000 UTC');
   });
 
   it('shows no flag and no Still current button when no mode is set', () => {
@@ -203,7 +203,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('stale amber and Still cur
     expect(html.match(/>Still current</g)).toHaveLength(1);
     const fresh = renderDashboard(view, EMPTY_FEED, true, testBridge({ currentModeRecord: record }), NOW + MIN);
     expect(fresh).not.toContain('cur-stale');
-    expect(textOf(fresh)).toContain('set 10:00 UTC');
+    expect(textOf(fresh)).toContain('set 1000 UTC');
   });
 
   it('Still current renews the time with no audit entry, no mode change and no recalculation', () => {
@@ -370,7 +370,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('drawer content [%s]', (_n
 
   it('shows the time zone (as pack metadata, not a parallel clock)', () => {
     expect(text).toContain(pack.airport.timeZone);
-    expect(text).toMatch(/Now [A-Za-z ,.]+ 10:12Z/);
+    expect(text).toMatch(/Now [A-Za-z ,.]+ 1012Z/);
   });
 
   it('uses no word for penalty, cost, points or score anywhere in the drawer', () => {
@@ -437,11 +437,11 @@ describe('audit trail view', () => {
     expect(rows[0]).toMatchObject({ old: `Mode ${a}`, new: `Mode ${b}` });
     expect(rows[1]).toMatchObject({ old: '6 hours', new: '4 hours' });
     expect(rows[2]).toMatchObject({ old: 'Not set', new: `Mode ${a}` });
-    expect(rows[0]?.time).toBe('10:10Z');
+    expect(rows[0]?.time).toBe('1010Z');
     const html = renderDashboard(r.ctrl.getState().view, EMPTY_FEED, true, testBridge({ audit: r.ctrl.getState().audit }));
     const text = textOf(html);
     expect(text).toContain('local record, not tamper-proof');
-    expect(text.indexOf('10:10Z')).toBeLessThan(text.indexOf('10:00Z (') + 1000);
+    expect(text.indexOf('1010Z')).toBeLessThan(text.indexOf('1000Z (') + 1000);
     expect(text).toContain('Export audit trail');
     expect(text).toContain('Clear audit trail');
     expect(text).toContain(`keeps the last ${pack.settings.auditMaxEntries} entries`);

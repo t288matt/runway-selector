@@ -72,14 +72,14 @@ describe('the cell to colour, icon and word mapping', () => {
 
   it('builds the accessible name and flags the uncertainty corner', () => {
     const v = cellView(cell('MARGINAL', [reason('CAP', 'MARGINAL')], true), T0, 'NO TAF');
-    expect(v.label).toBe('Mode M1, 00:30Z, marginal, cause capacity, depends on an uncertain input');
+    expect(v.label).toBe('Mode M1, 0030Z, marginal, cause capacity, depends on an uncertain input');
     expect(v.uncertain).toBe(true);
-    expect(cellView(cell('SUITABLE'), T0, 'NO TAF').label).toBe('Mode M1, 00:30Z, suitable');
+    expect(cellView(cell('SUITABLE'), T0, 'NO TAF').label).toBe('Mode M1, 0030Z, suitable');
     expect(cellView(cell('SUITABLE'), T0, 'NO TAF').uncertain).toBe(false);
   });
 
   it('does not mark a later UTC day in the accessible name (issue 129)', () => {
-    expect(cellView(cell('SUITABLE'), T0 + 86_400_000, 'NO TAF', T0).label).toBe('Mode M1, 00:30Z, suitable');
+    expect(cellView(cell('SUITABLE'), T0 + 86_400_000, 'NO TAF', T0).label).toBe('Mode M1, 0030Z, suitable');
   });
 
   describe('every MARGINAL cell is drawn plain green but keeps its word (OD-81)', () => {

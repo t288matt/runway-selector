@@ -100,7 +100,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('evaluation model [%s]', (
     const inside = evaluationModel(view, view.calcNowMs + 40 * 60_000);
     expect(inside.showNow).toBe(true);
     expect(inside.nowCol).toBe(1);
-    expect(inside.nowText).toMatch(/^NOW \d\d:\d\dZ$/);
+    expect(inside.nowText).toMatch(/^NOW \d{4}Z$/);
     const after = evaluationModel(view, view.calcNowMs + 6 * 3_600_000);
     expect(after.showNow).toBe(false);
     expect(after.nowCol).toBeNull();
@@ -122,7 +122,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('evaluation model [%s]', (
     const text = cellDetailText(d ?? (null as never));
     const lines = text.split('\n');
     expect(lines).toHaveLength(3);
-    expect(lines[0]).toMatch(new RegExp(`^${rig.a}, \\d\\d:\\d\\dZ: .*UNSUITABLE$`));
+    expect(lines[0]).toMatch(new RegExp(`^${rig.a}, \\d{4}Z: .*UNSUITABLE$`));
     expect(lines[2]).toMatch(/^Wind .+\. Runway (DRY|WET|WET POSSIBLE)\.$/);
     expect(text).not.toMatch(/Outlook|Operating plan|Traffic:|Wind used/);
     expect(text).not.toMatch(/<|>/);

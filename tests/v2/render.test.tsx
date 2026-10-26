@@ -68,7 +68,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer screen states [
     expect(textOf(html)).toContain('CHANGE SOON');
     expect(html).toContain('M8 2l7 12H1z');
     expect(textOf(html)).toContain(view.result.explanation.earlyChange?.text ?? 'missing');
-    expect(textOf(html)).toMatch(/Forecasting: \S+ at \d\d:\d\dZ/);
+    expect(textOf(html)).toMatch(/Forecasting: \S+ at \d{4}Z/);
   });
 
   it('shows the info mark and the alternatives as chips, with no P-numbers on screen; the ranking is in the popover (issue 122)', () => {
@@ -125,7 +125,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 tiles and picture [%s]
     const up = render(viewOf(pack, rig, same<Wx>(5, 'ok'), ['light', 'light', 'medium', 'busy', 'busy']));
     expect(textOf(up)).toContain('LOW');
     expect(textOf(up)).toContain('LOW → MEDIUM');
-    expect(textOf(up)).toMatch(/by \d\d:\d\dZ · 0 in · 0 out/);
+    expect(textOf(up)).toMatch(/by \d{4}Z · 0 in · 0 out/);
     expect(up.split('tl-').length - 1).toBeGreaterThanOrEqual(3);
     expect(textOf(up)).toContain('Traffic, next 90 minutes');
     const down = render(viewOf(pack, rig, same<Wx>(5, 'ok'), ['busy', 'busy', 'medium', 'light', 'light']));
@@ -139,7 +139,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 tiles and picture [%s]
 
   it('the trend is also said in words, for hover and for screen readers', () => {
     const html = render(viewOf(pack, rig, same<Wx>(5, 'ok'), ['light', 'light', 'medium', 'busy', 'busy']));
-    expect(html).toMatch(/aria-label="Traffic LOW, increasing to MEDIUM from \d\d:\d\dZ\./);
+    expect(html).toMatch(/aria-label="Traffic LOW, increasing to MEDIUM from \d{4}Z\./);
     expect(html).toContain('role="tooltip"');
   });
 
@@ -167,8 +167,8 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 tiles and picture [%s]
 
   it('the slim forecast bar is gone; the closed screen has the Detail toggle row in its place', () => {
     const html = render(viewOf(pack, rig, ['ok', 'ok', 'badA', 'badA'], same(4, 'light')));
-    expect(html).toMatch(/<summary[^>]*aria-label="Detail: open or close\. Forecast \d\d:\d\dZ to \d\d:\d\dZ\. Path: /);
-    expect(textOf(html)).toMatch(/Detail \d\d:\d\dZ to \d\d:\d\dZ/);
+    expect(html).toMatch(/<summary[^>]*aria-label="Detail: open or close\. Forecast \d{4}Z to \d{4}Z\. Path: /);
+    expect(textOf(html)).toMatch(/Detail \d{4}Z to \d{4}Z/);
     expect(html).not.toContain('class="fc2"');
     expect(html).not.toContain('data-testid="path-seg"');
     expect(html).not.toContain('class="track"');

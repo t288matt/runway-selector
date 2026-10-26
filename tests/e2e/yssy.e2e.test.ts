@@ -18,7 +18,7 @@
 //   16AD (16L, 16R), 07AD (07), 25AD (25), 07A16D (07, 16R, 16L). Mode order in modes.json: SODPROPS, 25A16D, 34A25D, 34AD25,
 //   34AD, 16AD, 07AD, 25AD, 07A16D.
 // Component maths: headwind = S cos(D - H), tailwind = max(0, -headwind), crosswind = S |sin(D - H)|.
-// Clock: 23-10-2026 03:10Z is 14:10 AEDT (UTC+11). The 03:00 slot is slot 0, with 20 minutes of it left.
+// Clock: 23-10-2026 0310Z is 14:10 AEDT (UTC+11). The 03:00 slot is slot 0, with 20 minutes of it left.
 //
 // A test marked it.fails documents a DISAGREEMENT between the hand-worked expectation and the tool
 // (see the QA report). The assertion is the hand-worked one; the test goes red when the tool is fixed.
@@ -323,7 +323,7 @@ describe('E08 METAR only, TAF only, neither (WX-9, OP-13)', () => {
     // OD-57 (24-10-2026): the line names each uncertain period and its reason, periods joined by "; ". Worked by hand: slots 0 and 1
     // (03:00-04:00, both inside the 40 min METAR window) are uncertain because SODPROPS has a capacity and no traffic is entered, so
     // demand is not known; slots 2-7 (04:00-07:00) have no weather at all, so they are uncertain because nothing forecasts them.
-    expect(r.out.explanation.uncertaintyLine).toMatch(/^03:00 UTC to 04:00 UTC: .*demand.*; 04:00 UTC to 07:00 UTC: .*forecast/);
+    expect(r.out.explanation.uncertaintyLine).toMatch(/^0300 UTC to 0400 UTC: .*demand.*; 0400 UTC to 0700 UTC: .*forecast/);
   });
   it('TAF only: the TAF governs from slot 1 and slot 1 is DRY', () => {
     const r = go({ metar: null, taf: taf(LIGHT_TAIL + ' 9999 SCT020') });
@@ -362,7 +362,7 @@ describe('E09 stale and old METARs (WX-7, WX-9, OD-30)', () => {
     expect(r.built.metarAgeMinutes).toBe(130);
   });
   // The METAR window is 40 minutes: a METAR governs a slot only when the slot starts less than 40 minutes after the observation.
-  it('a METAR observed 02:50Z (20 min old) governs slot 03:00 (10 min after observation) but not 03:30 (40 min)', () => {
+  it('a METAR observed 0250Z (20 min old) governs slot 03:00 (10 min after observation) but not 03:30 (40 min)', () => {
     const r = go({ metar: metar(LIGHT_TAIL, '-RA', '230250Z'), taf: tafOk });
     expect(r.out.evaluation.slots[0]!.governedBy).toBe('METAR');
     expect(r.out.evaluation.slots[0]!.runwayState).toBe('WET');
@@ -372,7 +372,7 @@ describe('E09 stale and old METARs (WX-7, WX-9, OD-30)', () => {
     expect(r.out.evaluation.slots[1]!.runwayState).toBe('WET');
     expect(r.out.evaluation.slots[1]!.runwayStateCause).toBe('DRYING');
   });
-  it('a METAR observed 02:20Z (50 min old, not stale) is outside its 40 minute window and governs nothing (slot 03:00 starts 40 minutes after it)', () => {
+  it('a METAR observed 0220Z (50 min old, not stale) is outside its 40 minute window and governs nothing (slot 03:00 starts 40 minutes after it)', () => {
     const r = go({ metar: metar(LIGHT_TAIL, '-RA', '230220Z'), taf: tafOk });
     expect(r.out.evaluation.slots[0]!.governedBy).toBe('TAF');
     expect(r.out.evaluation.slots[0]!.runwayState).toBe('DRY');
@@ -635,29 +635,29 @@ describe('E16 no suitable mode (OD-13, OP-11)', () => {
 
 // ---------------------------------------------------------------------------------------------
 describe('E17 month rollover, real TAF with hour 24 (WX-3, OP-2)', () => {
-  // taf-eham-month-rollover-becmg, replayed with YSSY runways. Valid 31-10 18Z to 02-11 00Z (3118/0124). Clock 01-11-2026 00:30Z.
-  // Base 120/12; BECMG 3121/3124 -> 170/17 from 21:00Z on 31-10; BECMG 0103/0106 -> 210/25G35 from 03:00Z on 01-11.
-  // Slot 1 is the slot containing now (00:30Z), so the window runs from 00:30Z on 01-11 to the validity end 00:00Z on 02-11: 47 slots.
+  // taf-eham-month-rollover-becmg, replayed with YSSY runways. Valid 31-10 18Z to 02-11 00Z (3118/0124). Clock 01-11-2026 0030Z.
+  // Base 120/12; BECMG 3121/3124 -> 170/17 from 2100Z on 31-10; BECMG 0103/0106 -> 210/25G35 from 0300Z on 01-11.
+  // Slot 1 is the slot containing now (0030Z), so the window runs from 0030Z on 01-11 to the validity end 0000Z on 02-11: 47 slots.
   // 02:30Z: 170/17. Mode 16AD (hdg 155): dir-hdg = 15, xw 17 sin 15 = 4.4, headwind 16.4 -> SUITABLE.
-  // 03:00Z onwards speed = gust 35 at 210: runway 16 (hdg 155) dir-hdg 55 -> xw 35 sin 55 = 28.7 -> Mode 16AD UNSUITABLE XW. Runway 25 (hdg 242):
+  // 0300Z onwards speed = gust 35 at 210: runway 16 (hdg 155) dir-hdg 55 -> xw 35 sin 55 = 28.7 -> Mode 16AD UNSUITABLE XW. Runway 25 (hdg 242):
   // dir-hdg -32 -> xw 35 sin 32 = 18.5, headwind 29.7: above 17 but within 20.05, so MARGINAL, not a failure. Runway 07 (hdg 062): dir-hdg 148 ->
   // tailwind 35 cos 32 = 29.7 fails; runway 34 (hdg 335): dir-hdg -125 -> tailwind 35 cos 55 = 20.1 fails.
-  // So from 03:00Z (slot 5) every mode fails except 25AD, which is MARGINAL on its 18.5 kt crosswind (every other mode uses 16, 07 or 34).
-  // Before 03:00Z (170/17): 25A16D is SUITABLE (25: dir-hdg -72, a 5.25 kt headwind, xw 16.2; 16: a headwind), penalty 2; 07 and 34 fail on tailwind.
+  // So from 0300Z (slot 5) every mode fails except 25AD, which is MARGINAL on its 18.5 kt crosswind (every other mode uses 16, 07 or 34).
+  // Before 0300Z (170/17): 25A16D is SUITABLE (25: dir-hdg -72, a 5.25 kt headwind, xw 16.2; 16: a headwind), penalty 2; 07 and 34 fail on tailwind.
   // Plan: 25A16D slots 0-4 (5 x 2 = 10), then a forced change (unknown demand, 5) to 25AD slots 5-46 (42 x (12 + 3 marginal)); 25AD all the way is dearer by 50.
   const raw = 'TAF TAF EHAM 311720Z 3118/0124 12012KT CAVOK /         BECMG 3121/3124 17017KT /         BECMG 0103/0106 21025G35KT';
   const r = run({ ref: YSSY_PACK, station: 'EHAM', nowIso: '2026-11-01T00:30:00Z', metar: null, taf: raw, windowMinutes: null });
-  it('the window is 47 slots, 01-11-2026 00:30Z to 02-11-2026 00:00Z', () => {
+  it('the window is 47 slots, 01-11-2026 0030Z to 02-11-2026 0000Z', () => {
     expect(r.out.evaluation.slots).toHaveLength(47);
     expect(r.out.evaluation.slots[0]!.startMs).toBe(Date.parse('2026-11-01T00:30:00Z'));
     expect(r.out.evaluation.slots.at(-1)!.endMs).toBe(Date.parse('2026-11-02T00:00:00Z'));
   });
-  it('the first BECMG (started on 31-10) prevails at the start, the second applies from 03:00Z', () => {
+  it('the first BECMG (started on 31-10) prevails at the start, the second applies from 0300Z', () => {
     expect(cell(r, '16AD', '2026-11-01T02:30').status).toBe('SUITABLE');
     expect(cell(r, '16AD', '2026-11-01T03:00')).toMatchObject({ status: 'UNSUITABLE', cause: 'XW' });
     expect(cell(r, '16AD', 0).status).toBe('SUITABLE');
   });
-  it('from 03:00Z every mode but 25AD fails, 25AD is MARGINAL, and the plan changes to it', () => {
+  it('from 0300Z every mode but 25AD fails, 25AD is MARGINAL, and the plan changes to it', () => {
     for (const id of ENABLED.filter((x) => x !== '25AD')) {
       expect(statuses(r, id).slice(5).every((s) => s === 'UNSUITABLE')).toBe(true);
     }

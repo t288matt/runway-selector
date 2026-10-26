@@ -70,10 +70,10 @@ function pad(n: number): string {
   return n < 10 ? `0${n}` : String(n);
 }
 
-/** "HH:MM UTC". The day is never shown (owner, 26-10-2026, issue 129): the forecast never looks far enough ahead for it to matter. `_nowMs` is kept so callers are unchanged. */
+/** "HHMM UTC". The day is never shown (owner, 26-10-2026, issue 129): the forecast never looks far enough ahead for it to matter. `_nowMs` is kept so callers are unchanged. */
 export function formatTime(ms: number, _nowMs: number): string {
   const minuteOfDay = Math.floor((((ms % MS_PER_DAY) + MS_PER_DAY) % MS_PER_DAY) / MS_PER_MINUTE);
-  return `${pad(Math.floor(minuteOfDay / 60))}:${pad(minuteOfDay % 60)} UTC`;
+  return `${pad(Math.floor(minuteOfDay / 60))}${pad(minuteOfDay % 60)} UTC`;
 }
 
 export function formatDuration(ms: number): string {

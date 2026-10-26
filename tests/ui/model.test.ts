@@ -207,14 +207,14 @@ describe('formatting', () => {
   // alias of hhmmZ so existing call sites need no change; this proves it ignores the zone.
   it('shows UTC only, ignoring the zone argument', () => {
     const ms = Date.UTC(2026, 9, 23, 14, 0);
-    expect(utcAndLocal(ms, 'Australia/Sydney')).toBe('14:00Z');
-    expect(utcAndLocal(ms, 'Asia/Kathmandu')).toBe('14:00Z');
-    expect(utcAndLocal(ms, 'Not/AZone')).toBe('14:00Z');
+    expect(utcAndLocal(ms, 'Australia/Sydney')).toBe('1400Z');
+    expect(utcAndLocal(ms, 'Asia/Kathmandu')).toBe('1400Z');
+    expect(utcAndLocal(ms, 'Not/AZone')).toBe('1400Z');
   });
   it('never marks a later UTC day (issue 129)', () => {
     const ms = Date.UTC(2026, 9, 24, 0, 30);
-    expect(hhmmZRel(ms, Date.UTC(2026, 9, 23, 23, 0))).toBe('00:30Z');
-    expect(hhmmZRel(ms, ms)).toBe('00:30Z');
+    expect(hhmmZRel(ms, Date.UTC(2026, 9, 23, 23, 0))).toBe('0030Z');
+    expect(hhmmZRel(ms, ms)).toBe('0030Z');
   });
   it('words ages, durations and directions', () => {
     expect(ageText(12)).toBe('12 min');

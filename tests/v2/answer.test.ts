@@ -102,7 +102,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer values [%s]', (
     const upcoming = view.result.changeovers.find((c) => c.change.slotIndex > 0);
     expect(upcoming).toBeDefined();
     expect(a.next).toBe(`Forecasting: ${upcoming?.change.toModeId} at ${hhmmZRel(upcoming?.change.startMs ?? 0, view.calcNowMs)}`);
-    expect(a.next).toMatch(/^Forecasting: \S+ at \d\d:\d\dZ$/);
+    expect(a.next).toMatch(/^Forecasting: \S+ at \d{4}Z$/);
   });
 
   it('lists alternatives (issue 122): suitable in both of the next two slots, never the recommended mode, most preferred first', () => {

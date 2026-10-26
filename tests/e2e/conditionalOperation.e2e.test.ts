@@ -39,7 +39,7 @@ describe('Darwin, 29AD36A recommended', () => {
     const r = go('9999 FEW020');
     expect(cell(r, '29AD36A', 0).status).toBe('SUITABLE');
     expect(r.out.plan.recommendedModeId).toBe('29AD36A');
-    expect(banners(r)).toEqual([{ tone: 'ok', title: 'LAHSO conditions met', text: expect.stringMatching(/^until \d\d:\d\dZ$/) }]);
+    expect(banners(r)).toEqual([{ tone: 'ok', title: 'LAHSO conditions met', text: expect.stringMatching(/^until \d{4}Z$/) }]);
   });
 
   it('shows the note in CAVOK', () => {
@@ -103,7 +103,7 @@ describe('Melbourne, 34A27AD recommended (the other modes forbidden by the plan,
     const r = go('8000 BKN045');
     expect(r.out.plan.recommendedModeId).toBe('34A27AD');
     expect(cell(r, '34A27AD', 0).status).toBe('SUITABLE');
-    expect(banners(r)).toEqual([{ tone: 'ok', title: 'LAHSO conditions met', text: expect.stringMatching(/^until \d\d:\d\dZ$/) }]);
+    expect(banners(r)).toEqual([{ tone: 'ok', title: 'LAHSO conditions met', text: expect.stringMatching(/^until \d{4}Z$/) }]);
   });
 
   it('shows nothing at 4,400 ft, which would have passed at Darwin', () => {

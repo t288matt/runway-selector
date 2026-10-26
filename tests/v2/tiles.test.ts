@@ -14,7 +14,7 @@ import { FIXTURE_NOW, FIXTURE_STATION, realView, viewOf } from './helpers';
 const T0 = Date.UTC(2026, 9, 25, 19, 0, 0);
 const HALF = 30 * 60_000;
 const starts = (n: number): number[] => Array.from({ length: n }, (_v, i) => T0 + i * HALF);
-const NOW = T0 + 28 * 60_000; // 19:28Z, the trend looks to 21:28Z
+const NOW = T0 + 28 * 60_000; // 1928Z, the trend looks to 2128Z
 
 describe('traffic trend (the two-hour rule)', () => {
   const L: TrafficLevel = 'light';
@@ -24,19 +24,19 @@ describe('traffic trend (the two-hour rule)', () => {
   it('1. steady: every known later slot is at the level now', () => {
     const t = trafficTrend([L, L, L, L, L], starts(5), NOW);
     expect(t.direction).toBe('steady');
-    expect(t.text).toBe('steady to 21:30Z');
+    expect(t.text).toBe('steady to 2130Z');
   });
 
   it('2. increasing: a later slot is at a higher level', () => {
     const t = trafficTrend([L, L, M, M, B], starts(5), NOW);
     expect(t.direction).toBe('increasing');
-    expect(t.text).toBe('increasing to MEDIUM from 20:00Z');
+    expect(t.text).toBe('increasing to MEDIUM from 2000Z');
   });
 
   it('3. decreasing: a later slot is at a lower level', () => {
     const t = trafficTrend([B, B, M, L, L], starts(5), NOW);
     expect(t.direction).toBe('decreasing');
-    expect(t.text).toBe('decreasing to MEDIUM from 20:00Z');
+    expect(t.text).toBe('decreasing to MEDIUM from 2000Z');
   });
 
   it('4. no arrow when every later slot is unknown', () => {
@@ -53,7 +53,7 @@ describe('traffic trend (the two-hour rule)', () => {
   it('ignores unknown slots among known ones, and says "unknown after" when the known ones stop', () => {
     const t = trafficTrend([L, L, null, L, null], starts(5), NOW);
     expect(t.direction).toBe('steady');
-    expect(t.text).toBe('steady to 21:00Z, unknown after');
+    expect(t.text).toBe('steady to 2100Z, unknown after');
     expect(trafficTrend([L, null, M, null, null], starts(5), NOW).direction).toBe('increasing');
   });
 
@@ -86,7 +86,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 tiles [%s]', (_n, ref)
     expect(t.word).toBe('LOW');
     expect(t.headline).toBe('LOW → MEDIUM');
     expect(t.trend.direction).toBe('increasing');
-    expect(t.sub).toMatch(/^by \d\d:\d\dZ · 0 in · 0 out$/);
+    expect(t.sub).toMatch(/^by \d{4}Z · 0 in · 0 out$/);
     expect(t.aria).toContain('Traffic LOW, increasing');
     expect(t.popover).toContain('Connected now: 0 inbound');
   });
@@ -115,7 +115,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 tiles [%s]', (_n, ref)
   it('runway state: DRY with the time it turns wet, WET with the time it dries, and the bar has one segment per slot', () => {
     const dry = runwayTile(viewOf(pack, rig, same<Wx>(6, 'ok')));
     expect(dry.word).toBe('DRY');
-    expect(dry.detail).toMatch(/^no wet runway forecast to \d\d:\d\dZ$/);
+    expect(dry.detail).toMatch(/^no wet runway forecast to \d{4}Z$/);
     expect(dry.segments).toEqual(same(6, 'dry'));
   });
 
@@ -130,7 +130,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 tiles [%s]', (_n, ref)
     const soon = runwayTile(withPresent(1, { intensity: null, descriptor: 'SH', phenomena: ['RA'] })).headline;
     expect(soon).toMatch(/^Showers in \d+ min$/);
     const late = runwayTile(withPresent(5, { intensity: null, descriptor: 'SH', phenomena: ['RA'] }));
-    expect(late.headline).toMatch(/^Showers (in \d+ h( \d+ min)?|from \d\d:\d\dZ)$/);
+    expect(late.headline).toMatch(/^Showers (in \d+ h( \d+ min)?|from \d{4}Z)$/);
     expect(runwayTile(withPresent(0, { intensity: '+', descriptor: null, phenomena: ['RA'] })).aria).toContain('Heavy rain now. Runway');
   });
 
@@ -199,8 +199,8 @@ describe('v2 trust chips', () => {
     const chips = chipModels(view, fresh, FIXTURE_NOW, NO_AUTO_WEATHER);
     expect(chips.map((c) => c.id)).toEqual(['metar', 'taf', 'vatsim', 'plan']);
     expect(chips.find((c) => c.id === 'vatsim')?.value).toBe('59s');
-    expect(chips.find((c) => c.id === 'plan')?.value).toMatch(/^\d\d:\d\d → \d\d:\d\d$/);
-    expect(chips.find((c) => c.id === 'plan')?.tip).toMatch(/^Plan recalculated at \d\d:\d\dZ\. Next recalculation \d\d:\d\dZ\.$/);
+    expect(chips.find((c) => c.id === 'plan')?.value).toMatch(/^\d{4} → \d{4}$/);
+    expect(chips.find((c) => c.id === 'plan')?.tip).toMatch(/^Plan recalculated at \d{4}Z\. Next recalculation \d{4}Z\.$/);
   });
 
   it('VATSIM: loading is a ring, failed is a cross with the last good time, old is a triangle', () => {

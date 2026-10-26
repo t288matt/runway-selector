@@ -17,7 +17,7 @@ const withOp = (id: string) =>
   });
 const pack = withOp(rig.a);
 const GOOD: Partial<SlotWeather> = { ceilingFt: 3500, visibilityMetres: 9999 };
-const hhmm = (slot: number) => new Date(BASE + slot * SLOT_MS).toISOString().slice(11, 16);
+const hhmm = (slot: number) => new Date(BASE + slot * SLOT_MS).toISOString().slice(11, 16).replace(':', '');
 
 /** One entry per slot: the engine weather named by `wx` plus these weather fields. */
 function view(wx: readonly Wx[], fields: readonly Partial<SlotWeather>[], p = pack, gov: SlotSource = 'TAF') {

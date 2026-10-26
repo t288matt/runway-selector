@@ -132,7 +132,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
     expect(r.plan.totalScore).toBe(0);
     expect(r.plan.uncertainSlots).toBe(2);
     expect(r.plan.uncertain).toBe(true);
-    expect(r.explanation.uncertaintyLine).toBe('00:30 UTC to 01:30 UTC: no forecast for this period');
+    expect(r.explanation.uncertaintyLine).toBe('0030 UTC to 0130 UTC: no forecast for this period');
     expect(r.plan.recommendedModeId).toBe(a);
   });
 
@@ -147,7 +147,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
 
   it('(vi) the uncertainty line says there are none when nothing is uncertain, and names a period and why otherwise', () => {
     expect(go(pack, rig, same(4, 'ok'), same(4, 'medium')).explanation.uncertaintyLine).toBe('No uncertain inputs');
-    expect(go(pack, rig, ['none', 'ok'], same(2, 'medium')).explanation.uncertaintyLine).toBe('00:00 UTC to 00:30 UTC: no forecast for this period');
+    expect(go(pack, rig, ['none', 'ok'], same(2, 'medium')).explanation.uncertaintyLine).toBe('0000 UTC to 0030 UTC: no forecast for this period');
   });
 
   it('(vii) ties: lower total preference first, then the mode first in the pack', () => {
@@ -256,8 +256,8 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
     expect(gap).toMatchObject({ startSlot: 2, endSlot: 2, afterMode: a, beforeMode: b });
     expect(gap?.endMs).toBe(BASE + 3 * 30 * 60000);
     const lines = r.explanation.lines.join('\n');
-    expect(lines).toContain('No suitable mode from 01:00 UTC to 01:30 UTC');
-    expect(lines).toContain(`recommended again: ${b} from 01:30 UTC`);
+    expect(lines).toContain('No suitable mode from 0100 UTC to 0130 UTC');
+    expect(lines).toContain(`recommended again: ${b} from 0130 UTC`);
     expect(lines).not.toContain('No mode change is planned');
     // A gap with no change after it.
     const same2 = go(pack, rig, ['ok', 'badBoth', 'ok'], same(3, 'medium'));

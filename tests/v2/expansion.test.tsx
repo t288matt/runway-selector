@@ -42,7 +42,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the Detail section [%s]',
     expect(html).toMatch(/<details class="fcx"[^>]*data-testid="forecast-bar">\s*<summary /);
     expect(html).not.toMatch(/<details[^>]*\sopen/);
     expect(html).toMatch(/<summary[^>]*aria-label="Detail: open or close\./);
-    expect(textOf(html)).toMatch(/Detail \d\d:\d\dZ to \d\d:\d\dZ/);
+    expect(textOf(html)).toMatch(/Detail \d{4}Z to \d{4}Z/);
     expect(html).toContain('class="chev"');
   });
 
@@ -67,7 +67,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the Detail section [%s]',
     const html = render(view, view.calcNowMs + 40 * 60_000);
     expect(count(html, 'data-testid="slot-time"')).toBe(view.weather.slots.length);
     expect(html).toContain('data-testid="now-marker"');
-    expect(textOf(html)).toMatch(/NOW \d\d:\d\dZ/);
+    expect(textOf(html)).toMatch(/NOW \d{4}Z/);
     expect(render(view, view.calcNowMs + 8 * 3_600_000)).not.toContain('data-testid="now-marker"');
   });
 
@@ -87,9 +87,9 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the Detail section [%s]',
     expect(cells.length).toBeGreaterThan(8);
     expect(cells.filter((c) => c.includes('tabindex="0"'))).toHaveLength(1);
     for (const c of cells) {
-      expect(c).toMatch(/aria-label="Mode [^"]+, \d\d:\d\dZ, (suitable|marginal|unsuitable|unknown)/);
+      expect(c).toMatch(/aria-label="Mode [^"]+, \d{4}Z, (suitable|marginal|unsuitable|unknown)/);
       const id = /aria-describedby="([^"]+)"/.exec(c)?.[1] ?? 'missing';
-      expect(html).toMatch(new RegExp(`<span id="${id}" role="tooltip" class="tip-pop" hidden="">\\S+, \\d\\d:\\d\\dZ: `));
+      expect(html).toMatch(new RegExp(`<span id="${id}" role="tooltip" class="tip-pop" hidden="">\\S+, \\d{4}Z: `));
     }
   });
 
