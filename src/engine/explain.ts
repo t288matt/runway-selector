@@ -70,13 +70,10 @@ function pad(n: number): string {
   return n < 10 ? `0${n}` : String(n);
 }
 
-/** "HH:MM UTC", with "(+1 day)" when the instant is on a later UTC day than `nowMs`. */
-export function formatTime(ms: number, nowMs: number): string {
+/** "HH:MM UTC". The day is never shown (owner, 26-10-2026, issue 129): the forecast never looks far enough ahead for it to matter. `_nowMs` is kept so callers are unchanged. */
+export function formatTime(ms: number, _nowMs: number): string {
   const minuteOfDay = Math.floor((((ms % MS_PER_DAY) + MS_PER_DAY) % MS_PER_DAY) / MS_PER_MINUTE);
-  const text = `${pad(Math.floor(minuteOfDay / 60))}:${pad(minuteOfDay % 60)} UTC`;
-  const days = Math.floor(ms / MS_PER_DAY) - Math.floor(nowMs / MS_PER_DAY);
-  if (days <= 0) return text;
-  return days === 1 ? `${text} (+1 day)` : `${text} (+${days} days)`;
+  return `${pad(Math.floor(minuteOfDay / 60))}:${pad(minuteOfDay % 60)} UTC`;
 }
 
 export function formatDuration(ms: number): string {

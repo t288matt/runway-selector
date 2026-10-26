@@ -78,8 +78,8 @@ describe('the cell to colour, icon and word mapping', () => {
     expect(cellView(cell('SUITABLE'), T0, 'NO TAF').uncertain).toBe(false);
   });
 
-  it('marks a later UTC day in the accessible name', () => {
-    expect(cellView(cell('SUITABLE'), T0 + 86_400_000, 'NO TAF', T0).label).toBe('Mode M1, 00:30Z (+1 day), suitable');
+  it('does not mark a later UTC day in the accessible name (issue 129)', () => {
+    expect(cellView(cell('SUITABLE'), T0 + 86_400_000, 'NO TAF', T0).label).toBe('Mode M1, 00:30Z, suitable');
   });
 
   describe('every MARGINAL cell is drawn plain green but keeps its word (OD-81)', () => {

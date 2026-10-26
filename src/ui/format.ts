@@ -20,11 +20,9 @@ export function hhmmZ(ms: number): string {
   return `${pad2(p.h)}:${pad2(p.m)}Z`;
 }
 
-/** "22:30Z", with " (+1 day)" when the instant is on a later UTC day than the reference instant. */
-export function hhmmZRel(ms: number, refMs: number): string {
-  const days = Math.floor(ms / MS_DAY) - Math.floor(refMs / MS_DAY);
-  if (days <= 0) return hhmmZ(ms);
-  return `${hhmmZ(ms)} (+${days} ${days === 1 ? 'day' : 'days'})`;
+/** "22:30Z". The day is never shown (owner, 26-10-2026, issue 129): the forecast never looks far enough ahead for it to matter. `_refMs` is kept so callers are unchanged. */
+export function hhmmZRel(ms: number, _refMs: number): string {
+  return hhmmZ(ms);
 }
 
 /** "22:11:40Z". */

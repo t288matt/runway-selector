@@ -211,9 +211,9 @@ describe('formatting', () => {
     expect(utcAndLocal(ms, 'Asia/Kathmandu')).toBe('14:00Z');
     expect(utcAndLocal(ms, 'Not/AZone')).toBe('14:00Z');
   });
-  it('marks a later UTC day', () => {
+  it('never marks a later UTC day (issue 129)', () => {
     const ms = Date.UTC(2026, 9, 24, 0, 30);
-    expect(hhmmZRel(ms, Date.UTC(2026, 9, 23, 23, 0))).toBe('00:30Z (+1 day)');
+    expect(hhmmZRel(ms, Date.UTC(2026, 9, 23, 23, 0))).toBe('00:30Z');
     expect(hhmmZRel(ms, ms)).toBe('00:30Z');
   });
   it('words ages, durations and directions', () => {
