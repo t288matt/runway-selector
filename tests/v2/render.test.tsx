@@ -82,7 +82,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer screen states [
     const alts = screenModel(stateOf(view)).answer.alternatives;
     expect(html.includes('data-testid="alternatives"')).toBe(alts.length > 0);
     expect(html.split('data-testid="alt-chip"').length - 1).toBe(alts.length);
-    if (alts.length > 0) expect(textOf(html)).toContain('Also valid for the next hour');
+    if (alts.length > 0) expect(textOf(html)).toContain('Also suitable for the next hour');
   });
 
   it('no suitable mode: the red label replaces the mode and no mode is named as recommended', () => {

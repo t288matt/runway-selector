@@ -4,18 +4,18 @@ import type { AnswerModel } from '../model/answer';
 import { StateGlyph } from './Icons';
 import { Tip } from './Popover';
 
-/** The ranking as coloured rows: blue for the recommended mode, green for valid, grey for not valid. */
+/** The ranking as coloured rows: blue for the recommended mode, green for suitable, grey for unsuitable. */
 function PriorityRich({ model }: { model: AnswerModel }) {
   return (
     <>
       <b className="pr-title">Runway mode priority</b>
-      <span className="pr-sub">1 is the most preferred</span>
+      <span className="pr-sub">1 is the most preferred. Suitable means for the next hour.</span>
       <span className="pr-grid">
         {model.priorityRows.map((r) => (
-          <span key={r.modeId} className={`pr-row pr-${r.state === 'not valid' ? 'no' : r.state}`}>
+          <span key={r.modeId} className={`pr-row pr-${r.state}`}>
             <span className="pr-n">{r.rank}</span>
             <span>{r.modeId}</span>
-            <span className="pr-s">{r.state === 'valid' ? 'valid for the next hour' : r.state}</span>
+            <span className="pr-s">{r.state}</span>
           </span>
         ))}
       </span>
@@ -64,12 +64,12 @@ export function Answer({ model }: { model: AnswerModel }) {
         </div>
       )}
       {model.alternatives.length === 0 ? null : (
-        <div className="alt" role="group" aria-label="Also valid for the next hour" data-testid="alternatives">
+        <div className="alt" role="group" aria-label="Also suitable for the next hour" data-testid="alternatives">
           {model.priorityText === null ? (
-            <div className="alt-label">Also valid for the next hour</div>
+            <div className="alt-label">Also suitable for the next hour</div>
           ) : (
             <Tip tag="div" text={model.priorityText} rich={rich} className="alt-label" data-testid="alt-label">
-              Also valid for the next hour
+              Also suitable for the next hour
             </Tip>
           )}
           <div className="alt-chips">

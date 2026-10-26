@@ -342,7 +342,7 @@ body {
 .pr-recommended {
   color: var(--accent);
 }
-.pr-valid {
+.pr-suitable {
   color: var(--ok-text);
 }
 .alt-label.tip-open {
