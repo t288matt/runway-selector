@@ -109,7 +109,7 @@ export function answerModel(view: ViewData): AnswerModel {
     if (index === recIndex || !m.enabled) return;
     const window = (result.evaluation.cells[index] ?? []).slice(0, ALSO_VALID_SLOTS);
     const rank = planRank(view, index, 0);
-    if (rank !== null && window.length > 0 && window.every((c) => c.status === 'SUITABLE')) alternatives.push({ modeId: m.id, rank, index });
+    if (rank !== null && window.length === ALSO_VALID_SLOTS && window.every((c) => c.status === 'SUITABLE')) alternatives.push({ modeId: m.id, rank, index });
   });
   alternatives.sort((a, b) => a.rank - b.rank || a.index - b.index);
   return {

@@ -7,7 +7,7 @@ import { StateGlyph } from './Icons';
 function PriorityTag({ rank }: { rank: number | null }) {
   if (rank === null) return null;
   return (
-    <span className="prio" title="Runway mode priority" tabIndex={0} data-testid="priority">
+    <span className="prio" title="Runway mode priority" aria-label={`Runway mode priority ${rank}`} role="img" tabIndex={0} data-testid="priority">
       P{rank}
     </span>
   );
@@ -47,7 +47,7 @@ export function Answer({ model }: { model: AnswerModel }) {
         </div>
       )}
       {model.alternatives.length === 0 ? null : (
-        <div className="alt" data-testid="alternatives">
+        <div className="alt" role="group" aria-label="Also valid for the next hour" data-testid="alternatives">
           <div className="alt-label">Also valid for the next hour</div>
           <div className="alt-chips">
             {model.alternatives.map((a) => (

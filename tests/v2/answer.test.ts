@@ -120,6 +120,23 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer values [%s]', (
     expect(a.rank).not.toBeNull();
   });
 
+  it('alternatives follow the rule on a known case: listed when suitable in both slots, dropped for marginal in slot 2, kept when only slot 3 fails, none with one slot, never a disabled mode (issue 122)', () => {
+    const rigY = rigFor(PACKS.find((p) => p.name === 'YSSY')!);
+    const packY = packOf(rigY);
+    const base = viewOf(packY, rigY, same<Wx>(4, 'ok'), same(4, 'light'));
+    const listed = answerModel(base).alternatives.map((x) => x.modeId);
+    expect(listed.length).toBeGreaterThan(0);
+    const target = listed[0]!;
+    const k = packY.modes.findIndex((m) => m.id === target);
+    const withCells = (edit: (cells: typeof base.result.evaluation.cells) => typeof base.result.evaluation.cells) => ({ ...base, result: { ...base.result, evaluation: { ...base.result.evaluation, cells: edit(base.result.evaluation.cells) } } });
+    const setStatus = (slot: number, status: 'MARGINAL' | 'UNSUITABLE') => withCells((cells) => cells.map((row, i) => (i === k ? row.map((c, s) => (s === slot ? { ...c, status } : c)) : row)));
+    expect(answerModel(setStatus(1, 'MARGINAL')).alternatives.map((x) => x.modeId)).not.toContain(target);
+    expect(answerModel(setStatus(2, 'UNSUITABLE')).alternatives.map((x) => x.modeId)).toContain(target);
+    expect(answerModel(withCells((cells) => cells.map((row) => row.slice(0, 1)))).alternatives).toEqual([]);
+    const disabled = { ...base, pack: { ...packY, modes: packY.modes.map((m) => (m.id === target ? { ...m, enabled: false } : m)) } };
+    expect(answerModel(disabled).alternatives.map((x) => x.modeId)).not.toContain(target);
+  });
+
   it('lists no alternative that fails in the second slot, and none when no mode is recommended', () => {
     const early = viewOf(pack, rig, ['ok', 'badA', 'badA', 'badA'], same(4, 'light'));
     for (const alt of answerModel(early).alternatives) {
