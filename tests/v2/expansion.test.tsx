@@ -210,9 +210,10 @@ describe('the shared popover', () => {
       const id = /aria-describedby="([^"]+)"/.exec(tag)?.[1] ?? 'missing';
       expect(html).toContain(`id="${id}" role="tooltip"`);
     });
-    it('the slim bar has the summary as its tooltip and in its name', () => {
+    it('the Detail row has the summary in its name and no hover popover', () => {
       const summary = /<summary[^>]*aria-label="Detail: open or close\. ([^"]*)"/.exec(html)?.[1] ?? 'missing';
-      expect(html).toContain(`role="tooltip" class="tip-pop" hidden="">${summary}</span>`);
+      expect(summary).not.toBe('missing');
+      expect(html).not.toContain(`role="tooltip" class="tip-pop" hidden="">${summary}</span>`);
     });
   });
 
