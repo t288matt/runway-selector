@@ -185,8 +185,14 @@ describe('the coordinate layout is turned into the weather reference (issue 112)
     for (const offset of [-25, -6, 0, 6, 25]) {
       const e = [...pair('16', '34', 168, 168 - offset, -33.9, 151.2), ...pair('07', '25', 74, 74 - offset, -33.92, 151.22)];
       for (const r of draw(e).runways) {
-        for (const v of [r.x1, r.x2]) expect(v).toBeGreaterThanOrEqual(0), expect(v).toBeLessThanOrEqual(DIAGRAM.width);
-        for (const v of [r.y1, r.y2]) expect(v).toBeGreaterThanOrEqual(0), expect(v).toBeLessThanOrEqual(DIAGRAM.height);
+        for (const v of [r.x1, r.x2]) {
+          expect(v).toBeGreaterThanOrEqual(0);
+          expect(v).toBeLessThanOrEqual(DIAGRAM.width);
+        }
+        for (const v of [r.y1, r.y2]) {
+          expect(v).toBeGreaterThanOrEqual(0);
+          expect(v).toBeLessThanOrEqual(DIAGRAM.height);
+        }
       }
     }
   });

@@ -2,7 +2,7 @@
 // visibility, runway state, and the METAR line. Pure view models: plain strings
 // and numbers from one view. Every threshold comes from the pack's settings
 // (the traffic bands, through the engine's own classifier); none is written here.
-import { trafficLevelsFor, type TrafficLevel } from '../../engine';
+import { trafficLevelsFor, type SlotCondition, type TrafficLevel } from '../../engine';
 import { ceilingOf, visibilityMetresOf, type DecodedConditions } from '../../weather';
 import { hhmmZ, hhmmZRel, thousands } from '../format';
 import { SLOT_MS, type FeedState, type ViewData } from './dashboard';
@@ -161,6 +161,8 @@ export type SlotWetness = 'dry' | 'wet' | 'possible';
 
 export interface RunwayTile {
   readonly known: boolean;
+  /** The weather line, for example "Showers in 30 min", "Heavy rain now" or "No precipitation forecast" (issue 123). */
+  readonly headline: string;
   readonly word: string;
   /** The wet-from or wet-until time, in words: "wet from 20:00Z", "now, until 22:30Z". */
   readonly detail: string;
@@ -169,12 +171,28 @@ export interface RunwayTile {
   readonly aria: string;
 }
 
+/** Precipitation worded for the tile: "heavy rain", "showers", "light drizzle", "thunderstorm". Display only. */
+export function conditionWords(c: SlotCondition): string {
+  const has = (code: string): boolean => c.phenomena.includes(code);
+  const kind = c.descriptor === 'TS' ? 'thunderstorm' : has('RA') ? (c.descriptor === 'SH' ? 'showers' : c.descriptor === 'FZ' ? 'freezing rain' : 'rain') : has('DZ') ? (c.descriptor === 'FZ' ? 'freezing drizzle' : 'drizzle') : has('SN') ? (c.descriptor === 'SH' ? 'snow showers' : 'snow') : has('GR') ? 'hail' : has('GS') ? 'small hail' : has('SG') ? 'snow grains' : has('PL') ? 'ice pellets' : c.descriptor === 'SH' ? 'showers' : 'precipitation';
+  return c.intensity === '+' ? `heavy ${kind}` : c.intensity === '-' ? `light ${kind}` : kind;
+}
+
+/** Minutes to the nearest five, as "30 min" or "1 h" or "1 h 30 min". */
+function inMinutes(ms: number): string {
+  const m = Math.max(5, Math.round(ms / MS_MINUTE / 5) * 5);
+  return m < 60 ? `${m} min` : m % 60 === 0 ? `${m / 60} h` : `${Math.floor(m / 60)} h ${m % 60} min`;
+}
+
+/** Beyond this the weather line gives a clock time instead of "in N min" (issue 123). A display rule. */
+const RELATIVE_LIMIT_MS = 120 * MS_MINUTE;
+
 /** The runway state now and when it changes, over the window the plan covers. */
 export function runwayTile(view: ViewData): RunwayTile {
   const slots = view.result.evaluation.slots;
   const first = slots[0];
   if (first === undefined || view.weather.slots[0]?.governedBy === 'NONE') {
-    return { known: false, word: 'UNKNOWN', detail: 'no weather for the runway condition', segments: [], aria: 'Runway condition unknown' };
+    return { known: false, headline: 'Weather unknown', word: 'UNKNOWN', detail: 'no weather for the runway condition', segments: [], aria: 'Runway condition unknown' };
   }
   const wetness = (state: string): SlotWetness => (state === 'WET' ? 'wet' : state === 'WET_POSSIBLE' ? 'possible' : 'dry');
   const segments = slots.map((s) => wetness(s.runwayState));
@@ -189,7 +207,16 @@ export function runwayTile(view: ViewData): RunwayTile {
     const dry = slots.findIndex((s, i) => i > 0 && s.runwayState === 'DRY');
     detail = dry < 0 ? `now, with no dry period to ${endZ}` : `now, until ${startOf(dry)}`;
   }
-  return { known: true, word, detail, segments, aria: `Runway ${word.toLowerCase()}, ${detail}` };
+  // The weather line: the first slot of the whole window that has precipitation, worded from the report (issue 123).
+  const ahead = slots.findIndex((_s, i) => i < view.weather.slots.length && (view.weather.slots[i]?.weather.present?.length ?? 0) > 0);
+  let headline = 'No precipitation forecast';
+  if (ahead >= 0) {
+    const found = view.weather.slots[ahead]?.weather.present ?? [];
+    const words = [...new Set(found.map(conditionWords))].slice(0, 2).join(' and ');
+    const text = words.charAt(0).toUpperCase() + words.slice(1);
+    headline = ahead === 0 || (slots[ahead]?.startMs ?? 0) <= view.calcNowMs ? `${text} now` : (slots[ahead]?.startMs ?? 0) - view.calcNowMs <= RELATIVE_LIMIT_MS ? `${text} in ${inMinutes((slots[ahead]?.startMs ?? 0) - view.calcNowMs)}` : `${text} from ${startOf(ahead)}`;
+  }
+  return { known: true, headline, word, detail, segments, aria: `${headline}. Runway ${word.toLowerCase()}, ${detail}` };
 }
 
 // ------------------------------------------------------------------- METAR

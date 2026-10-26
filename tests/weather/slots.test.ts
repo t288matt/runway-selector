@@ -497,6 +497,19 @@ describeForEachPack('vicinity weather is not precipitation', (pack, ref) => {
     }
   });
 
+  it('present (display only) lists the prevailing precipitation groups and leaves out VC groups and TEMPO or PROB groups (issue 123)', () => {
+    const now = utc('2026-10-23T12:10:00Z');
+    const decode = (body: string) => {
+      const r = decodeTaf(`TAF YSSY 231108Z 2312/2418 ${body}`, { pack: packWith(ref, { weatherStation: 'YSSY' }), nowMs: now });
+      if (r.kind !== 'ok') throw new Error('decode');
+      return build(pack, now, null, r.report, 60).slots[0]!;
+    };
+    expect(decode('04010KT 9999 -RA SCT012').weather.present?.length ?? 0).toBe((pack.settings.precipitationCodes as readonly string[]).includes('RA') ? 1 : 0);
+    expect(decode('04010KT 9999 VCSH SCT012').weather.present ?? []).toEqual([]);
+    expect(decode('04010KT 9999 SCT012 TEMPO 2312/2316 SHRA').weather.present ?? []).toEqual([]);
+    expect(decode('04010KT 9999 SCT012 PROB30 2312/2316 SHRA').weather.present ?? []).toEqual([]);
+  });
+
   it('real showers still count: -SHRA in an FM, SHRA in a PROB40 and a TEMPO SHRA', () => {
     const codes = pack.settings.precipitationCodes as readonly string[];
     const counts = codes.includes('SH') || codes.includes('RA');

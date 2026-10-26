@@ -3,7 +3,7 @@
 //
 // Pure: no clock, no network, no storage. `nowMs` is an input. Every number
 // that depends on the airport comes from the pack's settings.
-import type { PrecipitationFlags, SlotWeather, WeatherOverlay, WeatherSlot } from '../engine/inputs';
+import type { PrecipitationFlags, SlotCondition, SlotWeather, WeatherOverlay, WeatherSlot } from '../engine/inputs';
 import type { Settings } from '../refdata/schema';
 import { ceilingOf, visibilityMetresOf } from './ceiling';
 import type { DecodedMetar, DecodedTaf, DecodedVisibility, DecodedWeatherCondition } from './types';
@@ -52,6 +52,12 @@ function hasPrecipitation(weather: readonly DecodedWeatherCondition[], codes: Re
   return weather.some((c) => c.intensity !== 'VC' && c.codes.some((code) => codes.has(code)));
 }
 
+function presentOf(weather: readonly DecodedWeatherCondition[], codes: ReadonlySet<string>): SlotCondition[] {
+  return weather
+    .filter((c) => c.intensity !== 'VC' && c.codes.some((code) => codes.has(code)))
+    .map((c) => ({ intensity: c.intensity === '-' || c.intensity === '+' ? c.intensity : null, descriptor: c.descriptor, phenomena: c.phenomena }));
+}
+
 function hasThunderstorm(weather: readonly DecodedWeatherCondition[]): boolean {
   return weather.some((c) => c.intensity !== 'VC' && c.codes.includes('TS'));
 }
@@ -70,6 +76,7 @@ function metarWeather(metar: DecodedMetar, codes: ReadonlySet<string>, lowVisibi
   return {
     wind: metar.wind,
     precipitation: { prevailing: hasPrecipitation(metar.weather, codes), probable: null, temporary: false, recent: hasPrecipitation(metar.recentWeather, codes) },
+    present: presentOf(metar.weather, codes),
     overlays: [],
     ceilingFt: ceilingOf(metar),
     visibilityMetres: visibilityMetresOf(metar),
@@ -116,6 +123,7 @@ function tafWeather(taf: DecodedTaf, startMs: number, endMs: number, codes: Read
   return {
     wind: period.wind,
     precipitation: { prevailing: hasPrecipitation(period.weather, codes), probable, temporary, recent: false },
+    present: presentOf(period.weather, codes),
     overlays,
     ceilingFt: ceilingOf(period),
     visibilityMetres: visibilityMetresOf(period),

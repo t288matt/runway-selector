@@ -11,10 +11,14 @@
 //                RECOMMENDED" (the engine's explanation carries an early change);
 //   HOLD         otherwise (shown as RECOMMENDED).
 // v2 has no current mode (owner, 26-10-2026, issue 104), so CHANGE NOW is not reachable from the screen; the rule stays.
-// A plain planned change ("Next: ... at ...") does not make the state CHANGE SOON.
+// A plain planned change ("Forecasting: ... at ...") does not make the state CHANGE SOON.
 import { NO_SUITABLE_TITLE } from '../../engine';
 import { hhmmZRel } from '../format';
 import type { ViewData } from './dashboard';
+import { planRank } from './evaluation';
+
+/** How many half-hour slots from now an alternative must stay suitable to be listed (60 minutes; issue 122). A display rule. */
+export const ALSO_VALID_SLOTS = 2;
 
 export type BandId = 'HOLD' | 'CHANGE_SOON' | 'CHANGE_NOW' | 'NO_SUITABLE' | 'NO_DATA';
 export type Glyph = 'tick' | 'triangle' | 'cross' | 'question';
@@ -66,8 +70,12 @@ export interface AnswerModel {
   /** "Arr 03 · Dep 03, 06" parts, or null with no recommendation. */
   readonly arrivals: string | null;
   readonly departures: string | null;
-  /** "Next: 21AD at 22:00Z", "No change planned", or '' with no recommendation. */
+  /** "Forecasting: 21AD at 22:00Z", "No change planned", or '' with no recommendation. */
   readonly next: string;
+  /** The recommended mode's rank in the operating plan (1 is the most preferred), or null. */
+  readonly rank: number | null;
+  /** Other modes SUITABLE in every one of the next ALSO_VALID_SLOTS slots, most preferred first (issue 122). */
+  readonly alternatives: readonly { readonly modeId: string; readonly rank: number }[];
   readonly nextChange: { readonly modeId: string; readonly atMs: number } | null;
   /** The short line under the mode: the v1 banner text for CHANGE NOW and CHANGE SOON, what is missing for NO DATA. */
   readonly why: string | null;
@@ -90,11 +98,20 @@ export function answerModel(view: ViewData): AnswerModel {
       band.id === 'NO_DATA'
         ? [explanation.headline, ...view.weather.banners.filter((b) => b.code === 'no-weather' || b.code === 'no-metar' || b.code === 'no-taf' || b.code === 'taf-ended' || b.code === 'metar-outside-window').map((b) => b.message)].join(' ')
         : null;
-    return { band, modeId: null, modeSize: 'normal', modeLabel: 'No recommended mode', arrivals: null, departures: null, next: '', nextChange: null, why: missing };
+    return { band, modeId: null, modeSize: 'normal', modeLabel: 'No recommended mode', arrivals: null, departures: null, next: '', rank: null, alternatives: [], nextChange: null, why: missing };
   }
 
   const mode = pack.modes.find((m) => m.id === recId);
   const upcoming = result.changeovers.find((c) => c.change.slotIndex > 0);
+  const recIndex = pack.modes.findIndex((m) => m.id === recId);
+  const alternatives: { modeId: string; rank: number; index: number }[] = [];
+  pack.modes.forEach((m, index) => {
+    if (index === recIndex || !m.enabled) return;
+    const window = (result.evaluation.cells[index] ?? []).slice(0, ALSO_VALID_SLOTS);
+    const rank = planRank(view, index, 0);
+    if (rank !== null && window.length === ALSO_VALID_SLOTS && window.every((c) => c.status === 'SUITABLE')) alternatives.push({ modeId: m.id, rank, index });
+  });
+  alternatives.sort((a, b) => a.rank - b.rank || a.index - b.index);
   return {
     band,
     modeId: recId,
@@ -102,7 +119,9 @@ export function answerModel(view: ViewData): AnswerModel {
     modeLabel: `Recommended mode ${recId}`,
     arrivals: mode === undefined ? null : mode.arrivals.join(', ') || 'none',
     departures: mode === undefined ? null : mode.departures.join(', ') || 'none',
-    next: upcoming === undefined ? 'No change planned' : `Next: ${upcoming.change.toModeId} at ${hhmmZRel(upcoming.change.startMs, view.calcNowMs)}`,
+    next: upcoming === undefined ? 'No change planned' : `Forecasting: ${upcoming.change.toModeId} at ${hhmmZRel(upcoming.change.startMs, view.calcNowMs)}`,
+    rank: planRank(view, recIndex, 0),
+    alternatives: alternatives.map(({ modeId, rank }) => ({ modeId, rank })),
     nextChange: upcoming === undefined ? null : { modeId: upcoming.change.toModeId, atMs: upcoming.change.startMs },
     why: band.id === 'CHANGE_NOW' ? currentModeUnsuitableText(view) : band.id === 'CHANGE_SOON' ? (explanation.earlyChange?.text ?? null) : null,
   };
