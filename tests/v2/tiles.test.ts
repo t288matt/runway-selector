@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { TrafficLevel } from '../../src/engine';
 import { chipModels } from '../../src/v2/model/chips';
 import { EMPTY_FEED, type FeedState } from '../../src/v2/model/dashboard';
-import { ceilingTile, levelWord, metarTile, runwayTile, TREND_HORIZON_MS, trafficTile, trafficTrend } from '../../src/v2/model/tiles';
+import { ceilingTile, conditionWords, levelWord, metarTile, runwayTile, TREND_HORIZON_MS, trafficTile, trafficTrend } from '../../src/v2/model/tiles';
 import { NO_AUTO_WEATHER } from '../../src/v2/controller';
 import { PACKS, readJson, toRaw, YSSY_PACK } from '../helpers/packs';
 import { parsePack } from '../../src/refdata';
@@ -109,6 +109,32 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 tiles [%s]', (_n, ref)
     expect(dry.word).toBe('DRY');
     expect(dry.detail).toMatch(/^no wet runway forecast to \d\d:\d\dZ$/);
     expect(dry.segments).toEqual(same(6, 'dry'));
+  });
+
+  it('weather line (issue 123): says nothing is forecast, then "now", then "in N min" worded from the report', () => {
+    const view = viewOf(pack, rig, same<Wx>(6, 'ok'));
+    expect(runwayTile(view).headline).toBe('No precipitation forecast');
+    const withPresent = (at: number, c: { intensity: '-' | '+' | null; descriptor: string | null; phenomena: string[] }) => ({
+      ...view,
+      weather: { ...view.weather, slots: view.weather.slots.map((s, i) => (i === at ? { ...s, weather: { ...s.weather, present: [c] } } : s)) },
+    });
+    expect(runwayTile(withPresent(0, { intensity: '+', descriptor: null, phenomena: ['RA'] })).headline).toBe('Heavy rain now');
+    const soon = runwayTile(withPresent(1, { intensity: null, descriptor: 'SH', phenomena: ['RA'] })).headline;
+    expect(soon).toMatch(/^Showers in \d+ min$/);
+    const late = runwayTile(withPresent(5, { intensity: null, descriptor: 'SH', phenomena: ['RA'] }));
+    expect(late.headline).toMatch(/^Showers (in \d+ h( \d+ min)?|from \d\d:\d\dZ)$/);
+    expect(runwayTile(withPresent(0, { intensity: '+', descriptor: null, phenomena: ['RA'] })).aria).toContain('Heavy rain now. Runway');
+  });
+
+  it('weather words: intensity, showers, drizzle, snow, thunderstorm, freezing', () => {
+    const w = (intensity: '-' | '+' | null, descriptor: string | null, ...phenomena: string[]) => conditionWords({ intensity, descriptor, phenomena });
+    expect(w(null, 'SH', 'RA')).toBe('showers');
+    expect(w('+', null, 'RA')).toBe('heavy rain');
+    expect(w('-', null, 'DZ')).toBe('light drizzle');
+    expect(w(null, 'TS', 'RA')).toBe('thunderstorm');
+    expect(w(null, 'FZ', 'RA')).toBe('freezing rain');
+    expect(w('-', 'SH', 'SN')).toBe('light snow showers');
+    expect(w(null, null, 'UP')).toBe('precipitation');
   });
 
   it('runway state: unknown when no weather governs the slot', () => {

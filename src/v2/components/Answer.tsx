@@ -52,6 +52,7 @@ export function Answer({ model }: { model: AnswerModel }) {
           <div className="alt-chips">
             {model.alternatives.map((a) => (
               <span className="alt-chip" key={a.modeId} data-testid="alt-chip">
+                <i className="alt-dot" aria-hidden="true" />
                 {a.modeId}
                 <PriorityTag rank={a.rank} />
               </span>

@@ -57,11 +57,20 @@ export interface WeatherOverlay {
   readonly text: string;
 }
 
+/** A present-weather group at the station (never VC) whose codes count as precipitation. Shown on the v2 runway tile; the engine ignores it. */
+export interface SlotCondition {
+  readonly intensity: '-' | '+' | null;
+  readonly descriptor: string | null;
+  readonly phenomena: readonly string[];
+}
+
 /** The weather the engine uses for one 30-minute slot. */
 export interface SlotWeather {
   /** null when the source gives no wind for the slot. */
   readonly wind: WindObservation | null;
   readonly precipitation: PrecipitationFlags;
+  /** The precipitation groups behind `precipitation.prevailing`, for display only. */
+  readonly present?: readonly SlotCondition[];
   readonly overlays: readonly WeatherOverlay[];
   /**
    * Cloud ceiling in feet, for a mode's weather minima. A number is the ceiling,

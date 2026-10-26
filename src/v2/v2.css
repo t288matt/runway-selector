@@ -319,9 +319,17 @@ body {
   flex-wrap: wrap;
   gap: 8px;
 }
+.alt-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok-text);
+  flex: none;
+}
 .alt-chip {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
+  gap: 7px;
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 4px 9px;
@@ -379,10 +387,10 @@ body {
   height: 22px;
   flex: none;
 }
-.fact .k .k-detail {
+.fact .k-detail {
   font-weight: 500;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 13px;
 }
 .fact small {
   color: var(--muted);

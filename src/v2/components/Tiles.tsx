@@ -47,8 +47,10 @@ export function RunwayTileView({ tile }: { tile: RunwayTile }) {
     <Tip tag="div" text={tile.aria} className="fact wide" tabIndex={0} role="group" aria-label={tile.aria} data-testid="tile-runway">
       <span className="k">
         <DropIcon possible={tile.word === 'WET POSSIBLE'} />
-        <span data-testid="runway-word">{tile.word}</span>
-        <span className="k-detail">&nbsp;{tile.detail}</span>
+        <span data-testid="runway-headline">{tile.headline}</span>
+      </span>
+      <span className="k-detail">
+        Runway <span data-testid="runway-word">{tile.word}</span>
       </span>
       {tile.segments.length === 0 ? null : (
         <span className="dryline" aria-hidden="true">
