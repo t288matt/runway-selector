@@ -5,7 +5,7 @@ import type { CeilingTile, MetarTile, RunwayTile, TrafficTile } from '../model/t
 import { CloudIcon, DropIcon, TrafficBars } from './Icons';
 import { Tip } from './Popover';
 
-/** The hover content: one bar per half hour, sized to the pack's busy threshold; hatched where only arrivals are known. */
+/** The hover content: one bar per half hour, sized to the pack's busy threshold. */
 function TrafficRich({ tile }: { tile: TrafficTile }) {
   return (
     <>
@@ -21,7 +21,6 @@ function TrafficRich({ tile }: { tile: TrafficTile }) {
           </span>
         ))}
       </span>
-      {tile.slots.some((s) => s.partial) ? <span className="pr-sub">Hatched: arrivals only, so at least this.</span> : null}
     </>
   );
 }
