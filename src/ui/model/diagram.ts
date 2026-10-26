@@ -119,12 +119,49 @@ export function rolesOf(mode: Pick<Mode, 'arrivals' | 'departures'> | null): Map
   return out;
 }
 
+const wrap180 = (d: number): number => ((((d + 180) % 360) + 360) % 360) - 180;
+
+/**
+ * The runway coordinates give TRUE bearings, but the pack headings and the wind are in the weather's reference
+ * (magnetic). The offset between the two (the airport's magnetic variation) is read from the pack itself: the
+ * circular mean, over the runways, of the bearing from the coordinates minus the pack heading. Zero when there are
+ * no coordinates, or when the runways disagree with each other by more than a few degrees.
+ */
+function coordinateOffset(groups: (readonly RunwayEnd[])[]): number {
+  const offsets: number[] = [];
+  for (const g of groups) {
+    const a = g[0];
+    const b = g[1];
+    if (a === undefined || b === undefined) continue;
+    const ta = a.threshold;
+    const tb = b.threshold;
+    if (ta === null || tb === null) continue;
+    const north = tb.latitude - ta.latitude;
+    const east = (tb.longitude - ta.longitude) * Math.cos(((ta.latitude + tb.latitude) / 2) * RAD);
+    const bearing = (Math.atan2(east, north) / RAD + 360) % 360;
+    offsets.push(wrap180(bearing - a.headingDegrees));
+  }
+  if (offsets.length === 0) return 0;
+  const s = offsets.reduce((t, o) => t + Math.sin(o * RAD), 0);
+  const c = offsets.reduce((t, o) => t + Math.cos(o * RAD), 0);
+  const mean = Math.atan2(s, c) / RAD;
+  return offsets.every((o) => Math.abs(wrap180(o - mean)) <= 3) ? mean : 0;
+}
+
 function realPlacement(groups: (readonly RunwayEnd[])[]): Map<RunwayEnd, { x: number; y: number }> | null {
   const all = groups.flat();
   if (all.length === 0 || all.some((r) => r.threshold === null)) return null;
   const lat0 = all.reduce((s, r) => s + (r.threshold?.latitude ?? 0), 0) / all.length;
   const lon0 = all.reduce((s, r) => s + (r.threshold?.longitude ?? 0), 0) / all.length;
-  const pts = all.map((r) => ({ r, x: ((r.threshold?.longitude ?? 0) - lon0) * Math.cos(lat0 * RAD), y: -((r.threshold?.latitude ?? 0) - lat0) }));
+  // Turn the layout from true north into the weather's reference, so the runways sit right against the wind arrow.
+  const turn = coordinateOffset(groups) * RAD;
+  const cosT = Math.cos(turn);
+  const sinT = Math.sin(turn);
+  const pts = all.map((r) => {
+    const x = ((r.threshold?.longitude ?? 0) - lon0) * Math.cos(lat0 * RAD);
+    const y = -((r.threshold?.latitude ?? 0) - lat0);
+    return { r, x: x * cosT + y * sinT, y: -x * sinT + y * cosT };
+  });
   const extent = Math.max(1e-9, ...pts.map((p) => Math.max(Math.abs(p.x), Math.abs(p.y))));
   const scale = 75 / extent;
   const out = new Map<RunwayEnd, { x: number; y: number }>();

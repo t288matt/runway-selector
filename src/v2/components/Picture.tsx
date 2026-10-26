@@ -20,7 +20,7 @@ export function Picture({ model }: { model: PictureModel }) {
         ))}
         <g fontFamily={font} fontSize="13" fill="#e6ecf7">
           {d.runways.flatMap((r) =>
-            r.ends.map((e) => (
+            r.ends.filter((e) => e.roles.length > 0).map((e) => (
               <text key={e.name} x={e.x} y={e.y} textAnchor={e.anchor} dominantBaseline="middle" fontWeight={e.roles.length > 0 ? 700 : 400} fill={e.roles.length > 0 ? '#e6ecf7' : '#9db0cf'}>
                 {e.name}
                 {e.roles.length > 0 ? ` ${e.roles.join('/')}` : ''}
@@ -40,9 +40,6 @@ export function Picture({ model }: { model: PictureModel }) {
         )}
         <text x={d.windLabel.x} y={d.windLabel.y} textAnchor={d.windLabel.anchor} dominantBaseline="middle" fontFamily={font} fontSize="15" fontWeight="800" fill={d.arrow === null ? '#9db0cf' : '#ffb454'} data-testid="wind-label" data-place={d.windLabel.place}>
           {d.windLabel.text}
-        </text>
-        <text x={DIAGRAM.width - 10} y="16" textAnchor="end" fontFamily={font} fontSize="11" fill="#9db0cf">
-          N up
         </text>
       </svg>
     </figure>

@@ -187,9 +187,9 @@ function Key() {
       <div className="keyline">
         {k.legend.map((l) => (
           <span key={l.key}>
-            {l.key === 'suitable' || l.key === 'unsuitable' || l.key === 'unknown' ? (
+            {l.key === 'suitable' || l.key === 'unsuitable' ? (
               <>
-                <i className={`sw ${l.key === 'suitable' ? 'cs-suitable' : l.key === 'unsuitable' ? 'cs-unsuitable' : 'cs-unknown'}`} aria-hidden="true" />
+                <i className={`sw ${l.key === 'suitable' ? 'cs-suitable' : 'cs-unsuitable'}`} aria-hidden="true" />
                 {LEGEND_GLYPH[l.key]}{' '}
               </>
             ) : null}

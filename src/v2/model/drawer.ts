@@ -301,6 +301,6 @@ export function keyModel(): KeyModel {
     states: (REACHABLE_STATES).map((id) => ({ band: BANDS[id], meaning: STATE_MEANING[id] })),
     legend: LEGEND,
     causes: Object.entries(CAUSE_WORDS).map(([code, word]) => ({ code, word })),
-    runwayKey: ['Blue runways are used by the recommended mode; ARR is arrivals and DEP is departures.', 'N up: north is at the top of the picture.'],
+    runwayKey: ['Blue runways are used by the recommended mode; ARR is arrivals and DEP is departures.'],
   };
 }

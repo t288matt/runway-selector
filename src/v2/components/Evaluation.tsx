@@ -19,16 +19,9 @@ function LegendSwatch({ item }: { item: LegendItem }) {
   switch (item.key) {
     case 'suitable':
     case 'unsuitable':
-    case 'unknown':
       return (
-        <b className={`cell ${item.key === 'suitable' ? 'cs-suitable' : item.key === 'unsuitable' ? 'cs-unsuitable' : 'cs-unknown'}`} aria-hidden="true">
+        <b className={`cell ${item.key === 'suitable' ? 'cs-suitable' : 'cs-unsuitable'}`} aria-hidden="true">
           {LEGEND_GLYPH[item.key]}
-        </b>
-      );
-    case 'green-word':
-      return (
-        <b className="cell cs-suitable wide" aria-hidden="true">
-          <small>TEMPO</small>
         </b>
       );
     case 'path':

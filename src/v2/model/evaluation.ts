@@ -343,28 +343,23 @@ export interface EvaluationRow extends ModeRow {
 }
 
 export interface LegendItem {
-  readonly key: 'suitable' | 'unsuitable' | 'unknown' | 'green-word' | 'path' | 'change' | 'busy' | 'uncertain';
+  readonly key: 'suitable' | 'unsuitable' | 'path' | 'busy' | 'uncertain';
   readonly text: string;
 }
 
-/** v1's legend, in v1's order. */
-export const FORECAST_GREEN_LEGEND = 'Green with a word: passes, but see the word (forecast change, near a limit, variable wind)';
+/** v1's legend in v1's order, without the Unknown, green-with-a-word and planned-change entries (owner, 26-10-2026). */
 export const LEGEND: readonly LegendItem[] = [
   { key: 'suitable', text: 'Suitable' },
   { key: 'unsuitable', text: 'Unsuitable' },
-  { key: 'unknown', text: 'Unknown' },
-  { key: 'green-word', text: FORECAST_GREEN_LEGEND },
   { key: 'path', text: 'Recommended path' },
-  { key: 'change', text: 'Dashed blue line: planned change' },
   { key: 'busy', text: 'Amber band: HIGH traffic' },
   { key: 'uncertain', text: 'White corner: depends on an uncertain input' },
 ];
 
 /** The glyph in a legend swatch, from the same table the cells use. */
-export const LEGEND_GLYPH: Readonly<Record<'suitable' | 'unsuitable' | 'unknown', string>> = {
+export const LEGEND_GLYPH: Readonly<Record<'suitable' | 'unsuitable', string>> = {
   suitable: STATUS_STYLE.SUITABLE.icon,
   unsuitable: STATUS_STYLE.UNSUITABLE.icon,
-  unknown: STATUS_STYLE.UNKNOWN.icon,
 };
 
 export interface RawReport {
