@@ -9,7 +9,7 @@ function PriorityRich({ model }: { model: AnswerModel }) {
   return (
     <>
       <b className="pr-title">Runway mode priority</b>
-      <span className="pr-sub">1 is the most preferred. Suitable means for the next hour.</span>
+      <span className="pr-sub">1 is the most preferred.</span>
       <span className="pr-grid">
         {model.priorityRows.map((r) => (
           <span key={r.modeId} className={`pr-row pr-${r.state}`}>
@@ -70,25 +70,6 @@ export function Answer({ model }: { model: AnswerModel }) {
       {model.arrivals === null || model.departures === null ? null : (
         <div className="rw">
           Arr <b>{model.arrivals}</b> &middot; Dep <b>{model.departures}</b>
-        </div>
-      )}
-      {model.alternatives.length === 0 ? null : (
-        <div className="alt" role="group" aria-label="Also suitable for the next hour" data-testid="alternatives">
-          {model.priorityText === null ? (
-            <div className="alt-label">Also suitable for the next hour</div>
-          ) : (
-            <Tip tag="div" text={model.priorityText} rich={rich} className="alt-label" data-testid="alt-label">
-              Also suitable for the next hour
-            </Tip>
-          )}
-          <div className="alt-chips">
-            {model.alternatives.map((a) => (
-              <span className="alt-chip" key={a.modeId} data-testid="alt-chip">
-                <i className="alt-dot" aria-hidden="true" />
-                {a.modeId}
-              </span>
-            ))}
-          </div>
         </div>
       )}
       {model.conditional === null ? null : (
