@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "description": "Runway ends. PROVISIONAL DRAFT 24-10-2026: magnetic headings from public sources (SkyVector), not yet checked against the AIP. Melbourne has two runways, not parallel pairs: 16/34 (the main, about 3,657 m) and 09/27 (about 2,286 m). Wind direction and heading share one reference (OD-11), so headings are entered in the magnetic reference the weather reports use.",
   "status": "verified",
-  "source": "SkyVector, 24-10-2026",
+  "source": "SkyVector, 24-10-2026 Threshold coordinates (latitude and longitude, decimal degrees): OurAirports open data (community data), retrieved 26-10-2026, applied at the owner's instruction; not checked against the AIP.",
   "runways": [
-    { "name": "16", "headingDegrees": 160 },
-    { "name": "34", "headingDegrees": 340 },
-    { "name": "09", "headingDegrees": 83 },
-    { "name": "27", "headingDegrees": 263 }
+    { "name": "16", "headingDegrees": 160, "threshold": { "latitude": -37.65320, "longitude": 144.83501 } },
+    { "name": "34", "headingDegrees": 340, "threshold": { "latitude": -37.68580, "longitude": 144.84100 } },
+    { "name": "09", "headingDegrees": 83, "threshold": { "latitude": -37.66080, "longitude": 144.82201 } },
+    { "name": "27", "headingDegrees": 263, "threshold": { "latitude": -37.66230, "longitude": 144.84801 } }
   ]
 }

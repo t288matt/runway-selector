@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "description": "Runway ends. PROVISIONAL DRAFT 24-10-2026: magnetic headings from a public source (SkyVector), not yet checked against the AIP. Darwin has two runways that cross: 11/29 (3,354 m) and 18/36 (1,524 m, Wikipedia). Headings are in the reference the weather reports use, magnetic. Working: the SkyVector end coordinates give true bearings of about 109 for 11/29 and 180 for 18/36; SkyVector's 106/286 and 177/357 are those less a magnetic variation of about 3 degrees east, and agree with the designations (11 about 110, 29 about 290, 18 about 180, 36 about 360). Runway 36 is written 357, not 0 or 360.",
   "status": "verified",
-  "source": "SkyVector, 24-10-2026",
+  "source": "SkyVector, 24-10-2026 Threshold coordinates (latitude and longitude, decimal degrees): OurAirports open data (community data), retrieved 26-10-2026, applied at the owner's instruction; not checked against the AIP.",
   "runways": [
-    { "name": "11", "headingDegrees": 106 },
-    { "name": "29", "headingDegrees": 286 },
-    { "name": "18", "headingDegrees": 177 },
-    { "name": "36", "headingDegrees": 357 }
+    { "name": "11", "headingDegrees": 106, "threshold": { "latitude": -12.40940, "longitude": 130.86501 } },
+    { "name": "29", "headingDegrees": 286, "threshold": { "latitude": -12.41920, "longitude": 130.89400 } },
+    { "name": "18", "headingDegrees": 177, "threshold": { "latitude": -12.40880, "longitude": 130.87100 } },
+    { "name": "36", "headingDegrees": 357, "threshold": { "latitude": -12.42260, "longitude": 130.87100 } }
   ]
 }

@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "description": "Runway ends. Headings supplied by the owner, 23-10-2026, replacing the earlier placeholders. Wind direction and heading share one reference (OD-11), so headings are entered in the reference the weather reports use.",
+  "description": "Runway ends. Headings supplied by the owner, 23-10-2026, replacing the earlier placeholders. Wind direction and heading share one reference (OD-11), so headings are entered in the reference the weather reports use. Each end has a threshold latitude and longitude (decimal degrees) so the runway picture can be drawn to scale.",
   "status": "verified",
-  "source": "owner, 23-10-2026",
+  "source": "headings: owner, 23-10-2026. Threshold coordinates: OurAirports open data (community data), retrieved 26-10-2026, verified by the owner on 26-10-2026.",
   "runways": [
-    { "name": "16L", "headingDegrees": 155 },
-    { "name": "16R", "headingDegrees": 155 },
-    { "name": "34L", "headingDegrees": 335 },
-    { "name": "34R", "headingDegrees": 335 },
-    { "name": "07",  "headingDegrees": 62 },
-    { "name": "25",  "headingDegrees": 242 }
+    { "name": "16L", "headingDegrees": 155, "threshold": { "latitude": -33.94960, "longitude": 151.18800 } },
+    { "name": "16R", "headingDegrees": 155, "threshold": { "latitude": -33.92940, "longitude": 151.17200 } },
+    { "name": "34L", "headingDegrees": 335, "threshold": { "latitude": -33.96430, "longitude": 151.18100 } },
+    { "name": "34R", "headingDegrees": 335, "threshold": { "latitude": -33.97110, "longitude": 151.19400 } },
+    { "name": "07",  "headingDegrees": 62,  "threshold": { "latitude": -33.94370, "longitude": 151.16400 } },
+    { "name": "25",  "headingDegrees": 242, "threshold": { "latitude": -33.93750, "longitude": 151.19000 } }
   ]
 }
