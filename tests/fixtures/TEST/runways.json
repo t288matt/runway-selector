@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
   "description": "Two runways (four ends) with numeric-only names.",
-  "status": "provisional",
   "runways": [
     {
       "name": "9",

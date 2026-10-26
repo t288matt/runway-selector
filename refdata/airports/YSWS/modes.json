@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
   "description": "Preferred runway modes, owner-supplied 24-10-2026, in priority order (order in this file is the tie-break): 1 05A23D; 2 23AD; 3 05AD. 05A23D is reciprocal runway operations (RRO) on the one runway, head to head: arrivals land on 05 and departures take off on 23. That runway assignment comes from the airport's published night flight-path material (land on 05 from the south-west, take off on 23 toward the south-west), not from the owner: the owner to confirm. 23AD and 05AD use the one runway both ways in one direction. No crosswind limit or capacity has been supplied for any mode; they fall back to the pack default and have no capacity limit. 05A23D is a night mode in the public material (11pm to 5:30am); that is not applied.",
-  "status": "verified",
   "modes": [
     { "id": "05A23D", "description": "Reciprocal runway operations (RRO): arrivals 05, departures 23", "enabled": true, "arrivals": ["05"], "departures": ["23"] },
     { "id": "23AD", "description": "Arrivals and departures 23", "enabled": true, "arrivals": ["23"], "departures": ["23"] },

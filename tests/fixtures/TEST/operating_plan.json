@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
   "description": "Two bands; the late band crosses midnight.",
-  "status": "provisional",
   "bands": [
     {
       "id": "early",

@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
   "description": "Preferred runway modes, owner-supplied 24-10-2026, in priority order (order in this file is the tie-break). 27AD34D's departures are split by SID in real operations (34 via MNG, NONIX and DOSEL; 27 otherwise); the pack has no SID-conditional runway, so both are listed. 34A27AD lands on 34 and 27 and departs from 27; land-and-hold-short is not a mode: LAHSO is shown as a note on 34A27AD when its conditions are met (ceiling 4,500 ft or higher, visibility 8 km or more, dry runway), and never changes a mode's status or the plan (issue 58). The four single-runway modes are the lowest-priority fallback: 27AD, 16AD and 34AD equal, 09AD the single lowest of every mode. No crosswind limit or capacity has been supplied for any mode; they fall back to the pack default and have no capacity limit.",
-  "status": "verified",
   "modes": [
     { "id": "27AD34D", "description": "Arrivals 27; departures 34 (via MNG, NONIX, DOSEL) and 27 (all other departures)", "enabled": true, "arrivals": ["27"], "departures": ["34", "27"] },
     { "id": "16A27D",  "description": "Arrivals 16, departures 27", "enabled": true, "arrivals": ["16"], "departures": ["27"] },

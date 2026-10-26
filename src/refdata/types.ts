@@ -8,11 +8,8 @@ export type DeepReadonly<T> = T extends readonly (infer U)[]
     ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
     : T;
 
-export type PackStatus = 'verified' | 'provisional';
-
-/** Information only (OD-10): the engine never gates on it. */
+/** Information only: the engine never gates on it. */
 export interface Provenance {
-  readonly status: PackStatus | null;
   readonly source: string | null;
 }
 

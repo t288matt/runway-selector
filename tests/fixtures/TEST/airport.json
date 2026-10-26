@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
   "description": "Fictional airport used only by the tests. Not a real place.",
-  "status": "provisional",
   "icao": "TEST",
   "name": "Testfield",
   "latitude": 47.5,

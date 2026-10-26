@@ -776,14 +776,13 @@ describe('ranges and caps on every value (SEC-3)', () => {
     expect(() => parsePack(withLabel('Runway works on 16R until 14:00Z - expect delays (café, 35 kt limit)'))).not.toThrow();
   });
 
-  it('shape rules: times, zone, ids, names, status, code', () => {
+  it('shape rules: times, zone, ids, names, code', () => {
     expectRefused(bad((f) => { f['operating_plan.json'].bands[0].start = '24:00'; }), 'operating_plan.json', 'bands[0].start');
     expectRefused(bad((f) => { f['operating_plan.json'].bands[0].start = '6:30'; }), 'operating_plan.json', 'bands[0].start');
     expectRefused(bad((f) => { f['airport.json'].timeZone = 'Mars/Olympus'; }), 'airport.json', 'timeZone');
     expectRefused(bad((f) => { f['airport.json'].timeZone = '+05:30'; }), 'airport.json', 'timeZone');
     expectRefused(bad((f) => { f['modes.json'].modes[0].id = 'has space'; }), 'modes.json', 'modes[0].id');
     expectRefused(bad((f) => { f['runways.json'].runways[0].name = '<b>'; }), 'runways.json', 'runways[0].name');
-    expectRefused(bad((f) => { f['modes.json'].modes[0].status = 'official'; }), 'modes.json', 'modes[0].status');
     expectRefused(bad((f) => { f['airport.json'].icao = 'te'; }), 'airport.json', 'icao');
   });
 });

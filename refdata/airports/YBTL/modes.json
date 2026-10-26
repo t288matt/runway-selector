@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
   "description": "Preferred runway modes, owner-supplied 24-10-2026, in priority order (order in this file is the tie-break): equal first 0107AD and 1925AD (both runways together); then equal 01AD and 19AD (the main runway alone); then equal 07AD and 25AD (the crosswind runway alone). No crosswind limit or capacity has been supplied for any mode; they fall back to the pack default and have no capacity limit.",
-  "status": "verified",
   "modes": [
     { "id": "0107AD", "description": "Arrivals and departures 01 and 07", "enabled": true, "arrivals": ["01", "07"], "departures": ["01", "07"] },
     { "id": "1925AD", "description": "Arrivals and departures 19 and 25", "enabled": true, "arrivals": ["19", "25"], "departures": ["19", "25"] },

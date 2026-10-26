@@ -178,7 +178,7 @@ One folder per airport, `refdata/airports/<ICAO>/`. The files and their fields a
 ### 5a. Pack schema (kept deliberately simple)
 A pack is a folder of five plain JSON files. The validator (section 4c) checks them; the YSSY and TEST packs are the worked examples.
 
-**Values.** Every tunable is written as `{ "value": 5, "description": "..." }` (RD-7). The unit is part of the field name (`...Kt`, `...Minutes`, `...Pct`). The loader checks the pack, strips the descriptions for the screen, and hands the engine plain numbers. Records carry an optional `source` and `status` (`verified` or `provisional`) for information (OD-10).
+**Values.** Every tunable is written as `{ "value": 5, "description": "..." }` (RD-7). The unit is part of the field name (`...Kt`, `...Minutes`, `...Pct`). The loader checks the pack, strips the descriptions for the screen, and hands the engine plain numbers. Records carry an optional `source` for information. The `status` field was removed (owner, 26-10-2026).
 
 **Version.** Every file carries `schemaVersion`. A pack the app does not support is refused with a message naming file and field, and the previous valid pack stays in use.
 

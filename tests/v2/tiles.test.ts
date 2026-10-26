@@ -2,7 +2,7 @@
 // ceiling, runway-state and METAR values, and the trust chips.
 import { describe, expect, it } from 'vitest';
 import type { TrafficLevel } from '../../src/engine';
-import { chipModels, provisionalParts } from '../../src/v2/model/chips';
+import { chipModels } from '../../src/v2/model/chips';
 import { EMPTY_FEED, type FeedState } from '../../src/v2/model/dashboard';
 import { ceilingTile, levelWord, metarTile, runwayTile, TREND_HORIZON_MS, trafficTile, trafficTrend } from '../../src/v2/model/tiles';
 import { NO_AUTO_WEATHER } from '../../src/v2/controller';
@@ -184,16 +184,4 @@ describe('v2 trust chips', () => {
     expect(chips.find((c) => c.id === 'metar')).toMatchObject({ shape: 'ring', flag: 'Not entered', value: null });
   });
 
-  it('has no Pack draft chip unless the pack data says provisional', () => {
-    expect(chipModels(view, fresh, FIXTURE_NOW, NO_AUTO_WEATHER).some((c) => c.id === 'draft')).toBe(false);
-    expect(provisionalParts(real)).toEqual([]);
-    const files = readJson(YSSY_PACK);
-    files['runways.json'].status = 'provisional';
-    files['runways.json'].source = 'a public source';
-    const draft = parsePack(toRaw(files));
-    const chips = chipModels({ ...view, pack: draft }, fresh, FIXTURE_NOW, NO_AUTO_WEATHER);
-    const chip = chips.find((c) => c.id === 'draft');
-    expect(chip).toMatchObject({ shape: 'triangle', label: 'Pack draft' });
-    expect(chip?.tip).toContain('runways (a public source)');
-  });
 });

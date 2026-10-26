@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
   "description": "Preferred runway modes, owner-supplied 24-10-2026, in priority order (order in this file is the tie-break): 1 29AD36A; 2 29AD18A; 3 11AD36A; 4 11AD18A. Each uses both runways: 29AD36A lands on 29 and 36 and departs from 29; 29AD18A lands on 29 and 18 and departs from 29; 11AD36A lands on 11 and 36 and departs from 11; 11AD18A lands on 11 and 18 and departs from 11. LAHSO is not a mode: it is shown as a note on 29AD36A when its conditions are met (ceiling 3,000 ft or higher, visibility 8 km or more, dry runway), and never changes a mode's status or the plan (issue 58). No crosswind limit or capacity has been supplied for any mode; they fall back to the pack default and have no capacity limit.",
-  "status": "verified",
   "modes": [
     { "id": "29AD36A", "description": "Arrivals 29 and 36, departures 29", "enabled": true, "arrivals": ["29", "36"], "departures": ["29"], "conditionalOperation": { "name": "LAHSO", "ceilingFt": 3000, "visibilityMetres": 8000, "requiresDrySurface": true }, "source": "owner, 24-10-2026" },
     { "id": "29AD18A", "description": "Arrivals 29 and 18, departures 29", "enabled": true, "arrivals": ["29", "18"], "departures": ["29"] },

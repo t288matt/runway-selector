@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
   "description": "Two modes, one per direction.",
-  "status": "provisional",
   "modes": [
     {
       "id": "ONLY_A",

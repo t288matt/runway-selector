@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
   "description": "PROVISIONAL 24-10-2026. One band covers the whole day; no day/night split has been given. Order is the owner's preferred runway mode list, strict (no ties): 1 27AD34D; 2 16A27D; 3 09A16D; 4 34A27AD. The four single-runway fallback modes (27AD, 16AD, 34AD, 09AD) are lower priority than all of those; 27AD, 16AD and 34AD are equal priority, and 09AD is the single lowest priority of every mode (owner, 24-10-2026). The penalties are placeholders on the same design-example scale used for Sydney; lower is preferred. Replace with real figures when supplied.",
-  "status": "verified",
   "bands": [
     {
       "id": "all-day",

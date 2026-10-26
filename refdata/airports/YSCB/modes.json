@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
   "description": "Preferred runway modes, owner-supplied 24-10-2026, in priority order (order in this file is the tie-break): 1 3530A35D; 2 1712A17D; 3 17A35D; 4 35AD; 5 17AD; 6 30AD; 7 12AD. 3530A35D lands on 35 and 30 and departs 35; 1712A17D lands on 17 and 12 and departs 17; 17A35D is reciprocal operations on the main runway (arrivals 17, departures 35). The runway assignment of each name is read from the owner's mode codes. No crosswind limit or capacity has been supplied for any mode; they fall back to the pack default and have no capacity limit.",
-  "status": "verified",
   "modes": [
     { "id": "3530A35D", "description": "Arrivals 35 and 30, departures 35", "enabled": true, "arrivals": ["35", "30"], "departures": ["35"] },
     { "id": "1712A17D", "description": "Arrivals 17 and 12, departures 17", "enabled": true, "arrivals": ["17", "12"], "departures": ["17"] },

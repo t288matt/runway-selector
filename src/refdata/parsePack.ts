@@ -94,8 +94,7 @@ export function parseAppConfig(rawText: string): AppFile {
   return deepFreeze(app);
 }
 
-const prov = (o: { status?: 'verified' | 'provisional' | undefined; source?: string | undefined }): Provenance => ({
-  status: o.status ?? null,
+const prov = (o: { source?: string | undefined }): Provenance => ({
   source: o.source ?? null,
 });
 

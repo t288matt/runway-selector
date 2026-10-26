@@ -97,13 +97,11 @@ const text = (max: number) => v.pipe(v.string('Expected text'), v.minLength(1), 
 const labelText = (max: number) =>
   v.pipe(text(max), v.regex(/^[^\p{Cc}\p{Cf}\p{Zl}\p{Zp}]*$/u, 'A label may not contain control or direction-changing characters'));
 const note = v.pipe(v.string('Expected text'), v.trim(), v.nonEmpty('A description must not be empty'), v.maxLength(C.descriptionChars));
-const status = v.picklist(['verified', 'provisional'], 'status must be "verified" or "provisional"');
 
 /** Optional free-text and provenance fields that any record may carry. */
 const meta = {
   description: v.optional(note),
   source: v.optional(text(C.sourceChars)),
-  status: v.optional(status),
 };
 
 const version = v.picklist(SUPPORTED_SCHEMA_VERSIONS, (issue) => {
@@ -291,7 +289,7 @@ export const SETTING_NAMES = Object.keys(SETTING_VALUE_SCHEMAS) as SettingName[]
 
 /** A tunable is { value, description } and the description must not be empty (RD-7). */
 const tunable = <T extends v.GenericSchema>(value: T) =>
-  v.strictObject({ value, description: note, source: v.optional(text(C.sourceChars)), status: v.optional(status) });
+  v.strictObject({ value, description: note, source: v.optional(text(C.sourceChars)) });
 
 const tunableEntries = Object.fromEntries(
   Object.entries(SETTING_VALUE_SCHEMAS).map(([name, schema]) => [name, tunable(schema)]),

@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
   "description": "Fictional single-runway airport used only by the tests.",
-  "status": "provisional",
   "icao": "TEST1",
   "name": "Soloport",
   "latitude": 27.7,

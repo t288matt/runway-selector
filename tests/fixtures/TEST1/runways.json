@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
   "description": "One runway, two ends.",
-  "status": "provisional",
   "runways": [
     {
       "name": "3",

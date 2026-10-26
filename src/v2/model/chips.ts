@@ -12,10 +12,10 @@ export type ChipShape = 'dot' | 'triangle' | 'cross' | 'ring' | 'refresh';
 export type ChipTone = 'ok' | 'warn' | 'bad' | 'unk';
 
 export interface ChipModel {
-  readonly id: 'metar' | 'taf' | 'vatsim' | 'plan' | 'draft';
+  readonly id: 'metar' | 'taf' | 'vatsim' | 'plan';
   readonly shape: ChipShape;
   readonly tone: ChipTone;
-  /** "METAR", "TAF", "VATSIM", "" for the plan chip, "Pack draft". */
+  /** "METAR", "TAF", "VATSIM", "" for the plan chip. */
   readonly label: string;
   /** "27m", "2h13", "59s", "19:26 → 19:30"; null where the label says it all. */
   readonly value: string | null;
@@ -86,25 +86,7 @@ function vatsimChip(feed: FeedState, nowMs: number, pack: AirportPack): ChipMode
   });
 }
 
-/** What the pack itself marks as provisional (its status fields), or an empty list. */
-export function provisionalParts(pack: AirportPack): string[] {
-  const parts: string[] = [];
-  const meta: readonly (readonly [string, { readonly status: string | null; readonly source: string | null }])[] = [
-    ['airport', pack.meta.airport],
-    ['runways', pack.meta.runways],
-    ['modes', pack.meta.modes],
-    ['operating plan', pack.meta.operatingPlan],
-    ['settings', pack.meta.settings],
-  ];
-  for (const [name, p] of meta) if (p.status === 'provisional') parts.push(p.source === null ? name : `${name} (${p.source})`);
-  const ends = pack.runways.filter((r) => r.status === 'provisional').length;
-  if (ends > 0) parts.push(`${ends} runway ${ends === 1 ? 'end' : 'ends'}`);
-  const modes = pack.modes.filter((m) => m.status === 'provisional').length;
-  if (modes > 0) parts.push(`${modes} ${modes === 1 ? 'mode' : 'modes'}`);
-  return parts;
-}
-
-/** The chips, in order: METAR, TAF, VATSIM, plan, and "Pack draft" only where the pack says so. */
+/** The chips, in order: METAR, TAF, VATSIM, plan. */
 export function chipModels(view: ViewData, feed: FeedState, nowMs: number, auto: Readonly<Record<WeatherKind, AutoReportState>>): ChipModel[] {
   const { pack } = view;
   const s = pack.settings;
@@ -125,9 +107,5 @@ export function chipModels(view: ViewData, feed: FeedState, nowMs: number, auto:
       tip: `Plan recalculated at ${hhmmZ(view.calcNowMs)}. Next recalculation ${hhmmZ(nextPlanMs(view.calcNowMs))}.`,
     }),
   );
-  const draft = provisionalParts(pack);
-  if (draft.length > 0) {
-    chips.push(chip({ id: 'draft', label: 'Pack draft', shape: 'triangle', tone: 'warn', value: null, flag: null, tip: `The ${pack.airport.icao} pack has provisional data: ${draft.join(', ')}.` }));
-  }
   return chips;
 }

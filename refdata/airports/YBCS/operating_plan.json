@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
   "description": "Owner-supplied 24-10-2026. One band covers the whole day; no day/night split has been given. Priority order: 1 15AD; 2 33AD. The penalties (0, 2) encode that order; lower is preferred.",
-  "status": "verified",
   "bands": [
     {
       "id": "all-day",

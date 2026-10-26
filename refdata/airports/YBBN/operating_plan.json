@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
   "description": "PROVISIONAL 24-10-2026. One band covers the whole day; no day/night split has been given (SODPROPS is preferred overnight, 10pm to 6am, in the public material, but that is not applied). Order is the owner's preferred runway mode list, strict: 1 SODPROPS; 2 19AD; 3 01AD. The penalties are placeholders on the same scale as the other packs (0, 2, 5) for the owner to confirm.",
-  "status": "verified",
   "bands": [
     {
       "id": "all-day",

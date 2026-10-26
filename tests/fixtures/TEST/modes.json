@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
   "description": "Four modes with a different id convention; one has its own crosswind limit; one is disabled.",
-  "status": "provisional",
   "modes": [
     {
       "id": "TST_EAST",
