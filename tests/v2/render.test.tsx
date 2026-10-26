@@ -75,7 +75,8 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer screen states [
     const view = viewOf(pack, rig, same<Wx>(4, 'ok'), same(4, 'light'));
     const html = render(view);
     expect(html).toContain('data-testid="priority-info"');
-    expect(html).toContain('Runway mode priority (1 is the most preferred)');
+    expect(html).toContain('Runway mode priority</b>');
+    expect(html).toContain('pr-row pr-recommended');
     expect(html).not.toContain('title="Runway mode priority"');
     expect(html).not.toMatch(/>P\d+</);
     const alts = screenModel(stateOf(view)).answer.alternatives;

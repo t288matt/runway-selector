@@ -4,8 +4,28 @@ import type { AnswerModel } from '../model/answer';
 import { StateGlyph } from './Icons';
 import { Tip } from './Popover';
 
+/** The ranking as coloured rows: blue for the recommended mode, green for valid, grey for not valid. */
+function PriorityRich({ model }: { model: AnswerModel }) {
+  return (
+    <>
+      <b className="pr-title">Runway mode priority</b>
+      <span className="pr-sub">1 is the most preferred</span>
+      <span className="pr-grid">
+        {model.priorityRows.map((r) => (
+          <span key={r.modeId} className={`pr-row pr-${r.state === 'not valid' ? 'no' : r.state}`}>
+            <span className="pr-n">{r.rank}</span>
+            <span>{r.modeId}</span>
+            <span className="pr-s">{r.state === 'valid' ? 'valid for the next hour' : r.state}</span>
+          </span>
+        ))}
+      </span>
+    </>
+  );
+}
+
 export function Answer({ model }: { model: AnswerModel }) {
   const { band } = model;
+  const rich = model.priorityText === null ? undefined : <PriorityRich model={model} />;
   return (
     <div className="answer">
       <div className="state-row">
@@ -14,7 +34,7 @@ export function Answer({ model }: { model: AnswerModel }) {
           {band.word}
         </span>
         {model.priorityText === null ? null : (
-          <Tip text={model.priorityText} className="info" tabIndex={0} role="group" aria-label="Runway mode priority" data-testid="priority-info">
+          <Tip text={model.priorityText} rich={rich} className="info" tabIndex={0} role="group" aria-label="Runway mode priority" data-testid="priority-info">
             i
           </Tip>
         )}
@@ -48,7 +68,7 @@ export function Answer({ model }: { model: AnswerModel }) {
           {model.priorityText === null ? (
             <div className="alt-label">Also valid for the next hour</div>
           ) : (
-            <Tip tag="div" text={model.priorityText} className="alt-label" data-testid="alt-label">
+            <Tip tag="div" text={model.priorityText} rich={rich} className="alt-label" data-testid="alt-label">
               Also valid for the next hour
             </Tip>
           )}
