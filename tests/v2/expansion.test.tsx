@@ -37,12 +37,12 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the Detail section [%s]',
   const levels: (TrafficLevel | null)[] = ['light', 'busy', 'busy', 'medium', 'light', 'light', 'medium', 'light'];
   const wx: Wx[] = ['ok', 'ok', 'ok', 'ok', 'badA', 'badA', 'marginalA', 'ok'];
 
-  it('is a native details element with a summary labelled "Detail", a chevron and no time range, closed to begin with', () => {
+  it('is a native details element with a summary labelled "Detail", a chevron and the time range, closed to begin with', () => {
     const html = render(viewOf(pack, rig, wx, levels));
     expect(html).toMatch(/<details class="fcx"[^>]*data-testid="forecast-bar">\s*<summary /);
     expect(html).not.toMatch(/<details[^>]*\sopen/);
     expect(html).toMatch(/<summary[^>]*aria-label="Detail: open or close\./);
-    expect(textOf(html)).not.toMatch(/Detail \d{4}Z to \d{4}Z/);
+    expect(textOf(html)).toMatch(/Detail \d{4}Z to \d{4}Z/);
     expect(html).toContain('class="chev"');
   });
 

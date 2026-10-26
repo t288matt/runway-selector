@@ -141,7 +141,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer values [%s]', (
     const view = viewOf(pack, rig, ['ok', 'ok', 'badA', 'badA'], same(4, 'light'));
     const a = answerModel(view);
     const lines = (a.priorityText ?? '').split('\n');
-    expect(lines[0]).toBe('Runway mode priority (1 is the most preferred)');
+    expect(lines[0]).toBe('Runway mode priority (1 is the most preferred; suitable means for the next hour)');
     expect(lines.filter((l) => l.endsWith(': recommended'))).toHaveLength(1);
     expect(lines.some((l) => l.includes(`${a.modeId}: recommended`))).toBe(true);
     for (const alt of a.alternatives) expect(lines).toContain(`${alt.rank}. ${alt.modeId}: suitable`);

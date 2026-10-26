@@ -127,7 +127,7 @@ export function answerModel(view: ViewData): AnswerModel {
   });
   alternatives.sort((a, b) => a.rank - b.rank || a.index - b.index);
   ranked.sort((a, b) => a.rank - b.rank || a.index - b.index);
-  const priorityText = ['Runway mode priority (1 is the most preferred)', ...ranked.map((r) => `${r.rank}. ${r.modeId}: ${r.state}`)].join('\n');
+  const priorityText = ['Runway mode priority (1 is the most preferred; suitable means for the next hour)', ...ranked.map((r) => `${r.rank}. ${r.modeId}: ${r.state}`)].join('\n');
   return {
     band,
     modeId: recId,
