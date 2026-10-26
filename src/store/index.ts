@@ -7,12 +7,13 @@ import { WINDOW_AUDIT_PATH, loadWindowChoice, saveWindowChoice } from './forecas
 import type { Store } from './store';
 
 export type { Store, StorageLike, StorageAccessor, BrowserStore } from './store';
-export { createBrowserStore, createMemoryStore, storageKey } from './store';
+export { createBrowserStore, createMemoryStore, KEY_PREFIX, storageKey } from './store';
 export { loadCurrentMode, saveCurrentMode, clearCurrentMode, isCurrentModeStale } from './currentMode';
 export type { CurrentModeRecord, CurrentModeLoad } from './currentMode';
 export { loadAudit, appendAudit, clearAudit, exportAudit, AUDIT_NOTICE } from './audit';
 export type { AuditEntry, AuditExport, AuditLoad, AuditValue } from './audit';
 export { loadWindowChoice, saveWindowChoice, clearWindowChoice } from './forecastWindow';
+export { loadSelectedAirportId, saveSelectedAirport, clearSelectedAirport } from './selectedAirport';
 
 export interface CurrentModeChange {
   readonly changed: boolean;
