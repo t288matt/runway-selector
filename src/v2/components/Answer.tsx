@@ -72,6 +72,25 @@ export function Answer({ model }: { model: AnswerModel }) {
           Arr <b>{model.arrivals}</b> &middot; Dep <b>{model.departures}</b>
         </div>
       )}
+      {model.alternatives.length === 0 ? null : (
+        <div className="alt" role="group" aria-label="Also suitable for the next hour" data-testid="alternatives">
+          {model.priorityText === null ? (
+            <div className="alt-label">Also suitable for the next hour</div>
+          ) : (
+            <Tip tag="div" text={model.priorityText} rich={rich} className="alt-label" data-testid="alt-label">
+              Also suitable for the next hour
+            </Tip>
+          )}
+          <div className="alt-chips">
+            {model.alternatives.map((a) => (
+              <span className="alt-chip" key={a.modeId} data-testid="alt-chip">
+                <i className="alt-dot" aria-hidden="true" />
+                {a.modeId}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
       {model.conditional === null ? null : (
         <p className="banner banner-ok cond" role="status" data-testid="conditional-note">
           <b>&#10003; {model.conditional.title}</b> {model.conditional.text}

@@ -57,7 +57,7 @@ describe('the conditions-met note on the v2 answer band', () => {
     expect(answerModel(view(same(4, GOOD))).modeId).toBe(answerModel(plain).modeId);
   });
 
-  it('is drawn as a green status box with a check mark', () => {
+  it('is drawn as a green status box with a check mark, below the "Also suitable" section', () => {
     const html = render(view(same(4, GOOD)));
     const note = html.indexOf('data-testid="conditional-note"');
     expect(note).toBeGreaterThan(-1);
