@@ -7,7 +7,6 @@ import type { AppDeps } from './deps';
 import { createController, type Controller, type ControllerState } from './controller';
 
 export interface ScreenState extends ControllerState {
-  readonly setCurrentMode: (id: string | null) => void;
   readonly dismissNotice: (index: number) => void;
   readonly applyMetar: Controller['applyMetar'];
   readonly applyTaf: Controller['applyTaf'];
@@ -35,7 +34,6 @@ export function useController(pack: AirportPack, deps: AppDeps): ScreenState {
   }, [controller]);
   return {
     ...state,
-    setCurrentMode: controller.setCurrentMode,
     dismissNotice: controller.dismissNotice,
     applyMetar: controller.applyMetar,
     applyTaf: controller.applyTaf,

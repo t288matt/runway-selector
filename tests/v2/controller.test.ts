@@ -1,8 +1,9 @@
 // The v2 controller: weather fetched on the pack's own interval, VATSIM on its
-// own, the plan recalculated only when UP-1 allows, and the "I am on" mode
-// stored. Fake clock, timers and network (tests/v2/rig.ts).
+// own, the plan recalculated only when UP-1 allows, and no current mode at all
+// (issue 104). Fake clock, timers and network (tests/v2/rig.ts).
 import { describe, expect, it } from 'vitest';
-import { createMemoryStore, loadCurrentMode } from '../../src/store';
+import { createMemoryStore, loadAudit, loadCurrentMode, recordCurrentMode } from '../../src/store';
+import { answerModel } from '../../src/v2/model/answer';
 import { TICK_MS } from '../../src/v2/controller';
 import { chipModels } from '../../src/v2/model/chips';
 import { YSSY_PACK } from '../helpers/packs';
@@ -143,29 +144,47 @@ describe('v2 failure states show through the chips', () => {
   });
 });
 
-describe('v2 "I am on"', () => {
+describe('v2 has no current mode (issue 104)', () => {
   const enabled = pack.modes.filter((m) => m.enabled).map((m) => m.id);
 
-  it('stores the mode per airport, recalculates and sets view.currentMode', async () => {
-    const store = createMemoryStore();
-    const r = rig(pack, EARLY, store);
-    const id = enabled[0] ?? 'missing';
-    const before = r.ctrl.getState().view;
-    r.ctrl.setCurrentMode(id);
-    const s = r.ctrl.getState();
-    expect(s.view.currentMode).toBe(id);
-    expect(s.view.result).not.toBe(before.result);
-    expect(loadCurrentMode(store, pack).record?.modeId).toBe(id);
+  it('offers no way to set one', () => {
+    const r = rig(pack, EARLY);
+    expect('setCurrentMode' in r.ctrl).toBe(false);
   });
 
-  it('clears with Not set, and refuses a mode the pack does not enable', () => {
+  it('ignores a mode saved earlier by v1 in the shared storage: the plan is calculated with none, and the state is never CHANGE NOW', () => {
+    const store = createMemoryStore();
+    // v1 saved a mode that is unsuitable now; v2 must not read it.
+    recordCurrentMode(store, pack, EARLY - 60_000, enabled[0] ?? 'missing');
+    expect(loadCurrentMode(store, pack).record?.modeId).toBe(enabled[0]);
+    const r = rig(pack, EARLY, store);
+    const s = r.ctrl.getState();
+    expect(s.view.currentMode).toBeNull();
+    expect(s.view.result.plan.startModeId).toBe(rig(pack, EARLY).ctrl.getState().view.result.plan.startModeId);
+    expect(answerModel(s.view).band.id).not.toBe('CHANGE_NOW');
+    expect(s.notices).toEqual([]);
+  });
+
+  it('writes nothing about a current mode to the store, and leaves a saved one as it was', async () => {
+    const store = createMemoryStore();
+    const saved = recordCurrentMode(store, pack, EARLY - 60_000, enabled[0] ?? 'missing');
+    const r = rig(pack, EARLY, store);
+    r.ctrl.start();
+    await r.advance(WEATHER_MS * 2);
+    r.ctrl.stop();
+    expect(loadCurrentMode(store, pack).record).toEqual(saved.record);
+    expect(loadAudit(store, pack.airport.icao, pack.settings.auditMaxEntries).entries).toHaveLength(1);
+  });
+
+  it('the next change and the plan still work with no current mode', async () => {
     const r = rig(pack, EARLY);
-    const id = enabled[0] ?? 'missing';
-    r.ctrl.setCurrentMode(id);
-    r.ctrl.setCurrentMode('NOT-A-MODE');
-    expect(r.ctrl.getState().view.currentMode).toBe(id);
-    expect(r.ctrl.getState().notices.join(' ')).toContain('not enabled');
-    r.ctrl.setCurrentMode(null);
-    expect(r.ctrl.getState().view.currentMode).toBeNull();
+    weatherUp(r);
+    r.ctrl.start();
+    await r.advance(0);
+    const a = answerModel(r.ctrl.getState().view);
+    expect(a.modeId).not.toBeNull();
+    expect(a.next).toMatch(/^(No change planned|Next: \S+ at \d\d:\d\dZ)$/);
+    expect(['HOLD', 'CHANGE_SOON']).toContain(a.band.id);
+    r.ctrl.stop();
   });
 });

@@ -3,7 +3,7 @@
 // and clear through the store, and Reload data. v2's own copy of v1's behaviour,
 // proved on the same fixtures. Fake clock, timers and network (tests/v2/rig.ts).
 import { describe, expect, it, vi } from 'vitest';
-import { createMemoryStore, loadAudit, loadCurrentMode } from '../../src/store';
+import { appendAudit, createMemoryStore, loadAudit } from '../../src/store';
 import { MAX_REPORT_CHARS } from '../../src/weather/decode';
 import { YSSY_PACK } from '../helpers/packs';
 import { fixture, nowOf, packWith } from '../weather/helpers';
@@ -185,16 +185,20 @@ describe('Use my own weather: pasted text', () => {
 });
 
 describe('the audit trail through the store', () => {
-  it('records a change of the current mode, exports it as a file, and Clear empties the store as well as the screen', () => {
-    const store = createMemoryStore();
-    const r = rig(pack, NOW, store);
+  // v2 writes no audit entries of its own (it has no current mode); entries v1 saved are shown, exported and cleared.
+  const seed = (store: ReturnType<typeof createMemoryStore>): string => {
     const first = pack.modes.filter((m) => m.enabled)[0]?.id ?? 'missing';
-    expect(r.ctrl.getState().audit).toEqual([]);
-    r.ctrl.setCurrentMode(first);
+    appendAudit(store, pack.airport.icao, { timeMs: NOW - 60_000, path: 'currentMode', old: null, new: first }, pack.settings.auditMaxEntries);
+    return first;
+  };
+
+  it('shows a trail saved by v1, exports it as a file, and Clear empties the store as well as the screen', () => {
+    const store = createMemoryStore();
+    const first = seed(store);
+    const r = rig(pack, NOW, store);
     const s = r.ctrl.getState();
     expect(s.audit).toHaveLength(1);
     expect(s.audit[0]).toMatchObject({ path: 'currentMode', old: null, new: first });
-    expect(loadAudit(store, pack.airport.icao, pack.settings.auditMaxEntries).entries).toHaveLength(1);
 
     const file = r.ctrl.exportAudit();
     expect(file.filename).toContain(pack.airport.icao);
@@ -204,25 +208,10 @@ describe('the audit trail through the store', () => {
     r.ctrl.clearAudit();
     expect(r.ctrl.getState().audit).toEqual([]);
     expect(loadAudit(store, pack.airport.icao, pack.settings.auditMaxEntries).entries).toEqual([]);
-    // clearing the trail does not clear the current mode
-    expect(loadCurrentMode(store, pack).record?.modeId).toBe(first);
   });
 
-  it('setting the same mode again adds no entry; a second change adds one', () => {
-    const r = rig(pack, NOW);
-    const [a, b] = pack.modes.filter((m) => m.enabled).map((m) => m.id);
-    r.ctrl.setCurrentMode(a ?? null);
-    r.ctrl.setCurrentMode(a ?? null);
-    expect(r.ctrl.getState().audit).toHaveLength(1);
-    r.ctrl.setCurrentMode(b ?? null);
-    expect(r.ctrl.getState().audit).toHaveLength(2);
-  });
-
-  it('the trail is read from the store at start, so it survives a reload of the page', () => {
-    const store = createMemoryStore();
-    const first = pack.modes.filter((m) => m.enabled)[0]?.id ?? 'missing';
-    rig(pack, NOW, store).ctrl.setCurrentMode(first);
-    expect(rig(pack, NOW + 1000, store).ctrl.getState().audit).toHaveLength(1);
+  it('an empty store gives an empty trail', () => {
+    expect(rig(pack, NOW).ctrl.getState().audit).toEqual([]);
   });
 });
 

@@ -5,7 +5,7 @@ import type { ControllerState } from '../controller';
 import { answerModel, type AnswerModel } from './answer';
 import { chipModels, type ChipModel } from './chips';
 import { evaluationModel, type EvaluationModel } from './evaluation';
-import { forecastBarModel, type ForecastBarModel } from './forecastBar';
+import { forecastSummary, type ForecastSummary } from './forecastBar';
 import { pictureModel, type Picture } from './picture';
 import { ceilingTile, metarTile, runwayTile, trafficTile, type CeilingTile, type MetarTile, type RunwayTile, type TrafficTile } from './tiles';
 
@@ -16,7 +16,8 @@ export interface ScreenModel {
   readonly ceiling: CeilingTile;
   readonly runway: RunwayTile;
   readonly metar: MetarTile;
-  readonly bar: ForecastBarModel;
+  /** The range and the words that name the Evaluation and TAF toggle. */
+  readonly forecast: ForecastSummary;
   /** The expanded Evaluation and TAF section. */
   readonly evaluation: EvaluationModel;
   readonly chips: readonly ChipModel[];
@@ -32,7 +33,7 @@ export function screenModel(state: ControllerState): ScreenModel {
     ceiling: ceilingTile(view),
     runway: runwayTile(view),
     metar: metarTile(view),
-    bar: forecastBarModel(view, displayNowMs),
+    forecast: forecastSummary(view),
     evaluation: evaluationModel(view, displayNowMs),
     chips: chipModels(view, feed, displayNowMs, state.autoWeather),
     notices: state.notices,

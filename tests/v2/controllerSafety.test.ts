@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createMemoryStore } from '../../src/store';
 import { createController, type Timers } from '../../src/v2/controller';
 import { chipModels } from '../../src/v2/model/chips';
-import { TEST1_PACK, TEST_PACK, YSSY_PACK } from '../helpers/packs';
+import { TEST_PACK, YSSY_PACK } from '../helpers/packs';
 import { fixture, nowOf, packWith } from '../weather/helpers';
 import { datamaskBody, feedBody, rig } from './rig';
 
@@ -142,16 +142,5 @@ describe('switching airport', () => {
     await newCtrl.settled();
     expect(newCtrl.getState().feed.aircraft).toHaveLength(4);
     newCtrl.stop();
-  });
-
-  it('uses a pack of its own for each controller (the stored mode is per airport)', () => {
-    const store = createMemoryStore();
-    const a = createController({ pack, fetch: async () => new Response('x'), now: () => NOW, timers: noTimers, store });
-    const other = packWith(TEST1_PACK, { weatherStation: METAR.station });
-    const b = createController({ pack: other, fetch: async () => new Response('x'), now: () => NOW, timers: noTimers, store });
-    const id = pack.modes.find((m) => m.enabled)?.id ?? 'missing';
-    a.setCurrentMode(id);
-    expect(a.getState().view.currentMode).toBe(id);
-    expect(b.getState().view.currentMode).toBeNull();
   });
 });

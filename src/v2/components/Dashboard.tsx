@@ -14,11 +14,10 @@ import { CeilingTileView, MetarTileView, RunwayTileView, TrafficTileView } from 
 export interface DashboardProps {
   readonly model: ScreenModel;
   readonly pack: AirportPack;
-  readonly onCurrentMode: (id: string | null) => void;
   readonly onDismissNotice: (index: number) => void;
 }
 
-export function Dashboard({ model, pack, onCurrentMode, onDismissNotice }: DashboardProps) {
+export function Dashboard({ model, pack, onDismissNotice }: DashboardProps) {
   const tone = model.answer.band.tone;
   return (
     <>
@@ -31,7 +30,7 @@ export function Dashboard({ model, pack, onCurrentMode, onDismissNotice }: Dashb
         </div>
       ))}
       <main className={`hero tone-${tone}`} aria-label="Runway mode recommendation">
-        <Answer model={model.answer} onCurrentMode={onCurrentMode} />
+        <Answer model={model.answer} />
         <Picture model={model.picture} />
         <div className="facts">
           <TrafficTileView tile={model.traffic} />
@@ -40,7 +39,7 @@ export function Dashboard({ model, pack, onCurrentMode, onDismissNotice }: Dashb
           <MetarTileView tile={model.metar} />
         </div>
       </main>
-      <ForecastBar model={model.bar} evaluation={model.evaluation} />
+      <ForecastBar model={model.forecast} evaluation={model.evaluation} />
       <footer className="trust" aria-label="Data freshness">
         <Chips chips={model.chips} />
         <Notice pack={pack} />

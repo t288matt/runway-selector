@@ -1,11 +1,9 @@
 // The answer band: the state (a glyph and a word), the mode, the next change and
-// the "I am on" selector. Text nodes only (SEC-2).
-import { useId } from 'react';
+// the arrival and departure runways. Text nodes only (SEC-2). There is no current-mode selector (issue 104).
 import type { AnswerModel } from '../model/answer';
 import { StateGlyph } from './Icons';
 
-export function Answer({ model, onCurrentMode }: { model: AnswerModel; onCurrentMode: (id: string | null) => void }) {
-  const selectId = useId();
+export function Answer({ model }: { model: AnswerModel }) {
   const { band } = model;
   return (
     <div className="answer">
@@ -37,16 +35,6 @@ export function Answer({ model, onCurrentMode }: { model: AnswerModel; onCurrent
           Arr <b>{model.arrivals}</b> &middot; Dep <b>{model.departures}</b>
         </div>
       )}
-      <div className="cur">
-        <label htmlFor={selectId}>I am on</label>
-        <select id={selectId} value={model.current} onChange={(e) => onCurrentMode(e.target.value === '' ? null : e.target.value)}>
-          {model.choices.map((c) => (
-            <option key={c.value} value={c.value}>
-              {c.label}
-            </option>
-          ))}
-        </select>
-      </div>
     </div>
   );
 }
