@@ -19,8 +19,6 @@ export interface DiagramEnd {
   /** Text anchor, so neighbouring labels of parallel runways do not overlap. */
   readonly anchor: 'start' | 'middle' | 'end';
   readonly roles: readonly Role[];
-  /** The end is over a limit (cross icon beside the label). */
-  readonly over: boolean;
 }
 
 export interface DiagramRunway {
@@ -45,14 +43,102 @@ export interface WindArrow {
   readonly labelAnchor: 'start' | 'end';
 }
 
+/** Where the wind label is drawn, as an SVG text position (the text is vertically centred on y). */
+export interface WindLabelPlacement {
+  readonly text: string;
+  readonly x: number;
+  readonly y: number;
+  readonly anchor: 'start' | 'middle' | 'end';
+  /** 'arrow': immediately beside the tail of the wind arrow. 'corner': no arrow to place it by (variable or unknown wind), top left. */
+  readonly place: 'arrow' | 'corner';
+}
+
 export interface Diagram {
   readonly runways: readonly DiagramRunway[];
   readonly arrow: WindArrow | null;
+  readonly windLabel: WindLabelPlacement;
   /** Text equivalent, for the accessible name and the caption. */
   readonly caption: string;
 }
 
 const RAD = Math.PI / 180;
+
+// ------------------------------------------------------------ label placement
+/** The wind label is bold 15 px, the runway names 13 px; widths are estimated from the character count (display only). */
+export const WIND_LABEL_FONT = 15;
+const WIND_CHAR_W = 8.6;
+const NAME_CHAR_W = 7.8;
+const EDGE = 4;
+/** The fixed "N up" note, top right, which the label must not cover either. */
+const NORTH_BOX: Box = { x0: DIAGRAM.width - 10 - 34, y0: 6, x1: DIAGRAM.width - 10, y1: 22 };
+const GAP_TO_TAIL = 6;
+
+export interface Box {
+  readonly x0: number;
+  readonly y0: number;
+  readonly x1: number;
+  readonly y1: number;
+}
+
+const overlaps = (a: Box, b: Box, pad = 0): boolean => a.x0 < b.x1 + pad && a.x1 > b.x0 - pad && a.y0 < b.y1 + pad && a.y1 > b.y0 - pad;
+
+/** The box a runway name (with its roles) occupies. */
+export function endBox(e: Pick<DiagramEnd, 'name' | 'x' | 'y' | 'anchor' | 'roles'>): Box {
+  const w = (e.name.length + (e.roles.length === 0 ? 0 : 1 + e.roles.join('/').length)) * NAME_CHAR_W;
+  const x0 = e.anchor === 'start' ? e.x : e.anchor === 'end' ? e.x - w : e.x - w / 2;
+  return { x0, y0: e.y - 8, x1: x0 + w, y1: e.y + 8 };
+}
+
+/** Does the segment pass through (or within `pad` of) the box? Sampled, which is exact enough for a drawing. */
+function segmentHits(box: Box, x1: number, y1: number, x2: number, y2: number, pad: number): boolean {
+  for (let i = 0; i <= 24; i += 1) {
+    const t = i / 24;
+    const x = x1 + (x2 - x1) * t;
+    const y = y1 + (y2 - y1) * t;
+    if (x > box.x0 - pad && x < box.x1 + pad && y > box.y0 - pad && y < box.y1 + pad) return true;
+  }
+  return false;
+}
+
+/**
+ * Put the wind label immediately beside the TAIL of the arrow (the end away from the runways), on the side the wind comes
+ * from, so it follows the arrow as the direction changes. Tries straight out from the tail first, then swings round it,
+ * and takes the first spot that stays inside the picture and covers no runway name, no runway, no arrow and not the north note.
+ * With no arrow (variable or unknown wind) the label stays in the top left corner.
+ */
+export function placeWindLabel(text: string, arrow: Pick<WindArrow, 'x1' | 'y1' | 'x2' | 'y2'> | null, endBoxes: readonly Box[], runwayLines: readonly { x1: number; y1: number; x2: number; y2: number }[]): WindLabelPlacement {
+  if (arrow === null) return { text, x: 8, y: 18, anchor: 'start', place: 'corner' };
+  const w = text.length * WIND_CHAR_W;
+  const h = WIND_LABEL_FONT + 3;
+  const ox = arrow.x1 - arrow.x2;
+  const oy = arrow.y1 - arrow.y2;
+  const len = Math.hypot(ox, oy) || 1;
+  const outAngle = Math.atan2(oy / len, ox / len);
+  const inside = (b: Box): boolean => b.x0 >= EDGE && b.x1 <= DIAGRAM.width - EDGE && b.y0 >= EDGE && b.y1 <= DIAGRAM.height - EDGE;
+  const boxAt = (cx: number, cy: number): Box => ({ x0: cx - w / 2, y0: cy - h / 2, x1: cx + w / 2, y1: cy + h / 2 });
+  const clear = (b: Box): boolean => inside(b) && !overlaps(b, NORTH_BOX) && !endBoxes.some((e) => overlaps(b, e, 2)) && !runwayLines.some((l) => segmentHits(b, l.x1, l.y1, l.x2, l.y2, 7)) && !segmentHits(b, arrow.x1, arrow.y1, arrow.x2, arrow.y2, 5);
+  let best: { cx: number; cy: number; score: number } | null = null;
+  for (const spread of [1, 1.15, 1.3, 1.5, 1.8, 2.4]) {
+    for (const turn of [0, 15, -15, 30, -30, 45, -45, 60, -60, 75, -75, 90, -90, 110, -110, 135, -135, 160, -160, 180]) {
+      const a = outAngle + turn * RAD;
+      const dx = Math.cos(a);
+      const dy = Math.sin(a);
+      // far enough out that the box just clears the tail, whichever way round it sits
+      const r = (GAP_TO_TAIL + (w / 2) * Math.abs(dx) + (h / 2) * Math.abs(dy)) * spread;
+      const cx = arrow.x1 + dx * r;
+      const cy = arrow.y1 + dy * r;
+      const b = boxAt(cx, cy);
+      if (clear(b)) return { text, x: cx, y: cy, anchor: 'middle', place: 'arrow' };
+      // kept only as a fallback: the least bad spot (inside the picture) if nothing is fully clear
+      const bad = (inside(b) ? 0 : 1000) + endBoxes.filter((e) => overlaps(b, e, 2)).length * 100 + turn * turn * 0.001 + spread;
+      if (best === null || bad < best.score) best = { cx, cy, score: bad };
+    }
+  }
+  const f = best ?? { cx: arrow.x1, cy: arrow.y1, score: 0 };
+  const cx = Math.max(EDGE + w / 2, Math.min(DIAGRAM.width - EDGE - w / 2, f.cx));
+  const cy = Math.max(EDGE + h / 2, Math.min(DIAGRAM.height - EDGE - h / 2, f.cy));
+  return { text, x: cx, y: cy, anchor: 'middle', place: 'arrow' };
+}
 const LENGTH = 130;
 const GAP = 22;
 
@@ -107,7 +193,8 @@ export interface DiagramInput {
   readonly runways: readonly RunwayEnd[];
   /** Roles of each runway end in the mode being shown. */
   readonly modeRoles: ReadonlyMap<string, readonly Role[]>;
-  readonly overLimit: ReadonlySet<string>;
+  /** The text drawn beside the arrow, such as "130\u00B0 9 kt". */
+  readonly windLabel: string;
   readonly wind: WindObservation | null;
   readonly modeLabel: string | null;
 }
@@ -183,7 +270,6 @@ export function buildDiagram(input: DiagramInput): Diagram {
       y: y + outward.y * 11,
       anchor: side < 0 ? 'end' : side > 0 ? 'start' : 'middle',
       roles: input.modeRoles.get(end.name) ?? [],
-      over: input.overLimit.has(end.name),
     });
     const len = Math.hypot(bx - ax, by - ay) || 1;
     const dx = (bx - ax) / len;
@@ -225,8 +311,14 @@ export function buildDiagram(input: DiagramInput): Diagram {
   } else if (w !== null) {
     windPart = `Wind variable at ${Math.round(w.speedKt)} knots.`;
   }
+  const windLabel = placeWindLabel(
+    input.windLabel,
+    arrow,
+    runways.flatMap((r) => r.ends.map(endBox)),
+    runways,
+  );
   const used = [...input.modeRoles.entries()].map(([name, roles]) => `${name} (${roles.join(' and ')})`);
   const modePart = input.modeLabel === null ? 'No mode is recommended.' : `${input.modeLabel} uses ${used.length === 0 ? 'no runway' : used.join(', ')}.`;
   const names = input.runways.map((r) => r.name).join(', ');
-  return { runways, arrow, caption: `Runway ends: ${names}. ${windPart} ${modePart}` };
+  return { runways, arrow, windLabel, caption: `Runway ends: ${names}. ${windPart} ${modePart}` };
 }

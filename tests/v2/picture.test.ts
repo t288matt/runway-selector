@@ -1,8 +1,7 @@
-// The runway picture and the slim forecast bar: their view models.
+// The runway picture and the forecast in words: their view models.
 import { describe, expect, it } from 'vitest';
-import { runwayComponentRows } from '../../src/ui/model/panels';
 import { forecastSummary, windRuns } from '../../src/v2/model/forecastBar';
-import { currentWind, pictureModel, tailwindEnds } from '../../src/v2/model/picture';
+import { currentWind, pictureModel } from '../../src/v2/model/picture';
 import { steady, vrb } from '../engine/helpers';
 import { PACKS } from '../helpers/packs';
 import { packOf, rigFor } from '../engine/planHelpers';
@@ -14,16 +13,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 runway picture [%s]', 
   const rig = rigFor(ref);
   const pack = packOf(rig);
 
-  it('marks the tailwind ends: the same ends v1 finds over the tailwind limit', () => {
-    for (const wx of [rig.badForA, rig.badForB, rig.badForBoth]) {
-      const view = viewFromInput(pack, inputFor(BASE, [{ wind: wx }]));
-      const v1 = runwayComponentRows(view);
-      const expected = v1.filter((r) => r.over === 'TW').map((r) => r.name);
-      expect([...tailwindEnds(view)].sort()).toEqual(expected.sort());
-    }
-  });
-
-  it('draws every runway end of the pack, with the active ends carrying their roles and the cross on tailwind ends', () => {
+  it('draws every runway end of the pack, with the active ends carrying their roles', () => {
     const view = viewFromInput(pack, inputFor(BASE, [{ wind: steady(10, 12) }]));
     const p = pictureModel(view);
     const names = p.diagram.runways.flatMap((r) => r.ends.map((e) => e.name)).sort();
@@ -31,7 +21,6 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 runway picture [%s]', 
     const mode = pack.modes.find((m) => m.id === view.result.plan.recommendedModeId);
     const withRoles = p.diagram.runways.flatMap((r) => r.ends).filter((e) => e.roles.length > 0).map((e) => e.name);
     for (const n of withRoles) expect([...(mode?.arrivals ?? []), ...(mode?.departures ?? [])]).toContain(n);
-    for (const e of p.diagram.runways.flatMap((r) => r.ends)) expect(e.over).toBe(tailwindEnds(view).has(e.name));
     expect(p.title).toContain('Runway ends:');
   });
 

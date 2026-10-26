@@ -1,6 +1,6 @@
 // The runway picture, drawn from the pack's runway headings and the wind used.
-// Active ends are blue, the others grey; an end with a tailwind carries a cross;
-// the wind is an arrow with "direction kt". SVG text nodes only (SEC-2).
+// Active ends are blue, the others grey; the wind is an arrow with its label
+// ("direction kt") immediately beside the arrow's tail. SVG text nodes only (SEC-2).
 import { useId } from 'react';
 import { DIAGRAM } from '../model/diagram';
 import type { Picture as PictureModel } from '../model/picture';
@@ -24,7 +24,6 @@ export function Picture({ model }: { model: PictureModel }) {
               <text key={e.name} x={e.x} y={e.y} textAnchor={e.anchor} dominantBaseline="middle" fontWeight={e.roles.length > 0 ? 700 : 400} fill={e.roles.length > 0 ? '#e6ecf7' : '#9db0cf'}>
                 {e.name}
                 {e.roles.length > 0 ? ` ${e.roles.join('/')}` : ''}
-                {e.over ? <tspan fill="#ff8a80"> {'✕'}</tspan> : null}
               </text>
             )),
           )}
@@ -39,8 +38,8 @@ export function Picture({ model }: { model: PictureModel }) {
             <line x1={d.arrow.x1} y1={d.arrow.y1} x2={d.arrow.x2} y2={d.arrow.y2} strokeWidth="5" strokeLinecap="round" markerEnd={`url(#${markerId})`} />
           </g>
         )}
-        <text x="8" y="18" fontFamily={font} fontSize="15" fontWeight="800" fill={d.arrow === null ? '#9db0cf' : '#ffb454'} data-testid="wind-label">
-          {model.windLabel}
+        <text x={d.windLabel.x} y={d.windLabel.y} textAnchor={d.windLabel.anchor} dominantBaseline="middle" fontFamily={font} fontSize="15" fontWeight="800" fill={d.arrow === null ? '#9db0cf' : '#ffb454'} data-testid="wind-label" data-place={d.windLabel.place}>
+          {d.windLabel.text}
         </text>
         <text x={DIAGRAM.width - 10} y="16" textAnchor="end" fontFamily={font} fontSize="11" fill="#9db0cf">
           N up
