@@ -38,9 +38,9 @@ export function Answer({ model }: { model: AnswerModel }) {
         </div>
       )}
       {model.why === null ? null : (
-        <div className="why1" title={model.why} data-testid="why">
+        <Tip tag="div" text={model.why} className="why1" data-testid="why">
           {model.why}
-        </div>
+        </Tip>
       )}
       {model.arrivals === null || model.departures === null ? null : (
         <div className="rw">

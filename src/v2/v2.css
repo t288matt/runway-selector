@@ -630,6 +630,9 @@ body {
   min-height: 24px;
   align-self: stretch;
 }
+.tlx .lab.tip-open {
+  z-index: 12;
+}
 .tlx .row.isrec .lab {
   box-shadow: inset 3px 0 0 var(--accent);
 }
