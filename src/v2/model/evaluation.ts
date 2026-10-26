@@ -80,6 +80,9 @@ export function modeRows(view: ViewData): ModeRow[] {
     const cellsOfMode = result.evaluation.cells[index] ?? [];
     const penalty = cell0 === undefined ? Number.MAX_SAFE_INTEGER : preferencePenalty(pack, cell0.bandId, mode.id);
     const cap = mode.capacity === null ? 'no capacity set' : `capacity ${mode.capacity} per hour`;
+    // What is the same for every cell of the row lives here, once (issue 128): the plan priority and the outlook.
+    const rank = planRank(view, index, 0);
+    const outlook = cellDetail(view, index, 0)?.survival ?? '';
     rows.push({
       index,
       modeId: mode.id,
@@ -87,7 +90,7 @@ export function modeRows(view: ViewData): ModeRow[] {
       isCurrent: mode.id === view.currentMode,
       allUnsuitable: cellsOfMode.length > 0 && cellsOfMode.every((c) => c.status === 'UNSUITABLE'),
       runwaysText: runwaysText(mode.arrivals, mode.departures),
-      title: `Mode ${mode.id}: ${runwaysText(mode.arrivals, mode.departures)}; ${cap}; crosswind limit ${kt1(mode.maxCrosswindKt)} kt${mode.minima === null ? '' : `; minima: ${minimaText(mode.minima)}`}`,
+      title: `Mode ${mode.id}: ${runwaysText(mode.arrivals, mode.departures)}; ${cap}; crosswind limit ${kt1(mode.maxCrosswindKt)} kt${mode.minima === null ? '' : `; minima: ${minimaText(mode.minima)}`}${rank === null ? '' : `; plan priority ${rank}`}${outlook === '' ? '' : `. ${outlook}`}`,
       sort: penalty,
       order: index,
     });
@@ -201,6 +204,8 @@ export interface EvaluationSlot {
 // ------------------------------------------------------------ cell detail text
 export interface CellDetail {
   readonly title: string;
+  /** "25A16D, 13:00Z": the first line of the hover (issue 128). */
+  readonly heading: string;
   readonly statusWord: string;
   readonly icon: string;
   readonly code: string;
@@ -296,6 +301,7 @@ export function cellDetail(view: ViewData, modeIndex: number, slotIndex: number)
   const code = cv.code;
   return {
     title: `Mode ${mode.id}, ${hhmmZRel(slot.startMs, view.calcNowMs)} to ${hhmmZRel(slot.endMs, view.calcNowMs)}`,
+    heading: `${mode.id}, ${hhmmZRel(slot.startMs, view.calcNowMs)}`,
     statusWord: cv.word.toUpperCase(),
     icon: cv.icon,
     code: code === '' ? '' : `${code}: ${CAUSE_WORDS[code] ?? code}`,
@@ -312,21 +318,28 @@ export function cellDetail(view: ViewData, modeIndex: number, slotIndex: number)
   };
 }
 
-/** The detail as plain text, one fact per line, for the shared popover. Text only (SEC-2). */
+/** The deciding reason, with the limit added for a marginal tailwind or crosswind ("Tailwind 4 kt on runway 25, limit 5 kt"). */
+function causeText(d: CellDetail): string {
+  const m = /^(Tailwind|Crosswind) \S+ kt on runway (\S+)$/.exec(d.reason);
+  if (m === null) return d.reason;
+  const r = d.runways.find((x) => x.name === m[2]);
+  if (r === undefined) return d.reason;
+  return `${d.reason}, limit ${m[1] === 'Tailwind' ? r.tailLimit : r.crossLimit} kt`;
+}
+
+/**
+ * The hover for one cell: three short lines (issue 128). The mode, the time and the status; the cause, or "Within all
+ * limits"; the wind used and the runway condition. What is the same for the whole row (the outlook, the plan priority)
+ * is in the mode label's hover, and the traffic and the runway condition rows are drawn above the cells. Text only (SEC-2).
+ */
 export function cellDetailText(d: CellDetail): string {
-  const lines: string[] = [`${d.title}: ${d.icon === '' ? '' : `${d.icon} `}${d.statusWord}${d.code === '' || d.trigger !== '' ? '' : `, ${d.code}`}`];
-  if (d.reason !== '') {
+  const lines: string[] = [`${d.heading}: ${d.icon === '' ? '' : `${d.icon} `}${d.statusWord}`];
+  if (d.reason === '') lines.push('Within all limits.');
+  else {
     if (d.trigger !== '') lines.push(d.trigger);
-    lines.push(d.reason);
+    lines.push(`${causeText(d)}.`);
   }
-  for (const r of d.runways) lines.push(`Runway ${r.name} ${r.roles}: tailwind ${r.tailwind} kt (limit ${r.tailLimit})${r.overTailwind ? ' over' : ''}, crosswind ${r.crosswind} kt (limit ${r.crossLimit})${r.overCrosswind ? ' over' : ''}`);
-  lines.push(`Wind used: ${d.wind}`);
-  for (const o of d.overlays) lines.push(`Forecast: ${o}`);
-  lines.push(`Runway condition: ${d.runwayAssumption}.`);
-  lines.push(`Traffic: ${d.traffic}.`);
-  lines.push(`Operating plan: ${d.operatingPlan}.`);
-  if (d.survival !== '') lines.push(`Outlook: ${d.survival}.`);
-  for (const n of d.notes) lines.push(n);
+  lines.push(`Wind ${d.wind}. Runway ${d.runwayAssumption.split(':')[0]}.`);
   return lines.join('\n');
 }
 

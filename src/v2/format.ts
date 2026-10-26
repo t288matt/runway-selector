@@ -13,23 +13,21 @@ function utcParts(ms: number): { h: number; m: number; s: number } {
   return { h: Math.floor(inDay / 3_600_000), m: Math.floor((inDay % 3_600_000) / MS_MINUTE), s: Math.floor((inDay % MS_MINUTE) / 1000) };
 }
 
-/** "22:30Z". */
+/** "2230Z": four digits, no colon (owner, 26-10-2026, issue 130). */
 export function hhmmZ(ms: number): string {
   const p = utcParts(ms);
-  return `${pad2(p.h)}:${pad2(p.m)}Z`;
+  return `${pad2(p.h)}${pad2(p.m)}Z`;
 }
 
-/** "22:30Z", with " (+1 day)" when the instant is on a later UTC day than the reference instant. */
-export function hhmmZRel(ms: number, refMs: number): string {
-  const days = Math.floor(ms / MS_DAY) - Math.floor(refMs / MS_DAY);
-  if (days <= 0) return hhmmZ(ms);
-  return `${hhmmZ(ms)} (+${days} ${days === 1 ? 'day' : 'days'})`;
+/** "2230Z". The day is never shown (owner, 26-10-2026, issue 129): the forecast never looks far enough ahead for it to matter. `_refMs` is kept so callers are unchanged. */
+export function hhmmZRel(ms: number, _refMs: number): string {
+  return hhmmZ(ms);
 }
 
-/** "22:11:40Z". */
+/** "221140Z". */
 export function hhmmssZ(ms: number): string {
   const p = utcParts(ms);
-  return `${pad2(p.h)}:${pad2(p.m)}:${pad2(p.s)}Z`;
+  return `${pad2(p.h)}${pad2(p.m)}${pad2(p.s)}Z`;
 }
 
 /** The hour as two digits, for an axis label. */
@@ -64,10 +62,10 @@ export const dir3 = (degrees: number): string => String(Math.round(((degrees % 3
 /** 3200 -> "3,200". */
 export const thousands = (n: number): string => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
-/** "HH:MM" without the suffix, for column headers. */
+/** "HHMM" without the suffix, for column headers. */
 export function hhmm(ms: number): string {
   const p = utcParts(ms);
-  return `${pad2(p.h)}:${pad2(p.m)}`;
+  return `${pad2(p.h)}${pad2(p.m)}`;
 }
 
 /** DD-MM-YYYY (UTC). */

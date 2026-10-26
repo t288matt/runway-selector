@@ -47,12 +47,12 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 forecast in words (the
   it('has an accessible summary naming the window, the path, the wind, the runway and the traffic', () => {
     const view = viewOf(pack, rig, ['ok', 'ok', 'badA', 'badA'], ['light', 'light', 'medium', null]);
     const { summary, rangeText } = forecastSummary(view);
-    expect(summary).toMatch(/^Forecast \d\d:\d\dZ to \d\d:\d\dZ\. Path: /);
+    expect(summary).toMatch(/^Forecast \d{4}Z to \d{4}Z\. Path: /);
     expect(summary).toContain('Wind ');
     expect(summary).toMatch(/Runway (dry throughout|wet|possibly wet)/);
     expect(summary).toContain('Traffic LOW, then MEDIUM from');
     expect(summary).toContain('then unknown from');
-    expect(rangeText).toMatch(/^\d\d:\d\dZ to \d\d:\d\dZ$/);
+    expect(rangeText).toMatch(/^\d{4}Z to \d{4}Z$/);
     expect(summary).toContain(`Forecast ${rangeText}.`);
   });
 

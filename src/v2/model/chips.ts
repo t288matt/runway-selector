@@ -95,7 +95,7 @@ export function chipModels(view: ViewData, feed: FeedState, nowMs: number, auto:
     reportChip('taf', 'TAF', nowMs, auto.taf, view.taf?.issuedAtMs ?? null, s.tafStaleMinutes, (at, age) => `TAF issued ${hhmmZ(at)}, valid to ${hhmmZ(view.taf?.validToMs ?? at)}, ${ageText(age)} old`, s.weatherPollMinutes),
     vatsimChip(feed, nowMs, pack),
   ];
-  const hm = (ms: number): string => hhmmZ(ms).slice(0, 5);
+  const hm = (ms: number): string => hhmmZ(ms).slice(0, 4);
   chips.push(
     chip({
       id: 'plan',

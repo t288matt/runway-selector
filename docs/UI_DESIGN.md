@@ -42,12 +42,12 @@ Content width capped at 1440 px, centred, 16 px gutters. C, D and F sit side by 
 ```
 +----------------------------------------------------------------------------------------------------------+
 | Runway Mode Planner   [Live traffic; weather automatic]   Airport [YSSY v]   Times UTC   [Settings]      |
-| METAR 22:00Z, 12 min old | TAF 21:30Z valid to 07:30Z | VATSIM traffic 22:11:32Z, 32 s | Recalculated 22:00Z |
+| METAR 2200Z, 12 min old | TAF 2130Z valid to 0730Z | VATSIM traffic 22:1132Z, 32 s | Recalculated 2200Z |
 +----------------------------------------------------------------------------------------------------------+
-| Recommended         | Next change   07:30Z: 10 to 12 at 00:00Z                                           |
+| Recommended         | Next change   0730Z: 10 to 12 at 0000Z                                           |
 | 12                  | METAR         the METAR text in use                                              |
-| Arr 07, Dep 07      | Traffic       LOW now, HIGH by 04:00Z                                            |
-| Current mode [v]    | Runway state  DRY; wet possible 05:00Z-06:00Z                                    |
+| Arr 07, Dep 07      | Traffic       LOW now, HIGH by 0400Z                                            |
+| Current mode [v]    | Runway state  DRY; wet possible 0500Z-0600Z                                    |
 |                     | Ceiling       4,800 ft                                                           |
 | [banner: EARLY MODE CHANGE RECOMMENDED: trigger, timing, benefit]                                        |
 | > More about the recommendation (collapsed)                                                              |
@@ -120,7 +120,7 @@ Common to all panels: a title (the letter badge is removed, owner 24-10-2026, OD
 | State | Display |
 |---|---|
 | Normal, current equals recommended or not set | No banner. "No change needed" in Next change if no change is planned. |
-| Recommended mode has a conditional operation and its conditions are met (OD-79) | A quiet green note in the banner area under the facts, after any red or amber banner: "<name> conditions met until HH:MMZ" (or "from HH:MMZ"). Nothing otherwise. Mockup: docs/images/lahso-conditions-met-mockup.png. |
+| Recommended mode has a conditional operation and its conditions are met (OD-79) | A quiet green note in the banner area under the facts, after any red or amber banner: "<name> conditions met until HHMMZ" (or "from HHMMZ"). Nothing otherwise. Mockup: docs/images/lahso-conditions-met-mockup.png. |
 | Current differs, no urgency | No banner (OD-72). |
 | Current mode failing now | Red banner: "Current mode 10 is unsuitable now (tailwind 16L 7 kt). Change to Mode 12." |
 | EARLY MODE CHANGE RECOMMENDED | Amber banner with trigger, timing, benefit, traffic at changeover (section 7.1). |
@@ -169,7 +169,7 @@ Two text boxes, METAR and TAF, each with the raw text the user pasted and an App
 | Row height | 36 px (cell 32 px plus a 2 px margin each side). |
 | Columns | One per 30-minute slot, 56 px pitch (cell 54 px wide). Slots are clock-aligned half-hours; there are no extra columns at TAF change times (OD-24). |
 | Row header | 176 px, sticky at the left. Line 1: the mode id ("12", with no "Mode" before it) plus tags REC and CURRENT. Line 2: runways in small text. |
-| Column header | Three sticky-top strips: time (HH:MM, hour labels in bold), weather events (wind bars, then one bar for each TEMPO, INTER or PROB group, then the event words: wet risk, WET, TS, low vis, no TAF). A wind bar shows a variable direction range as reported (for example 160V220), traffic class words (LOW, MED, HIGH). |
+| Column header | Three sticky-top strips: time (HHMM, hour labels in bold), weather events (wind bars, then one bar for each TEMPO, INTER or PROB group, then the event words: wet risk, WET, TS, low vis, no TAF). A wind bar shows a variable direction range as reported (for example 160V220), traffic class words (LOW, MED, HIGH). |
 | Default span | The full TAF validity by default (OD-31), with options of 4 hours and 6 hours. The timeline shows the slots of the chosen window, as the mockup does. |
 | Window selector | Pull-down in the B header: Full TAF (default), 4 h, 6 h (OD-31). It sets the forecast window (OD-26) and the slots the timeline shows, as in the mockup. |
 
@@ -190,10 +190,10 @@ A white triangle in the top-right corner marks a cell whose status depends on an
 ### 6.3 Overlays (all drawn from the same plan object)
 | Overlay | Drawing | Notes |
 |---|---|---|
-| Now marker | 2 px white vertical line across all rows at the exact minute, with label "NOW 22:12Z" at the top | Moves each minute; the page scrolls so it is at the left edge on load. |
+| Now marker | 2 px white vertical line across all rows at the exact minute, with label "NOW 2212Z" at the top | Moves each minute; the page scrolls so it is at the left edge on load. |
 | Recommended sequence | A 4 px accent-coloured outline (with 1 px gap; was 2 px, OD-52) around the cells of the recommended mode in each time span, stepping between rows at changeovers | If no change is planned the outline stays on one row. |
 | Recommended mode row | Accent bar at the left of the row label and tag REC | |
-| Planned changeover | Dashed accent vertical line from the event strip to the bottom, with no text label (OD-53; the Next change tile gives the new mode and time), hover text "10 to 12, 00:00Z, traffic MEDIUM, prepare from 23:45Z" | The preparation period is a short bracket on the event strip. |
+| Planned changeover | Dashed accent vertical line from the event strip to the bottom, with no text label (OD-53; the Next change tile gives the new mode and time), hover text "10 to 12, 0000Z, traffic MEDIUM, prepare from 2345Z" | The preparation period is a short bracket on the event strip. |
 | High-traffic bands | A translucent amber band behind all rows from the traffic strip down, with dashed amber side edges, and the traffic chip "H HIGH" in the strip | Drawn behind cells; cell colours stay unchanged so contrast is kept. |
 | Wind shift | In the event strip, at the start time of a BECMG or FM group, a label with the new wind as reported (for example "020/12G22"); the hover text gives the old wind, the new wind and the turn in degrees. Changes under 10 degrees and 5 knots are not shown (OD-43). "TS" and "low vis" events are also shown (OD-43). | BECMG is an ordinary change at its start time (OD-20), so nothing is drawn across a transition. |
 | Tailwind exceedance | Cause code TW in the cell; the hover shows the figure. Cells over the limit are never green. | |
@@ -226,7 +226,7 @@ Event-strip hover shows the TAF group in raw and decoded form.
 - The scroll bar is shown only when the slots do not fit, with a visible track.
 
 ### 6.6 Summary tiles and reason line
-Three tiles above the grid: Recommended, Next change (the new mode and its time, for example "34A25D at 14:00Z", or "No change planned") and Next wet runway (OD-59). The Survives, Next constraint and Traffic at changeover tiles are removed (OD-49), and so is the one-line reason under the legend (OD-41). Reasons are template sentences filled from the engine, never hand-written text.
+Three tiles above the grid: Recommended, Next change (the new mode and its time, for example "34A25D at 1400Z", or "No change planned") and Next wet runway (OD-59). The Survives, Next constraint and Traffic at changeover tiles are removed (OD-49), and so is the one-line reason under the legend (OD-41). Reasons are template sentences filled from the engine, never hand-written text.
 
 ### 6.7 Legend
 Always visible under the grid: the suitable and unsuitable and unknown statuses with their icon, pattern and word, one entry "Green with a word: passes, but see the word (forecast change, near a limit, variable wind)" for marginal cells (OD-81), plus the overlay keys (recommended path, change line, busy band, uncertainty corner).
@@ -241,7 +241,7 @@ Always visible under the grid: the suitable and unsuitable and unknown statuses 
 | **NO SUITABLE STANDARD MODE IDENTIFIED** | Replaces the mode block with this text in a red bordered block, then: the first failing constraint per mode in a compact list, and what change would restore a mode (for example "Mode 10 returns when the tailwind falls below 5.0 kt"). No least-bad mode is ever named (OD-13). | Rows all red or grey at the affected slots; a red bracket labelled NO MODE spans those slots in the event strip. | Nothing further: the blocking cause for each mode is listed in Panel A. |
 | **EARLY MODE CHANGE RECOMMENDED** | Amber banner (section 7.1) | Planned changeover line, outline stepping between rows, preparation bracket | "Next change" in Panel A shows the replacement and its time. |
 | **Data partial** (for example TAF missing) | Only affected fields read "Unknown"; weather suitability after the METAR window is UNKNOWN; a banner names the missing report (WX-9) | Slots after the METAR window are grey | TAF chip shows "Not entered". |
-| **Recalculating** | Small spinner in the header; values do not blank | Cells keep their last colours until the new plan arrives, then swap together | Chip "Plan 22:30Z". |
+| **Recalculating** | Small spinner in the header; values do not blank | Cells keep their last colours until the new plan arrives, then swap together | Chip "Plan 2230Z". |
 
 ### 7.1 Required wording
 - **No suitable mode text:** exactly "NO SUITABLE STANDARD MODE IDENTIFIED", as in OP-11, uppercase, red text on dark red tint with a cross icon.
@@ -304,7 +304,7 @@ Minimum text size is 11 px, used only for time labels and secondary notes; the c
 2. **Overlays have text too.** Busy bands carry "H HIGH" in the traffic strip; wet risk carries the words "wet risk"; the changeover is the dashed line, with the hover text and the Next change tile; the uncertainty corner is explained in the hover and listed in the legend.
 3. **Contrast.** Body text at least 4.5 : 1 (actual 7.6 to 14.1). Cell icons at least 4.5 : 1 on their cell. Cell fills at least 3 : 1 against the panel (graphics). Banners: coloured text on a darkened tint at 7 : 1 or more.
 4. **Keyboard use of the timeline.** The timeline is a grid with roving tabindex: one Tab stop enters it, the arrow keys move between cells (up and down between modes, left and right between slots), Home and End go to the first and last slot of the row, Page Up and Page Down jump 4 slots (2 hours), Enter or Space pins the detail panel, Escape closes it. Focus scrolls the cell into view and the detail opens on focus. A visible 2 px white focus ring is drawn above the recommended outline. N moves focus to the now column; C moves it to the planned changeover.
-5. **Screen readers.** Each cell has an accessible name such as "Mode 12, 00:30Z, marginal, cause capacity". The grid has an accessible caption and the summary tiles and reason line are real text above it. There is no separate table view (removed by the owner, 24-10-2026, OD-39: not required).
+5. **Screen readers.** Each cell has an accessible name such as "Mode 12, 0030Z, marginal, cause capacity". The grid has an accessible caption and the summary tiles and reason line are real text above it. There is no separate table view (removed by the owner, 24-10-2026, OD-39: not required).
 6. **No motion dependence.** The now marker steps once a minute; there is no auto-scroll, no flashing and no animation needed to understand a state. Banners appear without animation. The page respects reduced-motion settings.
 7. **Targets and zoom.** Interactive controls at least 32 px high. The layout works at 200 per cent browser zoom by falling back to the laptop layout.
 8. **Language and time.** `lang="en-GB"`; all times carry the suffix Z or the stated zone.

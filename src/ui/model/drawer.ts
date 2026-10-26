@@ -72,7 +72,7 @@ export function limitText(minutes: number): string {
 }
 
 function bandTimes(band: PlanBand): string {
-  return band.allDay ? 'all day (local time)' : `${formatClock(band.startMinute)} to ${formatClock(band.endMinute)} local time`;
+  return band.allDay ? 'all day (local time)' : `${formatClock(band.startMinute).replace(':', '')} to ${formatClock(band.endMinute).replace(':', '')} local time`;
 }
 
 /** The operating plan for one band as ranks (lower number = more preferred). Enabled modes only. */

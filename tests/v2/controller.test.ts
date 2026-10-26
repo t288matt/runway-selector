@@ -183,7 +183,7 @@ describe('v2 has no current mode (issue 104)', () => {
     await r.advance(0);
     const a = answerModel(r.ctrl.getState().view);
     expect(a.modeId).not.toBeNull();
-    expect(a.next).toMatch(/^(No change planned|Forecasting: \S+ at \d\d:\d\dZ)$/);
+    expect(a.next).toMatch(/^(No change planned|Forecasting: \S+ at \d{4}Z)$/);
     expect(['HOLD', 'CHANGE_SOON']).toContain(a.band.id);
     r.ctrl.stop();
   });
