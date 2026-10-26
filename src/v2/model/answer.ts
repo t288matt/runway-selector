@@ -78,7 +78,7 @@ export interface AnswerModel {
   readonly rank: number | null;
   /** Other modes SUITABLE in every one of the next ALSO_SUITABLE_SLOTS slots, most preferred first (issue 122). */
   readonly alternatives: readonly { readonly modeId: string; readonly rank: number }[];
-  /** The popover text behind the info mark: every enabled, allowed mode in plan order with its rank and whether it is recommended, suitable or unsuitable. Null with no recommendation (issue 122). */
+  /** The popover text behind the info mark and the "Also suitable" label: every enabled, allowed mode in plan order with its rank and whether it is recommended, suitable or unsuitable. Null with no recommendation (issue 122). */
   readonly priorityText: string | null;
   /** The same ranking as rows, for the coloured popover. */
   readonly priorityRows: readonly { readonly rank: number; readonly modeId: string; readonly state: 'recommended' | 'suitable' | 'unsuitable' }[];
