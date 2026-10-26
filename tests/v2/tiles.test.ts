@@ -78,27 +78,36 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 tiles [%s]', (_n, ref)
   const rig = rigFor(ref);
   const pack = packOf(rig);
 
-  it('traffic: the level word from the pack bands, three bars, the trend and the in and out counts', () => {
+  it('traffic: the level word from the pack bands, the headline, the trend and the in and out counts', () => {
     const view = viewOf(pack, rig, same<Wx>(6, 'ok'), ['light', 'light', 'medium', 'medium', 'busy', 'busy']);
     const t = trafficTile(view, EMPTY_FEED);
     expect(t.state).toBe('ok');
     expect(t.word).toBe(levelWord('light'));
     expect(t.word).toBe('LOW');
-    expect(t.bars).toBe(1);
+    expect(t.headline).toBe('LOW → MEDIUM');
     expect(t.trend.direction).toBe('increasing');
-    expect(t.sub).toBe('Traffic · 0 in · 0 out');
+    expect(t.sub).toMatch(/^by \d\d:\d\dZ · 0 in · 0 out$/);
     expect(t.aria).toContain('Traffic LOW, increasing');
     expect(t.popover).toContain('Connected now: 0 inbound');
   });
 
-  it('traffic: HIGH lights three bars and MEDIUM two', () => {
-    expect(trafficTile(viewOf(pack, rig, same<Wx>(2, 'ok'), ['busy', 'busy']), EMPTY_FEED).bars).toBe(3);
-    expect(trafficTile(viewOf(pack, rig, same<Wx>(2, 'ok'), ['medium', 'medium']), EMPTY_FEED).bars).toBe(2);
+  it('traffic bars (issue 126): three half-hour slots; the headline names the first change; steady is just the level', () => {
+    const rising = trafficTile(viewOf(pack, rig, same<Wx>(6, 'ok'), ['light', 'medium', 'busy', 'busy', 'busy', 'busy']), EMPTY_FEED);
+    expect(rising.slots).toHaveLength(3);
+    expect(rising.slots.map((s) => s.level)).toEqual(['light', 'medium', 'busy']);
+    expect(rising.headline).toBe('LOW → MEDIUM');
+    expect(trafficTile(viewOf(pack, rig, same<Wx>(6, 'ok'), ['busy', 'busy', 'medium', 'light', 'light', 'light']), EMPTY_FEED).headline).toBe('HIGH → MEDIUM');
+    const steady = trafficTile(viewOf(pack, rig, same<Wx>(6, 'ok'), same(6, 'medium')), EMPTY_FEED);
+    expect(steady.headline).toBe('MEDIUM');
+    expect(steady.sub).toBe('Traffic · 0 in · 0 out');
+    expect(trafficTile(viewOf(pack, rig, same<Wx>(6, 'ok'), ['light', 'light', 'light', 'busy', 'busy', 'busy']), EMPTY_FEED).headline).toBe('LOW');
+    for (const s of rising.slots) expect(s.width).toBeGreaterThanOrEqual(0);
+    expect(rising.popover).toContain('Next 90 minutes:');
   });
 
   it('traffic: no data says so and gives the reason when VATSIM failed', () => {
     const view = viewOf(pack, rig, same<Wx>(3, 'ok'));
-    expect(trafficTile(view, EMPTY_FEED)).toMatchObject({ state: 'none', word: 'NO DATA', bars: 0 });
+    expect(trafficTile(view, EMPTY_FEED)).toMatchObject({ state: 'none', word: 'NO DATA', headline: 'NO DATA', slots: [] });
     const failed: FeedState = { ...EMPTY_FEED, error: 'network down', errorAtMs: 1 };
     expect(trafficTile(view, failed).popover).toContain('network down');
   });

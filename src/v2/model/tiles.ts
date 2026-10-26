@@ -62,12 +62,30 @@ export function trafficTrend(levels: readonly (TrafficLevel | null)[], startsMs:
   return { direction: 'steady', text: `steady to ${hhmmZ((lastKnown?.startMs ?? nowMs) + SLOT_MS)}${unknownAfter ? ', unknown after' : ''}` };
 }
 
+/** How many half-hour slots the three bars show: the next 90 minutes (issue 126). A display rule. */
+export const TRAFFIC_GRAPH_SLOTS = 3;
+
+/** One half hour, drawn as one of the three bars and as one row of the hover. */
+export interface TrafficSlotView {
+  readonly level: TrafficLevel | null;
+  /** "12:30Z". */
+  readonly time: string;
+  /** "LOW · 8 in · 1 out", "LOW · 8 in, out unknown" or "unknown". */
+  readonly text: string;
+  /** Departures are unknown for this slot, so the level counts arrivals only and is a minimum. */
+  readonly partial: boolean;
+  /** Length in percent of the pack's busy threshold, 0 to 100, for the hover bar. */
+  readonly width: number;
+}
+
 export interface TrafficTile {
   readonly state: 'none' | 'ok';
   readonly level: TrafficLevel | null;
   readonly word: string;
-  /** How many of the three bars are lit: 0 (unknown) to 3. */
-  readonly bars: 0 | 1 | 2 | 3;
+  /** The big line: "LOW", or "LOW → HIGH" when the level changes within the next 90 minutes. */
+  readonly headline: string;
+  /** The next 90 minutes, one entry per half hour: the three bars, and the rows of the hover. */
+  readonly slots: readonly TrafficSlotView[];
   readonly trend: Trend;
   /** "Traffic · 1 in · 0 out". */
   readonly sub: string;
@@ -86,7 +104,7 @@ export function trafficTile(view: ViewData, feed: FeedState): TrafficTile {
   const demand = view.liveDemand;
   if (demand === null) {
     const popover = feed.error === null ? NO_TRAFFIC_TEXT : `${NO_TRAFFIC_TEXT} VATSIM traffic could not be fetched: ${feed.error}`;
-    return { state: 'none', level: null, word: 'NO DATA', bars: 0, trend: { direction: 'none', text: 'no traffic data' }, sub: 'Traffic', popover, aria: `Traffic: no data. ${popover}`, elevationMissing: false };
+    return { state: 'none', level: null, word: 'NO DATA', headline: 'NO DATA', slots: [], trend: { direction: 'none', text: 'no traffic data' }, sub: 'Traffic', popover, aria: `Traffic: no data. ${popover}`, elevationMissing: false };
   }
   const starts = view.weather.slots.map((s) => s.startMs);
   const levels = trafficLevelsFor(view.pack, starts, demand.slots);
@@ -95,15 +113,36 @@ export function trafficTile(view: ViewData, feed: FeedState): TrafficTile {
   const s = demand.summary;
   const connected = `Connected now: ${s.connectedArrivals} inbound, ${s.groundElsewhere} of them on the ground elsewhere, and ${s.connectedDepartures} on the ground here.`;
   const word = levelWord(level);
-  const sub = `Traffic · ${s.connectedArrivals} in · ${s.connectedDepartures} out`;
+  const counts = `${s.connectedArrivals} in · ${s.connectedDepartures} out`;
+  const busyFrom = view.pack.settings.trafficBands.busy[0] ?? 1;
+  const slots: TrafficSlotView[] = starts.slice(0, TRAFFIC_GRAPH_SLOTS).map((startMs, i) => {
+    const t = demand.slots.find((x) => x.startMs === startMs);
+    const lv = levels[i] ?? null;
+    const arrivals = t?.arrivals ?? null;
+    const departures = t?.departures ?? null;
+    const biggest = Math.max(arrivals ?? 0, departures ?? 0);
+    const figures = arrivals === null ? '' : departures === null ? `${arrivals} in, out unknown` : `${arrivals} in · ${departures} out`;
+    return {
+      level: lv,
+      time: hhmmZ(startMs),
+      text: lv === null ? 'unknown' : `${levelWord(lv)} · ${figures}`,
+      partial: lv !== null && departures === null,
+      width: lv === null ? 0 : Math.max(4, Math.min(100, Math.round((100 * biggest) / busyFrom))),
+    };
+  });
+  const changed = slots.findIndex((x, i) => i > 0 && x.level !== null && level !== null && RANK[x.level] !== RANK[level]);
+  const headline = changed < 0 ? word : `${word} → ${levelWord(slots[changed]?.level ?? null)}`;
+  const sub = changed < 0 ? `Traffic · ${counts}` : `by ${slots[changed]?.time ?? ''} · ${counts}`;
+  const slotsText = slots.length === 0 ? '' : `Next 90 minutes: ${slots.map((x) => `${x.time} ${x.text}`).join('; ')}. `;
   return {
     state: 'ok',
     level,
     word,
-    bars: level === null ? 0 : level === 'light' ? 1 : level === 'medium' ? 2 : 3,
+    headline,
+    slots,
     trend,
     sub,
-    popover: `Trend: ${trend.text}. ${connected}${s.elevationMissing ? ` ${ELEVATION_TEXT}` : ''}`,
+    popover: `${slotsText}Trend: ${trend.text}. ${connected}${s.elevationMissing ? ` ${ELEVATION_TEXT}` : ''}`,
     aria: `Traffic ${word}, ${trend.text}. ${s.connectedArrivals} inbound, ${s.groundElsewhere} of them on the ground elsewhere, ${s.connectedDepartures} on the ground here.${s.elevationMissing ? ` ${ELEVATION_TEXT}` : ''}`,
     elevationMissing: s.elevationMissing,
   };
