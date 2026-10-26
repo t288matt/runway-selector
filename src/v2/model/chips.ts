@@ -43,7 +43,7 @@ function reportChip(
   detail: (atMs: number, ageMinutes: number) => string,
   pollMinutes: number,
 ): ChipModel {
-  const fetchNote = `Fetched automatically every ${pollMinutes} ${pollMinutes === 1 ? 'minute' : 'minutes'}.`;
+  const fetchNote = `Fetched automatically every ${pollMinutes} ${pollMinutes === 1 ? 'minute' : 'minutes'}. Not stored.`;
   const failed = auto.error !== null;
   if (at === null) {
     return chip({

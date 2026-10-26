@@ -1,6 +1,6 @@
 // The closed state of the answer screen below the header: store notices, the
-// answer band with the picture and the tiles, the slim forecast bar, and the
-// trust strip with the fixed flight-simulation notice. A fragment: its parts are
+// answer band with the picture and the tiles, the forecast section (slim bar, or
+// the expansion when open), and the trust strip with the fixed flight-simulation notice. A fragment: its parts are
 // the rows of the page grid.
 import type { AirportPack } from '../../refdata';
 import type { ScreenModel } from '../model/screen';
@@ -40,7 +40,7 @@ export function Dashboard({ model, pack, onCurrentMode, onDismissNotice }: Dashb
           <MetarTileView tile={model.metar} />
         </div>
       </main>
-      <ForecastBar model={model.bar} />
+      <ForecastBar model={model.bar} evaluation={model.evaluation} />
       <footer className="trust" aria-label="Data freshness">
         <Chips chips={model.chips} />
         <Notice pack={pack} />

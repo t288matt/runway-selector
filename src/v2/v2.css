@@ -19,6 +19,7 @@
   --state: var(--ok);
   --state-text: var(--ok-text);
   --wet: #5bb8e8;
+  --busy: #e8a33a;
 }
 * {
   box-sizing: border-box;
@@ -141,7 +142,7 @@ body {
   opacity: 0.95;
 }
 
-/* ---------- drawer (phase 1: an empty shell) ---------- */
+/* ---------- drawer ---------- */
 .scrim {
   position: fixed;
   inset: 0;
@@ -426,35 +427,34 @@ body {
   background: repeating-linear-gradient(45deg, var(--wet) 0 3px, #c9d4ea 3px 6px);
 }
 
-/* ---------- popovers (hover and focus) ---------- */
-.pop {
-  display: none;
-  position: absolute;
-  z-index: 5;
-  width: 240px;
+/* ---------- the shared popover (hover, focus and tap) ---------- */
+/* Fixed to the viewport (placed by the script) so a scrolling grid cannot clip it. */
+.tip-pop {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 60;
+  width: 260px;
+  max-width: calc(100vw - 16px);
   background: #0a1020;
   border: 1px solid var(--accent);
   border-radius: 6px;
   padding: 8px 10px;
   font-size: 12px;
   font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0;
+  text-align: left;
+  text-transform: none;
   color: var(--text);
-  white-space: normal;
+  white-space: pre-line;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
 }
-.fact:hover > .pop,
-.fact:focus > .pop,
-.chip:hover > .pop,
-.chip:focus > .pop {
-  display: block;
+.cell .tip-pop {
+  width: 320px;
 }
-.fact > .pop {
-  top: calc(100% + 6px);
-  left: 0;
-}
-.chip > .pop {
-  bottom: calc(100% + 6px);
-  left: 0;
+.cell.tip-open {
+  z-index: 9;
 }
 
 /* ---------- the slim forecast bar ---------- */
@@ -466,6 +466,40 @@ body {
   min-width: 0;
   max-width: 100%;
   --lab: 100px;
+}
+.fcx > summary {
+  list-style: none;
+  cursor: pointer;
+  display: block;
+  padding: 4px 0 2px;
+  border-radius: 10px;
+}
+.fcx > summary::-webkit-details-marker {
+  display: none;
+}
+.fcx > summary:hover .sumhead,
+.fcx > summary:focus-visible .sumhead {
+  text-decoration: underline;
+}
+.chev {
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  margin-top: -4px;
+  flex: none;
+}
+.fcx[open] .chev {
+  transform: rotate(-135deg);
+  margin-top: 4px;
+}
+.fcx[open] .fc2,
+.fcx[open] > summary .tip-pop {
+  display: none;
+}
+.fc2 {
+  display: block;
 }
 .sumhead {
   display: flex;
@@ -667,6 +701,354 @@ body {
   color: var(--muted);
 }
 
+/* ---------- the expansion: v1's timeline block ---------- */
+.tlx {
+  --cell: 56px;
+  --rowh: 36px;
+  --labw: 132px;
+  position: relative;
+  padding-top: 4px;
+  overflow-x: auto;
+  scroll-padding-left: var(--labw);
+}
+.tlx .inner {
+  position: relative;
+  min-width: calc(var(--labw) + var(--n) * var(--cell));
+}
+.tlx .row {
+  display: grid;
+  grid-template-columns: var(--cols);
+  align-items: center;
+}
+.tlx .below,
+.tlx .lower {
+  position: relative;
+}
+.tlx .lab {
+  position: sticky;
+  left: 0;
+  z-index: 8;
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  padding: 0 8px;
+  font-weight: 600;
+  font-size: 14px;
+  border-right: 1px solid var(--line);
+  height: var(--rowh);
+  color: var(--text);
+}
+.tlx .lab small {
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 11px;
+}
+.tlx .lab.hd {
+  font-weight: 500;
+  color: var(--muted);
+  font-size: 11px;
+  height: auto;
+  min-height: 24px;
+  align-self: stretch;
+}
+.tlx .row.isrec .lab {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.rt {
+  font-size: 10px;
+  padding: 0 5px;
+  border-radius: 3px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-left: 4px;
+}
+.rt.rec {
+  background: var(--accent);
+  color: #fff;
+}
+.rt.act {
+  background: var(--panel2);
+  border: 1px solid var(--accent-text);
+  color: var(--accent-text);
+}
+.tg {
+  grid-column: 2 / -1;
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  align-items: center;
+}
+.tg .h {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.2;
+}
+.tg .h .d {
+  display: block;
+  font-size: 10px;
+  color: var(--accent-text);
+}
+.tg .h.hr {
+  color: var(--text);
+  font-weight: 650;
+}
+.evs {
+  grid-column: 2 / -1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 2px 0;
+}
+.evw {
+  position: relative;
+  height: 18px;
+}
+.wbar,
+.obar {
+  position: absolute;
+  top: 0;
+  height: 18px;
+  line-height: 16px;
+  box-sizing: border-box;
+  margin-left: 1px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wbar {
+  color: var(--text);
+  background: rgba(106, 166, 255, 0.16);
+  border: 1px solid rgba(106, 166, 255, 0.45);
+}
+.obar {
+  color: var(--warn-text);
+  background: rgba(201, 138, 0, 0.18);
+  border: 1px solid rgba(201, 138, 0, 0.55);
+}
+.obar.prob {
+  border-style: dashed;
+}
+.ic {
+  text-align: center;
+  font-size: 10px;
+  line-height: 18px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tg .t {
+  margin: 3px 1px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 3px;
+  line-height: 16px;
+  height: 18px;
+  white-space: nowrap;
+}
+.lv-light {
+  background: #1c2a4d;
+  color: var(--muted);
+}
+.lv-medium {
+  background: #2b3a66;
+  color: var(--text);
+}
+.lv-busy {
+  background: #5a3d10;
+  color: var(--warn-text);
+  border: 1px solid var(--busy);
+}
+.lv-x {
+  background: transparent;
+  color: var(--muted);
+  border: 1px dashed var(--unk);
+}
+.cell {
+  margin: 2px 1px;
+  height: 32px;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  line-height: 1;
+}
+.cell small {
+  font-size: 9px;
+  font-weight: 600;
+  opacity: 0.95;
+  margin-top: 1px;
+}
+.cell:focus-visible,
+.cell:hover {
+  outline: 2px solid #fff;
+  outline-offset: 1px;
+  z-index: 6;
+}
+.cs-suitable {
+  background: var(--ok);
+}
+.cs-unsuitable {
+  background: repeating-linear-gradient(45deg, var(--bad) 0 5px, #8f2a20 5px 7px), var(--bad);
+}
+.cs-unknown {
+  background: radial-gradient(#9aa5bb 1px, transparent 1.5px) 0 0 / 6px 6px, var(--unk);
+}
+.cell.rec {
+  z-index: 3;
+  box-shadow: 0 0 0 1px var(--bg), 0 0 0 5px var(--accent-text);
+}
+.cell.unc::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  border-style: solid;
+  border-width: 0 9px 9px 0;
+  border-color: transparent #fff transparent transparent;
+}
+.ov {
+  position: absolute;
+  pointer-events: none;
+  top: 0;
+  bottom: 0;
+}
+.busyband {
+  border-left: 1px dashed var(--busy);
+  border-right: 1px dashed var(--busy);
+  background: rgba(232, 163, 58, 0.09);
+  z-index: 1;
+}
+.now {
+  width: 2px;
+  background: #fff;
+  z-index: 7;
+}
+.now span {
+  position: absolute;
+  top: -2px;
+  left: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  background: #fff;
+  color: #0b1426;
+  padding: 0 4px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.chg {
+  width: 0;
+  border-left: 2px dashed var(--accent-text);
+  z-index: 7;
+}
+.legend {
+  display: flex;
+  gap: 6px 14px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 8px 0 0;
+}
+.legend span {
+  display: inline-flex;
+  align-items: center;
+}
+.legend .cell {
+  display: inline-flex;
+  width: 22px;
+  height: 16px;
+  margin: 0 4px 0 0;
+  font-size: 11px;
+  cursor: default;
+  flex-direction: row;
+}
+.legend .cell.wide {
+  width: auto;
+  padding: 0 4px;
+}
+.legend .cell.swatch {
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  margin-right: 8px;
+}
+.raw {
+  padding-top: 2px;
+}
+.wxbox {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 8px;
+  margin-top: 6px;
+  align-items: start;
+}
+.wxbox .lbl {
+  color: var(--accent-text);
+  font-weight: 700;
+  font-size: 12px;
+  padding-top: 6px;
+}
+.wxbox .mono {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
+  word-break: break-word;
+}
+.rawtext {
+  white-space: pre-wrap;
+}
+.rawtext.none {
+  color: var(--muted);
+}
+
+/* While the expansion is open the answer band shrinks to one pinned line: the state, the mode and the next change. */
+.app:has(.fcx[open]) .hero {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  grid-template-columns: 1fr;
+  padding: 6px 12px;
+  gap: 0;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+.app:has(.fcx[open]) .hero .pic,
+.app:has(.fcx[open]) .hero .facts,
+.app:has(.fcx[open]) .why1,
+.app:has(.fcx[open]) .cur,
+.app:has(.fcx[open]) .rw {
+  display: none;
+}
+.app:has(.fcx[open]) .answer {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.app:has(.fcx[open]) .mode {
+  font-size: 34px;
+}
+.app:has(.fcx[open]) .next {
+  font-size: 15px;
+}
+
 /* ---------- phone ---------- */
 @media (max-width: 640px) {
   .app {
@@ -727,15 +1109,33 @@ body {
   .chip {
     padding: 0 8px;
   }
-  .pop,
-  .fact > .pop,
-  .chip > .pop {
-    position: fixed;
-    left: 8px;
+  /* On a phone the popover is a strip at the bottom of the screen, whatever opened it. */
+  .tip-pop,
+  .cell .tip-pop {
+    left: 8px !important;
     right: 8px;
-    top: auto;
+    top: auto !important;
     bottom: 8px;
     width: auto;
+    max-height: 45vh;
+    overflow-y: auto;
+  }
+  .tlx {
+    --labw: 104px;
+    --cell: 50px;
+  }
+  .tlx .lab {
+    font-size: 13px;
+  }
+  .app:has(.fcx[open]) .mode {
+    font-size: 28px;
+  }
+  .app:has(.fcx[open]) .next {
+    font-size: 13px;
+  }
+  .app:has(.fcx[open]) .state {
+    font-size: 11px;
+    padding: 2px 8px;
   }
 }
 @media (pointer: coarse) {

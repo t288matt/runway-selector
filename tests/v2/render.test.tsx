@@ -154,9 +154,9 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 tiles and picture [%s]
     for (const r of pack.runways) expect(textOf(html)).toContain(r.name);
   });
 
-  it('forecast bar: a picture with a summary in words as its name', () => {
+  it('forecast bar: the closed summary has the summary in words as its name', () => {
     const html = render(viewOf(pack, rig, ['ok', 'ok', 'badA', 'badA'], same(4, 'light')));
-    expect(html).toMatch(/role="img" aria-label="Forecast \d\d:\d\dZ to \d\d:\d\dZ\. Path: /);
+    expect(html).toMatch(/<summary[^>]*aria-label="Evaluation and TAF: open or close\. Forecast \d\d:\d\dZ to \d\d:\d\dZ\. Path: /);
     expect(html).toContain('data-testid="path-seg"');
   });
 });
