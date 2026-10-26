@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "description": "Runway ends. Verified by the owner, 24-10-2026. Canberra has two runways, 17/35 and 12/30. Headings are magnetic, the same reference as the other packs and the weather reports (168/348 and 117/297).",
   "status": "verified",
-  "source": "SkyVector and Flight Plan Database, 24-10-2026 Threshold coordinates (latitude and longitude, decimal degrees): OurAirports open data (community data), retrieved 26-10-2026, applied at the owner's instruction; not checked against the AIP.",
+  "source": "SkyVector and Flight Plan Database, 24-10-2026. Threshold coordinates (latitude and longitude, decimal degrees): OurAirports open data (community data), retrieved 26-10-2026, applied at the owner's instruction; not checked against the AIP.",
   "runways": [
     { "name": "17", "headingDegrees": 168, "threshold": { "latitude": -35.29063, "longitude": 149.19444 } },
     { "name": "35", "headingDegrees": 348, "threshold": { "latitude": -35.32020, "longitude": 149.19444 } },

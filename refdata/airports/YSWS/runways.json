@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "description": "Runway ends. PROVISIONAL DRAFT 24-10-2026: Western Sydney has one runway, 05/23 (3,700 m). The 50 and 230 degree headings are from the airport's environmental impact statement and flight-path material (the runway name 05 means a magnetic heading near 050); not checked against the AIP.",
   "status": "verified",
-  "source": "Western Sydney Airport environmental impact statement, 24-10-2026",
+  "source": "Western Sydney Airport environmental impact statement, 24-10-2026. Threshold coordinates (latitude and longitude, decimal degrees): OurAirports open data (community data, record AU-0539), retrieved 26-10-2026, applied at the owner's instruction; not checked against the AIP.",
   "runways": [
-    { "name": "05", "headingDegrees": 50 },
-    { "name": "23", "headingDegrees": 230 }
+    { "name": "05", "headingDegrees": 50, "threshold": { "latitude": -33.89057, "longitude": 150.69862 } },
+    { "name": "23", "headingDegrees": 230, "threshold": { "latitude": -33.87534, "longitude": 150.72984 } }
   ]
 }

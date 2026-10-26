@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "description": "Runway ends. PROVISIONAL DRAFT 24-10-2026: headings from a public source (SkyVector), not yet checked against the AIP, in the reference the weather reports use (magnetic). Perth has two crossing runways: 03/21 (3,444 m) and 06/24 (2,163 m).",
   "status": "verified",
-  "source": "SkyVector, 24-10-2026 Threshold coordinates (latitude and longitude, decimal degrees): OurAirports open data (community data), retrieved 26-10-2026, applied at the owner's instruction; not checked against the AIP.",
+  "source": "SkyVector, 24-10-2026. Threshold coordinates (latitude and longitude, decimal degrees): OurAirports open data (community data), retrieved 26-10-2026, applied at the owner's instruction; not checked against the AIP.",
   "runways": [
     { "name": "03", "headingDegrees": 16, "threshold": { "latitude": -31.95870, "longitude": 115.96000 } },
     { "name": "21", "headingDegrees": 196, "threshold": { "latitude": -31.92860, "longitude": 115.96800 } },

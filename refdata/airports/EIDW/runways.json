@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "description": "Runway ends. PROVISIONAL DRAFT 24-10-2026: 10/28 is modelled as two parallel runways, 10L/28R and 10R/28L (four runway ends), and 16/34 is the crosswind runway. Headings are magnetic, the same reference as the other packs and the weather reports, from SkyVector (098/278 and 159/339). The parallels share the same heading. Not checked against the Irish AIP.",
   "status": "verified",
-  "source": "SkyVector, 24-10-2026 Threshold coordinates (latitude and longitude, decimal degrees): OurAirports open data (community data), retrieved 26-10-2026, applied at the owner's instruction; not checked against the AIP.",
+  "source": "SkyVector, 24-10-2026. Threshold coordinates (latitude and longitude, decimal degrees): OurAirports open data (community data), retrieved 26-10-2026, applied at the owner's instruction; not checked against the AIP.",
   "runways": [
     { "name": "10L", "headingDegrees": 98, "threshold": { "latitude": 53.43716, "longitude": -6.28062 } },
     { "name": "10R", "headingDegrees": 98, "threshold": { "latitude": 53.42243, "longitude": -6.29007 } },
