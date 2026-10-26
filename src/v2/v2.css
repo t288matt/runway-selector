@@ -294,13 +294,59 @@ body {
   color: var(--text);
   font-weight: 600;
 }
-.prio {
-  color: var(--muted);
+.state-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  color: var(--accent);
   font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0;
-  margin-left: 6px;
+  font-weight: 700;
   cursor: help;
+}
+.info.tip-open {
+  background: var(--accent);
+  color: #0a1020;
+}
+.pr-title {
+  display: block;
+  font-weight: 600;
+}
+.pr-sub {
+  display: block;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.pr-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2px;
+}
+.pr-row {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  gap: 10px;
+  color: var(--muted);
+}
+.pr-row .pr-n {
+  color: var(--muted);
+}
+.pr-recommended {
+  color: var(--accent);
+}
+.pr-suitable {
+  color: var(--ok-text);
+}
+.alt-label.tip-open {
+  color: var(--accent);
 }
 .alt {
   border-top: 1px solid var(--line);
@@ -308,6 +354,8 @@ body {
   padding-top: 8px;
 }
 .alt-label {
+  cursor: help;
+  width: fit-content;
   color: var(--muted);
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -629,6 +677,9 @@ body {
   height: auto;
   min-height: 24px;
   align-self: stretch;
+}
+.tlx .lab.tip-open {
+  z-index: 12;
 }
 .tlx .row.isrec .lab {
   box-shadow: inset 3px 0 0 var(--accent);

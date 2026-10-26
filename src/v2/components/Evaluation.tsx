@@ -1,4 +1,4 @@
-// What the "Evaluation and TAF" section holds when it is open, and nothing else:
+// What the "Detail" section holds when it is open, and nothing else:
 // v1's timeline block (the UTC time row with the NOW marker; the weather events
 // row with the wind bars and the TEMPO, INTER and PROB bars; the event words; the
 // traffic row; one row per mode with its REC tag and runways; the cells; the
@@ -112,9 +112,9 @@ export function Evaluation({ model }: { model: EvaluationModel }) {
               <div className="evs">
                 <div className="evw" role="group" aria-label="Wind">
                   {model.windRuns.map((w) => (
-                    <div key={w.startSlot} className="wbar" title={w.title} style={barStyle(w.startSlot, w.endSlot, n)} data-testid="wind-bar">
+                    <Tip key={w.startSlot} tag="div" text={w.title} className="wbar" style={barStyle(w.startSlot, w.endSlot, n)} data-testid="wind-bar">
                       {w.label}
-                    </div>
+                    </Tip>
                   ))}
                 </div>
                 {Array.from({ length: model.overlayLanes }, (_, lane) => (
@@ -122,18 +122,18 @@ export function Evaluation({ model }: { model: EvaluationModel }) {
                     {model.overlayBars
                       .filter((b) => b.lane === lane)
                       .map((b) => (
-                        <div key={`${b.label}@${b.startSlot}`} className={`obar${b.probability ? ' prob' : ''}`} title={b.label} style={barStyle(b.startSlot, b.endSlot, n)} data-testid="group-bar">
+                        <Tip key={`${b.label}@${b.startSlot}`} tag="div" text={b.label} className={`obar${b.probability ? ' prob' : ''}`} style={barStyle(b.startSlot, b.endSlot, n)} data-testid="group-bar">
                           {b.displayLabel}
-                        </div>
+                        </Tip>
                       ))}
                   </div>
                 ))}
                 {model.hasEventText ? (
                   <div className="tg">
                     {model.slots.map((s) => (
-                      <div key={s.index} className="ic" title={s.eventTitle}>
+                      <Tip key={s.index} tag="div" text={s.eventTitle} className="ic">
                         {s.events.join(' ')}
-                      </div>
+                      </Tip>
                     ))}
                   </div>
                 ) : null}
@@ -147,23 +147,23 @@ export function Evaluation({ model }: { model: EvaluationModel }) {
                 </div>
                 <div className="tg">
                   {model.slots.map((s) => (
-                    <div key={s.index} className={`t lv-${s.level === null ? 'x' : s.level}`} title={s.levelTitle} data-testid="traffic-cell">
+                    <Tip key={s.index} tag="div" text={s.levelTitle} className={`t lv-${s.level === null ? 'x' : s.level}`} data-testid="traffic-cell">
                       {s.levelShort}
-                    </div>
+                    </Tip>
                   ))}
                 </div>
               </div>
 
               {rows.map((r, ri) => (
                 <div key={r.modeId} role="row" className={`row${r.isRecommended ? ' isrec' : ''}${r.isCurrent ? ' isact' : ''}`} data-testid="mode-row">
-                  <div className="lab" role="rowheader" title={r.title}>
+                  <Tip tag="div" text={r.title} className="lab" role="rowheader">
                     <span>
                       {r.modeId}
                       {r.isRecommended ? <span className="rt rec"> REC</span> : null}
                       {r.isCurrent ? <span className="rt act"> CURRENT</span> : null}
                     </span>
                     <small>{r.runwaysText}</small>
-                  </div>
+                  </Tip>
                   {r.cells.map((c, ci) => {
                     const active = at.row === ri && at.col === ci;
                     return (

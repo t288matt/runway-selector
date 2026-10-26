@@ -86,10 +86,10 @@ export function usePopover(text: string, options: { tap?: boolean } = {}): Popov
 }
 
 /** The popover itself. Always in the page (so it can describe its trigger), hidden until opened. */
-export function PopoverText({ binding, text }: { binding: PopoverBinding; text: string }) {
+export function PopoverText({ binding, text, rich }: { binding: PopoverBinding; text: string; rich?: ReactNode }) {
   return (
     <span id={binding.id} role="tooltip" className="tip-pop" hidden={!binding.open}>
-      {text}
+      {rich ?? text}
     </span>
   );
 }
@@ -99,6 +99,8 @@ type DataAttributes = { readonly [name: `data-${string}`]: string | undefined };
 export interface TipProps extends Omit<HTMLAttributes<HTMLElement>, 'children'>, DataAttributes {
   /** The popover text, shown on hover, focus and tap. */
   readonly text: string;
+  /** Coloured content for the popover (text nodes and spans only). `text` stays the plain-text form. */
+  readonly rich?: ReactNode;
   readonly tag?: 'span' | 'div';
   /** Called with the trigger element, for a caller that has to move focus to it. */
   readonly elRef?: (el: HTMLElement | null) => void;
@@ -106,7 +108,7 @@ export interface TipProps extends Omit<HTMLAttributes<HTMLElement>, 'children'>,
 }
 
 /** A focusable trigger with its popover inside. */
-export function Tip({ text, tag = 'span', elRef, children, onKeyDown, onMouseEnter, onMouseLeave, onFocus, onBlur, onClick, className, ...rest }: TipProps) {
+export function Tip({ text, rich, tag = 'span', elRef, children, onKeyDown, onMouseEnter, onMouseLeave, onFocus, onBlur, onClick, className, ...rest }: TipProps) {
   const p = usePopover(text);
   const Tag = tag;
   return (
@@ -141,7 +143,7 @@ export function Tip({ text, tag = 'span', elRef, children, onKeyDown, onMouseEnt
       }}
     >
       {children}
-      <PopoverText binding={p} text={text} />
+      <PopoverText binding={p} text={text} rich={rich} />
     </Tag>
   );
 }

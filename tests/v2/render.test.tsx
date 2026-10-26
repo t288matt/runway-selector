@@ -71,15 +71,18 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer screen states [
     expect(textOf(html)).toMatch(/Forecasting: \S+ at \d\d:\d\dZ/);
   });
 
-  it('shows the priority tag with its hover text, and the alternatives as chips when there are any (issue 122)', () => {
+  it('shows the info mark and the alternatives as chips, with no P-numbers on screen; the ranking is in the popover (issue 122)', () => {
     const view = viewOf(pack, rig, same<Wx>(4, 'ok'), same(4, 'light'));
     const html = render(view);
-    expect(html).toContain('title="Runway mode priority"');
-    expect(textOf(html)).toMatch(/P\d+/);
+    expect(html).toContain('data-testid="priority-info"');
+    expect(html).toContain('Runway mode priority</b>');
+    expect(html).toContain('pr-row pr-recommended');
+    expect(html).not.toContain('title="Runway mode priority"');
+    expect(html).not.toMatch(/>P\d+</);
     const alts = screenModel(stateOf(view)).answer.alternatives;
     expect(html.includes('data-testid="alternatives"')).toBe(alts.length > 0);
     expect(html.split('data-testid="alt-chip"').length - 1).toBe(alts.length);
-    if (alts.length > 0) expect(textOf(html)).toContain('Also valid for the next hour');
+    if (alts.length > 0) expect(textOf(html)).toContain('Also suitable for the next hour');
   });
 
   it('no suitable mode: the red label replaces the mode and no mode is named as recommended', () => {
@@ -100,7 +103,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer screen states [
     expect(html).toContain('tone-unk');
   });
 
-  it('draws the whole closed state in the fixed order: header-less answer, picture, tiles, Evaluation and TAF toggle, chips, notice', () => {
+  it('draws the whole closed state in the fixed order: header-less answer, picture, tiles, Detail toggle, chips, notice', () => {
     const html = render(viewOf(pack, rig, same<Wx>(4, 'ok'), same(4, 'light')));
     const marks = ['class="state ', 'data-testid="picture"', 'data-testid="tile-traffic"', 'data-testid="tile-metar"', 'data-testid="forecast-bar"', 'data-testid="chip-metar"', 'role="note"'].map((m) => html.indexOf(m));
     expect(marks.every((i) => i >= 0)).toBe(true);
@@ -159,10 +162,10 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 tiles and picture [%s]
     for (const r of pack.runways) expect(textOf(html)).toContain(r.name);
   });
 
-  it('the slim forecast bar is gone; the closed screen has the Evaluation and TAF toggle row in its place', () => {
+  it('the slim forecast bar is gone; the closed screen has the Detail toggle row in its place', () => {
     const html = render(viewOf(pack, rig, ['ok', 'ok', 'badA', 'badA'], same(4, 'light')));
-    expect(html).toMatch(/<summary[^>]*aria-label="Evaluation and TAF: open or close\. Forecast \d\d:\d\dZ to \d\d:\d\dZ\. Path: /);
-    expect(textOf(html)).toMatch(/Evaluation and TAF \d\d:\d\dZ to \d\d:\d\dZ/);
+    expect(html).toMatch(/<summary[^>]*aria-label="Detail: open or close\. Forecast \d\d:\d\dZ to \d\d:\d\dZ\. Path: /);
+    expect(textOf(html)).toMatch(/Detail \d\d:\d\dZ to \d\d:\d\dZ/);
     expect(html).not.toContain('class="fc2"');
     expect(html).not.toContain('data-testid="path-seg"');
     expect(html).not.toContain('class="track"');

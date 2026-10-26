@@ -16,9 +16,9 @@ export interface ScreenModel {
   readonly ceiling: CeilingTile;
   readonly runway: RunwayTile;
   readonly metar: MetarTile;
-  /** The range and the words that name the Evaluation and TAF toggle. */
+  /** The range and the words that name the Detail toggle. */
   readonly forecast: ForecastSummary;
-  /** The expanded Evaluation and TAF section. */
+  /** The expanded Detail section. */
   readonly evaluation: EvaluationModel;
   readonly chips: readonly ChipModel[];
   readonly notices: readonly string[];
