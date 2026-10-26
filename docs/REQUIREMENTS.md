@@ -98,7 +98,7 @@ A web application that recommends the runway operating mode for Sydney Kingsford
 | ID | Requirement |
 |---|---|
 | RD-1 | Two independently editable datasets: A, standard runway modes (assignments, capacity characteristics, eligibility); B, operating-plan priorities (preference order and time-of-day rules). |
-| RD-2 | Every rule keeps its source, document version effective date where available. Never fabricate official rules or capacities. |
+| RD-2 | Every rule keeps its source, document version and effective date where available. Never fabricate official rules or capacities. |
 | RD-3 | Per mode: number and description; arrival and departure runways; exact bearings; traffic capacity; operating-plan priority class; time-of-day eligibility; weather constraints (including its own maximum crosswind, OD-8); source. |
 | RD-4 | Each airport pack lists the standard modes for that airport, including variations. Every mode listed in a pack is treated as approved (OD-10); only enabled modes are recommended. No arbitrary runway combinations. The Sydney mode list is in section 16. |
 | RD-5 | Tunable values in refdata (OD-6): mode priorities; forecast window; light, medium and busy traffic bands for arrivals and departures; tailwind limits, the wet-runway probability threshold, the drying time, and the default crosswind limit (a per-mode value overrides it); preference, marginal and change penalties; changeover preparation time; calm wind and limit tolerance; METAR validity window; demand horizon; precipitation codes; stale-data limits; poll and recalculation intervals; display time zone. |
