@@ -130,7 +130,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the Evaluation and TAF se
     expect(count(html, 'data-testid="change-line"')).toBe(model.changeSlots.length);
     expect(count(html, 'data-testid="busy-band"')).toBe(model.busyRuns.length);
     expect(model.busyRuns.length).toBeGreaterThan(0);
-    expect(textOf(html)).toContain('Dashed blue line: planned change');
+    expect(textOf(html)).not.toContain('Dashed blue line: planned change'); // the line is drawn but not explained in the legend
     expect(textOf(html)).toContain('Amber band: HIGH traffic');
   });
 

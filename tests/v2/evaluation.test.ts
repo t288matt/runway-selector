@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import type { EngineInput, TrafficLevel, WeatherOverlay } from '../../src/engine';
 import { CAUSE_WORDS, STATUS_STYLE } from '../../src/v2/model/status';
-import { cellDetail, cellDetailText, evaluationModel, FORECAST_GREEN_LEGEND, LEGEND, levelShortWord, moveFocus, overlayBars, overlayDisplayLabel, visibleRowIndexes, type ModeRow } from '../../src/v2/model/evaluation';
+import { cellDetail, cellDetailText, evaluationModel, LEGEND, levelShortWord, moveFocus, overlayBars, overlayDisplayLabel, visibleRowIndexes, type ModeRow } from '../../src/v2/model/evaluation';
 import { inputFor } from '../engine/helpers';
 import { BASE, packOf, rigFor, same, specsFor, trafficFor, type Wx } from '../engine/planHelpers';
 import { PACKS, YSSY_PACK } from '../helpers/packs';
@@ -166,8 +166,9 @@ describe('group bars (TEMPO, INTER, PROB)', () => {
 
 describe('legend and raw reports', () => {
   it('has the v1 legend entries in order, with the green-with-a-word line', () => {
-    expect(LEGEND.map((l) => l.key)).toEqual(['suitable', 'unsuitable', 'unknown', 'green-word', 'path', 'change', 'busy', 'uncertain']);
-    expect(LEGEND.find((l) => l.key === 'green-word')?.text).toBe(FORECAST_GREEN_LEGEND);
+    expect(LEGEND.map((l) => l.key)).toEqual(['suitable', 'unsuitable', 'path', 'busy', 'uncertain']);
+    // the Unknown, green-with-a-word and planned-change entries are gone (owner, 26-10-2026)
+    expect(LEGEND.map((l) => l.text).join('|')).not.toMatch(/Unknown|Green with a word|Dashed blue line/);
   });
   it('carries the raw METAR and TAF in use, or says none is entered with the station', () => {
     const real = packWith(YSSY_PACK, { weatherStation: FIXTURE_STATION });
