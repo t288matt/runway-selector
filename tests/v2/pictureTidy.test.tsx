@@ -1,5 +1,6 @@
-// The runway picture draws no "N up" note, and names only the runway ends the recommended mode uses
-// (arrivals or departures); the unused ends keep their line but carry no label (owner, 26-10-2026).
+// The runway picture draws no "N up" note, and gives an ARR or DEP label only to the runway ends the
+// recommended mode uses; the unused ends keep their line and still carry their painted runway number,
+// in muted grey (owner, 26-10-2026 and issue 141), but no ARR/DEP label.
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { Picture } from '../../src/v2/components/Picture';
@@ -19,9 +20,18 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the picture is tidy [%s]'
     expect(html).not.toContain('N up');
   });
 
-  it('labels only the ends that have a role, and still draws every runway line', () => {
-    const labelled = (name: string): boolean => new RegExp(`<text[^>]*>\\s*${name}(<|\\s)`).test(html.replace(/<title[\s\S]*?<\/title>/, ''));
+  it('gives an ARR/DEP label only to the ends that have a role, and still draws every runway', () => {
+    // the painted runway number (class "rwy-number") carries every end's name regardless of role
+    // (issue 141); strip those out first so this checks only the ARR/DEP label.
+    const withoutTitleOrNumbers = html.replace(/<title[\s\S]*?<\/title>/, '').replace(/<text class="rwy-number"[^>]*>[\s\S]*?<\/text>/g, '');
+    const labelled = (name: string): boolean => new RegExp(`<text[^>]*>\\s*${name}(<|\\s)`).test(withoutTitleOrNumbers);
     for (const e of ends) expect(labelled(e.name), `${e.name} roles ${e.roles.join('/')}`).toBe(e.roles.length > 0);
-    expect(html.match(/<line [^>]*data-used/g)?.length).toBe(model.diagram.runways.length);
+    // one group carrying data-used per runway (the asphalt strip and its markings), not a bare line (issue 141)
+    expect(html.match(/<g [^>]*data-used/g)?.length).toBe(model.diagram.runways.length);
+  });
+
+  it('still paints every end its runway number, used or not (issue 141)', () => {
+    expect(html).toContain('class="rwy-number"');
+    for (const e of ends) expect(html).toContain(`>${e.name}</text>`);
   });
 });

@@ -33,8 +33,10 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the wind label is placed 
       const a = p.diagram.arrow;
       expect(a, `dir ${d}`).not.toBeNull();
       expect(p.diagram.windLabel.place).toBe('arrow');
-      // the label's nearest edge is within a short distance of the tail end of the arrow
-      expect(distToPoint(labelBox(p), a?.x1 ?? 0, a?.y1 ?? 0), `dir ${d}`).toBeLessThanOrEqual(30);
+      // the label's nearest edge is within a short distance of the tail end of the arrow (the limit is
+      // wider than it was: the asphalt strips (issue 141) are wider than the old lines, so the search
+      // sometimes has to swing the label further round the tail to find a spot clear of them)
+      expect(distToPoint(labelBox(p), a?.x1 ?? 0, a?.y1 ?? 0), `dir ${d}`).toBeLessThanOrEqual(50);
     }
   });
 

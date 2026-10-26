@@ -63,6 +63,14 @@ export interface Diagram {
 
 const RAD = Math.PI / 180;
 
+// ------------------------------------------------------------ the runway picture's look (issue 141)
+/** The asphalt strip's width, across the runway. The approved mockup used 18 units on a 371-wide canvas; scaled to this picture's 300-wide viewBox. */
+export const RUNWAY_STRIP_WIDTH = 18 * (DIAGRAM.width / 371);
+/** How much wider than the strip the in-use accent glow is drawn (3 units each side). */
+export const RUNWAY_ACCENT_EXTRA = 6;
+/** Half the widest a runway is ever drawn (the accent glow, which only a used runway carries), plus a small margin: the clearance the wind-label placement search keeps from every runway. */
+export const RUNWAY_CLEARANCE = RUNWAY_STRIP_WIDTH / 2 + RUNWAY_ACCENT_EXTRA / 2 + 2;
+
 // ------------------------------------------------------------ label placement
 /** The wind label is bold 15 px, the runway names 13 px; widths are estimated from the character count (display only). */
 export const WIND_LABEL_FONT = 15;
@@ -114,7 +122,7 @@ export function placeWindLabel(text: string, arrow: Pick<WindArrow, 'x1' | 'y1' 
   const outAngle = Math.atan2(oy / len, ox / len);
   const inside = (b: Box): boolean => b.x0 >= EDGE && b.x1 <= DIAGRAM.width - EDGE && b.y0 >= EDGE && b.y1 <= DIAGRAM.height - EDGE;
   const boxAt = (cx: number, cy: number): Box => ({ x0: cx - w / 2, y0: cy - h / 2, x1: cx + w / 2, y1: cy + h / 2 });
-  const clear = (b: Box): boolean => inside(b) && !endBoxes.some((e) => overlaps(b, e, 2)) && !runwayLines.some((l) => segmentHits(b, l.x1, l.y1, l.x2, l.y2, 7)) && !segmentHits(b, arrow.x1, arrow.y1, arrow.x2, arrow.y2, 5);
+  const clear = (b: Box): boolean => inside(b) && !endBoxes.some((e) => overlaps(b, e, 2)) && !runwayLines.some((l) => segmentHits(b, l.x1, l.y1, l.x2, l.y2, RUNWAY_CLEARANCE)) && !segmentHits(b, arrow.x1, arrow.y1, arrow.x2, arrow.y2, 5);
   let best: { cx: number; cy: number; score: number } | null = null;
   for (const spread of [1, 1.15, 1.3, 1.5, 1.8, 2.4]) {
     for (const turn of [0, 15, -15, 30, -30, 45, -45, 60, -60, 75, -75, 90, -90, 110, -110, 135, -135, 160, -160, 180]) {

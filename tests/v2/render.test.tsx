@@ -155,12 +155,12 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 tiles and picture [%s]
     expect((html.match(/class="w-dry"/g) ?? []).length).toBe(6);
   });
 
-  it('picture: has a text title, the wind label, and one line per runway of the pack', () => {
+  it('picture: has a text title, the wind label, and one asphalt strip per runway of the pack (issue 141)', () => {
     const view = viewOf(pack, rig, same<Wx>(3, 'ok'));
     const html = render(view);
     expect(html).toContain('<title');
     expect(html).toContain('data-testid="wind-label"');
-    expect((html.match(/stroke-width="10"/g) ?? []).length).toBeGreaterThanOrEqual(1);
+    expect((html.match(/class="rwy-strip"/g) ?? []).length).toBeGreaterThanOrEqual(1);
     for (const r of pack.runways) expect(textOf(html)).toContain(r.name);
   });
 

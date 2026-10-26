@@ -1272,6 +1272,11 @@ dl.v dd {
     max-width: 260px;
     max-height: 150px;
   }
+  /* The picture is only about 150 px tall here, so the threshold stripes and the painted
+     numbers drop out; the strip, its edge lines, the in-use accent and the centreline stay. */
+  .rwy-detail {
+    display: none;
+  }
   .answer {
     grid-column: 1;
     grid-row: 1;
