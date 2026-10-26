@@ -50,7 +50,7 @@ export function RunwayTileView({ tile }: { tile: RunwayTile }) {
         <span data-testid="runway-headline">{tile.headline}</span>
       </span>
       <span className="k-detail">
-        Runway <span data-testid="runway-word">{tile.word}</span>, {tile.detail}
+        Runway <span data-testid="runway-word">{tile.word}</span>
       </span>
       {tile.segments.length === 0 ? null : (
         <span className="dryline" aria-hidden="true">
