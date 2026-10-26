@@ -61,7 +61,6 @@ export function CeilingTileView({ tile }: { tile: CeilingTile }) {
 }
 
 export function RunwayTileView({ tile }: { tile: RunwayTile }) {
-  const hasPossible = tile.segments.includes('possible');
   return (
     <Tip tag="div" text={tile.aria} className="fact wide" tabIndex={0} role="group" aria-label={tile.aria} data-testid="tile-runway">
       <span className="k">
@@ -78,7 +77,6 @@ export function RunwayTileView({ tile }: { tile: RunwayTile }) {
           ))}
         </span>
       )}
-      {hasPossible ? <small>Hatched is possible</small> : null}
     </Tip>
   );
 }

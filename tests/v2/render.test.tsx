@@ -71,7 +71,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer screen states [
     expect(textOf(html)).toMatch(/Forecasting: \S+ at \d{4}Z/);
   });
 
-  it('shows the info mark and the alternatives as chips, with no P-numbers on screen; the ranking is in the popover (issue 122)', () => {
+  it('shows the info mark and no alternatives block, with no P-numbers on screen; the ranking is in the popover (issue 122)', () => {
     const view = viewOf(pack, rig, same<Wx>(4, 'ok'), same(4, 'light'));
     const html = render(view);
     expect(html).toContain('data-testid="priority-info"');
@@ -79,10 +79,9 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer screen states [
     expect(html).toContain('pr-row pr-recommended');
     expect(html).not.toContain('title="Runway mode priority"');
     expect(html).not.toMatch(/>P\d+</);
-    const alts = screenModel(stateOf(view)).answer.alternatives;
-    expect(html.includes('data-testid="alternatives"')).toBe(alts.length > 0);
-    expect(html.split('data-testid="alt-chip"').length - 1).toBe(alts.length);
-    if (alts.length > 0) expect(textOf(html)).toContain('Also suitable for the next hour');
+    expect(html).not.toContain('data-testid="alternatives"');
+    expect(textOf(html)).not.toContain('Also suitable');
+    expect(textOf(html)).not.toContain('Suitable means for the next hour');
   });
 
   it('no suitable mode: the red label replaces the mode and no mode is named as recommended', () => {
@@ -168,7 +167,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 tiles and picture [%s]
   it('the slim forecast bar is gone; the closed screen has the Detail toggle row in its place', () => {
     const html = render(viewOf(pack, rig, ['ok', 'ok', 'badA', 'badA'], same(4, 'light')));
     expect(html).toMatch(/<summary[^>]*aria-label="Detail: open or close\. Forecast \d{4}Z to \d{4}Z\. Path: /);
-    expect(textOf(html)).toMatch(/Detail \d{4}Z to \d{4}Z/);
+    expect(textOf(html)).not.toMatch(/Detail \d{4}Z to \d{4}Z/);
     expect(html).not.toContain('class="fc2"');
     expect(html).not.toContain('data-testid="path-seg"');
     expect(html).not.toContain('class="track"');
