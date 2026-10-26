@@ -9,6 +9,12 @@ import { createController, type Controller, type ControllerState } from './contr
 export interface ScreenState extends ControllerState {
   readonly setCurrentMode: (id: string | null) => void;
   readonly dismissNotice: (index: number) => void;
+  readonly applyMetar: Controller['applyMetar'];
+  readonly applyTaf: Controller['applyTaf'];
+  readonly resumeAutomatic: Controller['resumeAutomatic'];
+  readonly reloadPack: Controller['reloadPack'];
+  readonly clearAudit: Controller['clearAudit'];
+  readonly exportAudit: Controller['exportAudit'];
 }
 
 export function useController(pack: AirportPack, deps: AppDeps): ScreenState {
@@ -18,6 +24,7 @@ export function useController(pack: AirportPack, deps: AppDeps): ScreenState {
       fetch: deps.fetch,
       now: deps.now,
       store: deps.store,
+      ...(deps.baseUrl === undefined ? {} : { baseUrl: deps.baseUrl }),
       timers: { setInterval: (fn, ms) => setInterval(fn, ms), clearInterval: (h) => clearInterval(h as ReturnType<typeof setInterval>) },
     }),
   );
@@ -26,5 +33,15 @@ export function useController(pack: AirportPack, deps: AppDeps): ScreenState {
     controller.start();
     return () => controller.stop();
   }, [controller]);
-  return { ...state, setCurrentMode: controller.setCurrentMode, dismissNotice: controller.dismissNotice };
+  return {
+    ...state,
+    setCurrentMode: controller.setCurrentMode,
+    dismissNotice: controller.dismissNotice,
+    applyMetar: controller.applyMetar,
+    applyTaf: controller.applyTaf,
+    resumeAutomatic: controller.resumeAutomatic,
+    reloadPack: controller.reloadPack,
+    clearAudit: controller.clearAudit,
+    exportAudit: controller.exportAudit,
+  };
 }

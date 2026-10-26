@@ -9,13 +9,13 @@
 // METAR or TAF, on a current-mode change and on Refresh. A VATSIM poll updates
 // the traffic shown and the freshness chip but never the plan: the plan keeps
 // the traffic it was calculated with.
-import type { AirportPack, FetchLike } from '../refdata';
-import { loadCurrentMode, loadWindowChoice, recordCurrentMode, type CurrentModeRecord, type Store } from '../store';
+import { reloadPack, type AirportPack, type FetchLike } from '../refdata';
+import { clearAudit, exportAudit, loadAudit, loadCurrentMode, loadWindowChoice, recordCurrentMode, type AuditEntry, type AuditExport, type CurrentModeRecord, type Store } from '../store';
 import { fetchFeed } from '../traffic/fetchFeed';
 import type { DecodedMetar, DecodedTaf } from '../weather';
 import { fetchMetarText, fetchTafText, type WeatherFetchResult } from '../weather/fetchWeather';
-import type { Clock } from './clock';
-import { applyMetarText, applyTafText } from './model/apply';
+import { cacheBustToken, type Clock } from './clock';
+import { applyMetarText, applyTafText, type ApplyOutcome } from './model/apply';
 import { applyFeedResult, calculate, defaultWindowFor, EMPTY_FEED, liveDemandFor, needsRecalculation, WINDOW_OPTIONS, type FeedState, type ViewData, type WindowChoice } from './model/dashboard';
 
 /** The timer functions, injected. The handle is opaque. */
@@ -29,8 +29,17 @@ export interface ControllerDeps {
   readonly fetch: FetchLike;
   readonly now: Clock;
   readonly timers: Timers;
-  /** Where the current mode and the window are kept (per airport, AG-8). */
+  /** Where the current mode, the window and the audit trail are kept (per airport, AG-8). */
   readonly store: Store;
+  /** Where the pack is served from, for Reload data; defaults to ./refdata. */
+  readonly baseUrl?: string;
+}
+
+/** What Reload data last did (DESIGN section 4c, editing a pack while the app is open). */
+export interface ReloadState {
+  readonly status: 'idle' | 'busy' | 'changed' | 'unchanged' | 'refused';
+  /** The precise message when refused, else a short result line; plain text. */
+  readonly message: string | null;
 }
 
 /** The two reports the page fetches by itself (OD-37). */
@@ -38,13 +47,17 @@ export type WeatherKind = 'metar' | 'taf';
 
 /** How the last automatic fetch of one report went. */
 export interface AutoReportState {
+  /** Where the report in use came from. */
+  readonly source: 'automatic' | 'pasted' | null;
+  /** True after the user applied pasted text: automatic updates for this report stop until they resume them (a deliberate override is never silently replaced). */
+  readonly paused: boolean;
   /** Why the last automatic fetch failed or was refused, or null. The report in use is unchanged. */
   readonly error: string | null;
-  /** True once a fetched report has been accepted. */
-  readonly fetched: boolean;
+  /** Things the decoder noticed in the last fetched report. */
+  readonly warnings: readonly string[];
 }
 
-export const NO_AUTO_REPORT: AutoReportState = { error: null, fetched: false };
+export const NO_AUTO_REPORT: AutoReportState = { source: null, paused: false, error: null, warnings: [] };
 export const NO_AUTO_WEATHER: Readonly<Record<WeatherKind, AutoReportState>> = { metar: NO_AUTO_REPORT, taf: NO_AUTO_REPORT };
 
 /** Tick for ages and the now marker, and the check for the 30-minute boundary. */
@@ -57,7 +70,10 @@ export interface ControllerState {
   /** The stored current mode (with its set time), or null. */
   readonly currentModeRecord: CurrentModeRecord | null;
   /** Messages about stored values that were cleared or discarded; each is shown until dismissed. */
+  /** The audit trail, oldest first, as stored. */
+  readonly audit: readonly AuditEntry[];
   readonly notices: readonly string[];
+  readonly reload: ReloadState;
   readonly autoWeather: Readonly<Record<WeatherKind, AutoReportState>>;
 }
 
@@ -73,15 +89,27 @@ export interface Controller {
   readonly refresh: () => void;
   readonly setCurrentMode: (id: string | null) => void;
   readonly dismissNotice: (index: number) => void;
+  /** Use pasted text for a report. A refused text leaves the report in use (and its automatic updates) as they were. */
+  readonly applyMetar: (text: string) => ApplyOutcome;
+  readonly applyTaf: (text: string) => ApplyOutcome;
+  /** Pasted text paused automatic updates for this report: start them again and fetch now. */
+  readonly resumeAutomatic: (kind: WeatherKind) => void;
+  /** Re-read and re-validate the pack. A refused pack leaves the previous one in use. */
+  readonly reloadPack: () => Promise<void>;
+  readonly clearAudit: () => void;
+  /** The audit file text and name; the screen turns it into a download after a click. */
+  readonly exportAudit: () => AuditExport;
 }
 
 export function createController(deps: ControllerDeps): Controller {
-  const { pack, store } = deps;
+  let pack = deps.pack;
+  const { store } = deps;
   const windowIds = WINDOW_OPTIONS.map((o) => o.id);
   let metar: DecodedMetar | null = null;
   let taf: DecodedTaf | null = null;
   let feed: FeedState = EMPTY_FEED;
   let running = false;
+  let generation = 0;
   let pollInFlight: Promise<void> | null = null;
   let weatherInFlight: Promise<void> | null = null;
   let auto: Record<WeatherKind, AutoReportState> = { ...NO_AUTO_WEATHER };
@@ -89,6 +117,7 @@ export function createController(deps: ControllerDeps): Controller {
   let weatherTimer: unknown = null;
   let tickTimer: unknown = null;
   let notices: string[] = [];
+  let reload: ReloadState = { status: 'idle', message: null };
   const listeners = new Set<() => void>();
 
   const notify = (message: string | null): void => {
@@ -103,10 +132,14 @@ export function createController(deps: ControllerDeps): Controller {
   notify(storedWindow.message);
   const windowChoice: WindowChoice = (storedWindow.choice as WindowChoice | null) ?? defaultWindowFor(pack);
 
+  const storedAudit = loadAudit(store, pack.airport.icao, pack.settings.auditMaxEntries);
+  notify(storedAudit.message);
+  let audit: readonly AuditEntry[] = storedAudit.entries;
+
   const currentModeId = (): string | null => record?.modeId ?? null;
 
   const first = deps.now();
-  const build = (view: ViewData, displayNowMs: number): ControllerState => ({ view, feed, displayNowMs, currentModeRecord: record, notices, autoWeather: auto });
+  const build = (view: ViewData, displayNowMs: number): ControllerState => ({ view, feed, displayNowMs, currentModeRecord: record, audit, notices, reload, autoWeather: auto });
   let state: ControllerState = build(calculate({ pack, nowMs: first, metar, taf, windowChoice, currentMode: currentModeId(), feed }), first);
 
   const publish = (next: ControllerState): void => {
@@ -116,6 +149,12 @@ export function createController(deps: ControllerDeps): Controller {
 
   /** Publish the held view again with the current stored state (no recalculation). */
   const republish = (): void => publish(build(state.view, deps.now()));
+
+  const refreshAudit = (): void => {
+    const loaded = loadAudit(store, pack.airport.icao, pack.settings.auditMaxEntries);
+    audit = loaded.entries;
+    notify(loaded.message);
+  };
 
   /** A full recalculation with everything held now, including the latest traffic. */
   const recalculate = (nowMs: number): void => {
@@ -168,7 +207,8 @@ export function createController(deps: ControllerDeps): Controller {
   const fetchOneUnguarded = async (kind: WeatherKind): Promise<boolean> => {
     const station = pack.airport.weatherStation;
     const fetched: WeatherFetchResult = await (kind === 'metar' ? fetchMetarText : fetchTafText)(station, { fetch: deps.fetch });
-    if (!running) return false;
+    // Stopped (the airport was switched), the station changed, or the user pasted while this was in flight: drop it.
+    if (!running || station !== pack.airport.weatherStation || auto[kind].paused) return false;
     const label = kind === 'metar' ? 'METAR' : 'TAF';
     if (!fetched.ok) {
       setAuto(kind, { error: fetched.message });
@@ -180,10 +220,10 @@ export function createController(deps: ControllerDeps): Controller {
       setAuto(kind, { error: `The fetched ${label} was refused. ${applied.outcome.message ?? ''}`.trim() });
       return false;
     }
-    const unchanged = (kind === 'metar' ? metar?.raw : taf?.raw) === applied.report.raw && auto[kind].fetched;
+    const unchanged = (kind === 'metar' ? metar?.raw : taf?.raw) === applied.report.raw && auto[kind].source === 'automatic';
     if (kind === 'metar') metar = applied.report as DecodedMetar;
     else taf = applied.report as DecodedTaf;
-    setAuto(kind, { error: null, fetched: true });
+    setAuto(kind, { source: 'automatic', error: null, warnings: applied.outcome.warnings });
     return !unchanged;
   };
 
@@ -199,7 +239,8 @@ export function createController(deps: ControllerDeps): Controller {
 
   const runWeatherPoll = async (): Promise<void> => {
     try {
-      const changed = await Promise.all((['metar', 'taf'] as const).map(fetchOne));
+      const kinds = (['metar', 'taf'] as const).filter((k) => !auto[k].paused);
+      const changed = await Promise.all(kinds.map(fetchOne));
       if (!running) return;
       // A new METAR or TAF recalculates the plan (UP-1); an unchanged one, or a failure, only updates what is shown about the fetch.
       if (changed.some(Boolean)) recalculate(deps.now());
@@ -242,6 +283,46 @@ export function createController(deps: ControllerDeps): Controller {
     tickTimer = null;
   };
 
+  const setReload = (next: ReloadState): void => {
+    reload = next;
+    republish();
+  };
+
+  const doReload = async (): Promise<void> => {
+    if (reload.status === 'busy') return;
+    const started = generation;
+    setReload({ status: 'busy', message: null });
+    try {
+      const result = await reloadPack(deps.fetch, { baseUrl: deps.baseUrl ?? './refdata', cacheBust: cacheBustToken(deps.now()) }, pack);
+      if (started !== generation) return;
+      if (!result.ok) {
+        // The previous valid pack stays in use, with the precise message on screen.
+        setReload({ status: 'refused', message: result.message });
+        return;
+      }
+      if (JSON.stringify(result.pack) === JSON.stringify(pack)) {
+        setReload({ status: 'unchanged', message: 'The airport data was re-read and has not changed.' });
+        return;
+      }
+      const pollChanged = result.pack.settings.vatsimPollSeconds !== pack.settings.vatsimPollSeconds || result.pack.settings.weatherPollMinutes !== pack.settings.weatherPollMinutes;
+      pack = result.pack;
+      // A stored current mode that the new pack no longer enables is cleared, with a message (DESIGN section 4c).
+      const reread = loadCurrentMode(store, pack);
+      record = reread.record;
+      notify(reread.message);
+      refreshAudit();
+      if (running && pollChanged) {
+        stopTimers();
+        startTimers();
+      }
+      reload = { status: 'changed', message: 'The airport data was re-read and has changed. The plan was recalculated.' };
+      recalculate(deps.now());
+    } catch (e) {
+      // A throw while reloading is a refused reload: the previous pack stays in use.
+      if (started === generation) setReload({ status: 'refused', message: e instanceof Error ? e.message : 'unknown error' });
+    }
+  };
+
   return {
     getState: () => state,
     subscribe: (listener) => {
@@ -259,6 +340,7 @@ export function createController(deps: ControllerDeps): Controller {
     },
     stop: () => {
       running = false;
+      generation += 1;
       stopTimers();
     },
     settled: async () => {
@@ -275,6 +357,7 @@ export function createController(deps: ControllerDeps): Controller {
       const change = recordCurrentMode(store, pack, now, id);
       notify(change.message);
       record = change.record;
+      refreshAudit();
       if (change.changed) recalculate(now);
       else republish();
     },
@@ -282,5 +365,47 @@ export function createController(deps: ControllerDeps): Controller {
       notices = notices.filter((_n, i) => i !== index);
       republish();
     },
+    applyMetar: (text) => {
+      const now = deps.now();
+      try {
+        const applied = applyMetarText(text, pack, now);
+        if (applied.report !== null) {
+          metar = applied.report;
+          setAuto('metar', { source: 'pasted', paused: true, error: null, warnings: [] });
+          recalculate(now);
+        }
+        return applied.outcome;
+      } catch (e) {
+        // A throw while reading pasted text is a refusal: the report in use and its automatic updates stay as they were.
+        return { ok: false, message: `The METAR could not be read: ${e instanceof Error ? e.message : 'unknown error'}. Nothing was changed.`, warnings: [] };
+      }
+    },
+    applyTaf: (text) => {
+      const now = deps.now();
+      try {
+        const applied = applyTafText(text, pack, now);
+        if (applied.report !== null) {
+          taf = applied.report;
+          setAuto('taf', { source: 'pasted', paused: true, error: null, warnings: [] });
+          recalculate(now);
+        }
+        return applied.outcome;
+      } catch (e) {
+        // A throw while reading pasted text is a refusal: the report in use and its automatic updates stay as they were.
+        return { ok: false, message: `The TAF could not be read: ${e instanceof Error ? e.message : 'unknown error'}. Nothing was changed.`, warnings: [] };
+      }
+    },
+    resumeAutomatic: (kind) => {
+      setAuto(kind, { paused: false });
+      republish();
+      pollWeather();
+    },
+    reloadPack: doReload,
+    clearAudit: () => {
+      clearAudit(store, pack.airport.icao);
+      audit = [];
+      republish();
+    },
+    exportAudit: () => exportAudit(audit, pack.airport.icao, deps.now()),
   };
 }

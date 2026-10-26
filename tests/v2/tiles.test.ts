@@ -157,7 +157,7 @@ describe('v2 trust chips', () => {
   });
 
   it('a TAF that failed to fetch is a cross, whatever its age', () => {
-    const auto = { metar: NO_AUTO_WEATHER.metar, taf: { error: 'HTTP 503', fetched: true } };
+    const auto = { metar: NO_AUTO_WEATHER.metar, taf: { ...NO_AUTO_WEATHER.taf, error: 'HTTP 503', source: 'automatic' as const } };
     expect(chipModels(view, fresh, tafAt + 60_000, auto).find((c) => c.id === 'taf')).toMatchObject({ shape: 'cross', tone: 'bad', flag: 'Failed' });
   });
 

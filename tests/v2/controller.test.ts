@@ -59,7 +59,7 @@ describe('v2 polling cadence comes from the pack', () => {
     expect(s.view.metar?.raw).toBe(METAR.raw);
     expect(s.view.taf?.raw.startsWith('TAF TAF')).toBe(false);
     expect(s.view.result).not.toBe(before.result);
-    expect(s.autoWeather).toEqual({ metar: { error: null, fetched: true }, taf: { error: null, fetched: true } });
+    expect(s.autoWeather).toEqual({ metar: { source: 'automatic', paused: false, error: null, warnings: expect.any(Array) }, taf: { source: 'automatic', paused: false, error: null, warnings: expect.any(Array) } });
     r.ctrl.stop();
   });
 

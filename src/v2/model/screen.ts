@@ -4,6 +4,7 @@
 import type { ControllerState } from '../controller';
 import { answerModel, type AnswerModel } from './answer';
 import { chipModels, type ChipModel } from './chips';
+import { evaluationModel, type EvaluationModel } from './evaluation';
 import { forecastBarModel, type ForecastBarModel } from './forecastBar';
 import { pictureModel, type Picture } from './picture';
 import { ceilingTile, metarTile, runwayTile, trafficTile, type CeilingTile, type MetarTile, type RunwayTile, type TrafficTile } from './tiles';
@@ -16,6 +17,8 @@ export interface ScreenModel {
   readonly runway: RunwayTile;
   readonly metar: MetarTile;
   readonly bar: ForecastBarModel;
+  /** The expanded Evaluation and TAF section. */
+  readonly evaluation: EvaluationModel;
   readonly chips: readonly ChipModel[];
   readonly notices: readonly string[];
 }
@@ -30,6 +33,7 @@ export function screenModel(state: ControllerState): ScreenModel {
     runway: runwayTile(view),
     metar: metarTile(view),
     bar: forecastBarModel(view, displayNowMs),
+    evaluation: evaluationModel(view, displayNowMs),
     chips: chipModels(view, feed, displayNowMs, state.autoWeather),
     notices: state.notices,
   };

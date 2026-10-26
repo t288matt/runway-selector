@@ -1,17 +1,13 @@
 // The four tiles: traffic with its trend, ceiling and visibility, runway state
 // with its bar, and the METAR line. Each is reachable by keyboard; the longer
 // words open on hover and on focus. Text nodes only (SEC-2).
-import { useId } from 'react';
 import type { CeilingTile, MetarTile, RunwayTile, TrafficTile } from '../model/tiles';
 import { CloudIcon, DropIcon, TrafficBars, TrendArrow } from './Icons';
+import { Tip } from './Popover';
 
 export function TrafficTileView({ tile }: { tile: TrafficTile }) {
-  const tip = useId();
   return (
-    <div className="fact" tabIndex={0} role="group" aria-label={tile.aria} aria-describedby={tip} data-testid="tile-traffic">
-      <span className="pop" role="tooltip" id={tip}>
-        {tile.popover}
-      </span>
+    <Tip tag="div" text={tile.popover} className="fact" tabIndex={0} role="group" aria-label={tile.aria} data-testid="tile-traffic">
       <span className="k">
         {tile.state === 'none' ? (
           <svg className="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="#ff8a80" strokeWidth="3" strokeLinecap="round">
@@ -29,26 +25,26 @@ export function TrafficTileView({ tile }: { tile: TrafficTile }) {
         ) : null}
       </span>
       <small>{tile.sub}</small>
-    </div>
+    </Tip>
   );
 }
 
 export function CeilingTileView({ tile }: { tile: CeilingTile }) {
   return (
-    <div className="fact" tabIndex={0} role="group" aria-label={tile.aria} data-testid="tile-ceiling">
+    <Tip tag="div" text={tile.aria} className="fact" tabIndex={0} role="group" aria-label={tile.aria} data-testid="tile-ceiling">
       <span className="k">
         <CloudIcon />
         <span data-testid="ceiling-value">{tile.value}</span>
       </span>
       <small>Ceiling &middot; {tile.visibility}</small>
-    </div>
+    </Tip>
   );
 }
 
 export function RunwayTileView({ tile }: { tile: RunwayTile }) {
   const hasPossible = tile.segments.includes('possible');
   return (
-    <div className="fact wide" tabIndex={0} role="group" aria-label={tile.aria} data-testid="tile-runway">
+    <Tip tag="div" text={tile.aria} className="fact wide" tabIndex={0} role="group" aria-label={tile.aria} data-testid="tile-runway">
       <span className="k">
         <DropIcon possible={tile.word === 'WET POSSIBLE'} />
         <span data-testid="runway-word">{tile.word}</span>
@@ -62,15 +58,15 @@ export function RunwayTileView({ tile }: { tile: RunwayTile }) {
         </span>
       )}
       <small>Runway state{hasPossible ? ' (hatched is possible)' : ''}</small>
-    </div>
+    </Tip>
   );
 }
 
 export function MetarTileView({ tile }: { tile: MetarTile }) {
   return (
-    <div className="fact wide" tabIndex={0} role="group" aria-label={tile.text === null ? 'METAR unknown' : `METAR ${tile.text}`} data-testid="tile-metar">
+    <Tip tag="div" text={tile.text === null ? 'METAR unknown' : `METAR ${tile.text}`} className="fact wide" tabIndex={0} role="group" aria-label={tile.text === null ? 'METAR unknown' : `METAR ${tile.text}`} data-testid="tile-metar">
       <span className="mono">{tile.text ?? 'Unknown'}</span>
       <small>METAR</small>
-    </div>
+    </Tip>
   );
 }

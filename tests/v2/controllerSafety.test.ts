@@ -112,7 +112,7 @@ describe('answers that arrive after stop() are ignored', () => {
     expect(after.feed.aircraft).toBeNull();
     expect(after.view.metar).toBeNull();
     expect(after.view.taf).toBeNull();
-    expect(after.autoWeather.metar.fetched).toBe(false);
+    expect(after.autoWeather.metar.source).toBeNull();
   });
 });
 
