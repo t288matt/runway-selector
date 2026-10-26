@@ -4,6 +4,7 @@
 // imports nothing from src/ui.
 import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
 import { loadPack, type AirportPack } from '../refdata';
+import { clearSelectedAirport, loadSelectedAirportId, saveSelectedAirport } from '../store';
 import { cacheBustToken } from './clock';
 import { Dashboard } from './components/Dashboard';
 import { Drawer } from './components/Drawer';
@@ -137,11 +138,25 @@ export async function switchAirportTo(current: ReadyState, icao: string, deps: A
   return { pack: r.pack, airports: r.app.airports, airportError: null };
 }
 
+/**
+ * Loads the pack for `airportId` (the default when undefined). If that specific airport fails to load (its pack was
+ * withdrawn, or its files are invalid) while the default was not what was asked for, the stored choice is forgotten
+ * and the default is tried instead, so a stale or removed stored airport cannot turn into a blank error screen.
+ */
+export async function loadInitialPack(deps: AppDeps, airportId: string | undefined): Promise<Awaited<ReturnType<typeof loadPack>>> {
+  const r = await loadPack(deps.fetch, { baseUrl: deps.baseUrl ?? './refdata', cacheBust: cacheBustToken(deps.now()), airportId });
+  if (r.ok || airportId === undefined) return r;
+  clearSelectedAirport(deps.store);
+  return loadPack(deps.fetch, { baseUrl: deps.baseUrl ?? './refdata', cacheBust: cacheBustToken(deps.now()) });
+}
+
 export function App({ deps }: { deps: AppDeps }) {
   const [state, setState] = useState<PackState>({ status: 'loading' });
   useEffect(() => {
     let live = true;
-    void loadPack(deps.fetch, { baseUrl: deps.baseUrl ?? './refdata', cacheBust: cacheBustToken(deps.now()) }).then((r) => {
+    // A refresh opens on the airport last chosen in the selector, not back at the default (OD-82); the stored id
+    // is shape-checked only (selectedAirport.ts), so loadInitialPack above falls back if it is no longer offered.
+    void loadInitialPack(deps, loadSelectedAirportId(deps.store) ?? undefined).then((r) => {
       if (live) setState(r.ok ? { status: 'ready', pack: r.pack, airports: r.app.airports, airportError: null } : { status: 'error', message: r.message });
     });
     return () => {
@@ -157,7 +172,9 @@ export function App({ deps }: { deps: AppDeps }) {
     if (icao !== state.pack.airport.icao && state.airports.includes(icao)) setPendingAirport(icao);
     void switchAirportTo(state, icao, deps)
       .then((change) => {
-        if (change !== null) setState((prev) => (prev.status === 'ready' ? { ...prev, ...change } : prev));
+        if (change === null) return;
+        if (change.pack !== undefined) saveSelectedAirport(deps.store, icao);
+        setState((prev) => (prev.status === 'ready' ? { ...prev, ...change } : prev));
       })
       .finally(() => setPendingAirport(null));
   };

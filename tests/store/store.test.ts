@@ -8,17 +8,21 @@ import {
   appendAudit,
   clearAudit,
   clearCurrentMode,
+  clearSelectedAirport,
   confirmCurrentMode,
   createBrowserStore,
   createMemoryStore,
   exportAudit,
   isCurrentModeStale,
+  KEY_PREFIX,
   loadAudit,
   loadCurrentMode,
+  loadSelectedAirportId,
   loadWindowChoice,
   recordCurrentMode,
   recordForecastWindow,
   saveCurrentMode,
+  saveSelectedAirport,
   storageKey,
   type CurrentModeRecord,
   type StorageLike,
@@ -439,5 +443,67 @@ describe('storage keys', () => {
     expect(storageKey('ABCD', 'audit')).not.toBe(storageKey('ABCE', 'audit'));
     expect(() => storageKey('A:B', 'audit')).toThrow();
     expect(() => storageKey('', 'audit')).toThrow();
+  });
+});
+
+// The last airport chosen (app-level: read before any pack exists, so it has no airport of its own to be
+// namespaced under). Format-checked only here; whether it is still one of the airports on offer is for the
+// caller to check once app.json is read (App.tsx's loadInitialPack, proved in tests/ui and tests/v2).
+describe('selected-airport storage', () => {
+  it('round-trips a saved choice', () => {
+    const store = createMemoryStore();
+    expect(loadSelectedAirportId(store)).toBeNull();
+    saveSelectedAirport(store, 'YSSY');
+    expect(loadSelectedAirportId(store)).toBe('YSSY');
+    saveSelectedAirport(store, 'YMML');
+    expect(loadSelectedAirportId(store)).toBe('YMML');
+  });
+
+  it('clear removes it', () => {
+    const store = createMemoryStore();
+    saveSelectedAirport(store, 'YSSY');
+    clearSelectedAirport(store);
+    expect(loadSelectedAirportId(store)).toBeNull();
+  });
+
+  it('is kept apart from every per-airport key', () => {
+    const store = createMemoryStore();
+    saveSelectedAirport(store, 'YSSY');
+    expect(store.getItem(storageKey('YSSY', 'currentMode'))).toBeNull();
+  });
+
+  describe('a stored value that cannot be trusted is discarded, never used', () => {
+    const cases: [string, string][] = [
+      ['wrong version', JSON.stringify({ schemaVersion: 2, icao: 'YSSY' })],
+      ['unknown key', JSON.stringify({ schemaVersion: 1, icao: 'YSSY', extra: true })],
+      ['wrong type', JSON.stringify({ schemaVersion: 1, icao: 5 })],
+      ['too short', JSON.stringify({ schemaVersion: 1, icao: 'Y' })],
+      ['not letters or digits', JSON.stringify({ schemaVersion: 1, icao: 'Y:SY' })],
+      ['oversize', JSON.stringify({ schemaVersion: 1, icao: 'Y'.repeat(5000) })],
+      ['__proto__ key', '{"schemaVersion":1,"icao":"YSSY","__proto__":{"a":1}}'],
+      ['not JSON', 'not json'],
+    ];
+    it.each(cases)('%s', (_label, raw) => {
+      const store = createMemoryStore();
+      store.setItem(`${KEY_PREFIX}:selectedAirport`, raw);
+      expect(loadSelectedAirportId(store)).toBeNull();
+    });
+  });
+
+  it('a Store whose methods throw does not crash the loaders', () => {
+    const angry: Store = {
+      getItem: () => {
+        throw new Error('x');
+      },
+      setItem: () => {
+        throw new Error('x');
+      },
+      removeItem: () => {
+        throw new Error('x');
+      },
+    };
+    expect(loadSelectedAirportId(angry)).toBeNull();
+    expect(() => saveSelectedAirport(angry, 'YSSY')).not.toThrow();
+    expect(() => clearSelectedAirport(angry)).not.toThrow();
   });
 });

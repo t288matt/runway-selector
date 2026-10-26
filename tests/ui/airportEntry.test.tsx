@@ -2,8 +2,8 @@
 // option does. Only airports with a reviewed pack are offered, so there is nothing to type or validate.
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { createMemoryStore } from '../../src/store';
-import { switchAirportTo, type PackState } from '../../src/ui/App';
+import { createMemoryStore, loadSelectedAirportId, saveSelectedAirport } from '../../src/store';
+import { loadInitialPack, switchAirportTo, type PackState } from '../../src/ui/App';
 import { AirportEntry, Header } from '../../src/ui/components/Frame';
 import { NO_AUTO_REPORT, type AutoReportState } from '../../src/ui/controller';
 import { WeatherEntry } from '../../src/ui/components/WeatherEntry';
@@ -68,6 +68,24 @@ function serve(ref: PackRef, airports: string[]): (url: string) => Promise<Respo
   };
 }
 
+/** A fake server over two real packs, routing by the airport id in the URL, so a switch to the other pack is genuine. */
+function serveTwo(defaultRef: PackRef, otherRef: PackRef, listed: string[]): (url: string) => Promise<Response> {
+  const defaultFiles = readJson(defaultRef);
+  const otherFiles = readJson(otherRef);
+  const defaultRaw = toRaw(defaultFiles);
+  const otherRaw = toRaw(otherFiles);
+  const defaultIcao = defaultFiles['airport.json'].icao as string;
+  const otherIcao = otherFiles['airport.json'].icao as string;
+  return async (url: string) => {
+    const path = url.split('?')[0] ?? '';
+    if (path.endsWith('/app.json')) return new Response(JSON.stringify({ schemaVersion: 1, airports: listed, default: defaultIcao }));
+    const requested = /\/airports\/([^/]+)\//.exec(path)?.[1];
+    const raw = requested === otherIcao ? otherRaw : defaultRaw;
+    const name = path.split('/').pop() as keyof typeof raw;
+    return name in raw ? new Response(raw[name]) : new Response('missing', { status: 404 });
+  };
+}
+
 describe('switchAirportTo (typing a code)', () => {
   const current: Extract<PackState, { status: 'ready' }> = { status: 'ready', pack: yssy, airports: ['YSSY', 'TEST'], airportError: null };
   const deps = { fetch: serve(TEST_PACK, ['YSSY', 'TEST']), now: () => NOW, store: createMemoryStore() };
@@ -99,6 +117,45 @@ describe('switchAirportTo (typing a code)', () => {
   it('does nothing for the airport already shown', async () => {
     expect(await switchAirportTo(current, 'YSSY', deps)).toBeNull();
     expect(await switchAirportTo({ ...current, airportError: 'No data pack for EGLL yet.' }, 'YSSY', deps)).toEqual({ airportError: null });
+  });
+});
+
+// A refresh opens on the airport last chosen, not back at app.json's default (OD-82). loadInitialPack is what
+// App's mount effect calls with loadSelectedAirportId(deps.store) ?? undefined.
+describe('loadInitialPack (a refresh keeps the chosen airport)', () => {
+  const deps = { fetch: serveTwo(YSSY_PACK, TEST_PACK, ['YSSY', 'TEST']), now: () => NOW, store: createMemoryStore() };
+
+  it('with nothing stored, loads the default, exactly as before this change', async () => {
+    const r = await loadInitialPack(deps, undefined);
+    expect(r.ok && r.pack.airport.icao).toBe('YSSY');
+  });
+
+  it('with a stored, still-listed airport, loads that one instead of the default', async () => {
+    const r = await loadInitialPack(deps, 'TEST');
+    expect(r.ok && r.pack.airport.icao).toBe('TEST');
+  });
+
+  it('with a stored airport no longer listed in app.json, forgets it and loads the default', async () => {
+    const store = createMemoryStore();
+    saveSelectedAirport(store, 'WITHDRAWN');
+    const r = await loadInitialPack({ ...deps, store }, loadSelectedAirportId(store) ?? undefined);
+    expect(r.ok && r.pack.airport.icao).toBe('YSSY');
+    expect(loadSelectedAirportId(store)).toBeNull();
+  });
+
+  it('with a stored airport whose pack fails its checks, forgets it and loads the default', async () => {
+    const store = createMemoryStore();
+    saveSelectedAirport(store, 'BAD1');
+    const broken = { fetch: serveTwo(YSSY_PACK, TEST_PACK, ['YSSY', 'TEST', 'BAD1']), now: () => NOW, store };
+    const r = await loadInitialPack(broken, loadSelectedAirportId(store) ?? undefined);
+    expect(r.ok && r.pack.airport.icao).toBe('YSSY');
+    expect(loadSelectedAirportId(store)).toBeNull();
+  });
+
+  it('a genuinely unreachable default still fails (nothing to fall back to further)', async () => {
+    const dead = { fetch: async () => new Response('down', { status: 500 }), now: () => NOW, store: createMemoryStore() };
+    const r = await loadInitialPack(dead, undefined);
+    expect(r.ok).toBe(false);
   });
 });
 
