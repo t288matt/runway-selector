@@ -133,7 +133,7 @@ export function trafficTile(view: ViewData, feed: FeedState): TrafficTile {
   const changed = slots.findIndex((x, i) => i > 0 && x.level !== null && level !== null && RANK[x.level] !== RANK[level]);
   const headline = changed < 0 ? word : `${word} → ${levelWord(slots[changed]?.level ?? null)}`;
   const sub = changed < 0 ? `Traffic · ${counts}` : `by ${slots[changed]?.time ?? ''} · ${counts}`;
-  const slotsText = slots.length === 0 ? '' : `Next 90 minutes: ${slots.map((x) => `${x.time} ${x.text}${x.partial ? ' (arrivals only, at least)' : ''}`).join('; ')}. `;
+  const slotsText = slots.length === 0 ? '' : `Next 90 minutes: ${slots.map((x) => `${x.time} ${x.text}`).join('; ')}. `;
   return {
     state: 'ok',
     level,
