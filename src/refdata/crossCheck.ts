@@ -50,6 +50,28 @@ export function crossCheck(f: ParsedFiles): PackIssue[] {
   });
   const modeExact = new Set(f.modes.modes.map((m) => m.id));
 
+  // Approach ladders (issue 99): ids unique, row ids unique, only the last row has no limits, and a mode's ladder exists.
+  const ladders = f.modes.approachLadders ?? [];
+  const ladderIds = new Set<string>();
+  ladders.forEach((l, i) => {
+    if (ladderIds.has(key(l.id))) add('modes.json', `approachLadders[${i}].id`, `Duplicate approach ladder id "${l.id}"`);
+    ladderIds.add(key(l.id));
+    const rowIds = new Set<string>();
+    l.rows.forEach((row, j) => {
+      if (rowIds.has(key(row.id))) add('modes.json', `approachLadders[${i}].rows[${j}].id`, `Duplicate row id "${row.id}" in approach ladder "${l.id}"`);
+      rowIds.add(key(row.id));
+      const unbounded = row.cloudBase === undefined && row.visibility === undefined;
+      const last = j === l.rows.length - 1;
+      if (last && !unbounded) add('modes.json', `approachLadders[${i}].rows[${j}]`, `The last row of approach ladder "${l.id}" must have no cloudBase or visibility limit, so that it always matches`);
+      if (!last && unbounded) add('modes.json', `approachLadders[${i}].rows[${j}]`, `Row "${row.id}" of approach ladder "${l.id}" has no limit but is not the last row, so the rows after it can never match`);
+    });
+  });
+  f.modes.modes.forEach((m, i) => {
+    if (m.approachLadder !== undefined && !ladders.some((l) => l.id === m.approachLadder)) {
+      add('modes.json', `modes[${i}].approachLadder`, `Mode "${m.id}" names approach ladder "${m.approachLadder}", which is not in approachLadders`);
+    }
+  });
+
   // Operating plan: ids, rows, coverage.
   const bandIds = new Set<string>();
   f.operatingPlan.bands.forEach((b, i) => {

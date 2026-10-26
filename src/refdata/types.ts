@@ -56,6 +56,33 @@ export interface ConditionalOperation {
   readonly requiresDrySurface: boolean;
 }
 
+/** One limit pair of an approach-ladder row. A key the pack leaves out is null: no limit of that kind. above and below are strict; atLeast and atMost include the value. */
+export interface ApproachBound {
+  readonly above: number | null;
+  readonly atLeast: number | null;
+  readonly below: number | null;
+  readonly atMost: number | null;
+}
+
+/** One row of an approach ladder. Rows are checked top-down and the first match wins; the last row has no bounds. */
+export interface ApproachRow extends Provenance {
+  readonly id: string;
+  /** Limits on the approach cloud base in feet, or null for none. */
+  readonly cloudBase: ApproachBound | null;
+  /** Limits on the visibility in metres, or null for none. */
+  readonly visibility: ApproachBound | null;
+  /** The short text on the chip. */
+  readonly chipText: string;
+  /** The longer text on hover or tap. */
+  readonly hoverText: string;
+}
+
+/** An approach ladder (issue 99): the approach type shown for a mode, from cloud base and visibility. Modes name one by id. */
+export interface ApproachLadder extends Provenance {
+  readonly id: string;
+  readonly rows: readonly ApproachRow[];
+}
+
 export interface Mode extends Provenance {
   readonly id: string;
   readonly enabled: boolean;
@@ -70,6 +97,8 @@ export interface Mode extends Provenance {
   readonly minima: ModeMinima | null;
   /** The mode's conditional operation (a note only, never a gate), or null when it has none. */
   readonly conditionalOperation: ConditionalOperation | null;
+  /** The id of the approach ladder this mode uses (in the pack's `approachLadders`), or null for none: no approach type is shown. */
+  readonly approachLadder: string | null;
 }
 
 export interface PlanRow extends Provenance {
@@ -110,6 +139,8 @@ export interface AirportPack {
   readonly runways: readonly RunwayEnd[];
   /** In file order (the final tie-break). Ids are unique. */
   readonly modes: readonly Mode[];
+  /** The approach ladders modes may name; empty when the pack has none. */
+  readonly approachLadders: readonly ApproachLadder[];
   /** Cover the 24 hours with no gap or overlap. */
   readonly plan: readonly PlanBand[];
   /** Plain values only: every tunable unwrapped, no descriptions. */

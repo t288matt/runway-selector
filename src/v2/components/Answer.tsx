@@ -43,9 +43,18 @@ export function Answer({ model }: { model: AnswerModel }) {
         <div className="mode none" aria-label={model.modeLabel}>
           &ndash;
         </div>
-      ) : (
+      ) : model.approach === null ? (
         <div className={`mode ${model.modeSize === 'normal' ? '' : model.modeSize}`.trim()} aria-label={model.modeLabel} data-testid="mode">
           {model.modeId}
+        </div>
+      ) : (
+        <div className="mode-row">
+          <div className={`mode ${model.modeSize === 'normal' ? '' : model.modeSize}`.trim()} aria-label={model.modeLabel} data-testid="mode">
+            {model.modeId}
+          </div>
+          <Tip text={model.approach.hover} className="appr" tabIndex={0} role="group" aria-label={`Approach type ${model.approach.chip}`} data-testid="approach-chip">
+            {model.approach.chip}
+          </Tip>
         </div>
       )}
       {model.next === '' ? null : (

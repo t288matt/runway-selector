@@ -75,6 +75,10 @@ export const BOUNDS = {
     labelKeyChars: 40,
     labelValueChars: 300,
     conditionalNameChars: 40,
+    maxApproachLadders: 10,
+    maxApproachRows: 10,
+    approachChipChars: 24,
+    approachHoverChars: 80,
     timeZoneChars: 64,
     maxReportedIssues: 20,
   },
@@ -195,6 +199,40 @@ const ConditionalOperationSchema = v.pipe(
   }),
   v.check((m) => m.ceilingFt !== undefined || m.visibilityMetres !== undefined || m.requiresDrySurface !== undefined, 'conditionalOperation must give at least one of ceilingFt, visibilityMetres or requiresDrySurface'),
 );
+/**
+ * One limit pair of an approach-ladder row (issue 99): at least one of above, atLeast, below, atMost. above and below are strict,
+ * atLeast and atMost include the value. The range must hold at least one value (a lower limit never exceeds an upper one), and a
+ * side gives one limit only. The ranges are the minima ranges: cloud base in feet, visibility in metres.
+ */
+const approachBound = (r: { min: number; max: number }) =>
+  v.pipe(
+    v.strictObject({ above: v.optional(int(r)), atLeast: v.optional(int(r)), below: v.optional(int(r)), atMost: v.optional(int(r)) }),
+    v.check((b) => b.above !== undefined || b.atLeast !== undefined || b.below !== undefined || b.atMost !== undefined, 'A limit must give at least one of above, atLeast, below or atMost'),
+    v.check((b) => b.above === undefined || b.atLeast === undefined, 'Give only one lower limit: above or atLeast'),
+    v.check((b) => b.below === undefined || b.atMost === undefined, 'Give only one upper limit: below or atMost'),
+    v.check((b) => {
+      const lo = b.above ?? b.atLeast;
+      const hi = b.below ?? b.atMost;
+      if (lo === undefined || hi === undefined) return true;
+      return lo < hi || (lo === hi && b.above === undefined && b.below === undefined);
+    }, 'The lower limit exceeds the upper limit, so no value can match'),
+  );
+/** A row's description is required (RD-7: every value says what it is). Its chip and hover text are shown to the user, so they are held to the same rules as a label. */
+const ApproachRowSchema = v.strictObject({
+  id: modeId,
+  description: note,
+  source: v.optional(text(C.sourceChars)),
+  cloudBase: v.optional(approachBound(R.minimaCeilingFt)),
+  visibility: v.optional(approachBound(R.minimaVisibilityMetres)),
+  chipText: labelText(C.approachChipChars),
+  hoverText: labelText(C.approachHoverChars),
+});
+const ApproachLadderSchema = v.strictObject({
+  id: modeId,
+  description: note,
+  source: v.optional(text(C.sourceChars)),
+  rows: v.pipe(v.array(ApproachRowSchema), v.minLength(1, 'A ladder needs at least one row'), v.maxLength(C.maxApproachRows)),
+});
 const ModeSchema = v.strictObject({
   id: modeId,
   enabled: v.boolean('Expected true or false'),
@@ -204,12 +242,14 @@ const ModeSchema = v.strictObject({
   capacity: v.optional(v.nullable(int(R.capacityPerHour))),
   minima: v.optional(MinimaSchema),
   conditionalOperation: v.optional(ConditionalOperationSchema),
+  approachLadder: v.optional(modeId),
   ...meta,
 });
 export const ModesFileSchema = v.strictObject({
   schemaVersion: version,
   ...meta,
   modes: v.pipe(v.array(ModeSchema), v.minLength(1, 'At least one mode is required'), v.maxLength(C.maxModes)),
+  approachLadders: v.optional(v.pipe(v.array(ApproachLadderSchema), v.maxLength(C.maxApproachLadders))),
 });
 
 // ------------------------------------------------------ operating_plan.json
