@@ -68,7 +68,6 @@ export function MetarTileView({ tile }: { tile: MetarTile }) {
   return (
     <Tip tag="div" text={tile.text === null ? 'METAR unknown' : `METAR ${tile.text}`} className="fact wide" tabIndex={0} role="group" aria-label={tile.text === null ? 'METAR unknown' : `METAR ${tile.text}`} data-testid="tile-metar">
       <span className="mono">{tile.text ?? 'Unknown'}</span>
-      <small>METAR</small>
     </Tip>
   );
 }
