@@ -1,6 +1,6 @@
 # Runway Mode Planner: user interface design
 
-Status: DRAFT for the owner's review, 22-10-2026; amended 23-10-2026 (REQUIREMENTS.md OD-14 to OD-30). Design only; no application code. Where this document and [REQUIREMENTS.md](REQUIREMENTS.md) differ, REQUIREMENTS.md governs.
+Status: current. First written 22-10-2026 and amended with each owner decision (REQUIREMENTS.md). It describes the main screen (`index.html`, called v1). The answer-first screen (v2, `v2.html`) is described in [DESIGN.md](DESIGN.md) section 8a. Where this document and [REQUIREMENTS.md](REQUIREMENTS.md) differ, REQUIREMENTS.md governs.
 Language: British English. Dates DD-MM-YYYY, times UTC. Plain words; no emoji.
 Sources: [REQUIREMENTS.md](REQUIREMENTS.md) sections 4 to 9 (DB-1 to DB-9), [DESIGN.md](DESIGN.md) sections 4, 4b, 5, 6, 8, and the owner's survival-timeline illustration.
 Airport-agnostic: every airport name, runway, mode, label and time zone on screen comes from the airport pack (REQUIREMENTS.md AG-1 to AG-13). Mode numbers, runway names and times in the examples and the mockup are illustrative values from the first (Sydney) pack, not fixed text.
@@ -17,7 +17,7 @@ The controller is busy talking to aircraft. The tool is a second-screen aid, gla
 | T1 Check the mode is still right | every few minutes | Mode, next change, why |
 | T2 Plan a changeover | a few times per session | When, to what, traffic at that time, preparation time |
 | T3 Understand a change in advice | when the plan moves | Which input changed, which cell turned red |
-| T4 Trust or challenge the advice | on doubt | Per-cell numbers, sources, data ages, provisional flags |
+| T4 Trust or challenge the advice | on doubt | Per-cell numbers, data ages, the settings in use |
 | T5 Enter the current mode | at start, after each change of mode | Current mode (pull-down menu) |
 | T6 Tune the rules | rarely | Settings, with an audit trail |
 
@@ -32,45 +32,45 @@ Rules that follow from this:
 1. The first read answers four questions in this order: what mode now, how long will it last, when is the next change, why.
 2. Nothing in the first read depends on colour alone (section 9).
 3. Anything that needs attention is a banner inside A, never a pop-up. Pop-ups steal focus from the controller.
-4. Provisional and illustrative values are always labelled where they appear, never only in a footnote.
+4. Illustrative values are always labelled where they appear, never only in a footnote. The word "provisional" is not shown on screen (OD-46).
 
 ## 3. Screen layout
-The order is fixed at every width: header, freshness chips, A, B, weather entry, D and F, then the flight-simulation notice at the bottom (OD-38, OD-40, OD-41; the weather entry used to sit above A). B is always directly below A. Panel letters are not reused, so the panels are A, B, C, D and F.
+The order is fixed at every width: header, freshness chips, A, B, weather entry, D and F, then the flight-simulation notice at the bottom (OD-38, OD-40, OD-41; the weather entry used to sit above A). B is always directly below A. Panel letters are not reused: the panels are A, B, D and F, and C was removed (OD-40).
 
 ### 3.1 Wide desktop (1280 px and above, designed at 1440)
 Content width capped at 1440 px, centred, 16 px gutters. C, D and F sit side by side.
 ```
 +----------------------------------------------------------------------------------------------------------+
-| Runway Mode Planner   [Illustrative, not live data]   Times UTC + local   [Refresh] [Settings] |
-| Flight simulation only. Never for real-world navigation, flight planning or operations.                  |
-| METAR 22:00Z (12 min) | TAF 21:30Z to 07:30Z | VATSIM 32 s | Plan 22:00Z, next 22:30Z | DRY              |
+| Runway Mode Planner   [Live traffic; weather automatic]   Airport [YSSY v]   Times UTC   [Settings]      |
+| METAR 22:00Z, 12 min old | TAF 21:30Z valid to 07:30Z | VATSIM traffic 22:11:32Z, 32 s | Recalculated 22:00Z |
 +----------------------------------------------------------------------------------------------------------+
-| METAR [ paste box, 2 lines .......................................... ] [Apply]  12 min old              |
-| TAF   [ paste box, 3 lines .......................................... ] [Apply]  valid 07:30Z            |
-+----------------------------------------------------------------------------------------------------------+
-| A  RECOMMENDED NOW  | Next change 07:30Z              | Plan rank 3 of 8 (provisional)                   |
-| MODE 12             | Next change 10 to 12 at 00:00Z  | Uncertainty: based on 2 uncertain slots          |
-| Arr 07, Dep 07      | Weather SUITABLE                | Runway DRY; wet possible 05:00Z-06:00Z           |
-| Current [Mode 10 v] | Traffic LOW now, HIGH by 04:00Z | Capacity 60/hr (placeholder)                     |
+| Recommended         | Next change   07:30Z: 10 to 12 at 00:00Z                                           |
+| 12                  | METAR         the METAR text in use                                              |
+| Arr 07, Dep 07      | Traffic       LOW now, HIGH by 04:00Z                                            |
+| Current mode [v]    | Runway state  DRY; wet possible 05:00Z-06:00Z                                    |
+|                     | Ceiling       4,800 ft                                                           |
 | [banner: EARLY MODE CHANGE RECOMMENDED: trigger, timing, benefit]                                        |
-| Why Mode 12: one sentence                                                                                |
+| > More about the recommendation (collapsed)                                                              |
 +----------------------------------------------------------------------------------------------------------+
-| B  OPTIMAL MODE TIMELINE           Window [Full TAF v]                                                   |
-| [Recommended] [Next change]  (two summary tiles, OD-49, OD-50)                                           |
+| OPTIMAL MODE TIMELINE   range                         [Show N unsuitable modes] Window [Full TAF v]      |
+| [Recommended] [Next change] [Next wet runway]                                                            |
 | Time (UTC) | 22:00 | 22:30 | 23:00  | ...                                                                |
-| Events     | BECMG | TEMPO | CHANGE | ...                                                                |
-| Traffic    | L     | M     | H HIGH | ...                                                                |
-| Mode 12 REC       [S][S][S][S][S][S][M][M] ...  scrolls ->                                               |
-| Mode 10 CURRENT   [S][S][S][S][S][S][M][M] ...                                                           |
-| ... one row per enabled mode ...                                                                         |
-| Legend: tick suitable, green with a word marginal, cross, ?; outline, change line, bands                |
-| Reason line                                                                                              |
+| Events     | wind bars; TEMPO / INTER / PROB bars; WET, TS, low vis                                          |
+| Traffic    | LOW   | MED   | HIGH   | ...                                                                |
+| 12 REC            [S][S][S][S][S][S][M][M] ...  scrolls ->                                               |
+| 10 CURRENT        [S][S][S][S][S][S][M][M] ...                                                           |
+| ... one row per enabled mode, in operating-plan priority order ...                                       |
+| Legend: Suitable, Unsuitable, Unknown; green with a word; recommended path; change line; busy band; corner |
 +----------------------------------------------------------------------------------------------------------+
-| C Weather                | D VATSIM traffic            | F Runway diagram                                |
-| Ends, components, limits | Arrivals, departures, class | Runways, ARR/DEP, wind arrow                    |
+| Weather: METAR and TAF in use (read only, source and age)  [Use my own weather]                          |
++----------------------------------------------------------------------------------------------------------+
+| D VATSIM traffic                       | F Runway diagram                                                |
+| Next 30 mins, +30, +60, +90            | Runways, ARR/DEP, wind arrow                                    |
++----------------------------------------------------------------------------------------------------------+
+| Flight simulation only. Never for real-world navigation, flight planning or operations.                  |
 +----------------------------------------------------------------------------------------------------------+
 ```
-At 1440 px the timeline shows its slots with no scroll; at 1280 px the rest of the full TAF validity scrolls.
+At 1440 px the timeline shows its slots with no scroll; at 1280 px the rest of the full TAF validity scrolls. The wireframe is a sketch of the order of the parts, not of the exact wording.
 
 ### 3.2 Laptop (768 to 1279 px)
 Same order. A uses two columns (mode block left, facts right; banner and why full width). B scrolls horizontally with the mode labels sticky. C and D sit side by side, then F takes the full width.
@@ -79,14 +79,15 @@ Same order. A uses two columns (mode block left, facts right; banner and why ful
 | header, chips (wrap)                       |
 | METAR and TAF boxes, Apply buttons         |
 +--------------------------------------------+
-| A  MODE 12  |  next change, weather |
-| banner and why (full width)                |
+| A  12       |  next change, METAR, etc.    |
+| banner (full width)                        |
 +--------------------------------------------+
-| B  tiles 2 x 2                             |
+| B  tiles                                   |
 | [label] [cells ... scroll ->]              |
-| legend, reason                             |
+| legend                                     |
 +--------------------------------------------+
-| C Weather | D VATSIM traffic               |
+| weather entry                              |
+| D VATSIM traffic                           |
 | F Runway diagram (full width)              |
 +--------------------------------------------+
 ```
@@ -94,7 +95,7 @@ Target: A and the first four timeline rows visible on a 1366 x 768 laptop withou
 
 ## 4. Persistent elements
 ### 4.1 Header strip
-Title (built from the pack), a data tag, a "Times UTC" label, Refresh button, Settings button. The tag reads "Live" with source times when data is live and "Illustrative, not live data" in the mockup. The tag is never absent.
+Title, a data tag, the airport pull-down, a "Times UTC" label and the Settings button. The tag reads "Live" with source times when data is live and "Illustrative, not live data" in the mockup. The tag is never absent.
 
 ### 4.2 Flight-simulation notice
 - Text: "Flight simulation only. Never for real-world navigation, flight planning or operations." The Sydney pack no longer adds a second line (owner, 24-10-2026, OD-40); a pack may still add one.
@@ -108,10 +109,10 @@ One chip each for METAR, TAF, VATSIM and when the plan last and next recalculate
 Runway state is not a separate chip: owner decision, 24-10-2026, to stop the duplication of showing it in the header and again, one line below, in Panel A. It is now stated once, in Panel A, and every timeline cell still carries its own slot-by-slot runway-state detail on hover (DB-4).
 
 ## 5. Panel specifications
-Common to all panels: a title (the letter badge is removed, owner 24-10-2026, OD-60; panels are still called A, B, D and F in this document and in code, but the letter is no longer shown); a small "provisional" mark wherever a value comes from a provisional rule or placeholder band; no scrolling inside a panel except tables of more than 8 rows.
+Common to all panels: a title (the letter badge is removed, owner 24-10-2026, OD-60; panels are still called A, B, D and F in this document and in code, but the letter is no longer shown); no "provisional" mark (OD-46); no scrolling inside a panel except tables of more than 8 rows.
 
 ### Panel A: current recommendation
-**Content (DB-2).** Left block: label "MODE", the mode number at 44 px, arrival and departure runways, and the current mode with its pull-down menu (enabled modes, plus Not set). Middle: "Next change" (mode and time), weather suitability, traffic class now and expected, runway condition and wet-risk time (moved here under Traffic, owner 24-10-2026, OD-58), and Ceiling (lowest BKN/OVC base or the vertical visibility, OD-66). Right: operating-plan priority rank, an uncertainty line naming the period and reason (for example "14:00 UTC to 17:00 UTC: a chance of rain", OD-57). The capacity note is removed (owner, 24-10-2026, OD-58). Below: banner area, then a one-sentence "Why".
+**Content (DB-2).** Left block: the heading "Recommended", the mode id at 44 px, arrival and departure runways, and the current mode with its pull-down menu (enabled modes, plus Not set). Facts: "Next change" (mode and time), the METAR in use (OD-69), the traffic class now, runway state, and Ceiling (lowest BKN or OVC base or the vertical visibility, OD-66). The operating-plan rank, the uncertainty line (OD-57) and the capacity note are not drawn (OD-58, OD-76). Below: banner area, then "More about the recommendation", collapsed by default (OD-56).
 
 **Heading logic.** The large mode is the recommended mode for now: the first slot of the recommended sequence. A planned change appears in Next change. If the operator has entered a current mode that differs, it shows beside it as "Current: 10" and the banner explains the gap. The pull-down menu beside it sets the current mode (OD-21).
 
@@ -139,24 +140,23 @@ The owner removed this panel on 24-10-2026: it is not drawn, and its letter is n
 - States: METAR stale or missing shows "Unknown" in every figure that needs it.
 
 ### Panel D: VATSIM traffic
-- Table: for each of the first four 30-minute slots (now, +30, +60, +90 min), arrivals (airborne to the pack's airport), departures (on the ground) and movements (the raw count for that 30-minute slot, never doubled to an hourly rate, OD-63). Departures are estimated for the next slot only; later slots show "not est.". A line states "Connected aircraft are not movements."
+- Table: for each of the first four 30-minute slots ("Next 30 mins", +30, +60, +90 min), arrivals (airborne to the pack's airport, plus aircraft not yet departed), departures (connected aircraft on the ground, in the first slot; prefiled plans from the airport in the second, marked "(prefiled)") and movements (the raw count for that 30-minute slot, never doubled to an hourly rate, OD-63). Later slots, and the second slot when the feed carries no prefiled plans, show departures as "not est." and movements as arrivals only. A line gives the connected counts (inbound, of them on the ground elsewhere, and on the ground here).
 - Traffic class chip (LOW, MEDIUM, HIGH). The footnote explaining how arrivals and departures are counted, and the note that bands are provisional placeholders, were removed by the owner on 24-10-2026 (OD-41). No trend is shown (OD-32).
 - Beyond the demand horizon (default: the forecast window, REQUIREMENTS.md TR-7): "Demand unknown" is shown, never an invented figure.
 - States: feed stale shows the last values with the age in amber; feed failed shows "No traffic data" and the timeline falls back to unknown demand (capacity checks are skipped, shown by uncertainty corners).
 
 ### Panel F: runway diagram
-A simple plan view of the runways from the pack, with ends labelled. The runways used by the recommended arrival and departure are highlighted in the accent colour and labelled "ARR" or "DEP" in text. A wind arrow shows direction, speed and gust. Ends over a tailwind limit get the cross icon. A text equivalent sits below it. Orientation is the runways' true layout, not north-up unless the data says so.
+A plan view of the runways from the pack, with ends labelled. The runways used by the recommended arrival and departure are highlighted in the accent colour and labelled "ARR" or "DEP" in text. A wind arrow shows direction, with its speed and gust beside it. Ends over a tailwind limit get the cross icon (v1 only). A text equivalent sits below it. Layout: when the pack gives coordinates for every runway end, the runways are drawn to scale at those coordinates and the layout is turned from true north into the weather's magnetic reference by the offset read from the pack (the circular mean of each runway's coordinate bearing minus its pack heading, applied only when the runways agree within 3 degrees), so the runways sit right against the wind arrow. Without coordinates it is a schematic layout from the headings. There is no "N up" note. DESIGN.md section 8a gives the rule in full; v2's picture is larger, labels only the used ends and draws no cross marks.
 
 ### Settings (drawer, opened from the header)
-A right-hand drawer, not a page, so the dashboard stays visible behind it. In phase 1 the user can change only the current mode and the forecast window on screen (OD-27); the drawer shows the rest read-only. Sections in this order:
-1. **Current mode:** a pull-down menu of enabled modes, plus Not set (OD-21). Runway state is display only: DRY, WET or WET POSSIBLE, derived from METAR and TAF, with no control to set it (OD-14). The pull-down is also in Panel A.
-2. **Limits (read-only):** dry and wet tailwind, default crosswind limit, maximum crosswind per mode, calm wind and limit tolerance, each labelled "Simulation setting".
-3. **Runway wetness (read-only):** wet-runway probability threshold and drying time.
-4. **Plan and traffic (read-only):** operating-plan priorities and enabled modes, mode capacities, traffic bands, changeover preparation time and forecast horizon (DB-9).
-5. **Airport and data:** the airport pull-down is in the header, always visible (OD-37; a pull-down of the listed packs since OD-68), not in this drawer; a "Reload data" button that re-reads and re-validates the pack (DESIGN.md section 4c); and the pack's validation error, if a reload was rejected, with the previous valid pack still in use.
-6. **Audit trail:** the list of setting and current-mode changes, labelled "local record, not tamper-proof", with an export.
+A right-hand drawer, not a page, so the dashboard stays visible behind it. The drawer is read-only. The user changes only the current mode (the pull-down in Panel A, OD-21) and the forecast window (Panel B) on screen (OD-27). Runway state is display only, with no control to set it (OD-14). Sections in this order:
+1. **Limits (read-only):** dry and wet tailwind, default crosswind limit, maximum crosswind per mode, calm wind and limit tolerance, each labelled "Simulation setting".
+2. **Runway wetness (read-only):** wet-runway probability threshold and drying time.
+3. **Plan and traffic (read-only):** operating-plan priorities and enabled modes, mode capacities, traffic bands, changeover preparation time and forecast horizon (DB-9).
+4. **Airport and data:** the airport pull-down is in the header, always visible (OD-37; a pull-down of the listed packs since OD-68), not in this drawer; a "Reload data" button that re-reads and re-validates the pack (DESIGN.md section 4c); and the pack's validation error, if a reload was rejected, with the previous valid pack still in use.
+5. **Audit trail:** the list of setting and current-mode changes, labelled "local record, not tamper-proof", with an export.
 
-Each value shows its `description` from the pack as help text. Changing the current mode takes effect at once, triggers a fresh recommendation, and writes to the audit trail (RD-6). The user never sees penalties, costs or scores (see the plain-language rule in section 13). The time display is fixed: UTC only (OD-36).
+Each value shows its `description` from the pack as help text. Changing the current mode (in Panel A) takes effect at once, triggers a fresh recommendation, and writes to the audit trail (RD-6). The user never sees penalties, costs or scores (see the plain-language rule in section 13). The time display is fixed: UTC only (OD-36).
 
 ### Weather entry (above Panel A)
 Two text boxes, METAR and TAF, each with the raw text the user pasted and an Apply button (OD-28). The boxes start empty on every visit, with "No weather entered" beside them; reports are not stored (OD-30). A METAR older than its window is accepted with an amber stale flag. If only one report is entered, a banner names the missing one. On Apply the text is checked (station, size, decodable) and, if valid, replaces the previous report and triggers a fresh recommendation. An invalid paste is refused with a message naming what could not be read, and the previous report stays. The observation age is shown beside each box, taken from the report's own time group, so an old pasted report is visibly stale. Paste is an option, not the default (owner, 24-10-2026): the paste boxes and Apply buttons are hidden until the user presses "Use my own weather" (the boxes then start empty; a fetch never writes into them, so there is no second copy of the report on screen); until then each report is shown read-only with its source and age. Automatic fetching (OD-37): the app fetches both reports for the weather station on load and every `weatherPollMinutes`, and shows the report in use read-only. Under each box a line says where the report came from (automatic or pasted) and, if the last fetch failed, why, with the previous report still in use. Applying pasted text pauses automatic updates for that report and shows a Resume automatic button. A small credit line names NOAA/NWS and Datamask Aviation. Reports are not stored (OD-30).
@@ -165,11 +165,11 @@ Two text boxes, METAR and TAF, each with the raw text the user pasted and an App
 ### 6.1 Structure
 | Element | Specification |
 |---|---|
-| Rows | One per enabled mode. Order: recommended first, then the current mode if different, then by operating-plan rank. Disabled modes are not rows. A row that is red (UNSUITABLE) in every slot of the window is hidden by default, with a "Show N unsuitable modes" button in the panel heading that reveals them and "Hide unsuitable modes" to hide them again (OD-39). The recommended row and the current-mode row are never hidden, and when every row is red all are shown, so the grid is never empty. |
+| Rows | One per enabled mode. Order: the operating-plan priority order (OD-70); the recommended and current modes keep their tags but are not pinned to the top. Disabled modes are not rows. A row that is red (UNSUITABLE) in every slot of the window is hidden by default, with a "Show N unsuitable modes" button in the panel heading that reveals them and "Hide unsuitable modes" to hide them again (OD-39). The recommended row and the current-mode row are never hidden, and when every row is red all are shown, so the grid is never empty. |
 | Row height | 36 px (cell 32 px plus a 2 px margin each side). |
 | Columns | One per 30-minute slot, 56 px pitch (cell 54 px wide). Slots are clock-aligned half-hours; there are no extra columns at TAF change times (OD-24). |
 | Row header | 176 px, sticky at the left. Line 1: the mode id ("12", with no "Mode" before it) plus tags REC and CURRENT. Line 2: runways in small text. |
-| Column header | Three sticky-top strips: time (HH:MM, hour labels in bold), weather events (wind bars, then one bar for each TEMPO, INTER or PROB group, then the event words: wet risk, WET, TS, low vis, no TAF), traffic class chips (L, M, H HIGH). |
+| Column header | Three sticky-top strips: time (HH:MM, hour labels in bold), weather events (wind bars, then one bar for each TEMPO, INTER or PROB group, then the event words: wet risk, WET, TS, low vis, no TAF). A wind bar shows a variable direction range as reported (for example 160V220), traffic class words (LOW, MED, HIGH). |
 | Default span | The full TAF validity by default (OD-31), with options of 4 hours and 6 hours. The timeline shows the slots of the chosen window, as the mockup does. |
 | Window selector | Pull-down in the B header: Full TAF (default), 4 h, 6 h (OD-31). It sets the forecast window (OD-26) and the slots the timeline shows, as in the mockup. |
 
@@ -202,7 +202,7 @@ A white triangle in the top-right corner marks a cell whose status depends on an
 | Group bars | Each TEMPO, INTER or PROB group is a bar in the event strip, under the wind bars, over the slots its window covers, labelled with the group's own text without its validity period (for example `TEMPO VRB20G30KT 1000 TSRA`; the bar's length and position show the period), with the full group text, period included, on hover (issue 88). Groups that overlap in time take separate lines. A PROB bar has a dashed border. The bar line is not drawn when the window has no such group, and the event-words line is not drawn when no slot has a word (owner, 25-10-2026, OD-80). | A PROB30 or PROB40 group (on its own or on a TEMPO or INTER) is shown only; it never recolours a cell. A plain TEMPO or INTER does. |
 | Uncertainty | White corner triangle (6.2); UNKNOWN cells are grey with dots | |
 
-Overlay layering from back to front: wet band, busy band, cells, recommended outline, now and changeover lines, labels. The sticky row labels sit above everything except the now label.
+Overlay layering from back to front: busy band, cells, recommended outline, now and changeover lines, labels. The sticky row labels sit above everything except the now label.
 
 ### 6.4 Hover and click detail
 Hover (desktop) and click or Enter (any device) open a panel of at most 360 px beside the cell. It stays open on click until Escape or a click elsewhere.
@@ -213,7 +213,7 @@ Contents, in order:
 4. Forecast wind used and which group supplied it (prevailing, FM, BECMG, TEMPO, INTER, PROB with percentage).
 5. Runway assumption: DRY, WET, or "WET POSSIBLE: both evaluated".
 6. Traffic class and, where known, demand against capacity.
-7. Operating-plan eligibility (eligible, time band, provisional flag) and operating-plan rank.
+7. Operating-plan eligibility (eligible, time band) and operating-plan rank.
 8. Outlook for that mode (labelled "Outlook", not "Survival", owner 24-10-2026, OD-64): continuous viable duration from now, first marginal slot, first unsuitable slot, replacement mode.
 Row-label hover shows the mode description, restrictions, capacity value and its status.
 Event-strip hover shows the TAF group in raw and decoded form.
@@ -226,10 +226,10 @@ Event-strip hover shows the TAF group in raw and decoded form.
 - The scroll bar is shown only when the slots do not fit, with a visible track.
 
 ### 6.6 Summary tiles and reason line
-Two tiles above the grid: Recommended, and Next change (the new mode and its time, for example "34A25D at 14:00Z", or "No change planned"). The Survives, Next constraint and Traffic at changeover tiles are removed (OD-49). Below the legend, a one-line reason in the style of the owner's illustration: "Mode 12 is recommended because it is the only mode with no unsuitable slot until 07:30Z..." The reason is a template sentence filled from the engine, never hand-written text.
+Three tiles above the grid: Recommended, Next change (the new mode and its time, for example "34A25D at 14:00Z", or "No change planned") and Next wet runway (OD-59). The Survives, Next constraint and Traffic at changeover tiles are removed (OD-49), and so is the one-line reason under the legend (OD-41). Reasons are template sentences filled from the engine, never hand-written text.
 
 ### 6.7 Legend
-Always visible under the grid: the suitable and unsuitable and unknown statuses with their icon, pattern and word, one entry "Green with a word: passes, but see the word (forecast change, near a limit, variable wind)" for marginal cells (OD-81), plus the overlay keys (recommended outline, change line, busy band, wet band, uncertainty corner).
+Always visible under the grid: the suitable and unsuitable and unknown statuses with their icon, pattern and word, one entry "Green with a word: passes, but see the word (forecast change, near a limit, variable wind)" for marginal cells (OD-81), plus the overlay keys (recommended path, change line, busy band, uncertainty corner).
 
 ## 7. States
 | State | Panel A | Panel B | Elsewhere |
@@ -340,6 +340,8 @@ How the design can be checked once built (success criteria):
 | Q1 | Can you supply (or let us inspect) the vatpac.org tools stylesheet, so the tokens match exactly? | The invented navy and blue palette in section 8. |
 
 ## 13. Owner decisions (22-10-2026 and 23-10-2026)
+The answer-first screen (v2) and the design note that led to it are in [DESIGN.md](DESIGN.md) section 8a and [ui/answer-first-ledger.md](ui/answer-first-ledger.md).
+
 The layout in section 3 follows the mockup (`ui/mockup.html`) rebuilt on 23-10-2026. The mockup is illustration only. The owner decided (23-10-2026) that the mockup is followed where it differs from the requirements, and the requirements are amended to match (OD-31 to OD-33). The table below records those points.
 
 | Point | Mockup | Requirement or decision | Followed here |

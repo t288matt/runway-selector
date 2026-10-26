@@ -1,5 +1,16 @@
 # Radical answer-first design: ledger (25-10-2026)
 
+**Status, 26-10-2026.** This is the design note for the mockups of 25-10-2026, kept as a record. The shipped v2 screen (`v2.html`) is described in [../DESIGN.md](../DESIGN.md) section 8a, and where the two differ, that section is right. The main differences from the mockup are:
+- The state word for the normal state is RECOMMENDED, not HOLD.
+- There is no "I am on" selector and no current mode in v2.
+- There is no slim forecast bar. The Evaluation and TAF section is one closed row that opens to the full timeline.
+- The runway tile reads "Runway condition".
+- The picture is larger and drawn to scale from the pack's runway end coordinates, turned into the weather's magnetic reference. The wind label sits beside the arrow. It has no "N up" note and no cross marks, and labels only the ends the recommended mode uses.
+- The legend has five entries (Suitable, Unsuitable, Recommended path, Amber band, White corner).
+- Traffic is one row (the class per slot) in the expanded timeline. The per-slot arrivals, departures and movements are not shown.
+- Marginal cells are plain green with the cause word (OD-81), as in v1.
+- The window selector is not drawn.
+
 Mockup: radical-ux.html (HTML and CSS only; the drawer opens with `#more`, `#forecast` etc. via :target, so links work by keyboard, touch and click without scripts). Screenshots: radical-desktop-closed.jpg, radical-desktop-drawer.jpg, radical-mobile-closed.jpg, radical-mobile-drawer.jpg (same folder).
 
 ## Measured height

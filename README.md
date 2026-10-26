@@ -18,7 +18,7 @@ It advises only. It never changes anything, and the final decision is yours.
 
 ## Using it
 
-1. **Open the airport** you want from the selector in the header, if more than one is configured. Each airport keeps its own current mode, window and audit trail.
+1. **Open the airport** you want from the selector in the header. Each airport keeps its own current mode, window and audit trail.
 2. The **METAR and TAF are fetched automatically** and kept up to date. To use your own instead, press "Use my own weather", paste your report into the box and press Apply; that pauses automatic updates for that report until you press "Resume automatic". Each report shows its age, taken from its own time group. A report that cannot be read is refused with a message saying what is wrong, and the previous report stays in use.
 3. **Choose the current mode** from the pull-down menu in Panel A, if you want the advice to take it into account. The list has the airport's enabled modes and "Not set". The tool remembers your choice and shows when you set it. If it is older than a set limit it turns amber with a "Still current" button, so a forgotten setting is visible.
 4. **Read the recommendation** in Panel A, then check the optimal mode timeline below it.
@@ -28,32 +28,45 @@ If only a METAR is available, the tool judges the first hour from it and marks l
 
 ## The screen
 
-**Under the header:** the age of the METAR, the TAF and the traffic data, the runway state, and the raw METAR and TAF text.
+**Under the header:** a chip for each of the METAR, the TAF and the VATSIM traffic, with its time and age, and when the plan was last calculated and is next due. A chip turns amber with "Stale" when its data is older than the pack's limit (the shipped packs use 60 minutes for the METAR, 180 for the TAF and 10 for the traffic), and red with "Failed" when the last fetch failed.
 
 **Panel A: recommendation.**
 - The recommended mode for now, with its arrival and departure runways.
 - Your current mode, if set, and a note if it differs from the recommendation.
 - How long the recommended mode lasts, and the next change with its time.
-- Weather suitability, traffic now and later, the mode's rank in the airport's operating plan, the runway state, and a line saying how much of the plan rests on uncertain inputs.
+- The METAR now in use, the traffic level now, the runway state and the ceiling. A collapsed "More about the recommendation" holds the full explanation.
 - A red banner if your current mode is unsuitable now, and an amber banner, EARLY MODE CHANGE RECOMMENDED, when changing earlier avoids a forced change in busier traffic.
 - A quiet green note, such as "LAHSO conditions met until 14:30Z", when the recommended mode has a conditional operation in its airport data and its conditions (cloud ceiling, visibility, dry runway) are met on a green slot. It shows nothing otherwise and never changes the recommendation.
 - If no mode is suitable, it says so and lists, for every mode, what blocks it. It never names a "least bad" mode.
 
-**Panel B: optimal mode timeline.** Its header has the Recommended, Next change and Next wet runway summary tiles, and the window selector (full TAF, 4 hours or 6 hours). Rows are modes and columns are half-hour slots. The recommended path is outlined, and a dashed line marks the planned change. Cell colours:
+**Panel B: optimal mode timeline.** Its header has the window selector (full TAF, 4 hours or 6 hours), and under it sit the Recommended, Next change and Next wet runway tiles. Rows are modes, in the airport's priority order, and columns are half-hour slots. A mode that is red in every slot is hidden behind a "Show unsuitable modes" button. Above the cells, the time row is followed by the weather events: bars for the wind (with a variable direction range, such as 160V220, shown as reported), a bar for each TEMPO, INTER or PROB group, and words such as WET, TS or low vis. A traffic row shows LOW, MED or HIGH for each slot. A PROB group is only shown: it never changes a cell. The recommended path is outlined, and a dashed line marks the planned change. Cell colours:
 - Green: suitable.
 - Green with a word (TEMPO, TW, VRB and so on): marginal. It passes, but see the word. A white corner marks a cell that depends on an uncertain input.
 - Red with cross-hatching: unsuitable, with the cause (for example TW tailwind, XW crosswind, CAP capacity, PLAN operating plan).
 - Grey with dots: unknown, for example after the TAF ends.
 
-Hover or focus a cell to see the time (UTC and local), the wind and the tailwind and crosswind for every runway the mode uses, the runway state, the traffic, the operating-plan status and the reason. Colour is never the only signal: every cell also has an icon and a word.
+Hover or focus a cell to see the time (UTC), the wind and the tailwind and crosswind for every runway the mode uses, the runway state, the traffic, the operating-plan status and the reason. Colour is never the only signal: every cell also has an icon and a word.
 
-**Panel C: weather.** Headwind, tailwind and crosswind for every runway end, against the limits.
+**Weather.** Below the timeline, the raw METAR and TAF in use, with where each came from and its age, and the "Use my own weather" option.
 
-**Panel D: VATSIM traffic.** Arrivals and departures per half-hour, with a traffic level of LOW, MEDIUM or HIGH.
+**Panel D: VATSIM traffic.** Arrivals and departures for the next four half-hours, with a traffic level of LOW, MEDIUM or HIGH.
 
-**Panel F: runway diagram.** The runways, the wind, and the runways the recommended mode uses.
+**Panel F: runway diagram.** The runways, the wind (with its speed and any gust), and the runways the recommended mode uses. An end that breaks a tailwind limit is marked with a cross. When the pack gives every runway end's coordinates, the runways are drawn to scale and turned from true north into the weather's magnetic reference, using the offset worked out from the pack itself. Without coordinates they are drawn from their headings.
+
+(Panel C, the weather table, was removed. The panel letters are not reused.)
 
 **Settings drawer.** Read only: every limit, threshold and setting in use, with a short explanation of each, plus the enabled modes, the operating plan's priority order, the time zone, a Reload data button, and the audit trail of changes you have made. The current mode and window are changed in Panel A and Panel B, not here.
+
+## The answer-first screen (v2)
+
+`v2.html` is a second screen that gives the answer on one page with no scrolling. It uses the same packs and the same engine, so it gives the same recommendation as the main screen does with "Not set" as the current mode. The freshness chips and the flight-simulation notice sit at the foot.
+
+- **The answer.** A state word (RECOMMENDED, CHANGE SOON, NO SUITABLE STANDARD MODE IDENTIFIED or NO DATA) with the mode, its arrival and departure runways, and the next change. It has no "current mode" selector and ignores any current mode saved by the main screen.
+- **The runway picture.** The runways the recommended mode uses are blue and labelled ARR or DEP. The wind is an arrow with its direction, speed and any gust beside it. The picture is drawn to scale from the pack's runway end coordinates, turned into the weather's magnetic reference as described under Panel F.
+- **Four tiles.** Traffic (with its trend), ceiling and visibility, runway condition (DRY, WET or WET POSSIBLE, with when it changes) and the METAR.
+- **Evaluation and TAF.** A section that opens to the same timeline as the main screen (modes by half-hour, the weather events, the traffic row, the recommended path), with its legend and the raw METAR and TAF. Hover, focus or tap a cell for its detail.
+- **More.** A panel with Why (the explanation), Reports (the raw reports and "Use my own weather"), Key and Settings (read only, with Reload data and the audit trail).
+- **Not in v2.** The window selector, the per-slot traffic figures and the current-mode setting.
 
 ## How a mode is judged
 
@@ -72,17 +85,17 @@ The recommended sequence is the one with the best fit overall: preferred modes w
 ## Traffic
 
 Traffic is read from the public VATSIM data feed every five minutes while the page is open.
-- **Departures:** every aircraft on the ground at the airport counts as departing in the next slot.
-- **Arrivals:** aircraft already airborne to the airport are timed from their distance and speed. Aircraft on the ground elsewhere with a flight plan to the airport are assumed to take off over the next 30 minutes and arrive after the flight time at an assumed speed.
+- **Departures:** every connected aircraft on the ground at the airport, with a flight plan from it, counts as departing in the current half-hour. Flight plans filed from the airport by pilots who are not yet connected ("prefiled") count as departing in the next half-hour, whatever their filed time. Panel D marks that figure "(prefiled)". If the feed lists no prefiled plans, the next half-hour's departures are unknown.
+- **Arrivals:** aircraft already airborne to the airport are timed from their distance and speed. Aircraft on the ground elsewhere with a flight plan to the airport are assumed to take off over the next 30 minutes and arrive after the flight time at an assumed speed. A prefiled plan to the airport counts in the next half-hour if its filed departure time plus its time en route falls in it.
 - **Traffic level:** each half-hour is rated LOW, MEDIUM or HIGH from the airport's bands, using the higher of arrivals and departures.
-- **Unknown:** beyond what can be estimated, traffic is shown as unknown, never invented. Departures are known only for the next slot, so later slots use arrivals alone.
+- **Unknown:** beyond what can be estimated, traffic is shown as unknown, never invented. Departures are known only for the current and the next half-hour, so later slots use arrivals alone.
 - **Privacy:** only position, altitude, speed, origin and destination are used. Names, member numbers and callsigns are discarded as the feed is read, and are never stored or shown.
 
 ## Airports
 
-Each airport is a data pack: a folder of plain JSON files describing the airport, its runways, its modes, its operating plan and its settings. The packs are in `refdata/airports/`. To add an airport, add a folder in the same shape and list it in `refdata/app.json`. When more than one airport is listed, an airport selector appears. Nothing in the program is specific to any airport.
+Each airport is a data pack: a folder of plain JSON files describing the airport, its runways, its modes, its operating plan and its settings. The packs are in `refdata/airports/`: YSSY (the default), YMML, YPAD, YPPH, YBBN, YSWS, YPDN, YSCB, NFFN, YBCS and YBTL. To add an airport, add a folder in the same shape and list it in `refdata/app.json`; the airport selector offers every listed airport. Nothing in the program is specific to any airport.
 
-The values in a pack, including every limit and threshold, are edited in its files and take effect after Reload data. Each value carries a short description of what it means. A pack that is incomplete or inconsistent is refused with a message naming the file and field. Every pack's own status (shown in its description) states whether its figures are confirmed or still provisional estimates.
+The values in a pack, including every limit and threshold, are edited in its files and take effect after Reload data. Each value carries a short description of what it means. A pack that is incomplete or inconsistent is refused with a message naming the file and field. A record may carry a `source` note saying where its figures came from. Treat every limit and capacity as a simulation assumption unless its source says otherwise. Runway end coordinates in every pack are community map data (OurAirports), with the source noted in each pack, and have not been checked against the official charts.
 
 ## Data and privacy
 
