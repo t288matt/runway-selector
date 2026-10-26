@@ -14,6 +14,7 @@
 // A plain planned change ("Forecasting: ... at ...") does not make the state CHANGE SOON.
 import { NO_SUITABLE_TITLE } from '../../engine';
 import { hhmmZRel } from '../format';
+import { conditionalBanner } from './conditional';
 import type { ViewData } from './dashboard';
 import { planRank } from './evaluation';
 
@@ -83,6 +84,8 @@ export interface AnswerModel {
   readonly nextChange: { readonly modeId: string; readonly atMs: number } | null;
   /** The short line under the mode: the v1 banner text for CHANGE NOW and CHANGE SOON, what is missing for NO DATA. */
   readonly why: string | null;
+  /** The conditional-operation note (OD-79), for example "LAHSO conditions met" with "until 1530Z" or "from 1530Z"; null when the recommended mode has none or its conditions are not met. */
+  readonly conditional: { readonly title: string; readonly text: string } | null;
 }
 
 /** Longer mode ids use a smaller type so they stay inside the answer column. A display rule, not an airport fact. */
@@ -102,7 +105,7 @@ export function answerModel(view: ViewData): AnswerModel {
       band.id === 'NO_DATA'
         ? [explanation.headline, ...view.weather.banners.filter((b) => b.code === 'no-weather' || b.code === 'no-metar' || b.code === 'no-taf' || b.code === 'taf-ended' || b.code === 'metar-outside-window').map((b) => b.message)].join(' ')
         : null;
-    return { band, modeId: null, modeSize: 'normal', modeLabel: 'No recommended mode', arrivals: null, departures: null, next: '', rank: null, alternatives: [], priorityText: null, priorityRows: [], nextChange: null, why: missing };
+    return { band, modeId: null, modeSize: 'normal', modeLabel: 'No recommended mode', arrivals: null, departures: null, next: '', rank: null, alternatives: [], priorityText: null, priorityRows: [], nextChange: null, why: missing, conditional: null };
   }
 
   const mode = pack.modes.find((m) => m.id === recId);
@@ -136,5 +139,6 @@ export function answerModel(view: ViewData): AnswerModel {
     priorityRows: ranked.map(({ rank, modeId, state }) => ({ rank, modeId, state })),
     nextChange: upcoming === undefined ? null : { modeId: upcoming.change.toModeId, atMs: upcoming.change.startMs },
     why: band.id === 'CHANGE_NOW' ? currentModeUnsuitableText(view) : band.id === 'CHANGE_SOON' ? (explanation.earlyChange?.text ?? null) : null,
+    conditional: conditionalBanner(view, recIndex),
   };
 }

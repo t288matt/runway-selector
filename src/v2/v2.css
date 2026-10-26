@@ -980,7 +980,8 @@ i.part {
 .app:has(.fcx[open]) .hero .pic,
 .app:has(.fcx[open]) .hero .facts,
 .app:has(.fcx[open]) .why1,
-.app:has(.fcx[open]) .rw {
+.app:has(.fcx[open]) .rw,
+.app:has(.fcx[open]) .cond {
   display: none;
 }
 .app:has(.fcx[open]) .answer {
@@ -1060,6 +1061,16 @@ i.part {
 }
 .banner-ok {
   border-color: var(--ok);
+}
+/* The conditional-operation note under the alternatives (for example "LAHSO conditions met"). */
+.answer .cond {
+  margin: 8px 0 0;
+  width: fit-content;
+  max-width: 100%;
+  font-size: 14px;
+}
+.answer .cond b {
+  color: var(--ok-text);
 }
 .states {
   display: grid;
@@ -1244,6 +1255,26 @@ dl.v dd {
   .app {
     padding: 6px 10px 6px;
     gap: 6px;
+  }
+  /* The closed screen must not scroll at 375 x 812, so the conditional-operation note is a tight line and its neighbours give back some space. */
+  .answer .cond {
+    margin: 0;
+    padding: 2px 8px;
+    font-size: 13px;
+    line-height: 1.25;
+  }
+  .answer:has(.cond) {
+    gap: 4px;
+  }
+  .hero:has(.cond) {
+    gap: 6px;
+  }
+  .answer:has(.cond) .alt {
+    margin-top: 6px;
+    padding-top: 6px;
+  }
+  .answer:has(.cond) .alt-label {
+    margin-bottom: 4px;
   }
   .bar h1 {
     display: none;
