@@ -66,7 +66,7 @@ function expectParity(view: ViewData, label: string): { cells: number; uncertain
     ).toEqual({ index: s1?.index, startMs: s1?.startMs, time: s1?.time, onTheHour: s1?.onTheHour, dateLabel: s1?.dateLabel, level: s1?.level, busy: s1?.busy, wet: s1?.wet, events: s1?.events, eventTitle: s1?.eventTitle, isChange: s1?.isChange, noMode: s1?.noMode, noTaf: s1?.noTaf });
   });
 
-  // the detail text behind every cell, for every mode (also the hidden rows)
+  // the detail text behind every cell, for every mode (also the hidden rows). OWNER EXCEPTION (26-10-2026): v2 drops v1's per-slot demand and capacity figures from the traffic line, so only its class word is compared.
   view.pack.modes.forEach((mode, mi) => {
     if (!mode.enabled) return;
     for (let si = 0; si < v1.slots.length; si += 1) {
@@ -75,9 +75,9 @@ function expectParity(view: ViewData, label: string): { cells: number; uncertain
       expect(d2 === null, at(`detail exists ${mode.id} ${si}`)).toBe(d1 === null);
       if (d1 === null || d2 === null) continue;
       expect(
-        { title: d2.title, statusWord: d2.statusWord, icon: d2.icon, code: d2.code, reason: d2.reason, trigger: d2.trigger, runways: d2.runways, wind: d2.wind, overlays: d2.overlays, runwayAssumption: d2.runwayAssumption, traffic: d2.traffic, operatingPlan: d2.operatingPlan, survival: d2.survival, notes: d2.notes },
+        { title: d2.title, statusWord: d2.statusWord, icon: d2.icon, code: d2.code, reason: d2.reason, trigger: d2.trigger, runways: d2.runways, wind: d2.wind, overlays: d2.overlays, runwayAssumption: d2.runwayAssumption, traffic: d2.traffic.split(';')[0], operatingPlan: d2.operatingPlan, survival: d2.survival, notes: d2.notes },
         at(`detail ${mode.id} ${si}`),
-      ).toEqual({ title: d1.title, statusWord: d1.statusWord, icon: d1.icon, code: d1.code, reason: d1.reason, trigger: d1.trigger, runways: d1.runways, wind: d1.wind, overlays: d1.overlays, runwayAssumption: d1.runwayAssumption, traffic: d1.traffic, operatingPlan: d1.operatingPlan, survival: d1.survival, notes: d1.notes });
+      ).toEqual({ title: d1.title, statusWord: d1.statusWord, icon: d1.icon, code: d1.code, reason: d1.reason, trigger: d1.trigger, runways: d1.runways, wind: d1.wind, overlays: d1.overlays, runwayAssumption: d1.runwayAssumption, traffic: d1.traffic.split(';')[0], operatingPlan: d1.operatingPlan, survival: d1.survival, notes: d1.notes });
     }
   });
 

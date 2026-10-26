@@ -271,11 +271,10 @@ export function cellDetail(view: ViewData, modeIndex: number, slotIndex: number)
   const overlays = overlaySource.map((o) => `${o.kind}${o.probabilityPct === null ? '' : ` PROB${o.probabilityPct}`}: ${o.text}`);
   const assumption = info.runwayState === 'WET_POSSIBLE' ? 'WET POSSIBLE: both dry and wet are evaluated' : info.runwayState === 'WET' ? 'WET' : 'DRY';
 
-  let trafficText = `${levelWord(level)}`;
-  const d = cell.demand;
-  if (d.knownDemand === null) trafficText += '; demand unknown';
-  else trafficText += `; known demand ${d.knownDemand} in the slot${d.arrivals !== null && d.departures === null ? ' (arrivals only; departures are not estimated beyond the next slot)' : ''}`;
-  trafficText += d.capacityPerHour === null ? '; no capacity set' : `; capacity ${d.capacityPerHour} per hour (${kt1(d.capacityInSlot ?? 0)} in the slot)`;
+  // Owner decision (26-10-2026): v2 shows no per-slot arrivals, departures, movements or capacity figures. The popover
+  // names the traffic class of the slot (the Traffic row says the same); a capacity reason, when capacity is the cause,
+  // is the engine's own reason text and stays.
+  const trafficText = levelWord(level);
 
   const band = cell.bandId;
   const planFail = cell.reasons.some((r) => r.code === 'PLAN' && r.severity === 'FAIL');

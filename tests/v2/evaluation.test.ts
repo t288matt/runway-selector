@@ -130,6 +130,21 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('evaluation model [%s]', (
   });
 });
 
+describe.each(PACKS.map((p) => [p.name, p] as const))('no per-slot traffic figures in a cell popover (owner decision) [%s]', (_n, ref) => {
+  const rig = rigFor(ref);
+  const pack = packOf(rig);
+  const FIGURES = /known demand|in the slot|capacity \d|per hour|demand unknown|no capacity set|arrivals only|movements/i;
+  it('a cell with known traffic names the traffic class only, never the demand or capacity numbers', () => {
+    const view = viewOf(pack, rig, ['ok', 'badA', 'marginalA', 'ok'], same(4, 'busy'));
+    const cells = evaluationModel(view, view.calcNowMs).rows.flatMap((r) => r.cells);
+    expect(cells.length).toBeGreaterThan(4);
+    for (const c of cells) {
+      expect(c.detail.match(FIGURES)?.[0] ?? '').toBe('');
+      expect(c.detail).toContain('Traffic: HIGH');
+    }
+  });
+});
+
 describe('group bars (TEMPO, INTER, PROB)', () => {
   const g = (text: string, probabilityPct: number | null) => ({ weather: { overlays: [{ text, probabilityPct }] } });
   it('draws one bar per distinct group, ends it at a gap, and puts overlapping groups on separate lanes', () => {

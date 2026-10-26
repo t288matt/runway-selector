@@ -11,6 +11,7 @@ import { Drawer } from '../../src/v2/components/Drawer';
 import { DrawerContent, DRAWER_SECTIONS, type DrawerBridge } from '../../src/v2/components/DrawerContent';
 import { NO_AUTO_WEATHER } from '../../src/v2/controller';
 import type { ViewData } from '../../src/v2/model/dashboard';
+import { evaluationModel } from '../../src/v2/model/evaluation';
 import { auditRows, keyModel, planBandModel, settingsModel, whyModel } from '../../src/v2/model/drawer';
 import { CAUSE_WORDS } from '../../src/v2/model/status';
 import { packOf, rigFor, same, type Wx } from '../engine/planHelpers';
@@ -60,6 +61,9 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the drawer sections [%s]'
     const t = textOf(render(view));
     expect(t.match(/.{0,50}(Arrivals|Departures|Movements).{0,50}/)?.[0] ?? '').toBe('');
     expect(t).not.toContain('(prefiled)');
+    // the same holds for the cell popovers of the Evaluation and TAF section
+    const popovers = evaluationModel(view, view.calcNowMs).rows.flatMap((r) => r.cells.map((c) => c.detail)).join(' ');
+    expect(popovers.match(/known demand|in the slot|capacity \d|per hour|demand unknown|arrivals only|movements/i)?.[0] ?? '').toBe('');
     expect(t).not.toContain('arrivals only');
     expect(t).not.toMatch(/Per 30 min/);
   });
