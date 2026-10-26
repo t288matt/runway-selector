@@ -121,17 +121,20 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 tiles and picture [%s]
   const rig = rigFor(ref);
   const pack = packOf(rig);
 
-  it('traffic tile: the level word, the three-bar icon, the trend arrow and "N in · N out"', () => {
+  it('traffic tile: the headline, three bars for the next 90 minutes, the counts, and the hover rows (issue 126)', () => {
     const up = render(viewOf(pack, rig, same<Wx>(5, 'ok'), ['light', 'light', 'medium', 'busy', 'busy']));
     expect(textOf(up)).toContain('LOW');
-    expect(up).toContain('data-trend="increasing"');
-    expect(textOf(up)).toContain('Traffic · 0 in · 0 out');
+    expect(textOf(up)).toContain('LOW → MEDIUM');
+    expect(textOf(up)).toMatch(/by \d\d:\d\dZ · 0 in · 0 out/);
+    expect(up.split('tl-').length - 1).toBeGreaterThanOrEqual(3);
+    expect(textOf(up)).toContain('Traffic, next 90 minutes');
     const down = render(viewOf(pack, rig, same<Wx>(5, 'ok'), ['busy', 'busy', 'medium', 'light', 'light']));
-    expect(down).toContain('data-trend="decreasing"');
+    expect(textOf(down)).toContain('HIGH → MEDIUM');
     const flat = render(viewOf(pack, rig, same<Wx>(5, 'ok'), same(5, 'medium')));
-    expect(flat).toContain('data-trend="steady"');
+    expect(textOf(flat)).toContain('Traffic · 0 in · 0 out');
+    expect(textOf(flat)).not.toMatch(/MEDIUM →/);
     const none = render(viewOf(pack, rig, same<Wx>(5, 'ok'), ['medium', null, null, null, null]));
-    expect(none).not.toContain('data-trend=');
+    expect(textOf(none)).not.toMatch(/MEDIUM →/);
   });
 
   it('the trend is also said in words, for hover and for screen readers', () => {

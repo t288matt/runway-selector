@@ -1,10 +1,10 @@
-// The small drawings: state glyphs, the trend arrow, the weather icons and the
+// The small drawings: state glyphs, the traffic bars, the weather icons and the
 // chip shapes. All are decorative (aria-hidden); the words beside them, or the
 // accessible name of the thing they sit in, carry the meaning. SVG only, no
 // emoji (colour is never the only signal).
 import type { Glyph } from '../model/answer';
 import type { ChipShape } from '../model/chips';
-import type { TrendDirection } from '../model/tiles';
+import type { TrafficSlotView } from '../model/tiles';
 
 export function StateGlyph({ glyph }: { glyph: Glyph }) {
   return (
@@ -17,27 +17,14 @@ export function StateGlyph({ glyph }: { glyph: Glyph }) {
   );
 }
 
-const TREND_PATH: Readonly<Record<Exclude<TrendDirection, 'none'>, string>> = {
-  steady: 'M4 12H20M14 6l6 6-6 6',
-  increasing: 'M5 19L19 5M10 5h9v9',
-  decreasing: 'M5 5L19 19M10 19h9v-9',
-};
+const BAR_HEIGHT = { light: 6, medium: 12, busy: 18 } as const;
 
-/** Sideways grey is steady, 45 degrees climbing amber is increasing, 45 degrees descending blue is decreasing. */
-export function TrendArrow({ direction }: { direction: Exclude<TrendDirection, 'none'> }) {
-  const cls = direction === 'steady' ? 't-flat' : direction === 'increasing' ? 't-up' : 't-down';
-  return (
-    <svg className={`trend ${cls}`} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" data-trend={direction}>
-      <path d={TREND_PATH[direction]} />
-    </svg>
-  );
-}
-
-export function TrafficBars({ lit }: { lit: 0 | 1 | 2 | 3 }) {
+/** The three bars: one per half hour (now, +30, +60). Height and colour show the level; hatched where only arrivals are known; dashed when unknown. */
+export function TrafficBars({ slots }: { slots: readonly TrafficSlotView[] }) {
   return (
     <span className="bars" aria-hidden="true">
-      {[6, 12, 18].map((h, i) => (
-        <i key={h} className={i < lit ? 'on' : undefined} style={{ height: h }} />
+      {slots.map((s, i) => (
+        <i key={i} className={`tl-${s.level ?? 'x'}${s.partial ? ' part' : ''}`} style={{ height: s.level === null ? BAR_HEIGHT.light : BAR_HEIGHT[s.level] }} />
       ))}
     </span>
   );
