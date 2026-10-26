@@ -114,17 +114,17 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('evaluation model [%s]', (
     expect(none.hasEventText).toBe(true);
   });
 
-  it('says what a cell is in plain text: title, status, the reason, the wind, the traffic and the plan', () => {
+  it('says what a cell is in plain text: the mode and time, the status, the cause, then the wind and runway condition (issue 128)', () => {
     const view = viewOf(pack, rig, ['badA', 'ok'], same(2, 'medium'));
     const idx = pack.modes.findIndex((m) => m.id === rig.a);
     const d = cellDetail(view, idx, 0);
     expect(d).not.toBeNull();
     const text = cellDetailText(d ?? (null as never));
-    expect(text).toContain(`Mode ${rig.a}`);
-    expect(text).toContain('UNSUITABLE');
-    expect(text).toContain('Wind used:');
-    expect(text).toContain('Traffic: MEDIUM');
-    expect(text).toContain('Operating plan:');
+    const lines = text.split('\n');
+    expect(lines).toHaveLength(3);
+    expect(lines[0]).toMatch(new RegExp(`^${rig.a}, \\d\\d:\\d\\dZ: .*UNSUITABLE$`));
+    expect(lines[2]).toMatch(/^Wind .+\. Runway (DRY|WET|WET POSSIBLE)\.$/);
+    expect(text).not.toMatch(/Outlook|Operating plan|Traffic:|Wind used/);
     expect(text).not.toMatch(/<|>/);
     expect(cellDetail(view, idx, 99)).toBeNull();
   });
@@ -140,7 +140,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('no per-slot traffic figur
     expect(cells.length).toBeGreaterThan(4);
     for (const c of cells) {
       expect(c.detail.match(FIGURES)?.[0] ?? '').toBe('');
-      expect(c.detail).toContain('Traffic: HIGH');
+      expect(c.detail.split('\n').length).toBeLessThanOrEqual(4);
     }
   });
 });

@@ -34,10 +34,12 @@ function expectParity(view: ViewData, label: string): { cells: number; uncertain
   expect(v2.hiddenCount, at('hidden count')).toBe(shown.hiddenCount);
   v2.rows.forEach((row, ri) => {
     const r1 = shown.rows[ri];
+    // OWNER EXCEPTION (issue 128): v2's row hover adds the plan priority and the outlook after v1's text, so it must start with v1's title.
+    expect(row.title.startsWith(r1?.title ?? '\u0000'), at(`row title ${row.modeId}`)).toBe(true);
     expect(
-      { isRecommended: row.isRecommended, isCurrent: row.isCurrent, allUnsuitable: row.allUnsuitable, runwaysText: row.runwaysText, title: row.title, index: row.index },
+      { isRecommended: row.isRecommended, isCurrent: row.isCurrent, allUnsuitable: row.allUnsuitable, runwaysText: row.runwaysText, index: row.index },
       at(`row ${row.modeId}`),
-    ).toEqual({ isRecommended: r1?.isRecommended, isCurrent: r1?.isCurrent, allUnsuitable: r1?.allUnsuitable, runwaysText: r1?.runwaysText, title: r1?.title, index: r1?.index });
+    ).toEqual({ isRecommended: r1?.isRecommended, isCurrent: r1?.isCurrent, allUnsuitable: r1?.allUnsuitable, runwaysText: r1?.runwaysText, index: r1?.index });
     row.cells.forEach((c, ci) => {
       const c1 = shown.cells[ri]?.[ci];
       expect(

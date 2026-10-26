@@ -89,7 +89,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the Detail section [%s]',
     for (const c of cells) {
       expect(c).toMatch(/aria-label="Mode [^"]+, \d\d:\d\dZ, (suitable|marginal|unsuitable|unknown)/);
       const id = /aria-describedby="([^"]+)"/.exec(c)?.[1] ?? 'missing';
-      expect(html).toContain(`<span id="${id}" role="tooltip" class="tip-pop" hidden="">Mode `);
+      expect(html).toMatch(new RegExp(`<span id="${id}" role="tooltip" class="tip-pop" hidden="">\\S+, \\d\\d:\\d\\dZ: `));
     }
   });
 
