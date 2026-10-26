@@ -73,12 +73,12 @@ export function Answer({ model }: { model: AnswerModel }) {
         </div>
       )}
       {model.alternatives.length === 0 ? null : (
-        <div className="alt" role="group" aria-label="Also suitable for the next hour" data-testid="alternatives">
+        <div className="alt" role="group" aria-label="Also suitable" data-testid="alternatives">
           {model.priorityText === null ? (
-            <div className="alt-label">Also suitable for the next hour</div>
+            <div className="alt-label">Also suitable</div>
           ) : (
             <Tip tag="div" text={model.priorityText} rich={rich} className="alt-label" data-testid="alt-label">
-              Also suitable for the next hour
+              Also suitable
             </Tip>
           )}
           <div className="alt-chips">

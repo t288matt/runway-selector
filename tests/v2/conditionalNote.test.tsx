@@ -1,5 +1,5 @@
 // The conditional-operation note on the v2 answer band (issue 58, OD-79; v2 placement owner, 26-10-2026): the same
-// "<name> conditions met" note v1 shows in Panel A, drawn under "Also suitable for the next hour" and kept in the Why
+// "<name> conditions met" note v1 shows in Panel A, drawn under "Also suitable" and kept in the Why
 // section of the drawer. On the fictional TEST pack with a conditional operation added to one mode in memory. It is a
 // note only: it never changes the recommendation. Each test fails if the rule it names is removed.
 import { renderToStaticMarkup } from 'react-dom/server';
