@@ -2,14 +2,15 @@
 // the arrival and departure runways. Text nodes only (SEC-2). There is no current-mode selector (issue 104).
 import type { AnswerModel } from '../model/answer';
 import { StateGlyph } from './Icons';
+import { Tip } from './Popover';
 
 /** The small "P2" tag: the mode's rank in the operating plan. */
 function PriorityTag({ rank }: { rank: number | null }) {
   if (rank === null) return null;
   return (
-    <span className="prio" title="Runway mode priority" aria-label={`Runway mode priority ${rank}`} role="img" data-testid="priority">
+    <Tip text="Runway mode priority" className="prio" tabIndex={0} role="group" aria-label={`Runway mode priority ${rank}`} data-testid="priority">
       P{rank}
-    </span>
+    </Tip>
   );
 }
 

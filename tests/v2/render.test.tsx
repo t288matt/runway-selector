@@ -74,7 +74,8 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer screen states [
   it('shows the priority tag with its hover text, and the alternatives as chips when there are any (issue 122)', () => {
     const view = viewOf(pack, rig, same<Wx>(4, 'ok'), same(4, 'light'));
     const html = render(view);
-    expect(html).toContain('title="Runway mode priority"');
+    expect(html).toContain('Runway mode priority');
+    expect(html).not.toContain('title="Runway mode priority"');
     expect(textOf(html)).toMatch(/P\d+/);
     const alts = screenModel(stateOf(view)).answer.alternatives;
     expect(html.includes('data-testid="alternatives"')).toBe(alts.length > 0);
