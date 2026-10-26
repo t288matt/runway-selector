@@ -4,24 +4,21 @@ import type { AnswerModel } from '../model/answer';
 import { StateGlyph } from './Icons';
 import { Tip } from './Popover';
 
-/** The small "P2" tag: the mode's rank in the operating plan. */
-function PriorityTag({ rank }: { rank: number | null }) {
-  if (rank === null) return null;
-  return (
-    <Tip text="Runway mode priority" className="prio" tabIndex={0} role="group" aria-label={`Runway mode priority ${rank}`} data-testid="priority">
-      P{rank}
-    </Tip>
-  );
-}
-
 export function Answer({ model }: { model: AnswerModel }) {
   const { band } = model;
   return (
     <div className="answer">
-      <span className={`state state-${band.tone}`} role="status" data-testid="state-band" data-state={band.id}>
-        <StateGlyph glyph={band.glyph} />
-        {band.word}
-      </span>
+      <div className="state-row">
+        <span className={`state state-${band.tone}`} role="status" data-testid="state-band" data-state={band.id}>
+          <StateGlyph glyph={band.glyph} />
+          {band.word}
+        </span>
+        {model.priorityText === null ? null : (
+          <Tip text={model.priorityText} className="info" tabIndex={0} role="group" aria-label="Runway mode priority" data-testid="priority-info">
+            i
+          </Tip>
+        )}
+      </div>
       {model.modeId === null ? (
         <div className="mode none" aria-label={model.modeLabel}>
           &ndash;
@@ -29,7 +26,6 @@ export function Answer({ model }: { model: AnswerModel }) {
       ) : (
         <div className={`mode ${model.modeSize === 'normal' ? '' : model.modeSize}`.trim()} aria-label={model.modeLabel} data-testid="mode">
           {model.modeId}
-          <PriorityTag rank={model.rank} />
         </div>
       )}
       {model.next === '' ? null : (
@@ -49,13 +45,18 @@ export function Answer({ model }: { model: AnswerModel }) {
       )}
       {model.alternatives.length === 0 ? null : (
         <div className="alt" role="group" aria-label="Also valid for the next hour" data-testid="alternatives">
-          <div className="alt-label">Also valid for the next hour</div>
+          {model.priorityText === null ? (
+            <div className="alt-label">Also valid for the next hour</div>
+          ) : (
+            <Tip tag="div" text={model.priorityText} className="alt-label" data-testid="alt-label">
+              Also valid for the next hour
+            </Tip>
+          )}
           <div className="alt-chips">
             {model.alternatives.map((a) => (
               <span className="alt-chip" key={a.modeId} data-testid="alt-chip">
                 <i className="alt-dot" aria-hidden="true" />
                 {a.modeId}
-                <PriorityTag rank={a.rank} />
               </span>
             ))}
           </div>

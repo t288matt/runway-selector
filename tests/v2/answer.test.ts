@@ -137,6 +137,19 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer values [%s]', (
     expect(answerModel(disabled).alternatives.map((x) => x.modeId)).not.toContain(target);
   });
 
+  it('priority text lists every enabled, allowed mode in rank order with recommended, valid or not valid (issue 122)', () => {
+    const view = viewOf(pack, rig, ['ok', 'ok', 'badA', 'badA'], same(4, 'light'));
+    const a = answerModel(view);
+    const lines = (a.priorityText ?? '').split('\n');
+    expect(lines[0]).toBe('Runway mode priority (1 is the most preferred)');
+    expect(lines.filter((l) => l.endsWith(': recommended'))).toHaveLength(1);
+    expect(lines.some((l) => l.includes(`${a.modeId}: recommended`))).toBe(true);
+    for (const alt of a.alternatives) expect(lines).toContain(`${alt.rank}. ${alt.modeId}: valid for the next hour`);
+    const ranks = lines.slice(1).map((l) => Number(l.split('.')[0]));
+    expect([...ranks].sort((x, y) => x - y)).toEqual(ranks);
+    expect(answerModel(viewOf(pack, rig, ['badBoth', 'badBoth'], same(2, 'medium'))).priorityText).toBeNull();
+  });
+
   it('lists no alternative that fails in the second slot, and none when no mode is recommended', () => {
     const early = viewOf(pack, rig, ['ok', 'badA', 'badA', 'badA'], same(4, 'light'));
     for (const alt of answerModel(early).alternatives) {

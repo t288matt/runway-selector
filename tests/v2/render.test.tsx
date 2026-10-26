@@ -71,12 +71,13 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer screen states [
     expect(textOf(html)).toMatch(/Forecasting: \S+ at \d\d:\d\dZ/);
   });
 
-  it('shows the priority tag with its hover text, and the alternatives as chips when there are any (issue 122)', () => {
+  it('shows the info mark and the alternatives as chips, with no P-numbers on screen; the ranking is in the popover (issue 122)', () => {
     const view = viewOf(pack, rig, same<Wx>(4, 'ok'), same(4, 'light'));
     const html = render(view);
-    expect(html).toContain('Runway mode priority');
+    expect(html).toContain('data-testid="priority-info"');
+    expect(html).toContain('Runway mode priority (1 is the most preferred)');
     expect(html).not.toContain('title="Runway mode priority"');
-    expect(textOf(html)).toMatch(/P\d+/);
+    expect(html).not.toMatch(/>P\d+</);
     const alts = screenModel(stateOf(view)).answer.alternatives;
     expect(html.includes('data-testid="alternatives"')).toBe(alts.length > 0);
     expect(html.split('data-testid="alt-chip"').length - 1).toBe(alts.length);

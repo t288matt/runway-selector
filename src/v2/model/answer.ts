@@ -76,6 +76,8 @@ export interface AnswerModel {
   readonly rank: number | null;
   /** Other modes SUITABLE in every one of the next ALSO_VALID_SLOTS slots, most preferred first (issue 122). */
   readonly alternatives: readonly { readonly modeId: string; readonly rank: number }[];
+  /** The popover text behind the info mark and the "Also valid" label: every enabled, allowed mode in plan order with its rank and whether it is recommended, valid for the next hour or not. Null with no recommendation (issue 122). */
+  readonly priorityText: string | null;
   readonly nextChange: { readonly modeId: string; readonly atMs: number } | null;
   /** The short line under the mode: the v1 banner text for CHANGE NOW and CHANGE SOON, what is missing for NO DATA. */
   readonly why: string | null;
@@ -98,20 +100,26 @@ export function answerModel(view: ViewData): AnswerModel {
       band.id === 'NO_DATA'
         ? [explanation.headline, ...view.weather.banners.filter((b) => b.code === 'no-weather' || b.code === 'no-metar' || b.code === 'no-taf' || b.code === 'taf-ended' || b.code === 'metar-outside-window').map((b) => b.message)].join(' ')
         : null;
-    return { band, modeId: null, modeSize: 'normal', modeLabel: 'No recommended mode', arrivals: null, departures: null, next: '', rank: null, alternatives: [], nextChange: null, why: missing };
+    return { band, modeId: null, modeSize: 'normal', modeLabel: 'No recommended mode', arrivals: null, departures: null, next: '', rank: null, alternatives: [], priorityText: null, nextChange: null, why: missing };
   }
 
   const mode = pack.modes.find((m) => m.id === recId);
   const upcoming = result.changeovers.find((c) => c.change.slotIndex > 0);
   const recIndex = pack.modes.findIndex((m) => m.id === recId);
   const alternatives: { modeId: string; rank: number; index: number }[] = [];
+  const ranked: { modeId: string; rank: number; index: number; state: string }[] = [];
   pack.modes.forEach((m, index) => {
-    if (index === recIndex || !m.enabled) return;
-    const window = (result.evaluation.cells[index] ?? []).slice(0, ALSO_VALID_SLOTS);
+    if (!m.enabled) return;
     const rank = planRank(view, index, 0);
-    if (rank !== null && window.length === ALSO_VALID_SLOTS && window.every((c) => c.status === 'SUITABLE')) alternatives.push({ modeId: m.id, rank, index });
+    if (rank === null) return;
+    const window = (result.evaluation.cells[index] ?? []).slice(0, ALSO_VALID_SLOTS);
+    const valid = window.length === ALSO_VALID_SLOTS && window.every((c) => c.status === 'SUITABLE');
+    if (index !== recIndex && valid) alternatives.push({ modeId: m.id, rank, index });
+    ranked.push({ modeId: m.id, rank, index, state: index === recIndex ? 'recommended' : valid ? 'valid for the next hour' : 'not valid' });
   });
   alternatives.sort((a, b) => a.rank - b.rank || a.index - b.index);
+  ranked.sort((a, b) => a.rank - b.rank || a.index - b.index);
+  const priorityText = ['Runway mode priority (1 is the most preferred)', ...ranked.map((r) => `${r.rank}. ${r.modeId}: ${r.state}`)].join('\n');
   return {
     band,
     modeId: recId,
@@ -122,6 +130,7 @@ export function answerModel(view: ViewData): AnswerModel {
     next: upcoming === undefined ? 'No change planned' : `Forecasting: ${upcoming.change.toModeId} at ${hhmmZRel(upcoming.change.startMs, view.calcNowMs)}`,
     rank: planRank(view, recIndex, 0),
     alternatives: alternatives.map(({ modeId, rank }) => ({ modeId, rank })),
+    priorityText,
     nextChange: upcoming === undefined ? null : { modeId: upcoming.change.toModeId, atMs: upcoming.change.startMs },
     why: band.id === 'CHANGE_NOW' ? currentModeUnsuitableText(view) : band.id === 'CHANGE_SOON' ? (explanation.earlyChange?.text ?? null) : null,
   };
