@@ -96,13 +96,13 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 answer values [%s]', (
     expect(a.next).toBe('No change planned');
   });
 
-  it('shows "Recommend: <mode> at HH:MMZ" for the first change after now', () => {
+  it('shows "Forecasting: <mode> at HH:MMZ" for the first change after now', () => {
     const view = viewOf(pack, rig, ['ok', 'ok', 'badA', 'badA', 'badA'], same(5, 'light'));
     const a = answerModel(view);
     const upcoming = view.result.changeovers.find((c) => c.change.slotIndex > 0);
     expect(upcoming).toBeDefined();
-    expect(a.next).toBe(`Recommend: ${upcoming?.change.toModeId} at ${hhmmZRel(upcoming?.change.startMs ?? 0, view.calcNowMs)}`);
-    expect(a.next).toMatch(/^Recommend: \S+ at \d{4}Z$/);
+    expect(a.next).toBe(`Forecasting: ${upcoming?.change.toModeId} at ${hhmmZRel(upcoming?.change.startMs ?? 0, view.calcNowMs)}`);
+    expect(a.next).toMatch(/^Forecasting: \S+ at \d{4}Z$/);
   });
 
   it('lists alternatives (issue 122): suitable in both of the next two slots, never the recommended mode, most preferred first', () => {
@@ -222,7 +222,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('PARITY: v2 shows what v1 
     } else {
       const up = v1.result.changeovers.find((c) => c.change.slotIndex > 0);
       expect(m1.nextChange).toBe(`${up?.change.fromModeId} to ${a2.nextChange.modeId} at ${hhmmZRel(a2.nextChange.atMs, v1.calcNowMs)}`);
-      expect(a2.next).toBe(`Recommend: ${a2.nextChange.modeId} at ${hhmmZRel(a2.nextChange.atMs, v2.calcNowMs)}`);
+      expect(a2.next).toBe(`Forecasting: ${a2.nextChange.modeId} at ${hhmmZRel(a2.nextChange.atMs, v2.calcNowMs)}`);
     }
   });
 

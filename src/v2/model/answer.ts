@@ -11,7 +11,7 @@
 //                RECOMMENDED" (the engine's explanation carries an early change);
 //   HOLD         otherwise (shown as RECOMMENDED).
 // v2 has no current mode (owner, 26-10-2026, issue 104), so CHANGE NOW is not reachable from the screen; the rule stays.
-// A plain planned change ("Recommend: ... at ...") does not make the state CHANGE SOON.
+// A plain planned change ("Forecasting: ... at ...") does not make the state CHANGE SOON.
 import { NO_SUITABLE_TITLE } from '../../engine';
 import { hhmmZRel } from '../format';
 import { approachChip, type ApproachChip } from './approach';
@@ -72,7 +72,7 @@ export interface AnswerModel {
   /** "Arr 03 · Dep 03, 06" parts, or null with no recommendation. */
   readonly arrivals: string | null;
   readonly departures: string | null;
-  /** "Recommend: 21AD at 22:00Z", "No change planned", or '' with no recommendation. */
+  /** "Forecasting: 21AD at 22:00Z", "No change planned", or '' with no recommendation. */
   readonly next: string;
   /** The recommended mode's rank in the operating plan (1 is the most preferred), or null. */
   readonly rank: number | null;
@@ -135,7 +135,7 @@ export function answerModel(view: ViewData): AnswerModel {
     modeLabel: `Recommended mode ${recId}`,
     arrivals: mode === undefined ? null : mode.arrivals.join(', ') || 'none',
     departures: mode === undefined ? null : mode.departures.join(', ') || 'none',
-    next: upcoming === undefined ? 'No change planned' : `Recommend: ${upcoming.change.toModeId} at ${hhmmZRel(upcoming.change.startMs, view.calcNowMs)}`,
+    next: upcoming === undefined ? 'No change planned' : `Forecasting: ${upcoming.change.toModeId} at ${hhmmZRel(upcoming.change.startMs, view.calcNowMs)}`,
     rank: planRank(view, recIndex, 0),
     alternatives: alternatives.map(({ modeId, rank }) => ({ modeId, rank })),
     priorityText,
