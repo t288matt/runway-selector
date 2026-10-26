@@ -1,4 +1,4 @@
-// The slim forecast bar (phase 1: one closed state, not expandable): the
+// The slim forecast bar (the closed state of the Evaluation and TAF section): the
 // recommended path across the window with the change line, the wind, the
 // forecast-group risk, the wet runway and the traffic micro-bars. Pure view
 // model from one view. The wind-change threshold and the group handling are
