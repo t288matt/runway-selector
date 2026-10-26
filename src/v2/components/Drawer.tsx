@@ -1,6 +1,6 @@
-// The "More" drawer shell (phase 1: empty). Dialog semantics, a close button,
-// Escape closes, Tab stays inside it, and focus goes back to the button that
-// opened it. Phase 2 puts the reports, key and settings inside.
+// The "More" drawer. Dialog semantics, a close button, Escape closes, Tab stays
+// inside it, and focus goes back to the button that opened it. What is inside
+// (Why, Reports, Key, Settings) is DrawerContent.
 import { useEffect, useRef, type ReactNode } from 'react';
 
 export function Drawer({ open, onClose, returnFocusTo, children }: { open: boolean; onClose: () => void; returnFocusTo: React.RefObject<HTMLElement | null>; children?: ReactNode }) {
@@ -23,7 +23,8 @@ export function Drawer({ open, onClose, returnFocusTo, children }: { open: boole
       return;
     }
     if (e.key !== 'Tab' || panel.current === null) return;
-    const focusable = [...panel.current.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')];
+    // Only what can be reached now: not disabled, and not inside a closed details element.
+    const focusable = [...panel.current.querySelectorAll<HTMLElement>('button:not([disabled]), [href], input, select, textarea, summary, [tabindex]:not([tabindex="-1"])')].filter((el) => el.getClientRects().length > 0);
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
     if (first === undefined || last === undefined) return;

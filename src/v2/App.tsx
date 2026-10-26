@@ -7,6 +7,7 @@ import { loadPack, type AirportPack } from '../refdata';
 import { cacheBustToken } from './clock';
 import { Dashboard } from './components/Dashboard';
 import { Drawer } from './components/Drawer';
+import { DrawerContent } from './components/DrawerContent';
 import { APP_TITLE, Header } from './components/Header';
 import { Notice } from './components/Notice';
 import type { AppDeps } from './deps';
@@ -58,13 +59,15 @@ interface AirportSwitch {
 function Screen({ pack, deps, airport }: { pack: AirportPack; deps: AppDeps; airport: AirportSwitch }) {
   const screen = useController(pack, deps);
   const model = screenModel(screen);
+  // Reload data can replace the pack the controller holds, so the screen reads it from the calculation, not from the prop.
+  const livePack = screen.view.pack;
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLButtonElement>(null);
   return (
     <>
       <div className="app" inert={moreOpen}>
         <Header
-          icao={pack.airport.icao}
+          icao={livePack.airport.icao}
           airports={airport.airports}
           pending={airport.pending}
           airportError={airport.airportError}
@@ -74,9 +77,25 @@ function Screen({ pack, deps, airport }: { pack: AirportPack; deps: AppDeps; air
           onMore={() => setMoreOpen(true)}
           moreRef={moreRef}
         />
-        <Dashboard model={model} pack={pack} onCurrentMode={screen.setCurrentMode} onDismissNotice={screen.dismissNotice} />
+        <Dashboard model={model} pack={livePack} onCurrentMode={screen.setCurrentMode} onDismissNotice={screen.dismissNotice} />
       </div>
-      <Drawer open={moreOpen} onClose={() => setMoreOpen(false)} returnFocusTo={moreRef} />
+      <Drawer open={moreOpen} onClose={() => setMoreOpen(false)} returnFocusTo={moreRef}>
+        <DrawerContent
+          bridge={{
+            view: screen.view,
+            displayNowMs: screen.displayNowMs,
+            auto: screen.autoWeather,
+            reload: screen.reload,
+            audit: screen.audit,
+            onApplyMetar: screen.applyMetar,
+            onApplyTaf: screen.applyTaf,
+            onResume: screen.resumeAutomatic,
+            onReload: () => void screen.reloadPack(),
+            onClearAudit: screen.clearAudit,
+            onExportAudit: screen.exportAudit,
+          }}
+        />
+      </Drawer>
     </>
   );
 }

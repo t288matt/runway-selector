@@ -21,7 +21,7 @@ import { FIXTURE_NOW, FIXTURE_STATION, realView, viewFromInput, viewOf } from '.
 const BANNED_WORDS = /\b(penalty|penalties|cost|costs|points?|scores?|least[- ]bad)\b/i;
 
 function stateOf(view: ViewData, displayNowMs: number = view.calcNowMs + 60_000): ControllerState {
-  return { view, feed: EMPTY_FEED, displayNowMs, currentModeRecord: null, notices: [], autoWeather: NO_AUTO_WEATHER };
+  return { view, feed: EMPTY_FEED, displayNowMs, currentModeRecord: null, audit: [], notices: [], reload: { status: 'idle', message: null }, autoWeather: NO_AUTO_WEATHER };
 }
 function render(view: ViewData, displayNowMs?: number): string {
   return renderToStaticMarkup(<Dashboard model={screenModel(stateOf(view, displayNowMs))} pack={view.pack} onCurrentMode={() => undefined} onDismissNotice={() => undefined} />);
