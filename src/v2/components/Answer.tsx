@@ -7,7 +7,7 @@ import { StateGlyph } from './Icons';
 function PriorityTag({ rank }: { rank: number | null }) {
   if (rank === null) return null;
   return (
-    <span className="prio" title="Runway mode priority" aria-label={`Runway mode priority ${rank}`} role="img" tabIndex={0} data-testid="priority">
+    <span className="prio" title="Runway mode priority" aria-label={`Runway mode priority ${rank}`} role="img" data-testid="priority">
       P{rank}
     </span>
   );

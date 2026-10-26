@@ -161,7 +161,7 @@ export type SlotWetness = 'dry' | 'wet' | 'possible';
 
 export interface RunwayTile {
   readonly known: boolean;
-  /** The weather line, for example "Showers in 30 min", "Heavy rain now" or "No precipitation next hour" (issue 123). */
+  /** The weather line, for example "Showers in 30 min", "Heavy rain now" or "No precipitation forecast" (issue 123). */
   readonly headline: string;
   readonly word: string;
   /** The wet-from or wet-until time, in words: "wet from 20:00Z", "now, until 22:30Z". */
