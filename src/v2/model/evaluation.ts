@@ -322,7 +322,7 @@ export function cellDetailText(d: CellDetail): string {
   for (const r of d.runways) lines.push(`Runway ${r.name} ${r.roles}: tailwind ${r.tailwind} kt (limit ${r.tailLimit})${r.overTailwind ? ' over' : ''}, crosswind ${r.crosswind} kt (limit ${r.crossLimit})${r.overCrosswind ? ' over' : ''}`);
   lines.push(`Wind used: ${d.wind}`);
   for (const o of d.overlays) lines.push(`Forecast: ${o}`);
-  lines.push(`Runway state: ${d.runwayAssumption}.`);
+  lines.push(`Runway condition: ${d.runwayAssumption}.`);
   lines.push(`Traffic: ${d.traffic}.`);
   lines.push(`Operating plan: ${d.operatingPlan}.`);
   if (d.survival !== '') lines.push(`Outlook: ${d.survival}.`);
