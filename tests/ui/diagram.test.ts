@@ -123,3 +123,26 @@ describe('edge cases', () => {
     expect(r?.ends.find((e) => e.name === 'B')?.over).toBe(true);
   });
 });
+
+// Issue 112: coordinates give TRUE bearings, the pack headings and the wind are in the weather's (magnetic)
+// reference; the picture turns a coordinate layout by the offset it reads from the pack.
+describe('the coordinate layout is turned into the weather reference (issue 112)', () => {
+  const at = (latitude: number, longitude: number) => ({ latitude, longitude });
+  const ends = [end('16R', 155, at(-33.9294, 151.172)), end('34L', 335, at(-33.9643, 151.181)), end('07', 62, at(-33.9437, 151.164)), end('25', 242, at(-33.9375, 151.19))];
+  const draw = (e: RunwayEnd[]) => buildDiagram({ runways: e, modeRoles: rolesOf(null), overLimit: new Set(), wind: null, modeLabel: null });
+  const bearing = (r: { x1: number; y1: number; x2: number; y2: number }): number => ((Math.atan2(r.x2 - r.x1, -(r.y2 - r.y1)) * 180) / Math.PI + 360) % 360;
+  const apart = (a: number, b: number): number => Math.abs(((a - b + 540) % 360) - 180);
+
+  it('draws each runway at its pack heading (within a degree) when the coordinates are true bearings', () => {
+    const runways = draw(ends).runways;
+    const find = (n: string) => runways.find((r) => r.ends.some((e) => e.name === n))!;
+    expect(apart(bearing(find('16R')), 155)).toBeLessThan(1);
+    expect(apart(bearing(find('07')), 62)).toBeLessThan(1);
+  });
+
+  it('does not turn the layout when the runways disagree with each other by more than a few degrees', () => {
+    const mixed = [ends[0]!, ends[1]!, end('07', 40, at(-33.9437, 151.164)), end('25', 220, at(-33.9375, 151.19))];
+    const r = draw(mixed).runways.find((x) => x.ends.some((e) => e.name === '16R'))!;
+    expect(apart(bearing(r), 168)).toBeLessThan(1);
+  });
+});

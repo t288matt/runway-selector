@@ -1,5 +1,5 @@
 // Issue 105 and 107: the wind label sits beside the wind arrow's tail, follows the arrow, stays
-// inside the picture and covers no runway name, runway, arrow or the north note, at every wind
+// inside the picture and covers no runway name, runway or arrow, at every wind
 // direction; and the picture draws no cross marks at all.
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -52,7 +52,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the wind label is placed 
     }
   });
 
-  it('stays inside the picture and covers no runway name, runway, arrow or the north note, at every direction, with and without gusts', () => {
+  it('stays inside the picture and covers no runway name, runway or arrow, at every direction, with and without gusts', () => {
     for (const d of DIRECTIONS) {
       for (const p of [at(d), at(d, 23, 34)]) {
         const b = labelBox(p);
@@ -60,7 +60,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the wind label is placed 
         expect(b.y0).toBeGreaterThanOrEqual(0);
         expect(b.x1).toBeLessThanOrEqual(DIAGRAM.width);
         expect(b.y1).toBeLessThanOrEqual(DIAGRAM.height);
-        for (const e of p.diagram.runways.flatMap((r) => r.ends)) expect(hit(b, endBox(e)), `dir ${d} over ${e.name}`).toBe(false);
+        for (const e of p.diagram.runways.flatMap((r) => r.ends).filter((e) => e.roles.length > 0)) expect(hit(b, endBox(e)), `dir ${d} over ${e.name}`).toBe(false);
         const a = p.diagram.arrow;
         for (let i = 0; i <= 20; i += 1) {
           const t = i / 20;
@@ -68,7 +68,6 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the wind label is placed 
           const y = (a?.y1 ?? 0) + ((a?.y2 ?? 0) - (a?.y1 ?? 0)) * t;
           expect(distToPoint(b, x, y) > 0 || i === 0, `dir ${d} arrow t=${t}`).toBe(true);
         }
-        expect(hit(b, { x0: DIAGRAM.width - 44, y0: 6, x1: DIAGRAM.width - 10, y1: 22 }), `dir ${d} north note`).toBe(false);
       }
     }
   });

@@ -69,8 +69,6 @@ export const WIND_LABEL_FONT = 15;
 const WIND_CHAR_W = 8.6;
 const NAME_CHAR_W = 7.8;
 const EDGE = 4;
-/** The fixed "N up" note, top right, which the label must not cover either. */
-const NORTH_BOX: Box = { x0: DIAGRAM.width - 10 - 34, y0: 6, x1: DIAGRAM.width - 10, y1: 22 };
 const GAP_TO_TAIL = 6;
 
 export interface Box {
@@ -103,7 +101,7 @@ function segmentHits(box: Box, x1: number, y1: number, x2: number, y2: number, p
 /**
  * Put the wind label immediately beside the TAIL of the arrow (the end away from the runways), on the side the wind comes
  * from, so it follows the arrow as the direction changes. Tries straight out from the tail first, then swings round it,
- * and takes the first spot that stays inside the picture and covers no runway name, no runway, no arrow and not the north note.
+ * and takes the first spot that stays inside the picture and covers no runway name, no runway and no arrow.
  * With no arrow (variable or unknown wind) the label stays in the top left corner.
  */
 export function placeWindLabel(text: string, arrow: Pick<WindArrow, 'x1' | 'y1' | 'x2' | 'y2'> | null, endBoxes: readonly Box[], runwayLines: readonly { x1: number; y1: number; x2: number; y2: number }[]): WindLabelPlacement {
@@ -116,7 +114,7 @@ export function placeWindLabel(text: string, arrow: Pick<WindArrow, 'x1' | 'y1' 
   const outAngle = Math.atan2(oy / len, ox / len);
   const inside = (b: Box): boolean => b.x0 >= EDGE && b.x1 <= DIAGRAM.width - EDGE && b.y0 >= EDGE && b.y1 <= DIAGRAM.height - EDGE;
   const boxAt = (cx: number, cy: number): Box => ({ x0: cx - w / 2, y0: cy - h / 2, x1: cx + w / 2, y1: cy + h / 2 });
-  const clear = (b: Box): boolean => inside(b) && !overlaps(b, NORTH_BOX) && !endBoxes.some((e) => overlaps(b, e, 2)) && !runwayLines.some((l) => segmentHits(b, l.x1, l.y1, l.x2, l.y2, 7)) && !segmentHits(b, arrow.x1, arrow.y1, arrow.x2, arrow.y2, 5);
+  const clear = (b: Box): boolean => inside(b) && !endBoxes.some((e) => overlaps(b, e, 2)) && !runwayLines.some((l) => segmentHits(b, l.x1, l.y1, l.x2, l.y2, 7)) && !segmentHits(b, arrow.x1, arrow.y1, arrow.x2, arrow.y2, 5);
   let best: { cx: number; cy: number; score: number } | null = null;
   for (const spread of [1, 1.15, 1.3, 1.5, 1.8, 2.4]) {
     for (const turn of [0, 15, -15, 30, -30, 45, -45, 60, -60, 75, -75, 90, -90, 110, -110, 135, -135, 160, -160, 180]) {
@@ -208,12 +206,49 @@ export function rolesOf(mode: Pick<Mode, 'arrivals' | 'departures'> | null): Map
   return out;
 }
 
+const wrap180 = (d: number): number => ((((d + 180) % 360) + 360) % 360) - 180;
+
+/**
+ * The runway coordinates give TRUE bearings, but the pack headings and the wind are in the weather's reference
+ * (magnetic). The offset between the two (the airport's magnetic variation) is read from the pack itself: the
+ * circular mean, over the runways, of the bearing from the coordinates minus the pack heading. Zero when there are
+ * no coordinates, or when the runways disagree with each other by more than a few degrees.
+ */
+function coordinateOffset(groups: (readonly RunwayEnd[])[]): number {
+  const offsets: number[] = [];
+  for (const g of groups) {
+    const a = g[0];
+    const b = g[1];
+    if (a === undefined || b === undefined) continue;
+    const ta = a.threshold;
+    const tb = b.threshold;
+    if (ta === null || tb === null) continue;
+    const north = tb.latitude - ta.latitude;
+    const east = (tb.longitude - ta.longitude) * Math.cos(((ta.latitude + tb.latitude) / 2) * RAD);
+    const bearing = (Math.atan2(east, north) / RAD + 360) % 360;
+    offsets.push(wrap180(bearing - a.headingDegrees));
+  }
+  if (offsets.length === 0) return 0;
+  const s = offsets.reduce((t, o) => t + Math.sin(o * RAD), 0);
+  const c = offsets.reduce((t, o) => t + Math.cos(o * RAD), 0);
+  const mean = Math.atan2(s, c) / RAD;
+  return offsets.every((o) => Math.abs(wrap180(o - mean)) <= 3) ? mean : 0;
+}
+
 function realPlacement(groups: (readonly RunwayEnd[])[]): Map<RunwayEnd, { x: number; y: number }> | null {
   const all = groups.flat();
   if (all.length === 0 || all.some((r) => r.threshold === null)) return null;
   const lat0 = all.reduce((s, r) => s + (r.threshold?.latitude ?? 0), 0) / all.length;
   const lon0 = all.reduce((s, r) => s + (r.threshold?.longitude ?? 0), 0) / all.length;
-  const pts = all.map((r) => ({ r, x: ((r.threshold?.longitude ?? 0) - lon0) * Math.cos(lat0 * RAD), y: -((r.threshold?.latitude ?? 0) - lat0) }));
+  // Turn the layout from true north into the weather's reference, so the runways sit right against the wind arrow.
+  const turn = coordinateOffset(groups) * RAD;
+  const cosT = Math.cos(turn);
+  const sinT = Math.sin(turn);
+  const pts = all.map((r) => {
+    const x = ((r.threshold?.longitude ?? 0) - lon0) * Math.cos(lat0 * RAD);
+    const y = -((r.threshold?.latitude ?? 0) - lat0);
+    return { r, x: x * cosT + y * sinT, y: -x * sinT + y * cosT };
+  });
   const extent = Math.max(1e-9, ...pts.map((p) => Math.max(Math.abs(p.x), Math.abs(p.y))));
   const scale = 75 / extent;
   const out = new Map<RunwayEnd, { x: number; y: number }>();
@@ -314,7 +349,7 @@ export function buildDiagram(input: DiagramInput): Diagram {
   const windLabel = placeWindLabel(
     input.windLabel,
     arrow,
-    runways.flatMap((r) => r.ends.map(endBox)),
+    runways.flatMap((r) => r.ends.filter((e) => e.roles.length > 0).map(endBox)), // only the named (used) ends are drawn
     runways,
   );
   const used = [...input.modeRoles.entries()].map(([name, roles]) => `${name} (${roles.join(' and ')})`);
