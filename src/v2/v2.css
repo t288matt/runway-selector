@@ -274,6 +274,28 @@ body {
 .mode.none {
   color: var(--muted);
 }
+/* The approach-type chip beside the mode name (issue 99). It carries words, never colour alone, and wraps below the mode when the row is narrow. */
+.mode-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  min-width: 0;
+}
+.appr {
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 3px 9px;
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: help;
+}
+.appr.tip-open {
+  background: var(--accent);
+  color: var(--bg);
+}
 .next {
   font-size: 16px;
   font-weight: 650;
@@ -981,7 +1003,8 @@ i.part {
 .app:has(.fcx[open]) .hero .facts,
 .app:has(.fcx[open]) .why1,
 .app:has(.fcx[open]) .rw,
-.app:has(.fcx[open]) .cond {
+.app:has(.fcx[open]) .cond,
+.app:has(.fcx[open]) .appr {
   display: none;
 }
 .app:has(.fcx[open]) .answer {

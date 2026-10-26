@@ -4,12 +4,24 @@
   "modes": [
     { "id": "SODPROPS", "description": "Simultaneous opposite direction parallel runway operations; enabled by the owner, 23-10-2026, for use at any time of day", "enabled": true, "arrivals": ["34L"], "departures": ["16L", "16R"], "maxCrosswindKt": 20, "capacity": 20 },
     { "id": "25A16D",        "description": "Arrivals 25, departures 16L and 16R", "enabled": true, "arrivals": ["25"], "departures": ["16L", "16R"], "maxCrosswindKt": 20, "capacity": 30 },
-    { "id": "34A25D",        "description": "Arrivals 34L and 34R, departures 25", "enabled": true, "arrivals": ["34L", "34R"], "departures": ["25"], "maxCrosswindKt": 20, "capacity": 30 },
-    { "id": "34AD25",        "description": "Arrivals 34L and 34R, departures 25, 34R and 34L", "enabled": true, "arrivals": ["34L", "34R"], "departures": ["25", "34R", "34L"], "maxCrosswindKt": 20, "capacity": 30 },
-    { "id": "34AD",        "description": "Arrivals and departures 34L and 34R", "enabled": true, "arrivals": ["34L", "34R"], "departures": ["34L", "34R"], "maxCrosswindKt": 20, "capacity": null },
-    { "id": "16AD",       "description": "Arrivals and departures 16L and 16R", "enabled": true, "arrivals": ["16L", "16R"], "departures": ["16L", "16R"], "maxCrosswindKt": 20, "capacity": null },
+    { "id": "34A25D",        "description": "Arrivals 34L and 34R, departures 25", "enabled": true, "arrivals": ["34L", "34R"], "departures": ["25"], "maxCrosswindKt": 20, "capacity": 30, "approachLadder": "parallel" },
+    { "id": "34AD25",        "description": "Arrivals 34L and 34R, departures 25, 34R and 34L", "enabled": true, "arrivals": ["34L", "34R"], "departures": ["25", "34R", "34L"], "maxCrosswindKt": 20, "capacity": 30, "approachLadder": "parallel" },
+    { "id": "34AD",        "description": "Arrivals and departures 34L and 34R", "enabled": true, "arrivals": ["34L", "34R"], "departures": ["34L", "34R"], "maxCrosswindKt": 20, "capacity": null, "approachLadder": "parallel" },
+    { "id": "16AD",       "description": "Arrivals and departures 16L and 16R", "enabled": true, "arrivals": ["16L", "16R"], "departures": ["16L", "16R"], "maxCrosswindKt": 20, "capacity": null, "approachLadder": "parallel" },
     { "id": "07AD",       "description": "Arrivals and departures 07", "enabled": true, "arrivals": ["07"], "departures": ["07"], "maxCrosswindKt": 20, "capacity": 20 },
     { "id": "25AD",       "description": "Arrivals and departures 25", "enabled": true, "arrivals": ["25"], "departures": ["25"], "maxCrosswindKt": 20, "capacity": 20 },
     { "id": "07A16D",      "description": "Arrivals 07, departures 16L and 16R", "enabled": true, "arrivals": ["07"], "departures": ["16L", "16R"], "maxCrosswindKt": 20, "capacity": 30 }
+  ],
+  "approachLadders": [
+    {
+      "id": "parallel",
+      "description": "Approach type pilots are told to expect, from cloud base (lowest layer of any cover, or vertical visibility) and visibility, for the modes that run parallel approaches. Rows are checked from the top and the first match wins.",
+      "source": "YSSY operations guide, approach-type table (owner decision 26-10-2026, OD-83)",
+      "rows": [
+        { "id": "indepVisual", "description": "Cloud base above 3000 ft and visibility 5000 m or more: independent visual approaches.", "cloudBase": { "above": 3000 }, "visibility": { "atLeast": 5000 }, "chipText": "IVA", "hoverText": "INDEP VISUAL APCH" },
+        { "id": "instrThenIva", "description": "Cloud base 2000 to 3000 ft inclusive and visibility 5000 m or more: instrument approach, then independent visual approach.", "cloudBase": { "atLeast": 2000, "atMost": 3000 }, "visibility": { "atLeast": 5000 }, "chipText": "INSTR THEN IVA", "hoverText": "INSTR APCH THEN INDEP VISUAL APCH" },
+        { "id": "instrument", "description": "Everything else: instrument approach.", "chipText": "INSTRUMENT", "hoverText": "INSTR APCH" }
+      ]
+    }
   ]
 }

@@ -22,7 +22,7 @@ import {
   type SettingName,
   type Settings,
 } from './schema';
-import type { AirportPack, Provenance } from './types';
+import type { AirportPack, ApproachBound, Provenance } from './types';
 
 export const PACK_FILE_NAMES = ['airport.json', 'runways.json', 'modes.json', 'operating_plan.json', 'settings.json'] as const;
 export type PackFileName = (typeof PACK_FILE_NAMES)[number];
@@ -98,6 +98,10 @@ const prov = (o: { source?: string | undefined }): Provenance => ({
   source: o.source ?? null,
 });
 
+/** A schema bound as the pack's bound: a missing key is null (no limit); a missing bound is null. */
+const boundOf = (b: { above?: number | undefined; atLeast?: number | undefined; below?: number | undefined; atMost?: number | undefined } | undefined): ApproachBound | null =>
+  b === undefined ? null : { above: b.above ?? null, atLeast: b.atLeast ?? null, below: b.below ?? null, atMost: b.atMost ?? null };
+
 /**
  * Validate and build an AirportPack from the raw text of the five files.
  * Throws PackValidationError (listing every problem) and never returns a
@@ -172,7 +176,20 @@ export function parsePack(raw: Readonly<Record<string, string>>): AirportPack {
         m.conditionalOperation === undefined
           ? null
           : { name: m.conditionalOperation.name, ceilingFt: m.conditionalOperation.ceilingFt ?? null, visibilityMetres: m.conditionalOperation.visibilityMetres ?? null, requiresDrySurface: m.conditionalOperation.requiresDrySurface ?? false },
+      approachLadder: m.approachLadder ?? null,
       ...prov(m),
+    })),
+    approachLadders: (modes.approachLadders ?? []).map((l) => ({
+      id: l.id,
+      rows: l.rows.map((row) => ({
+        id: row.id,
+        cloudBase: boundOf(row.cloudBase),
+        visibility: boundOf(row.visibility),
+        chipText: row.chipText,
+        hoverText: row.hoverText,
+        ...prov(row),
+      })),
+      ...prov(l),
     })),
     plan: operatingPlan.bands.map((b) => ({
       id: b.id,

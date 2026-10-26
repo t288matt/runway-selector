@@ -26,6 +26,22 @@ export function ceilingOf(c: DecodedConditions): number | null | undefined {
   return c.clouds.length === 0 ? undefined : null;
 }
 
+/**
+ * The approach cloud base in feet (issue 99): the lowest base of ANY layer, FEW, SCT, BKN or OVC, whatever the cover,
+ * with vertical visibility counted as a base. Unlike ceilingOf it does not wait for a broken or overcast layer, so FEW015
+ * is 1,500 here and "No ceiling" on the ceiling tile. null when the report says there is no cloud (CAVOK, SKC, NSC, NCD).
+ * undefined when the report says nothing about cloud (no cloud group, not CAVOK) or a layer has cover but no base height.
+ */
+export function approachCloudBaseOf(c: DecodedConditions): number | null | undefined {
+  if (c.cavok) return null;
+  const layers = c.clouds.filter((cl) => cl.quantity === 'FEW' || cl.quantity === 'SCT' || cl.quantity === 'BKN' || cl.quantity === 'OVC');
+  if (layers.some((cl) => cl.baseFt === null)) return undefined;
+  const bases = layers.map((cl) => cl.baseFt).filter((b): b is number => b !== null);
+  if (c.verticalVisibilityFt !== null) bases.push(c.verticalVisibilityFt);
+  if (bases.length > 0) return Math.min(...bases);
+  return c.clouds.length === 0 ? undefined : null;
+}
+
 /** Visibility in metres: CAVOK is at least 10 km; "more than" 9999 counts as 10 km, like CAVOK, other "more than" values as the stated metres; undefined when not stated. */
 export function visibilityMetresOf(c: DecodedConditions): number | undefined {
   if (c.cavok) return CAVOK_VISIBILITY_METRES;
