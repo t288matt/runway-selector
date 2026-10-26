@@ -174,7 +174,7 @@ export function runwayTile(view: ViewData): RunwayTile {
   const slots = view.result.evaluation.slots;
   const first = slots[0];
   if (first === undefined || view.weather.slots[0]?.governedBy === 'NONE') {
-    return { known: false, word: 'UNKNOWN', detail: 'no weather for the runway state', segments: [], aria: 'Runway state unknown' };
+    return { known: false, word: 'UNKNOWN', detail: 'no weather for the runway condition', segments: [], aria: 'Runway condition unknown' };
   }
   const wetness = (state: string): SlotWetness => (state === 'WET' ? 'wet' : state === 'WET_POSSIBLE' ? 'possible' : 'dry');
   const segments = slots.map((s) => wetness(s.runwayState));

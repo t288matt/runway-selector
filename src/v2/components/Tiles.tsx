@@ -57,7 +57,7 @@ export function RunwayTileView({ tile }: { tile: RunwayTile }) {
           ))}
         </span>
       )}
-      <small>Runway state{hasPossible ? ' (hatched is possible)' : ''}</small>
+      <small>Runway condition{hasPossible ? ' (hatched is possible)' : ''}</small>
     </Tip>
   );
 }
