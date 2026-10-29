@@ -23,5 +23,6 @@
         { "id": "instrument", "description": "Everything else: instrument approach.", "chipText": "INSTRUMENT", "hoverText": "INSTR APCH" }
       ]
     }
-  ]
+  ],
+  "atisWording": { "rwyWord": "RWY", "forWord": "FOR", "arrWord": "ARR", "depWord": "DEPS", "andWord": "AND", "source": "owner, 29-10-2026" }
 }

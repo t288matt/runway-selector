@@ -7,5 +7,6 @@
     { "id": "0209A20D", "description": "Arrivals 02 and 09, departures 20", "enabled": true, "arrivals": ["02", "09"], "departures": ["20"] },
     { "id": "02AD", "description": "Arrivals and departures 02", "enabled": true, "arrivals": ["02"], "departures": ["02"] },
     { "id": "20AD", "description": "Arrivals and departures 20", "enabled": true, "arrivals": ["20"], "departures": ["20"] }
-  ]
+  ],
+  "atisWording": { "rwyWord": "RWY", "forWord": "FOR", "arrWord": "ARR", "depWord": "DEPS", "andWord": "AND", "source": "owner, 29-10-2026" }
 }

@@ -10,5 +10,6 @@
     { "id": "27AD", "description": "Arrivals and departures 27", "enabled": true, "arrivals": ["27"], "departures": ["27"] },
     { "id": "16AD", "description": "Arrivals and departures 16", "enabled": true, "arrivals": ["16"], "departures": ["16"] },
     { "id": "34AD", "description": "Arrivals and departures 34", "enabled": true, "arrivals": ["34"], "departures": ["34"] }
-  ]
+  ],
+  "atisWording": { "rwyWord": "RWY", "forWord": "FOR", "arrWord": "ARR", "depWord": "DEPS", "andWord": "AND", "source": "owner, 29-10-2026" }
 }

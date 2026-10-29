@@ -4,5 +4,6 @@
   "modes": [
     { "id": "15AD", "description": "Arrivals and departures 15", "enabled": true, "arrivals": ["15"], "departures": ["15"] },
     { "id": "33AD", "description": "Arrivals and departures 33", "enabled": true, "arrivals": ["33"], "departures": ["33"] }
-  ]
+  ],
+  "atisWording": { "rwyWord": "RWY", "forWord": "FOR", "arrWord": "ARR", "depWord": "DEPS", "andWord": "AND", "source": "owner, 29-10-2026" }
 }

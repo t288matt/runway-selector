@@ -5,5 +5,6 @@
     { "id": "05A23D", "description": "Reciprocal runway operations (RRO): arrivals 05, departures 23", "enabled": true, "arrivals": ["05"], "departures": ["23"] },
     { "id": "23AD", "description": "Arrivals and departures 23", "enabled": true, "arrivals": ["23"], "departures": ["23"] },
     { "id": "05AD", "description": "Arrivals and departures 05", "enabled": true, "arrivals": ["05"], "departures": ["05"] }
-  ]
+  ],
+  "atisWording": { "rwyWord": "RWY", "forWord": "FOR", "arrWord": "ARR", "depWord": "DEPS", "andWord": "AND", "source": "owner, 29-10-2026" }
 }

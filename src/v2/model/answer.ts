@@ -125,7 +125,7 @@ export function answerModel(view: ViewData): AnswerModel {
     if (rank === null) return;
     const window = (result.evaluation.cells[index] ?? []).slice(0, ALSO_SUITABLE_SLOTS);
     const suitable = window.length === ALSO_SUITABLE_SLOTS && window.every((c) => c.status === 'SUITABLE');
-    if (index !== recIndex && suitable) alternatives.push({ modeId: m.id, rank, index, copyText: atisText(m.arrivals, m.departures) });
+    if (index !== recIndex && suitable) alternatives.push({ modeId: m.id, rank, index, copyText: atisText(m.arrivals, m.departures, pack.atisWording) });
     ranked.push({ modeId: m.id, rank, index, state: index === recIndex ? 'recommended' : suitable ? 'suitable' : 'unsuitable' });
   });
   alternatives.sort((a, b) => a.rank - b.rank || a.index - b.index);
@@ -138,7 +138,7 @@ export function answerModel(view: ViewData): AnswerModel {
     modeLabel: `Recommended mode ${recId}`,
     arrivals: mode === undefined ? null : mode.arrivals.join(', ') || 'none',
     departures: mode === undefined ? null : mode.departures.join(', ') || 'none',
-    copyText: mode === undefined ? null : atisText(mode.arrivals, mode.departures),
+    copyText: mode === undefined ? null : atisText(mode.arrivals, mode.departures, pack.atisWording),
     next: upcoming === undefined ? 'No change planned' : `Forecasting: ${upcoming.change.toModeId} at ${hhmmZRel(upcoming.change.startMs, view.calcNowMs)}`,
     rank: planRank(view, recIndex, 0),
     alternatives: alternatives.map(({ modeId, rank, copyText }) => ({ modeId, rank, copyText })),

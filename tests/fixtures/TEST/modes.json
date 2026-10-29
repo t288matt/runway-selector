@@ -47,5 +47,6 @@
       "arrivals": [],
       "departures": []
     }
-  ]
+  ],
+  "atisWording": { "rwyWord": "STRIP", "forWord": "TO", "arrWord": "LANDING", "depWord": "TAKEOFF", "andWord": "PLUS", "source": "test fixture, invented wording" }
 }

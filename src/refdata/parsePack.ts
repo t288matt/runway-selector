@@ -191,6 +191,14 @@ export function parsePack(raw: Readonly<Record<string, string>>): AirportPack {
       })),
       ...prov(l),
     })),
+    atisWording: {
+      rwyWord: modes.atisWording.rwyWord,
+      forWord: modes.atisWording.forWord,
+      arrWord: modes.atisWording.arrWord,
+      depWord: modes.atisWording.depWord,
+      andWord: modes.atisWording.andWord,
+      ...prov(modes.atisWording),
+    },
     plan: operatingPlan.bands.map((b) => ({
       id: b.id,
       allDay: b.allDay ?? false,
