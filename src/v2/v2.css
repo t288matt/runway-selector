@@ -82,9 +82,39 @@ body {
   font: inherit;
   min-height: 36px;
 }
+.utc-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 .utc {
   color: var(--muted);
   font-size: 12px;
+}
+.how-chosen-info .tip-pop {
+  width: 340px;
+  max-height: 60vh;
+  overflow-y: auto;
+  white-space: normal;
+}
+.how-chosen-info .tip-pop p {
+  margin: 4px 0 8px;
+}
+.how-chosen-info .tip-pop .pr-title {
+  margin-top: 8px;
+}
+.how-chosen-info .tip-pop .pr-title:first-child {
+  margin-top: 0;
+}
+.how-chosen-list {
+  margin: 4px 0 0;
+  padding-left: 16px;
+}
+.how-chosen-list li {
+  margin-bottom: 6px;
+}
+.how-chosen-list li:last-child {
+  margin-bottom: 0;
 }
 .stamp {
   font-size: 11px;
