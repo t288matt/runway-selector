@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "description": "Zurich has three runway pairs: 10/28, 14/32 and 16/34. Headings are TRUE, not magnetic, because LSZH METAR wind direction is reported relative to true north (confirmed from MeteoSwiss's own flight-weather documentation) and runway heading must match the wind-report reference frame (docs/NEW_AIRPORT_QUESTIONS.md section 2). SkyVector's magnetic headings (152/332, 134/314, 093/273) were cross-checked against Sprinkle.com's true headings below; the few-degree gap matches Switzerland's magnetic declination, supporting the true set. Not checked against the Swiss AIP (charts 10-P/10-P1) — see docs/LSZH_RUNWAY_RESEARCH.md.",
+  "source": "Sprinkle.com (true headings, decimal-degree thresholds), cross-checked against SkyVector (magnetic headings), 29-10-2026. Not checked against the Swiss AIP.",
+  "runways": [
+    { "name": "10", "headingDegrees": 96, "threshold": { "latitude": 47.4589, "longitude": 8.5375 } },
+    { "name": "28", "headingDegrees": 276, "threshold": { "latitude": 47.4566, "longitude": 8.5704 } },
+    { "name": "14", "headingDegrees": 137, "threshold": { "latitude": 47.4831, "longitude": 8.5347 } },
+    { "name": "32", "headingDegrees": 317, "threshold": { "latitude": 47.4613, "longitude": 8.5645 } },
+    { "name": "16", "headingDegrees": 155, "threshold": { "latitude": 47.4756, "longitude": 8.5359 } },
+    { "name": "34", "headingDegrees": 335, "threshold": { "latitude": 47.4454, "longitude": 8.5567 } }
+  ]
+}

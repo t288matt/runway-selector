@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "description": "Zurich (Kloten) Airport, Switzerland. Coordinates and elevation (1417 ft) are from public aggregator sites (Wikipedia, ch-aviation, SkyVector), not checked against the Swiss AIP. trafficAreaNm, groundMaxSpeedKt, groundAltitudeMarginFt and arrivalSpeedFloorKt are carried over unchanged from the other packs, same as NFFN's approach. See docs/LSZH_RUNWAY_RESEARCH.md for full sourcing and confidence notes.",
+  "icao": "LSZH",
+  "name": "Zurich",
+  "latitude": 47.46472,
+  "longitude": 8.54917,
+  "elevationFt": 1417,
+  "timeZone": "Europe/Zurich",
+  "weatherStation": "LSZH",
+  "trafficAreaNm": 5,
+  "groundMaxSpeedKt": 40,
+  "groundAltitudeMarginFt": 100,
+  "arrivalSpeedFloorKt": 150,
+  "labels": {}
+}
