@@ -81,6 +81,17 @@ describe('the agreed style (no border, blue 8px dot, white text, dot aligned 10p
     expect(rule('.alt-chip')).toMatch(/border: 1px solid/);
     expect(rule('.alt-chip')).toMatch(/padding: 4px 9px;/);
   });
+  it('PHONE: at 640px and below the chip sits beside the Also suitable label and takes no row (the closed screen must not grow at 375 x 812)', () => {
+    const phone = css.slice(css.indexOf('@media (max-width: 640px)'));
+    const rule375 = /\n  \.alt \.atis-chip \{([^}]*)\}/.exec(phone)?.[1] ?? '';
+    expect(rule375).toMatch(/position: absolute;/);
+    expect(rule375).toMatch(/margin: 0;/);
+    // outside the group that is named "Also suitable"
+    const html = renderToStaticMarkup(<Dashboard model={screenModel({ view: realView(syd, YSSY_PACK), feed: EMPTY_FEED, displayNowMs: NOW, audit: [], notices: [], reload: { status: 'idle', message: null }, autoWeather: NO_AUTO_WEATHER, atis: reading(sample('real-sydney.txt')) })} pack={syd} onDismissNotice={() => undefined} detailOpen={false} onToggleDetail={() => undefined} />);
+    const group = /<div role="group" aria-label="Also suitable"[\s\S]*?<\/div><\/div>/.exec(html)?.[0] ?? '';
+    expect(group).not.toContain('atis-chip');
+    expect(html).toContain('class="atis-chip"');
+  });
   it('the dot is 8px and the accent blue', () => {
     const dot = rule('.atis-dot');
     expect(dot).toMatch(/width: 8px;/);
