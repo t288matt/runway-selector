@@ -164,10 +164,12 @@ describe('E04 TEMPO / PROB / INTER showers (WC-9, WC-5, WC-10)', () => {
   //   (last wet slot ends 07:00, +60 min = 08:00) -> DRY from 08:00.
   // Mode 16AD (hdg 155): 150 is 5 degrees off -> 3.98 kt headwind, SUITABLE wet or dry.
   // Recommended mode, worked from the preference penalties (12 slots in the 6 h window, no traffic so a change costs 5):
-  //   Mode 07A16D (arr 07 hdg 062: 150-62 = 88 degrees -> a 0.14 kt headwind; dep 16: headwind) is SUITABLE wet or dry, penalty 2 a slot.
+  //   Mode 07A16D (arr 07 hdg 062: 150-62 = 88 degrees -> a 0.14 kt headwind; dep 16: headwind) is SUITABLE wet or dry, penalty 2 a slot: 12 x 2 = 24.
+  //   Mode 16AD is also SUITABLE wet or dry, and since 29-10-2026 shares 07A16D's penalty 2: 12 x 2 = 24, tying with 07A16D. On a tie the
+  //   engine takes the mode listed first in modes.json, which is 16AD (before 07AD, 07A16D).
   //   Mode 25A16D (arr 25: the 0.14 kt tailwind) is SUITABLE dry, MARGINAL in the 4 wet-possible slots: 12 x 2 + 4 x 3 = 36.
   //   SODPROPS (arr 34L hdg 335: 150-335 = -185 -> a 3.98 kt tailwind, above the 2 kt margin line) is MARGINAL in every slot: 12 x (0 + 3) = 36.
-  //   Modes 34A25D / 34AD25 have the same 34L/34R tailwind: 12 x (2 + 3) = 60.   07A16D: 12 x 2 = 24, the cheapest, no change.
+  //   Modes 34A25D / 34AD25 have the same 34L/34R tailwind: 12 x (2 + 3) = 60.   16AD: 12 x 2 = 24, the cheapest, no change.
   const base = LIGHT_TAIL + ' 9999 SCT020';
   const m = metar(LIGHT_TAIL);
   const wp = ['05:00', '05:30', '06:00', '06:30'];
@@ -183,13 +185,14 @@ describe('E04 TEMPO / PROB / INTER showers (WC-9, WC-5, WC-10)', () => {
       expect(r.out.evaluation.slots[at(r, '07:00')]!.runwayState).toBe('DRY');
       expect(cell(r, '25AD', '07:00').status).toBe('SUITABLE');
       expect(cell(r, '25AD', '04:30').status).toBe('SUITABLE');
-      expect(r.out.plan.recommendedModeId).toBe('07A16D');
-      expect(new Set(chosen(r))).toEqual(new Set(['07A16D']));
+      expect(r.out.plan.recommendedModeId).toBe('16AD');
+      expect(new Set(chosen(r))).toEqual(new Set(['16AD']));
       expect(r.out.plan.changes).toHaveLength(0);
     },
   );
-  // PROB40 plain: wet in 05:00-07:30 (6 slots, see above). Mode 07A16D is a headwind on both ends, so it stays SUITABLE at 2 a
-  // slot; 25A16D, SODPROPS and the 34 modes all fail the 0 kt wet limit (UNSUITABLE) there. 07A16D throughout, no change.
+  // PROB40 plain: wet in 05:00-07:30 (6 slots, see above). Modes 07A16D and 16AD are both a headwind throughout, so both stay
+  // SUITABLE at penalty 2 a slot; 25A16D, SODPROPS and the 34 modes all fail the 0 kt wet limit (UNSUITABLE) there. Tied with
+  // 07A16D, 16AD wins (listed first in modes.json) throughout, no change.
   it('PROB40 2305/2307 SHRA (no TEMPO) is WET, with 60 minutes of drying', () => {
     const r = go({ metar: m, taf: taf(`${base} PROB40 2305/2307 4000 SHRA`), windowMinutes: 360 });
     for (const t of [...wp, '07:00', '07:30']) {
@@ -198,7 +201,7 @@ describe('E04 TEMPO / PROB / INTER showers (WC-9, WC-5, WC-10)', () => {
     }
     expect(r.out.evaluation.slots[at(r, '08:00')]!.runwayState).toBe('DRY');
     expect(cell(r, '25AD', '08:00').status).toBe('SUITABLE');
-    expect(r.out.plan.recommendedModeId).toBe('07A16D');
+    expect(r.out.plan.recommendedModeId).toBe('16AD');
     expect(r.out.plan.changes).toHaveLength(0);
   });
   it.each([['PROB30 TEMPO'], ['PROB40 TEMPO']])('%s 2305/2307 SHRA changes nothing: DRY and 25AD SUITABLE throughout', (group) => {
@@ -569,12 +572,12 @@ describe('E15 busy-traffic early change: banner only when the forced change is i
     expect(['07AD', '25AD']).toContain(r.out.plan.changes[0]!.toModeId);
     expect(r.out.plan.changes[0]!.slotIndex).toBeLessThan(4);
   });
-  it('light before, medium at the forced slot: strictly busier, early cost 1 < waiting cost 5 -> banner', () => {
+  // Real preferences: 16AD is penalty 2 (since 29-10-2026), 07AD/25AD are 12. Waiting in 16AD until the forced
+  // slot is now cheap enough on preference alone that the small traffic saving from changing early no longer
+  // tips the balance, so no banner.
+  it('light before, medium at the forced slot: real preferences keep 16AD cheap enough that the plan waits, so no banner', () => {
     const r = go({ ...wx, arrivals: traffic(3, 15) });
-    const early = r.out.explanation.earlyChange;
-    expect(early).not.toBeNull();
-    expect(early!.trafficAtChange).toBe('light');
-    expect(early!.trafficAtForced).toBe('medium');
+    expect(r.out.explanation.earlyChange).toBeNull();
   });
   it('medium everywhere: waiting costs the same as changing early, so no banner', () => {
     const r = go({ ...wx, arrivals: traffic(15, 15) });
