@@ -205,8 +205,10 @@ export function check(root) {
   const violations = [];
   const srcDir = join(root, 'src');
   const files = existsSync(srcDir) ? [...walk(srcDir)] : [];
-  // index.html is part of the shipped page too
-  if (existsSync(join(root, 'index.html'))) files.push(join(root, 'index.html'));
+  // index.html and v1.html are part of the shipped pages too
+  for (const page of ['index.html', 'v1.html']) {
+    if (existsSync(join(root, page))) files.push(join(root, page));
+  }
   for (const file of files) {
     const code = stripComments(readFileSync(file, 'utf8'), extname(file).toLowerCase());
     code.split('\n').forEach((line, idx) => {
