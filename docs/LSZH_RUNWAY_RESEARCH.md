@@ -27,17 +27,19 @@ Source: Sprinkle.com (true headings/decimal coordinates) cross-checked against S
 
 **Second pass — VATSIM Switzerland's vACC "Preferential Runway System" (vacc.ch, LSZH chart page).** This gives exact single-runway-in/single-runway-out pairs, explicit UTC windows (with separate summer/winter times) and a tailwind-component threshold, and it matches the live ATIS sample exactly. This is now the pack's primary source for runway pairs and hours, even though it is a VATSIM controller SOP, not the Swiss AIP itself, and the page itself says compliance is "the decision of the TOWER ATC."
 
-| Configuration | vACC published window (UTC, winter/summer) | Converted to local time | Arrivals | Departures |
-|---|---|---|---|---|
-| General | (default/daytime) | 07:00–21:00 weekday, 09:00–20:00 weekend | 14 | 28 |
-| Morning | until 0600Z / 0500Z weekday; until 0800Z / 0700Z weekend | 00:00(ish)–07:00 weekday, –09:00 weekend | 34 | 32 |
-| Evening | after 2000Z / 1900Z weekday; after 1900Z / 1800Z weekend | 21:00–24:00 weekday, 20:00–24:00 weekend | 28 | 32 |
+| vACC name | Mode id in this pack | vACC published window (UTC, winter/summer) | Converted to local time | Arrivals | Departures |
+|---|---|---|---|---|---|
+| General | `14A28D` | (default/daytime) | 07:00–21:00 weekday, 09:00–20:00 weekend | 14 | 28 |
+| Morning | `34A32D` | until 0600Z / 0500Z weekday; until 0800Z / 0700Z weekend | 00:00(ish)–07:00 weekday, –09:00 weekend | 34 | 32 |
+| Evening | `28A32D` | after 2000Z / 1900Z weekday; after 1900Z / 1800Z weekend | 21:00–24:00 weekday, 20:00–24:00 weekend | 28 | 32 |
+
+Mode ids use the project's usual runway-coded form (as YSSY and NFFN do), not the airport's own concept names. An earlier draft of this pack used names taken from the vACC page's own wording (`GENERAL`, `MORNING`, `EVENING`) and the Zurich Airport "Operating Concepts" page (`NORTH`/`EAST`/`SOUTH`) in two successive revisions; `GENERAL` on its own was then found to collide with an unrelated use of the word "general" in `src/traffic/parseFeed.ts` (a VATSIM feed field name, nothing to do with airports), which the project's airport-literal check (`scripts/check-no-airport-literals.mjs`) correctly caught in CI. Runway-coded ids avoid this class of problem entirely, which is why the project uses them as the default.
 
 The UTC-with-summer-offset figures convert to the **same local clock time** in both seasons (e.g. 0600Z winter and 0500Z summer are both 07:00 CET/CEST) — a useful cross-check that the conversion is right, and convenient since the pack's bands are in local time anyway.
 
-**Tailwind threshold (General only):** "Runways will be used up to 10 kts (RWY 14) and 7 kts (RWY 28) tailwind-component" — a genuine per-runway figure, but the pack schema only has one pack-wide tailwind limit (`settings.json`), not a per-runway override. The pack uses 7 kt (the stricter figure) pack-wide, which likely understates RWY14's real 10 kt margin — flagged as a known simplification, not a data gap to silently ignore.
+**Tailwind threshold (General/`14A28D` only):** "Runways will be used up to 10 kts (RWY 14) and 7 kts (RWY 28) tailwind-component" — a genuine per-runway figure, but the pack schema only has one pack-wide tailwind limit (`settings.json`), not a per-runway override. The pack uses 7 kt (the stricter figure) pack-wide, which likely understates RWY14's real 10 kt margin — flagged as a known simplification, not a data gap to silently ignore.
 
-**North-easterly wind variants (GENERAL_NE, EVENING_NE).** Zurich Airport's own page separately states that north-easterly wind moves departures to runway 10 (arrivals staying on 14 by day, or switching to 34 in the evening). This was **not** in the vACC page and **not** seen in the one live ATIS sample (which was itself a light 050°/9 kt wind, i.e. north-easterly-ish but evidently below whatever threshold triggers the switch — General was still in use). No wind-speed threshold was found for these two variants from any source, so they carry a higher band penalty and are flagged low-confidence.
+**North-easterly wind variants (`14A10D`, `34A10D`).** Zurich Airport's own page separately states that north-easterly wind moves departures to runway 10 (arrivals staying on 14 by day, or switching to 34 in the evening). This was **not** in the vACC page and **not** seen in the one live ATIS sample (which was itself a light 050°/9 kt wind, i.e. north-easterly-ish but evidently below whatever threshold triggers the switch — General/`14A28D` was still in use). No wind-speed threshold was found for these two variants from any source, so they carry a higher band penalty and are flagged low-confidence.
 
 **Not modelled / flagged:**
 - No crosswind threshold was found for any mode from either source; `maxCrosswindKt` falls back to the pack default (20 kt), unconfirmed.
@@ -69,8 +71,8 @@ This is free-running prose, not the `RWY <n> FOR ARR AND DEP` template the pack'
 
 ## 8. Confidence summary (revised 29-10-2026)
 
-- **Reasonably solid:** runway geometry/headings, the true-vs-magnetic wind finding, the GENERAL/MORNING/EVENING runway pairs and their local-time windows (now cross-checked against a real ATIS sample, not just two secondary sources agreeing with each other), declared capacity, the RWY14/RWY28 tailwind-component figures.
-- **Weak:** the north-easterly wind variants (GENERAL_NE, EVENING_NE) — sourced only from the airport's own vague marketing page, not corroborated by the vACC SOP or the one live ATIS sample, no threshold found; weekend/holiday hours (not modelled, per TB-4); crosswind limits (no source found at all, pack default used).
+- **Reasonably solid:** runway geometry/headings, the true-vs-magnetic wind finding, the 14A28D/34A32D/28A32D runway pairs and their local-time windows (now cross-checked against a real ATIS sample, not just two secondary sources agreeing with each other), declared capacity, the RWY14/RWY28 tailwind-component figures.
+- **Weak:** the north-easterly wind variants (`14A10D`, `34A10D`) — sourced only from the airport's own vague marketing page, not corroborated by the vACC SOP or the one live ATIS sample, no threshold found; weekend/holiday hours (not modelled, per TB-4); crosswind limits (no source found at all, pack default used).
 - **Not found:** a genuine Skyguide/AIP-published runway-selection document (the vACC page, while accurate enough to match the live ATIS, is explicitly a VATSIM controller aid with compliance "at the tower controller's discretion," not an AIP extract); ATIS phrasing template; per-runway crosswind limits.
 - **One confirmed false lead:** the first version of this pack, built from Zurich Airport's own "Operating Concepts" page alone, did not match the live ATIS sample at all — a reminder that an airport's public-facing noise/policy page can describe themes rather than the actual runway pairs ATC assigns, and should be cross-checked against real traffic data before being treated as the primary source for a pack.
 
@@ -78,7 +80,7 @@ This is free-running prose, not the `RWY <n> FOR ARR AND DEP` template the pack'
 
 - [Zurich Airport — Operating Concepts](https://www.flughafen-zuerich.ch/en/company/responsibility/noise-and-sound-insulation/flight-operations/operating-concepts) (background / superseded as primary source for runway pairs, see §3)
 - [Zurich Airport — Flight Operation](https://www.flughafen-zuerich.ch/en/company/responsibility/noise-and-sound-insulation/flight-operations) (source for the north-easterly wind variants only)
-- [VATSIM Switzerland vACC — Airports and Charts](https://www.vacc.ch/en/airports_and_charts/) and the LSZH chart page (vacc.ch/de/flughäfen_und_charts/LSZH) — primary source for GENERAL/MORNING/EVENING runway pairs, hours and the tailwind threshold
+- [VATSIM Switzerland vACC — Airports and Charts](https://www.vacc.ch/en/airports_and_charts/) and the LSZH chart page (vacc.ch/de/flughäfen_und_charts/LSZH) — primary source for 14A28D/34A32D/28A32D runway pairs, hours and the tailwind threshold
 - A live LSZH arrival ATIS, read 2026-10-29 16:23 UTC (owner-supplied, quoted in full in §7) — used to cross-check the vACC data and to retract the first-pass "Operating Concepts" modes
 - [MeteoSwiss — Flugwetterinfo (METAR wind = geographic/true)](https://www.meteoschweiz.admin.ch/dam/jcr:b72541fe-015d-4da5-bb4f-3f0dae842034/MCH_Flugwetterinfo_D_Web-2023.pdf)
 - SkyVector LSZH airport page (magnetic headings) and Sprinkle.com LSZH page (true headings/decimal coordinates)
