@@ -64,10 +64,10 @@ describe('v2 polling cadence comes from the pack', () => {
     r.ctrl.stop();
   });
 
-  it('starts three timers and stops all of them', () => {
+  it('starts four timers (VATSIM, weather, ATIS, tick) and stops all of them', () => {
     const r = rig(pack, EARLY);
     r.ctrl.start();
-    expect(r.timerCount()).toBe(3);
+    expect(r.timerCount()).toBe(4);
     r.ctrl.stop();
     expect(r.timerCount()).toBe(0);
   });
