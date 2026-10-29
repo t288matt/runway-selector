@@ -27,7 +27,7 @@ function stateOf(view: ViewData, feed: FeedState = EMPTY_FEED, notices: string[]
 }
 
 function render(view: ViewData, feed: FeedState = EMPTY_FEED, notices: string[] = []): string {
-  return renderToStaticMarkup(<Dashboard model={screenModel(stateOf(view, feed, notices))} pack={view.pack} onDismissNotice={() => undefined} />);
+  return renderToStaticMarkup(<Dashboard model={screenModel(stateOf(view, feed, notices))} pack={view.pack} onDismissNotice={() => undefined} detailOpen={false} onToggleDetail={() => undefined} />);
 }
 
 const textOf = (markup: string): string =>
@@ -183,7 +183,7 @@ describe('v2 chips, notice and failure states on real reports', () => {
 
   it('shows METAR, TAF, VATSIM and the plan chip, each with a shape and a hover text', () => {
     const html = renderToStaticMarkup(
-      <Dashboard model={screenModel(stateOf(view, { aircraft: [], prefiles: [], fetchedAtMs: FIXTURE_NOW - 30_000, error: null, errorAtMs: null }, [], FIXTURE_NOW))} pack={real} onDismissNotice={() => undefined} />,
+      <Dashboard model={screenModel(stateOf(view, { aircraft: [], prefiles: [], fetchedAtMs: FIXTURE_NOW - 30_000, error: null, errorAtMs: null }, [], FIXTURE_NOW))} pack={real} onDismissNotice={() => undefined} detailOpen={false} onToggleDetail={() => undefined} />,
     );
     for (const id of ['metar', 'taf', 'vatsim', 'plan']) expect(html).toContain(`data-testid="chip-${id}"`);
     expect(html).toContain('data-shape="dot"');
@@ -202,7 +202,7 @@ describe('v2 chips, notice and failure states on real reports', () => {
     files['airport.json'].labels = { extraNotice: 'A pack line.' };
     files['airport.json'].weatherStation = FIXTURE_STATION;
     const pack = parsePack(toRaw(files));
-    const html = renderToStaticMarkup(<Dashboard model={screenModel(stateOf({ ...view, pack }))} pack={pack} onDismissNotice={() => undefined} />);
+    const html = renderToStaticMarkup(<Dashboard model={screenModel(stateOf({ ...view, pack }))} pack={pack} onDismissNotice={() => undefined} detailOpen={false} onToggleDetail={() => undefined} />);
     expect(html).toContain(FLIGHT_SIM_NOTICE);
     expect(textOf(html)).toContain('A pack line.');
   });
