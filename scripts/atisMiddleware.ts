@@ -10,6 +10,8 @@
 // in memory for ATIS_MIN_INTERVAL_MS and served from there. NAIPS is never called for
 // the same ICAO more often than that, whatever the client asks.
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { readLimited } from '../src/net/readLimited.ts';
 
 /** The floor between two NAIPS calls for the same airport. Change it only on the owner's say-so (tests pin it at 30 minutes). */
@@ -35,11 +37,43 @@ export interface AtisMiddlewareOptions {
   readonly getCredentials: () => { username?: string | undefined; password?: string | undefined };
   readonly fetch: NaipsFetch;
   readonly now: () => number;
+  /** True for an airport the server was started with a pack for (built from refdata/airports/*\/airport.json). */
+  readonly isKnownAirport: (icao: string) => boolean;
+}
+
+/** The `icao` of every `<dir>/*\/airport.json`: the airports the server will ask NAIPS about. Unreadable entries are skipped. */
+export function airportsWithPacks(dir: string): ReadonlySet<string> {
+  const found = new Set<string>();
+  if (!existsSync(dir)) return found;
+  for (const name of readdirSync(dir)) {
+    try {
+      const icao = (JSON.parse(readFileSync(join(dir, name, 'airport.json'), 'utf8')) as { icao?: unknown }).icao;
+      if (typeof icao === 'string' && ICAO.test(icao)) found.add(icao);
+    } catch {
+      // not a pack folder
+    }
+  }
+  return found;
+}
+
+/**
+ * A request from another site is refused: Sec-Fetch-Site says cross-site, or an Origin is present and is not this server's own
+ * (its Host). A page on the same origin sends neither a foreign Origin nor cross-site. Returns true when it must be refused.
+ */
+export function isForeignRequest(headers: IncomingMessage['headers']): boolean {
+  if (headers['sec-fetch-site'] === 'cross-site') return true;
+  const origin = headers['origin'];
+  if (origin === undefined) return false;
+  try {
+    return new URL(origin).host !== headers['host'];
+  } catch {
+    return true;
+  }
 }
 
 export type AtisOutcome =
   | { readonly status: 200; readonly body: { readonly atis: string; readonly fetchedAt: number } }
-  | { readonly status: 400 | 405 | 503; readonly body: { readonly error: string } };
+  | { readonly status: 400 | 403 | 404 | 405 | 503; readonly body: { readonly error: string } };
 
 const ICAO = /^[A-Z]{4}$/;
 
@@ -139,6 +173,8 @@ export function createAtisService(options: AtisMiddlewareOptions): (method: stri
   return async (method, icao) => {
     if (method !== 'GET') return { status: 405, body: { error: 'Method not allowed.' } };
     if (!ICAO.test(icao)) return { status: 400, body: { error: 'Expected a four-letter airport code.' } };
+    // Only airports that have a pack are asked for, so a stray page cannot spend the NAIPS budget on made-up codes.
+    if (!options.isKnownAirport(icao)) return { status: 404, body: { error: 'Unknown airport.' } };
     const now = options.now();
     const hit = cache.get(icao);
     if (hit !== undefined && now - hit.at < ATIS_MIN_INTERVAL_MS) return hit.outcome;
@@ -150,9 +186,10 @@ export function createAtisService(options: AtisMiddlewareOptions): (method: stri
       for (const [k, v] of cache) if (now - v.at >= ATIS_MIN_INTERVAL_MS) cache.delete(k);
       if (cache.size >= MAX_CACHED) return UNAVAILABLE;
     }
-    // Recorded before the call returns, so a client that asks again at once gets the same single call.
+    // The floor runs from the START of the call (not its end), so a page that polls every 30 minutes from its own request start
+    // is never served the same cache twice. A client that asks again at once gets the same single call.
     const p = callNaips(icao, { username, password }).then((outcome) => {
-      cache.set(icao, { at: options.now(), outcome });
+      cache.set(icao, { at: now, outcome });
       return outcome;
     });
     inFlight.set(icao, p);
@@ -170,6 +207,12 @@ export function createAtisMiddleware(options: AtisMiddlewareOptions): (req: Inco
   return (req, res) => {
     const path = (req.url ?? '').split('?')[0] ?? '';
     const icao = path.replace(/^\/+/, '').replace(/\/+$/, '');
+    if (isForeignRequest(req.headers)) {
+      res.statusCode = 403;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: 'Not allowed.' }));
+      return;
+    }
     void service(req.method ?? 'GET', icao)
       .catch((): AtisOutcome => UNAVAILABLE)
       .then((outcome) => {

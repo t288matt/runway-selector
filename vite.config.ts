@@ -4,7 +4,7 @@ import { defineConfig, type Plugin } from 'vitest/config';
 import { loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
-import { createAtisMiddleware } from './scripts/atisMiddleware.ts';
+import { airportsWithPacks, createAtisMiddleware } from './scripts/atisMiddleware.ts';
 
 const refdataDir = resolve(import.meta.dirname, 'refdata');
 
@@ -67,6 +67,8 @@ function atisEndpoint(): Plugin {
   return {
     name: 'serve-atis',
     configureServer(server) {
+      // The airports with a pack, read once at server start (no airport is named in code).
+      const known = airportsWithPacks(join(refdataDir, 'airports'));
       server.middlewares.use(
         '/api/atis',
         createAtisMiddleware({
@@ -76,6 +78,7 @@ function atisEndpoint(): Plugin {
           },
           fetch: (input, init) => fetch(input, init),
           now: () => Date.now(),
+          isKnownAirport: (icao) => known.has(icao),
         }),
       );
     },

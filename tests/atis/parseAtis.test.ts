@@ -91,6 +91,20 @@ describe('parseAtisRunways: refuses rather than guesses', () => {
   });
 });
 
+describe('parseAtisRunways: an entry that wraps onto continuation lines', () => {
+  const wording = loadPackFrom(YSSY_PACK).atisWording;
+  it('joins the continuation lines before parsing (wrap rule)', () => {
+    expect(parseAtisRunways(sample('real-wrapped.txt'), wording)).toEqual({ arrivals: ['34L'], departures: ['16R'] });
+  });
+  it('a single-line entry still wins and the next field is never swallowed', () => {
+    expect(parseAtisRunways(sample('real-sydney.txt'), wording)).toEqual({ arrivals: ['34L'], departures: ['16R'] });
+  });
+  it('if the joined text does not fit, it is null', () => {
+    expect(parseAtisRunways('ATIS XXXX A 010000\n  RWY: 34L FOR ARRS.\n  WIND: 340/10', wording)).toBeNull();
+    expect(parseAtisRunways('ATIS XXXX A 010000\n  RWY: 34L FOR ARRS.\n\n  RWY 16R FOR DEPS', wording)).toBeNull();
+  });
+});
+
 describe('matchMode', () => {
   const pack = (icao: string): AirportPack => loadPackFrom(REAL(icao));
   it('Melbourne sample matches 16A27D', () => {

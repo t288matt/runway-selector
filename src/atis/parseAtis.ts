@@ -52,10 +52,24 @@ function runwaysFrom(text: string, andWord: string): string[] | null {
   return out.length === 0 ? null : out;
 }
 
-/** The text of the RWY line (after the runway word and the colon), or null. */
-function runwayLine(text: string, rwyWord: string): string | null {
-  const m = new RegExp(`^[ \\t]*${escapeRegExp(rwyWord)}[ \\t]*:?[ \\t]*(\\S.*)$`, 'm').exec(text);
-  return m?.[1] ?? null;
+/**
+ * The text after the runway word and the colon on the first RWY line, as candidates: the line alone, then the line joined with
+ * up to three following lines (an entry that wraps onto continuation lines), stopping at a blank line. The shortest that parses wins.
+ */
+function runwayCandidates(text: string, rwyWord: string): string[] {
+  const lines = text.split(/\r?\n/);
+  const head = new RegExp(`^[ \\t]*${escapeRegExp(rwyWord)}[ \\t]*:?[ \\t]*(\\S.*)$`);
+  const at = lines.findIndex((l) => head.test(l));
+  if (at < 0) return [];
+  const first = head.exec(lines[at] ?? '')?.[1] ?? '';
+  const out = [first];
+  let joined = first;
+  for (const l of lines.slice(at + 1, at + 4)) {
+    if (l.trim() === '') break;
+    joined = `${joined} ${l.trim()}`;
+    out.push(joined);
+  }
+  return out;
 }
 
 const unique = (xs: readonly string[]): string[] => [...new Set(xs)];
@@ -64,8 +78,14 @@ export function parseAtisRunways(atisText: string, wording: AtisParseWords): Par
   if (atisText.length === 0 || atisText.length > MAX_CHARS) return null;
   const rwyWord = wording.rwyWord.toUpperCase();
   const andWord = wording.andWord.toUpperCase();
-  const line = runwayLine(atisText.toUpperCase(), rwyWord);
-  if (line === null) return null;
+  for (const line of runwayCandidates(atisText.toUpperCase(), rwyWord)) {
+    const parsed = parseRunwayText(line, wording, rwyWord, andWord);
+    if (parsed !== null) return parsed;
+  }
+  return null;
+}
+
+function parseRunwayText(line: string, wording: AtisParseWords, rwyWord: string, andWord: string): ParsedRunways | null {
   const forWord = escapeRegExp(wording.forWord.toUpperCase());
   const arrOnly = new RegExp(`^${wordRegExp(wording.arrWord.toUpperCase())}$`);
   const depOnly = new RegExp(`^${wordRegExp(wording.depWord.toUpperCase())}$`);

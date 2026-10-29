@@ -34,6 +34,7 @@ function rig(opts: { answer?: () => Response | Promise<Response>; creds?: { user
       return opts.answer === undefined ? new Response(soap(briefing())) : opts.answer();
     },
     now: () => clock.now,
+    isKnownAirport: (i) => i === 'ZZZA' || i === 'ZZZB',
   });
   return { clock, calls, service };
 }
@@ -191,6 +192,7 @@ describe('over HTTP (the real handler on a throwaway local server)', () => {
         return new Response(soap(briefing()));
       },
       now: () => 42,
+      isKnownAirport: (i) => i === 'ZZZA',
     });
     server = createServer((req, res) => handler(Object.assign(req, { url: (req.url ?? '').replace('/api/atis', '') }), res));
     await new Promise<void>((ok) => server!.listen(0, '127.0.0.1', ok));

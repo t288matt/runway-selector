@@ -11,6 +11,7 @@
 // the traffic it was calculated with.
 import { reloadPack, type AirportPack, type FetchLike } from '../refdata';
 import { clearAudit, exportAudit, loadAudit, loadWindowChoice, type AuditEntry, type AuditExport, type Store } from '../store';
+import { ATIS_POLL_MARGIN_MS } from '../atis/config';
 import { fetchAtis } from '../atis/fetchAtis';
 import { fetchFeed } from '../traffic/fetchFeed';
 import type { DecodedMetar, DecodedTaf } from '../weather';
@@ -302,7 +303,7 @@ export function createController(deps: ControllerDeps): Controller {
   const startTimers = (): void => {
     pollTimer = deps.timers.setInterval(poll, pack.settings.vatsimPollSeconds * 1000);
     weatherTimer = deps.timers.setInterval(pollWeather, pack.settings.weatherPollMinutes * 60_000);
-    atisTimer = deps.timers.setInterval(pollAtis, pack.settings.atisPollMinutes * 60_000);
+    atisTimer = deps.timers.setInterval(pollAtis, pack.settings.atisPollMinutes * 60_000 + ATIS_POLL_MARGIN_MS);
     tickTimer = deps.timers.setInterval(tick, TICK_MS);
   };
   const stopTimers = (): void => {

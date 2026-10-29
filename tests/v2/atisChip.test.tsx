@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { ATIS_STALE_MINUTES } from '../../src/atis/config';
+import { ATIS_POLL_MARGIN_MS, ATIS_STALE_MINUTES } from '../../src/atis/config';
 import { fetchAtis } from '../../src/atis/fetchAtis';
 import { Dashboard } from '../../src/v2/components/Dashboard';
 import { NO_AUTO_WEATHER, type AtisReading, type ControllerState } from '../../src/v2/controller';
@@ -54,7 +54,8 @@ describe('the chip on the answer card', () => {
     const out = html(reading(sample('real-sydney.txt')));
     expect(out).toMatch(/<div class="atis-chip" role="group" tabindex="0" aria-label="Real-world runway mode now: 34L arr, 16R dep" data-testid="atis-chip" data-matched="false"><i class="atis-dot" aria-hidden="true"><\/i>RW: 34L arr, 16R dep<\/div>/);
     const alt = out.indexOf('data-testid="alternatives"');
-    if (alt >= 0) expect(out.indexOf('data-testid="atis-chip"')).toBeGreaterThan(alt);
+    expect(alt).toBeGreaterThanOrEqual(0);
+    expect(out.indexOf(`data-testid="atis-chip"`)).toBeGreaterThan(alt);
   });
   it('is absent when there is no reading, the text does not parse, or the reading is stale', () => {
     expect(html(null)).not.toContain('atis-chip');
@@ -90,7 +91,7 @@ describe('the agreed style (no border, blue 8px dot, white text, dot aligned 10p
 
 const pack = packWith(YSSY_PACK, { weatherStation: 'ZZZZ' });
 const EARLY = Date.UTC(2026, 9, 23, 14, 5, 0);
-const ATIS_MS = pack.settings.atisPollMinutes * MIN;
+const ATIS_MS = pack.settings.atisPollMinutes * MIN + ATIS_POLL_MARGIN_MS;
 const answer = (r: ReturnType<typeof rig>): string => JSON.stringify({ atis: sample('real-sydney.txt'), fetchedAt: r.clock.now });
 
 describe('the controller polls the local route', () => {
