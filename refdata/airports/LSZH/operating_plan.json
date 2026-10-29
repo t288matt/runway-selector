@@ -7,7 +7,7 @@
       "start": "23:30",
       "end": "06:00",
       "rows": [
-        { "mode": "28A3234D", "allowed": true, "penalty": 0 }
+        { "mode": "EAST", "allowed": true, "penalty": 0 }
       ]
     },
     {
@@ -15,8 +15,8 @@
       "start": "06:00",
       "end": "07:00",
       "rows": [
-        { "mode": "34A3234D", "allowed": true, "penalty": 0 },
-        { "mode": "34A10D", "allowed": true, "penalty": 2 }
+        { "mode": "SOUTH", "allowed": true, "penalty": 0 },
+        { "mode": "SOUTH_NE", "allowed": true, "penalty": 2 }
       ]
     },
     {
@@ -24,8 +24,8 @@
       "start": "07:00",
       "end": "21:00",
       "rows": [
-        { "mode": "1416A2816D", "allowed": true, "penalty": 0 },
-        { "mode": "14A10D", "allowed": true, "penalty": 2 }
+        { "mode": "NORTH", "allowed": true, "penalty": 0 },
+        { "mode": "NORTH_NE", "allowed": true, "penalty": 2 }
       ]
     },
     {
@@ -33,7 +33,7 @@
       "start": "21:00",
       "end": "23:30",
       "rows": [
-        { "mode": "28A3234D", "allowed": true, "penalty": 0 }
+        { "mode": "EAST", "allowed": true, "penalty": 0 }
       ]
     }
   ]
