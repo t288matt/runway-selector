@@ -14,6 +14,7 @@
 // A plain planned change ("Forecasting: ... at ...") does not make the state CHANGE SOON.
 import { NO_SUITABLE_TITLE } from '../../engine';
 import { hhmmZRel } from '../format';
+import { atisText } from './atisText';
 import { approachChip, type ApproachChip } from './approach';
 import { conditionalBanner } from './conditional';
 import type { ViewData } from './dashboard';
@@ -69,6 +70,8 @@ export interface AnswerModel {
   /** 'long' and 'xlong' let a long mode id use a smaller type size so it never overflows. */
   readonly modeSize: 'normal' | 'long' | 'xlong';
   readonly modeLabel: string;
+  /** The ATIS-style runway text copied when the main mode is clicked (issue 150), built from the mode's raw arrays; null with no recommendation. */
+  readonly copyText: string | null;
   /** "Arr 03 · Dep 03, 06" parts, or null with no recommendation. */
   readonly arrivals: string | null;
   readonly departures: string | null;
@@ -77,7 +80,7 @@ export interface AnswerModel {
   /** The recommended mode's rank in the operating plan (1 is the most preferred), or null. */
   readonly rank: number | null;
   /** Other modes SUITABLE in every one of the next ALSO_SUITABLE_SLOTS slots, most preferred first (issue 122). */
-  readonly alternatives: readonly { readonly modeId: string; readonly rank: number }[];
+  readonly alternatives: readonly { readonly modeId: string; readonly rank: number; readonly copyText: string }[];
   /** The popover text behind the info mark and the "Also suitable" label: every enabled, allowed mode in plan order with its rank and whether it is recommended, suitable or unsuitable. Null with no recommendation (issue 122). */
   readonly priorityText: string | null;
   /** The same ranking as rows, for the coloured popover. */
@@ -108,13 +111,13 @@ export function answerModel(view: ViewData): AnswerModel {
       band.id === 'NO_DATA'
         ? [explanation.headline, ...view.weather.banners.filter((b) => b.code === 'no-weather' || b.code === 'no-metar' || b.code === 'no-taf' || b.code === 'taf-ended' || b.code === 'metar-outside-window').map((b) => b.message)].join(' ')
         : null;
-    return { band, modeId: null, modeSize: 'normal', modeLabel: 'No recommended mode', arrivals: null, departures: null, next: '', rank: null, alternatives: [], priorityText: null, priorityRows: [], nextChange: null, why: missing, conditional: null, approach: null };
+    return { band, modeId: null, modeSize: 'normal', modeLabel: 'No recommended mode', arrivals: null, departures: null, copyText: null, next: '', rank: null, alternatives: [], priorityText: null, priorityRows: [], nextChange: null, why: missing, conditional: null, approach: null };
   }
 
   const mode = pack.modes.find((m) => m.id === recId);
   const upcoming = result.changeovers.find((c) => c.change.slotIndex > 0);
   const recIndex = pack.modes.findIndex((m) => m.id === recId);
-  const alternatives: { modeId: string; rank: number; index: number }[] = [];
+  const alternatives: { modeId: string; rank: number; index: number; copyText: string }[] = [];
   const ranked: { modeId: string; rank: number; index: number; state: 'recommended' | 'suitable' | 'unsuitable' }[] = [];
   pack.modes.forEach((m, index) => {
     if (!m.enabled) return;
@@ -122,7 +125,7 @@ export function answerModel(view: ViewData): AnswerModel {
     if (rank === null) return;
     const window = (result.evaluation.cells[index] ?? []).slice(0, ALSO_SUITABLE_SLOTS);
     const suitable = window.length === ALSO_SUITABLE_SLOTS && window.every((c) => c.status === 'SUITABLE');
-    if (index !== recIndex && suitable) alternatives.push({ modeId: m.id, rank, index });
+    if (index !== recIndex && suitable) alternatives.push({ modeId: m.id, rank, index, copyText: atisText(m.arrivals, m.departures) });
     ranked.push({ modeId: m.id, rank, index, state: index === recIndex ? 'recommended' : suitable ? 'suitable' : 'unsuitable' });
   });
   alternatives.sort((a, b) => a.rank - b.rank || a.index - b.index);
@@ -135,9 +138,10 @@ export function answerModel(view: ViewData): AnswerModel {
     modeLabel: `Recommended mode ${recId}`,
     arrivals: mode === undefined ? null : mode.arrivals.join(', ') || 'none',
     departures: mode === undefined ? null : mode.departures.join(', ') || 'none',
+    copyText: mode === undefined ? null : atisText(mode.arrivals, mode.departures),
     next: upcoming === undefined ? 'No change planned' : `Forecasting: ${upcoming.change.toModeId} at ${hhmmZRel(upcoming.change.startMs, view.calcNowMs)}`,
     rank: planRank(view, recIndex, 0),
-    alternatives: alternatives.map(({ modeId, rank }) => ({ modeId, rank })),
+    alternatives: alternatives.map(({ modeId, rank, copyText }) => ({ modeId, rank, copyText })),
     priorityText,
     priorityRows: ranked.map(({ rank, modeId, state }) => ({ rank, modeId, state })),
     nextChange: upcoming === undefined ? null : { modeId: upcoming.change.toModeId, atMs: upcoming.change.startMs },

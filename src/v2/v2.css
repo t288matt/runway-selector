@@ -265,6 +265,40 @@ body {
   letter-spacing: -0.02em;
   overflow-wrap: anywhere;
 }
+/* Clicking a mode copies its ATIS runway text (issue 150): real buttons that look exactly like the text they wrap. */
+.copy {
+  position: relative;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  text-align: inherit;
+  cursor: pointer;
+  overflow-wrap: inherit;
+}
+.mode-btn {
+  display: inline;
+}
+.copied {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 5;
+  margin-top: 2px;
+  padding: 1px 7px;
+  border-radius: 4px;
+  background: var(--panel2);
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.3;
+  color: var(--ok-text);
+}
 .mode.long {
   font-size: 62px;
 }
@@ -397,6 +431,10 @@ body {
   flex: none;
 }
 .alt-chip {
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 7px;
