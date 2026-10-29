@@ -1,39 +1,31 @@
 {
   "schemaVersion": 1,
-  "description": "Four bands following Zurich Airport's own published North/East/South concept windows (docs/LSZH_RUNWAY_RESEARCH.md). Zurich's real published hours differ on weekends/Baden-Württemberg holidays (e.g. North 09:00-20:00 instead of 07:00-21:00) but the engine does not yet support day-of-week rules (docs/TIME_BASED_RULES.md, TB-4) -- this plan uses the weekday hours as the only set of bands, a known simplification, not a data error. The overnight 23:30-06:00 period is covered by the East-concept mode rather than a dedicated curfew band, matching the project's own precedent of not modelling curfews as a special rule (YSSY). A mode with no row in a band keeps the pack's default preference penalty and stays allowed, so wind can still override these preferences if it must (soft preference, hard eligibility).",
+  "description": "Rebuilt 29-10-2026 from VATSIM Switzerland's vACC 'Preferential Runway System' page (vacc.ch), cross-checked against a live LSZH ATIS read 2026-10-29 16:23 UTC (see modes.json for detail and docs/LSZH_RUNWAY_RESEARCH.md for sourcing). The page's UTC times (which differ between winter and summer) convert to the SAME local clock times either way: Morning ends 0600Z winter / 0500Z summer = 07:00 local on weekdays, 0800Z/0700Z = 09:00 local on weekends; Evening starts 2000Z/1900Z = 21:00 local on weekdays, 1900Z/1800Z = 20:00 local on weekends. Zurich's real schedule differs on weekends, but the engine does not yet support day-of-week rules (docs/TIME_BASED_RULES.md, TB-4) -- this plan uses the weekday hours (07:00/21:00) as the only band set, a known simplification, not a data error. A mode with no row in a band keeps the pack's default preference penalty and stays allowed, so wind can still override these preferences if it must (soft preference, hard eligibility).",
   "bands": [
     {
-      "id": "night",
-      "start": "23:30",
-      "end": "06:00",
-      "rows": [
-        { "mode": "28A3234D", "allowed": true, "penalty": 0 }
-      ]
-    },
-    {
-      "id": "south",
-      "start": "06:00",
+      "id": "morning",
+      "start": "00:00",
       "end": "07:00",
       "rows": [
-        { "mode": "34A3234D", "allowed": true, "penalty": 0 },
-        { "mode": "34A10D", "allowed": true, "penalty": 2 }
+        { "mode": "MORNING", "allowed": true, "penalty": 0 }
       ]
     },
     {
-      "id": "north",
+      "id": "general",
       "start": "07:00",
       "end": "21:00",
       "rows": [
-        { "mode": "1416A2816D", "allowed": true, "penalty": 0 },
-        { "mode": "14A10D", "allowed": true, "penalty": 2 }
+        { "mode": "GENERAL", "allowed": true, "penalty": 0 },
+        { "mode": "GENERAL_NE", "allowed": true, "penalty": 2 }
       ]
     },
     {
-      "id": "east",
+      "id": "evening",
       "start": "21:00",
-      "end": "23:30",
+      "end": "00:00",
       "rows": [
-        { "mode": "28A3234D", "allowed": true, "penalty": 0 }
+        { "mode": "EVENING", "allowed": true, "penalty": 0 },
+        { "mode": "EVENING_NE", "allowed": true, "penalty": 2 }
       ]
     }
   ]
