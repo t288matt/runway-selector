@@ -1,8 +1,49 @@
 // The answer band: the state (a glyph and a word), the mode, the next change and
 // the arrival and departure runways. Text nodes only (SEC-2). There is no current-mode selector (issue 104).
+import { useEffect, useState } from 'react';
 import type { AnswerModel } from '../model/answer';
+import { copyText } from '../copy';
 import { StateGlyph } from './Icons';
 import { Tip } from './Popover';
+
+/** The words that show after a click for a moment. */
+export const COPIED_WORD = 'Copied';
+export const COPIED_MS = 1500;
+
+/** The click handler: copy the text, and call onCopied only when it worked. */
+export function copyHandler(text: string, onCopied: () => void): () => void {
+  return () => {
+    void copyText(text).then((ok) => {
+      if (ok) onCopied();
+    });
+  };
+}
+
+/** A real button that copies the mode's ATIS runway text (issue 150). Looks like the text it wraps; "Copied" shows for about 1.5 seconds. */
+export function CopyButton({ text, modeId, className, testId, children }: { text: string; modeId: string; className?: string; testId?: string; children: React.ReactNode }) {
+  const [copied, setCopied] = useState(false);
+  // "Copied" goes after COPIED_MS; a fresh click restarts the wait because the effect runs again.
+  const [clicks, setClicks] = useState(0);
+  useEffect(() => {
+    if (!copied) return undefined;
+    const t = setTimeout(() => setCopied(false), COPIED_MS);
+    return () => clearTimeout(t);
+  }, [copied, clicks]);
+  const onClick = copyHandler(text, () => {
+    setCopied(true);
+    setClicks((n) => n + 1);
+  });
+  return (
+    <button type="button" className={`copy ${className ?? ''}`.trim()} aria-label={`Copy ATIS text for ${modeId}`} data-copy={text} data-testid={testId} onClick={onClick}>
+      {children}
+      {copied ? (
+        <span className="copied" role="status">
+          {COPIED_WORD}
+        </span>
+      ) : null}
+    </button>
+  );
+}
 
 /** The ranking as coloured rows: blue for the recommended mode, green for suitable, grey for unsuitable. */
 function PriorityRich({ model }: { model: AnswerModel }) {
@@ -21,6 +62,11 @@ function PriorityRich({ model }: { model: AnswerModel }) {
       </span>
     </>
   );
+}
+
+function MainMode({ model }: { model: AnswerModel }) {
+  const id = model.modeId ?? '';
+  return model.copyText === null ? <>{id}</> : <CopyButton text={model.copyText} modeId={id} className="mode-btn">{id}</CopyButton>;
 }
 
 export function Answer({ model }: { model: AnswerModel }) {
@@ -45,12 +91,12 @@ export function Answer({ model }: { model: AnswerModel }) {
         </div>
       ) : model.approach === null ? (
         <div className={`mode ${model.modeSize === 'normal' ? '' : model.modeSize}`.trim()} aria-label={model.modeLabel} data-testid="mode">
-          {model.modeId}
+          <MainMode model={model} />
         </div>
       ) : (
         <div className="mode-row">
           <div className={`mode ${model.modeSize === 'normal' ? '' : model.modeSize}`.trim()} aria-label={model.modeLabel} data-testid="mode">
-            {model.modeId}
+            <MainMode model={model} />
           </div>
           <Tip text={model.approach.hover} className="appr" tabIndex={0} role="group" aria-label={`Approach type ${model.approach.chip}`} data-testid="approach-chip">
             {model.approach.chip}
@@ -83,10 +129,10 @@ export function Answer({ model }: { model: AnswerModel }) {
           )}
           <div className="alt-chips">
             {model.alternatives.map((a) => (
-              <span className="alt-chip" key={a.modeId} data-testid="alt-chip">
+              <CopyButton key={a.modeId} text={a.copyText} modeId={a.modeId} className="alt-chip" testId="alt-chip">
                 <i className="alt-dot" aria-hidden="true" />
                 {a.modeId}
-              </span>
+              </CopyButton>
             ))}
           </div>
         </div>
