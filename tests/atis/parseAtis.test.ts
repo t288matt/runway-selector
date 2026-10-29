@@ -96,7 +96,13 @@ describe('parseAtisRunways: an entry that wraps onto continuation lines', () => 
   it('joins the continuation lines before parsing (wrap rule)', () => {
     expect(parseAtisRunways(sample('real-wrapped.txt'), wording)).toEqual({ arrivals: ['34L'], departures: ['16R'] });
   });
-  it('a single-line entry still wins and the next field is never swallowed', () => {
+  it('LONGEST-FIRST: a wrapped second clause is not lost (16L for both, then 16R on the next line)', () => {
+    expect(parseAtisRunways('ATIS XXXX A 010000\n  RWY: 16L FOR ARRS AND DEPS.\n  RWY 16R FOR DEPS\n  WIND: 340/10', wording)).toEqual({ arrivals: ['16L'], departures: ['16L', '16R'] });
+  });
+  it('real single-line samples followed by field lines are unchanged: a longer candidate that swallows a field fails, the shorter is used (not null)', () => {
+    for (const field of ['OPR INFO: ILS 34L CAT 1', 'APCH: EXP ILS RWY 34L', 'WIND: 340/10']) {
+      expect(parseAtisRunways(`ATIS XXXX A 010000\n  RWY: 34L FOR ARRS. RWY 16R FOR DEPS\n  ${field}\n  ${field}`, wording)).toEqual({ arrivals: ['34L'], departures: ['16R'] });
+    }
     expect(parseAtisRunways(sample('real-sydney.txt'), wording)).toEqual({ arrivals: ['34L'], departures: ['16R'] });
   });
   it('if the joined text does not fit, it is null', () => {

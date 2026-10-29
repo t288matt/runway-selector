@@ -54,7 +54,7 @@ function runwaysFrom(text: string, andWord: string): string[] | null {
 
 /**
  * The text after the runway word and the colon on the first RWY line, as candidates: the line alone, then the line joined with
- * up to three following lines (an entry that wraps onto continuation lines), stopping at a blank line. The shortest that parses wins.
+ * up to three following lines (an entry that wraps onto continuation lines), stopping at a blank line. The LONGEST that parses wins (a wrapped second clause is not lost); a candidate that swallows the next field fails to parse and the shorter one is used.
  */
 function runwayCandidates(text: string, rwyWord: string): string[] {
   const lines = text.split(/\r?\n/);
@@ -78,7 +78,7 @@ export function parseAtisRunways(atisText: string, wording: AtisParseWords): Par
   if (atisText.length === 0 || atisText.length > MAX_CHARS) return null;
   const rwyWord = wording.rwyWord.toUpperCase();
   const andWord = wording.andWord.toUpperCase();
-  for (const line of runwayCandidates(atisText.toUpperCase(), rwyWord)) {
+  for (const line of runwayCandidates(atisText.toUpperCase(), rwyWord).reverse()) {
     const parsed = parseRunwayText(line, wording, rwyWord, andWord);
     if (parsed !== null) return parsed;
   }
