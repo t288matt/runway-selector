@@ -33,7 +33,7 @@ export function Dashboard({ model, pack, onDismissNotice, detailOpen, onToggleDe
         </div>
       ))}
       <main className={`hero tone-${tone}`} aria-label="Runway mode recommendation">
-        <Answer model={model.answer} atis={model.atis} />
+        <Answer model={model.answer} />
         <Picture model={model.picture} />
         <div className="facts">
           <TrafficTileView tile={model.traffic} />

@@ -3,7 +3,6 @@
 // network, no React.
 import type { ControllerState } from '../controller';
 import { answerModel, type AnswerModel } from './answer';
-import { atisChip, type AtisChip } from './atis';
 import { chipModels, type ChipModel } from './chips';
 import { evaluationModel, type EvaluationModel } from './evaluation';
 import { forecastSummary, type ForecastSummary } from './forecastBar';
@@ -22,8 +21,6 @@ export interface ScreenModel {
   /** The expanded Detail section. */
   readonly evaluation: EvaluationModel;
   readonly chips: readonly ChipModel[];
-  /** The real-world runway mode chip under the Also suitable chips (issue 159), or null (hidden). */
-  readonly atis: AtisChip | null;
   readonly notices: readonly string[];
 }
 
@@ -39,7 +36,6 @@ export function screenModel(state: ControllerState): ScreenModel {
     forecast: forecastSummary(view),
     evaluation: evaluationModel(view, displayNowMs),
     chips: chipModels(view, feed, displayNowMs, state.autoWeather),
-    atis: atisChip(state.atis, view.pack, displayNowMs),
     notices: state.notices,
   };
 }

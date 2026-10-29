@@ -1,7 +1,5 @@
 // Review round 1: strict objects everywhere, duplicate keys, whole-day bands,
 // _ keys where data is expected, -0, airport id shape, poll bound.
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadPack, parseAppConfig, parsePack, type FetchLike } from '../../src/refdata';
 import { TEST1_PACK, TEST_PACK, YSSY_PACK, readJson, readRaw, toRaw, type JsonFiles, type RawFiles } from '../helpers/packs';
@@ -149,33 +147,5 @@ describe('vatsimPollSeconds has no enforced minimum beyond 1', () => {
     expect(parsePack(toRaw(f)).settings.vatsimPollSeconds).toBe(1);
     f['settings.json'].vatsimPollSeconds.value = 0;
     expect(refusedMessage(toRaw(f))).toContain('settings.json: vatsimPollSeconds.value');
-  });
-});
-
-describe('atisPollMinutes has an enforced floor of 30 minutes (issue 159, owner, 29-10-2026)', () => {
-  it('every shipped pack and fixture carries it, at 30', () => {
-    for (const ref of [YSSY_PACK, TEST_PACK, TEST1_PACK]) expect(parsePack(toRaw(readJson(ref))).settings.atisPollMinutes).toBe(30);
-    const dir = join(import.meta.dirname, '..', '..', 'refdata', 'airports');
-    for (const icao of readdirSync(dir)) {
-      const settings = JSON.parse(readFileSync(join(dir, icao, 'settings.json'), 'utf8')) as { atisPollMinutes?: { value: number } };
-      expect(settings.atisPollMinutes?.value, icao).toBe(30);
-    }
-  });
-  it('30 and more load; 29, 1, 0, a negative and a fraction are refused', () => {
-    const f = readJson(YSSY_PACK);
-    f['settings.json'].atisPollMinutes.value = 30;
-    expect(parsePack(toRaw(f)).settings.atisPollMinutes).toBe(30);
-    f['settings.json'].atisPollMinutes.value = 120;
-    expect(parsePack(toRaw(f)).settings.atisPollMinutes).toBe(120);
-    for (const bad of [29, 1, 0, -30, 30.5]) {
-      f['settings.json'].atisPollMinutes.value = bad;
-      expect(refusedMessage(toRaw(f))).toContain('settings.json: atisPollMinutes.value');
-    }
-  });
-  it('a pack without it is refused, like any other setting, and it has a description', () => {
-    const f = readJson(YSSY_PACK);
-    expect(parsePack(toRaw(f)).descriptions.atisPollMinutes.length).toBeGreaterThan(10);
-    delete f['settings.json'].atisPollMinutes;
-    expect(refusedMessage(toRaw(f))).toContain('atisPollMinutes');
   });
 });

@@ -23,7 +23,7 @@ import { FIXTURE_NOW, FIXTURE_STATION, realView, viewOf } from './helpers';
 const BANNED_WORDS = /\b(penalty|penalties|cost|costs|points?|scores?|least[- ]bad)\b/i;
 
 function stateOf(view: ViewData, feed: FeedState = EMPTY_FEED, notices: string[] = [], displayNowMs: number = view.calcNowMs + 60_000): ControllerState {
-  return { view, feed, displayNowMs, audit: [], notices, reload: { status: 'idle', message: null }, autoWeather: NO_AUTO_WEATHER, atis: null };
+  return { view, feed, displayNowMs, audit: [], notices, reload: { status: 'idle', message: null }, autoWeather: NO_AUTO_WEATHER };
 }
 
 function render(view: ViewData, feed: FeedState = EMPTY_FEED, notices: string[] = []): string {

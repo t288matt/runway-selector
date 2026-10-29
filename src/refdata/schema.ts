@@ -52,8 +52,6 @@ export const BOUNDS = {
     staleMinutes: { min: 1, max: 2880 },
     lowVisibilityMetres: { min: 50, max: 10000 },
     weatherPollMinutes: { min: 1, max: 120 },
-    // The ATIS service is never asked more often than every 30 minutes (issue 159, owner, 29-10-2026): the floor is part of the schema.
-    atisPollMinutes: { min: 30, max: 1440 },
     // No enforced minimum (OD/UP-2): 1 is the smallest positive whole number of seconds.
     vatsimPollSeconds: { min: 1, max: 3600 },
     auditMaxEntries: { min: 10, max: 5000 },
@@ -333,7 +331,6 @@ export const SETTING_VALUE_SCHEMAS = {
   tafStaleMinutes: int(R.staleMinutes),
   vatsimStaleMinutes: int(R.staleMinutes),
   weatherPollMinutes: int(R.weatherPollMinutes),
-  atisPollMinutes: int(R.atisPollMinutes),
   vatsimPollSeconds: int(R.vatsimPollSeconds),
   currentModeStaleMinutes: int(R.staleMinutes),
   auditMaxEntries: int(R.auditMaxEntries),

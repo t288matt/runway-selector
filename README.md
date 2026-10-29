@@ -32,8 +32,6 @@ Each airport's rules, runways and limits live in a separate data pack, so adding
 
 Everything runs in your browser. Weather and traffic data are fetched directly from VATSIM and public weather services — nothing you do is sent to any other server. The only things saved (in your browser only) are your current mode, your settings, and your own change log, per airport.
 
-The one exception is the optional real-world runway chip on your own PC. If you run the dev server with your own NAIPS account in a `.env` file (`NAIPS_USERNAME` and `NAIPS_PASSWORD`), the dev server (not the page) asks Airservices' NAIPS for the airport's ATIS, at most once every 30 minutes per running server (the record is kept in memory, so restarting the dev server clears it), and the page shows the runways it reports. Your credentials stay on the server. Without them, or on a published copy, the chip does not appear, and the page stops asking for the rest of that visit, so reload the page once after you add your `.env` and restart the dev server. Details: [docs/DESIGN.md](docs/DESIGN.md) section 8b.
-
 ## Running it yourself
 
 You'll need [Node.js](https://nodejs.org/) 24 or later.
