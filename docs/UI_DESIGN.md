@@ -1,6 +1,6 @@
 # Runway Mode Planner: user interface design
 
-Status: current. First written 22-10-2026 and amended with each owner decision (REQUIREMENTS.md). It describes the main screen (`index.html`, called v1). The answer-first screen (v2, `v2.html`) is described in [DESIGN.md](DESIGN.md) section 8a. Where this document and [REQUIREMENTS.md](REQUIREMENTS.md) differ, REQUIREMENTS.md governs.
+Status: current. First written 22-10-2026 and amended with each owner decision (REQUIREMENTS.md). It describes the legacy main screen (v1, `v1.html` as of 29-10-2026). The answer-first screen (v2, `index.html`, now the root screen) is described in [DESIGN.md](DESIGN.md) section 8a. Where this document and [REQUIREMENTS.md](REQUIREMENTS.md) differ, REQUIREMENTS.md governs.
 Language: British English. Dates DD-MM-YYYY, times UTC. Plain words; no emoji.
 Sources: [REQUIREMENTS.md](REQUIREMENTS.md) sections 4 to 9 (DB-1 to DB-9), [DESIGN.md](DESIGN.md) sections 4, 4b, 5, 6, 8, and the owner's survival-timeline illustration.
 Airport-agnostic: every airport name, runway, mode, label and time zone on screen comes from the airport pack (REQUIREMENTS.md AG-1 to AG-13). Mode numbers, runway names and times in the examples and the mockup are illustrative values from the first (Sydney) pack, not fixed text.

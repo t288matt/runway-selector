@@ -59,10 +59,10 @@ function refdata(): Plugin {
 export default defineConfig({
   base: './',
   plugins: [react(), tailwindcss(), refdata()],
-  // Two page entries: v1 (index.html) and the v2 front end (v2.html). refdata/ is still copied once, by the plugin above.
+  // Two page entries: the v2 front end (index.html, now the root) and legacy v1 (v1.html). refdata/ is still copied once, by the plugin above.
   build: {
     rollupOptions: {
-      input: { main: resolve(import.meta.dirname, 'index.html'), v2: resolve(import.meta.dirname, 'v2.html') },
+      input: { main: resolve(import.meta.dirname, 'index.html'), v1: resolve(import.meta.dirname, 'v1.html') },
     },
   },
   test: {
