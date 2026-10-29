@@ -61,12 +61,12 @@ function runwayCandidates(text: string, rwyWord: string): string[] {
   const head = new RegExp(`^[ \\t]*${escapeRegExp(rwyWord)}[ \\t]*:?[ \\t]*(\\S.*)$`);
   const at = lines.findIndex((l) => head.test(l));
   if (at < 0) return [];
-  const first = head.exec(lines[at] ?? '')?.[1] ?? '';
+  const first = (head.exec(lines[at] ?? '')?.[1] ?? '').replace(/\s+/g, ' ');
   const out = [first];
   let joined = first;
   for (const l of lines.slice(at + 1, at + 4)) {
     if (l.trim() === '') break;
-    joined = `${joined} ${l.trim()}`;
+    joined = `${joined} ${l.trim().replace(/\s+/g, ' ')}`;
     out.push(joined);
   }
   return out;

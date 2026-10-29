@@ -124,7 +124,7 @@ export function contentOf(xml: string): string | null {
  */
 export function extractAtisBlock(content: string, icao: string): string | null {
   const lines = content.split(/\r?\n/);
-  const header = new RegExp(`^\\s*ATIS ${icao} [A-Z] \\d{6}\\b`);
+  const header = new RegExp(`^\\s*ATIS\\s+${icao}\\s+[A-Z]\\s+\\d{6}\\b`);
   const at = lines.findIndex((l) => header.test(l));
   if (at < 0) return null;
   const block = [(lines[at] ?? '').trim()];
