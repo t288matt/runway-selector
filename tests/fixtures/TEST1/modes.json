@@ -24,5 +24,6 @@
       ],
       "maxCrosswindKt": 25
     }
-  ]
+  ],
+  "atisWording": { "rwyWord": "TRACK", "forWord": "VIA", "arrWord": "INBOUND", "depWord": "OUTBOUND", "andWord": "WITH", "source": "test fixture, invented wording" }
 }

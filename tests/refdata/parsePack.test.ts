@@ -494,6 +494,16 @@ describe('refused packs name the file and the field', () => {
     expectRefused(raw, 'runways.json', '', 'Not valid JSON');
   });
 
+  it('a modes.json with no atisWording is refused (AG-10): there is no default to fall back on', () => {
+    expectRefused(
+      bad((f) => {
+        delete f['modes.json'].atisWording;
+      }),
+      'modes.json',
+      'atisWording',
+    );
+  });
+
   it('a missing file and an unexpected file', () => {
     const raw: Record<string, string> = { ...readRaw(TEST_PACK) };
     delete raw['modes.json'];

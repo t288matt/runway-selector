@@ -233,6 +233,19 @@ const ApproachLadderSchema = v.strictObject({
   source: v.optional(text(C.sourceChars)),
   rows: v.pipe(v.array(ApproachRowSchema), v.minLength(1, 'A ladder needs at least one row'), v.maxLength(C.maxApproachRows)),
 });
+/**
+ * The vocabulary the ATIS-style copy text is built from (issue 150, AG-13): a report convention, not an airport fact, so it
+ * is required pack data with no default -- a default string would itself be an unstated country assumption (design review,
+ * 29-10-2026). Each field is a short label, held to the same rules as a chip or hover label.
+ */
+const AtisWordingSchema = v.strictObject({
+  rwyWord: labelText(C.labelValueChars),
+  forWord: labelText(C.labelValueChars),
+  arrWord: labelText(C.labelValueChars),
+  depWord: labelText(C.labelValueChars),
+  andWord: labelText(C.labelValueChars),
+  source: v.optional(text(C.sourceChars)),
+});
 const ModeSchema = v.strictObject({
   id: modeId,
   enabled: v.boolean('Expected true or false'),
@@ -250,6 +263,7 @@ export const ModesFileSchema = v.strictObject({
   ...meta,
   modes: v.pipe(v.array(ModeSchema), v.minLength(1, 'At least one mode is required'), v.maxLength(C.maxModes)),
   approachLadders: v.optional(v.pipe(v.array(ApproachLadderSchema), v.maxLength(C.maxApproachLadders))),
+  atisWording: AtisWordingSchema,
 });
 
 // ------------------------------------------------------ operating_plan.json

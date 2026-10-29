@@ -83,6 +83,18 @@ export interface ApproachLadder extends Provenance {
   readonly rows: readonly ApproachRow[];
 }
 
+/**
+ * The vocabulary the ATIS-style copy text is built from (issue 150, AG-13): a report convention, pack data, one per
+ * airport (not per mode). Required, with no default: see `AtisWordingSchema` in schema.ts for why.
+ */
+export interface AtisWording extends Provenance {
+  readonly rwyWord: string;
+  readonly forWord: string;
+  readonly arrWord: string;
+  readonly depWord: string;
+  readonly andWord: string;
+}
+
 export interface Mode extends Provenance {
   readonly id: string;
   readonly enabled: boolean;
@@ -141,6 +153,8 @@ export interface AirportPack {
   readonly modes: readonly Mode[];
   /** The approach ladders modes may name; empty when the pack has none. */
   readonly approachLadders: readonly ApproachLadder[];
+  /** The ATIS-style copy text's vocabulary (issue 150, AG-13): one per airport, not per mode. */
+  readonly atisWording: AtisWording;
   /** Cover the 24 hours with no gap or overlap. */
   readonly plan: readonly PlanBand[];
   /** Plain values only: every tunable unwrapped, no descriptions. */
