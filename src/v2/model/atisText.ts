@@ -1,20 +1,22 @@
 // The ATIS-style runway text copied when a mode is clicked (issue 150). Pure: built from
 // the mode's raw arrival and departure runway arrays, never from the mode id or the
 // display strings, and it never adds or drops a runway. No airport fact is written here.
-//   different arrivals and departures:  "07 ARR. RWY 16L and R DEPS"
-//   the same runways for both:          "16L and R for ARR and DEP"
-// A parallel pair is merged only when its runways are in the arrays ("16L and R"); a
-// single runway prints as it is ("16", "07").
+//   different arrivals and departures:        "07 FOR ARR. RWY 16L AND R FOR DEPS"
+//   the same runways for both, more than one: "16L AND R FOR ARR AND DEPS"
+//   the same single runway for both:          "16" (no ARR/DEP wording at all)
+// Everything in the copied text is upper case (owner, 29-10-2026). A parallel pair is
+// merged only when its runways are in the arrays ("16L AND R"); a single runway prints
+// as it is ("16", "07").
 
 const RUNWAY = /^(\d{1,2})([LCR]?)$/;
 
-/** "a", "a and b" or "a, b and c". */
+/** "a", "a AND b" or "a, b AND c". */
 function joinAnd(parts: readonly string[]): string {
-  if (parts.length <= 2) return parts.join(' and ');
-  return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
+  if (parts.length <= 2) return parts.join(' AND ');
+  return `${parts.slice(0, -1).join(', ')} AND ${parts[parts.length - 1]}`;
 }
 
-/** One runway list as words: runways with the same number are grouped ("34L and R"), first-seen order kept. */
+/** One runway list as words: runways with the same number are grouped ("34L AND R"), first-seen order kept. */
 export function runwayWords(runways: readonly string[]): string {
   const groups = new Map<string, string[]>();
   for (const rw of runways) {
@@ -39,5 +41,8 @@ export function runwayWords(runways: readonly string[]): string {
 export function atisText(arrivals: readonly string[], departures: readonly string[]): string {
   const arr = runwayWords(arrivals);
   const dep = runwayWords(departures);
-  return arr === dep ? `${arr} for ARR and DEP` : `${arr} ARR. RWY ${dep} DEPS`;
+  if (arr !== dep) return `${arr} FOR ARR. RWY ${dep} FOR DEPS`;
+  // Same runways both ways: a single physical runway needs no ARR/DEP wording at all ("16"); more than one still reads it out ("16L AND R FOR ARR AND DEPS").
+  const single = new Set(arrivals).size === 1;
+  return single ? arr : `${arr} FOR ARR AND DEPS`;
 }

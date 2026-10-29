@@ -16,7 +16,7 @@ interface RawMode {
 }
 const REAL: [string, RawMode[]][] = readdirSync(AIRPORTS).map((icao) => [icao, (JSON.parse(readFileSync(join(AIRPORTS, icao, 'modes.json'), 'utf8')) as { modes: RawMode[] }).modes]);
 
-/** Every runway name an ATIS string mentions, number plus letter: "34L and R" is 34L and 34R. */
+/** Every runway name an ATIS string mentions, number plus letter: "34L AND R" is 34L and 34R. */
 function runwaysIn(part: string): string[] {
   const out: string[] = [];
   let num = '';
@@ -33,37 +33,49 @@ const sortedUnique = (xs: readonly string[]): string[] => [...new Set(xs)].sort(
 
 describe('atisText: the wording', () => {
   it.each([
-    [['07'], ['16L', '16R'], '07 ARR. RWY 16L and R DEPS'],
-    [['16L', '16R'], ['16L', '16R'], '16L and R for ARR and DEP'],
-    [['16'], ['16'], '16 for ARR and DEP'],
-    [['16'], ['27'], '16 ARR. RWY 27 DEPS'],
-    [['34', '27'], ['27'], '34 and 27 ARR. RWY 27 DEPS'],
-    [['34L', '34R'], ['25', '34L', '34R'], '34L and R ARR. RWY 25, 34L and R DEPS'],
-    [['16L', '16C', '16R'], ['16L', '16C', '16R'], '16L, C and R for ARR and DEP'],
+    [['07'], ['16L', '16R'], '07 FOR ARR. RWY 16L AND R FOR DEPS'],
+    [['16L', '16R'], ['16L', '16R'], '16L AND R FOR ARR AND DEPS'],
+    [['16'], ['16'], '16'],
+    [['16'], ['27'], '16 FOR ARR. RWY 27 FOR DEPS'],
+    [['34', '27'], ['27'], '34 AND 27 FOR ARR. RWY 27 FOR DEPS'],
+    [['34L', '34R'], ['25', '34L', '34R'], '34L AND R FOR ARR. RWY 25, 34L AND R FOR DEPS'],
+    [['16L', '16C', '16R'], ['16L', '16C', '16R'], '16L, C AND R FOR ARR AND DEPS'],
   ])('%j / %j -> %s', (arr, dep, expected) => {
     expect(atisText(arr, dep)).toBe(expected);
   });
 
   it('does not merge a lone L or R and does not drop or add a runway', () => {
-    expect(atisText(['16L'], ['16L'])).toBe('16L for ARR and DEP');
-    expect(atisText(['16R'], ['16L', '16R'])).toBe('16R ARR. RWY 16L and R DEPS');
+    expect(atisText(['16L'], ['16L'])).toBe('16L');
+    expect(atisText(['16R'], ['16L', '16R'])).toBe('16R FOR ARR. RWY 16L AND R FOR DEPS');
   });
 
   it('keeps a name it does not understand, as it is', () => {
-    expect(atisText(['H1'], ['H1'])).toBe('H1 for ARR and DEP');
+    expect(atisText(['H1'], ['H1'])).toBe('H1');
   });
 });
 
 describe.each(REAL)('every mode of %s (real modes.json)', (_icao, modes) => {
   it.each(modes.map((m) => [m.id, m] as const))('%s: the text names exactly the runways in the arrays, with no mode name', (_id, m) => {
     const text = atisText(m.arrivals, m.departures);
-    const both = text.endsWith(' for ARR and DEP');
-    const arrPart = both ? text.replace(' for ARR and DEP', '') : (text.split(' ARR. ')[0] ?? '');
-    const depPart = both ? arrPart : (text.split(' ARR. ')[1] ?? '').replace(/^RWY /, '').replace(' DEPS', '');
-    expect(sortedUnique(runwaysIn(arrPart))).toEqual(sortedUnique(m.arrivals));
-    expect(sortedUnique(runwaysIn(depPart))).toEqual(sortedUnique(m.departures));
-    expect(both).toBe(sortedUnique(m.arrivals).join() === sortedUnique(m.departures).join());
-    if (!both) expect(text).toContain(' ARR. RWY ');
+    const arrSet = sortedUnique(m.arrivals);
+    const depSet = sortedUnique(m.departures);
+    const same = arrSet.join() === depSet.join();
+    const single = same && new Set(m.arrivals).size === 1;
+    if (single) {
+      // One physical runway both ways: just the runway name, no ARR/DEP wording at all.
+      expect(sortedUnique(runwaysIn(text))).toEqual(arrSet);
+      expect(text).not.toMatch(/ARR|DEP/);
+    } else if (same) {
+      expect(text).toMatch(/ FOR ARR AND DEPS$/);
+      expect(sortedUnique(runwaysIn(text.replace(/ FOR ARR AND DEPS$/, '')))).toEqual(arrSet);
+    } else {
+      expect(text).toContain(' FOR ARR. RWY ');
+      expect(text).toMatch(/ FOR DEPS$/);
+      const arrPart = text.split(' FOR ARR. ')[0] ?? '';
+      const depPart = (text.split(' FOR ARR. ')[1] ?? '').replace(/^RWY /, '').replace(/ FOR DEPS$/, '');
+      expect(sortedUnique(runwaysIn(arrPart))).toEqual(arrSet);
+      expect(sortedUnique(runwaysIn(depPart))).toEqual(depSet);
+    }
     expect(text).not.toContain(m.id);
   });
 });
@@ -74,21 +86,21 @@ describe('the same mode name reads differently on different packs (no airport kn
     if (m === undefined) throw new Error(`${icao} ${id} missing`);
     return m;
   };
-  it('16AD at the parallel-runway airport merges, at the single-runway airport does not', () => {
+  it('16AD at the parallel-runway airport merges and keeps the ARR/DEP wording; at the single-runway airport it is just the runway name', () => {
     const parallel = find('YSSY', '16AD');
     const single = find('YMML', '16AD');
-    expect(atisText(parallel.arrivals, parallel.departures)).toBe('16L and R for ARR and DEP');
-    expect(atisText(single.arrivals, single.departures)).toBe('16 for ARR and DEP');
+    expect(atisText(parallel.arrivals, parallel.departures)).toBe('16L AND R FOR ARR AND DEPS');
+    expect(atisText(single.arrivals, single.departures)).toBe('16');
   });
   it('the owner examples from the real packs', () => {
     const a = find('YSSY', '07A16D');
-    expect(atisText(a.arrivals, a.departures)).toBe('07 ARR. RWY 16L and R DEPS');
+    expect(atisText(a.arrivals, a.departures)).toBe('07 FOR ARR. RWY 16L AND R FOR DEPS');
     const b = find('YMML', '16A27D');
-    expect(atisText(b.arrivals, b.departures)).toBe('16 ARR. RWY 27 DEPS');
+    expect(atisText(b.arrivals, b.departures)).toBe('16 FOR ARR. RWY 27 FOR DEPS');
     const c = find('YMML', '34A27AD');
-    expect(atisText(c.arrivals, c.departures)).toBe('34 and 27 ARR. RWY 27 DEPS');
+    expect(atisText(c.arrivals, c.departures)).toBe('34 AND 27 FOR ARR. RWY 27 FOR DEPS');
     const d = find('YSSY', '34AD25');
-    expect(atisText(d.arrivals, d.departures)).toBe('34L and R ARR. RWY 25, 34L and R DEPS');
+    expect(atisText(d.arrivals, d.departures)).toBe('34L AND R FOR ARR. RWY 25, 34L AND R FOR DEPS');
   });
 });
 
