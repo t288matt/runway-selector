@@ -32,7 +32,7 @@ function view(fields: readonly Partial<SlotWeather>[], gov: SlotSource = 'TAF') 
 }
 
 function render(v: ReturnType<typeof view>): string {
-  const state = { view: v, feed: EMPTY_FEED, displayNowMs: v.calcNowMs + 60_000, audit: [], notices: [], reload: { status: 'idle' as const, message: null }, autoWeather: NO_AUTO_WEATHER };
+  const state = { view: v, feed: EMPTY_FEED, displayNowMs: v.calcNowMs + 60_000, audit: [], notices: [], reload: { status: 'idle' as const, message: null }, autoWeather: NO_AUTO_WEATHER, atis: null };
   return renderToStaticMarkup(<Dashboard model={screenModel(state)} pack={v.pack} onDismissNotice={() => undefined} detailOpen={false} onToggleDetail={() => undefined} />);
 }
 const textOf = (markup: string): string => markup.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');

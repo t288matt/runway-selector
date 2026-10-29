@@ -444,6 +444,25 @@ body {
   font-size: 14px;
   font-weight: 600;
 }
+/* The real-world runway mode (issue 159): no border and no divider; the blue dot sits 10px in (1px border + 9px padding of the Also suitable chips), so the two columns of dots line up. Text is always white (owner, mockup, 29-10-2026). */
+.atis-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  margin-top: 6px;
+  padding: 4px 0 4px 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+.atis-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
+}
 .pic {
   display: flex;
   align-items: center;

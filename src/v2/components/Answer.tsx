@@ -2,6 +2,7 @@
 // the arrival and departure runways. Text nodes only (SEC-2). There is no current-mode selector (issue 104).
 import { useEffect, useState } from 'react';
 import type { AnswerModel } from '../model/answer';
+import type { AtisChip } from '../model/atis';
 import { copyText } from '../copy';
 import { StateGlyph } from './Icons';
 import { Tip } from './Popover';
@@ -69,7 +70,7 @@ function MainMode({ model }: { model: AnswerModel }) {
   return model.copyText === null ? <>{id}</> : <CopyButton text={model.copyText} modeId={id} className="mode-btn">{id}</CopyButton>;
 }
 
-export function Answer({ model }: { model: AnswerModel }) {
+export function Answer({ model, atis = null }: { model: AnswerModel; atis?: AtisChip | null }) {
   const { band } = model;
   const rich = model.priorityText === null ? undefined : <PriorityRich model={model} />;
   return (
@@ -135,6 +136,12 @@ export function Answer({ model }: { model: AnswerModel }) {
               </CopyButton>
             ))}
           </div>
+        </div>
+      )}
+      {atis === null ? null : (
+        <div className="atis-chip" role="group" tabIndex={0} aria-label={atis.label} data-testid="atis-chip" data-matched={atis.matched ? 'true' : 'false'}>
+          <i className="atis-dot" aria-hidden="true" />
+          {atis.text}
         </div>
       )}
       {model.conditional === null ? null : (

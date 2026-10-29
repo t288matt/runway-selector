@@ -11,8 +11,15 @@ export interface WeatherRig {
   readonly urls: string[];
 }
 
+/** The local ATIS route: `body` is the answer text (null answers 503); `urls` records each ask. */
+export interface AtisRig {
+  body: string | null;
+  readonly urls: string[];
+}
+
 export interface Rig {
   readonly wx: WeatherRig;
+  readonly atis: AtisRig;
   readonly ctrl: Controller;
   readonly clock: { now: number };
   readonly calls: { n: number };
@@ -42,6 +49,7 @@ export function rig(pack: AirportPack, start: number, store: Store = createMemor
   const calls = { n: 0 };
   const feed = { parked: 1, fail: false };
   const wx: WeatherRig = { metar: null, datamask: null, urls: [] };
+  const atis: AtisRig = { body: null, urls: [] };
   const timers: { id: number; every: number; due: number; fn: () => void }[] = [];
   let nextId = 1;
   const fake: Timers = {
@@ -69,6 +77,10 @@ export function rig(pack: AirportPack, start: number, store: Store = createMemor
       if (url.startsWith('https://metar.vatsim.net/')) return answer('metar', url);
       if (url.startsWith('https://datamask.org/')) return answer('datamask', url);
       if (url.startsWith('https://metars.eu/')) return new Response('down', { status: 503 });
+      if (url.startsWith('./api/atis/')) {
+        atis.urls.push(url);
+        return atis.body === null ? new Response('down', { status: 503 }) : new Response(atis.body);
+      }
       calls.n += 1;
       if (feed.fail) throw new Error('network down');
       return new Response(feedBody(pack, feed.parked));
@@ -93,5 +105,5 @@ export function rig(pack: AirportPack, start: number, store: Store = createMemor
     clock.now = target;
     await settle();
   };
-  return { ctrl, clock, calls, feed, wx, store, advance, timerCount: () => timers.length };
+  return { ctrl, clock, calls, feed, wx, atis, store, advance, timerCount: () => timers.length };
 }
