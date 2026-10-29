@@ -129,7 +129,38 @@ describe('real-shape NAIPS answers', () => {
       expect(extractAtisBlock(`    ATIS YSSY K${gap}291327\n      RWY: 34L FOR ARRS. RWY 16R FOR DEPS\n`, 'YSSY')).toBe('ATIS YSSY K' + gap + '291327\nRWY: 34L FOR ARRS. RWY 16R FOR DEPS');
     }
   });
-  it('runs of spaces inside the RWY entry do not break the parser', () => {
+  it.each([
+    ['YSSY', SYDNEY, '      RWY: 34L', 'RW: 34L arr, 16R dep'],
+    ['YMML', MELBOURNE, '       RWY: 16', 'RW: 16A27D'],
+    ['YPPH', PERTH, '       RWY: 21', 'RW: 24A21AD'],
+  ])('PLUS-MARKED RWY LINE: a changed %s runway line ("    + RWY: ...") still gives the chip', async (icao, content, plain, chip) => {
+    const changed = content.replace(plain, plain.replace(/^ +/, '    + '));
+    expect(changed).not.toBe(content);
+    const out = await viaMiddleware(icao, changed);
+    expect(out.status).toBe(200);
+    if (out.status !== 200) return;
+    expect(atisChip({ text: out.body.atis, fetchedAtMs: out.body.fetchedAt }, loadPackFrom(icao === 'YSSY' ? YSSY_PACK : REAL(icao)), NOW)?.text).toBe(chip);
+  });
+  it('a "+ WIND:" line after a "+ RWY:" line is not swallowed into the runways', () => {
+    const w = loadPackFrom(YSSY_PACK).atisWording;
+    expect(parseAtisRunways('ATIS YSSY K   291327\n+ RWY: 34L FOR ARRS. RWY 16R FOR DEPS\n+ WIND: 080/6.\n+ OPR INFO: x', w)).toEqual({ arrivals: ['34L'], departures: ['16R'] });
+  });
+  it('TWO DIFFERENT HEADERS for one airport: no block, never the older one (and a stray earlier header line counts too)', () => {
+    const older = 'ATIS YSSY J   291227\n  RWY: 34L FOR ARRS. RWY 34R FOR DEPS\n';
+    const newer = 'ATIS YSSY K   291327\n  RWY: 34L FOR ARRS. RWY 16R FOR DEPS\n';
+    expect(extractAtisBlock(`${older}\n${newer}`, 'YSSY')).toBeNull();
+    expect(extractAtisBlock(`${newer}\n${older}`, 'YSSY')).toBeNull();
+    expect(extractAtisBlock(`SUMMARY ... \n  ATIS YSSY J 291227\nother\n\n${newer}`, 'YSSY')).toBeNull();
+    // the same header twice is one block; another airport's header is not a second block
+    expect(extractAtisBlock(`${newer}\n${newer}`, 'YSSY')).toBe('ATIS YSSY K   291327\nRWY: 34L FOR ARRS. RWY 16R FOR DEPS');
+    expect(extractAtisBlock(`${newer}\nATIS YMML W   291333\n  RWY: 16 FOR ARR.\n`, 'YSSY')).toBe('ATIS YSSY K   291327\nRWY: 34L FOR ARRS. RWY 16R FOR DEPS');
+  });
+  it('missing credentials answer with the not-set-up code the page uses to stop asking', async () => {
+    const service = createAtisService({ getCredentials: () => ({}), fetch: async () => new Response(''), now: () => 1, isKnownAirport: () => true });
+    const out = await service('GET', 'YSSY');
+    expect(out).toMatchObject({ status: 503, body: { code: 'not_set_up' } });
+  });
+  it('runs of spaces inside the RWY entry do not break the parser (no collapse is needed)', () => {
     const w = loadPackFrom(YSSY_PACK).atisWording;
     expect(parseAtisRunways('ATIS YSSY K   291327\nRWY:   34L  FOR   ARRS.   RWY  16R FOR   DEPS', w)).toEqual({ arrivals: ['34L'], departures: ['16R'] });
   });

@@ -125,6 +125,8 @@ export function createController(deps: ControllerDeps): Controller {
   let pollTimer: unknown = null;
   let weatherTimer: unknown = null;
   let atisTimer: unknown = null;
+  // Set when the local server has no ATIS route (a static host) or no credentials: it will not answer this session, so the page stops asking.
+  let atisOff = false;
   let tickTimer: unknown = null;
   let notices: string[] = [];
   let reload: ReloadState = { status: 'idle', message: null };
@@ -278,14 +280,22 @@ export function createController(deps: ControllerDeps): Controller {
   const runAtisPoll = async (): Promise<void> => {
     const icao = pack.airport.icao;
     const result = await fetchAtis(icao, { fetch: deps.fetch });
-    if (!running || icao !== pack.airport.icao || !result.ok) return;
+    if (!running || icao !== pack.airport.icao) return;
+    if (!result.ok) {
+      if (result.permanent === true) {
+        atisOff = true;
+        if (atisTimer !== null) deps.timers.clearInterval(atisTimer);
+        atisTimer = null;
+      }
+      return;
+    }
     if (atis?.text === result.atis && atis.fetchedAtMs === result.fetchedAtMs) return;
     atis = { text: result.atis, fetchedAtMs: result.fetchedAtMs };
     republish();
   };
 
   const pollAtis = (): void => {
-    if (atisInFlight !== null) return;
+    if (atisInFlight !== null || atisOff) return;
     const p: Promise<void> = runAtisPoll()
       .catch(() => undefined)
       .finally(() => {
@@ -303,7 +313,7 @@ export function createController(deps: ControllerDeps): Controller {
   const startTimers = (): void => {
     pollTimer = deps.timers.setInterval(poll, pack.settings.vatsimPollSeconds * 1000);
     weatherTimer = deps.timers.setInterval(pollWeather, pack.settings.weatherPollMinutes * 60_000);
-    atisTimer = deps.timers.setInterval(pollAtis, pack.settings.atisPollMinutes * 60_000 + ATIS_POLL_MARGIN_MS);
+    atisTimer = atisOff ? null : deps.timers.setInterval(pollAtis, pack.settings.atisPollMinutes * 60_000 + ATIS_POLL_MARGIN_MS);
     tickTimer = deps.timers.setInterval(tick, TICK_MS);
   };
   const stopTimers = (): void => {

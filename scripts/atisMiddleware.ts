@@ -12,6 +12,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { ATIS_NOT_SET_UP_CODE } from '../src/atis/config.ts';
 import { readLimited } from '../src/net/readLimited.ts';
 
 /** The floor between two NAIPS calls for the same airport. Change it only on the owner's say-so (tests pin it at 30 minutes). */
@@ -73,7 +74,7 @@ export function isForeignRequest(headers: IncomingMessage['headers']): boolean {
 
 export type AtisOutcome =
   | { readonly status: 200; readonly body: { readonly atis: string; readonly fetchedAt: number } }
-  | { readonly status: 400 | 403 | 404 | 405 | 503; readonly body: { readonly error: string } };
+  | { readonly status: 400 | 403 | 404 | 405 | 503; readonly body: { readonly error: string; readonly code?: string } };
 
 const ICAO = /^[A-Z]{4}$/;
 
@@ -125,8 +126,11 @@ export function contentOf(xml: string): string | null {
 export function extractAtisBlock(content: string, icao: string): string | null {
   const lines = content.split(/\r?\n/);
   const header = new RegExp(`^\\s*ATIS\\s+${icao}\\s+[A-Z]\\s+\\d{6}\\b`);
-  const at = lines.findIndex((l) => header.test(l));
-  if (at < 0) return null;
+  const heads = lines.flatMap((l, i) => (header.test(l) ? [i] : []));
+  const at = heads[0];
+  if (at === undefined) return null;
+  // Two different headers for the same airport (an older and a newer information letter): which is current cannot be told, so none is shown.
+  if (new Set(heads.map((i) => (lines[i] ?? '').trim().replace(/\s+/g, ' '))).size > 1) return null;
   const block = [(lines[at] ?? '').trim()];
   for (const l of lines.slice(at + 1)) {
     if (l.trim() === '' || !/^\s/.test(l)) break;
@@ -138,7 +142,7 @@ export function extractAtisBlock(content: string, icao: string): string | null {
 type Cached = { readonly at: number; readonly outcome: AtisOutcome };
 
 const UNAVAILABLE: AtisOutcome = { status: 503, body: { error: 'The real-world ATIS is not available.' } };
-const NOT_SET_UP: AtisOutcome = { status: 503, body: { error: 'The real-world ATIS is not set up on this server.' } };
+const NOT_SET_UP: AtisOutcome = { status: 503, body: { error: 'The real-world ATIS is not set up on this server.', code: ATIS_NOT_SET_UP_CODE } };
 
 export function createAtisService(options: AtisMiddlewareOptions): (method: string, icao: string) => Promise<AtisOutcome> {
   const cache = new Map<string, Cached>();

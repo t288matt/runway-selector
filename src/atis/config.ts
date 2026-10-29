@@ -9,6 +9,8 @@ export const ATIS_URL_BASE = './api/atis/';
 export const ATIS_MAX_BYTES = 16 * 1024;
 /** Time allowed for one local request. The server itself waits for NAIPS up to its own timeout. */
 export const ATIS_TIMEOUT_MS = 30_000;
+/** The `code` the local server puts in its "not set up" 503 (no NAIPS credentials): the page stops asking for the rest of the session. */
+export const ATIS_NOT_SET_UP_CODE = 'not_set_up';
 /** A result older than this (by the server's own fetch time) is never shown as current (owner, 29-10-2026). */
 export const ATIS_STALE_MINUTES = 90;
 /**

@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { ATIS_POLL_MARGIN_MS, ATIS_STALE_MINUTES } from '../../src/atis/config';
+import { ATIS_NOT_SET_UP_CODE, ATIS_POLL_MARGIN_MS, ATIS_STALE_MINUTES } from '../../src/atis/config';
 import { fetchAtis } from '../../src/atis/fetchAtis';
 import { Dashboard } from '../../src/v2/components/Dashboard';
 import { NO_AUTO_WEATHER, type AtisReading, type ControllerState } from '../../src/v2/controller';
@@ -140,6 +140,47 @@ describe('the controller polls the local route', () => {
     await r.advance(0);
     expect(r.ctrl.getState().atis).toBeNull();
     r.ctrl.stop();
+  });
+});
+
+describe('the page stops asking when the server will never answer, and keeps asking after other failures', () => {
+  const NOT_SET_UP = JSON.stringify({ error: 'The real-world ATIS is not set up on this server.', code: ATIS_NOT_SET_UP_CODE });
+  async function pollsAfter(setup: (r: ReturnType<typeof rig>) => void): Promise<{ first: number; later: number; timers: number }> {
+    const r = rig(pack, EARLY);
+    setup(r);
+    r.ctrl.start();
+    await r.advance(0);
+    const first = r.atis.urls.length;
+    const timersAfterFirst = r.timerCount();
+    await r.advance(ATIS_MS * 3);
+    r.ctrl.stop();
+    return { first, later: r.atis.urls.length - first, timers: timersAfterFirst };
+  }
+  it('a 404 (a static host) stops polling for the session: one request, the ATIS timer is gone', async () => {
+    const out = await pollsAfter((r) => {
+      r.atis.body = 'not found';
+      r.atis.status = 404;
+    });
+    expect(out).toEqual({ first: 1, later: 0, timers: 3 });
+  });
+  it('the "not set up" 503 stops polling for the session', async () => {
+    const out = await pollsAfter((r) => {
+      r.atis.body = NOT_SET_UP;
+      r.atis.status = 503;
+    });
+    expect(out).toEqual({ first: 1, later: 0, timers: 3 });
+  });
+  it('any other 503, a 500 and a network error keep polling at the normal cadence', async () => {
+    for (const setup of [
+      (r: ReturnType<typeof rig>) => { r.atis.body = '{"error":"x"}'; r.atis.status = 503; },
+      (r: ReturnType<typeof rig>) => { r.atis.body = 'boom'; r.atis.status = 500; },
+      (r: ReturnType<typeof rig>) => { r.atis.throws = true; },
+    ]) {
+      const out = await pollsAfter(setup);
+      expect(out.first).toBe(1);
+      expect(out.later).toBe(3);
+      expect(out.timers).toBe(4);
+    }
   });
 });
 
