@@ -1,7 +1,7 @@
 // The ATIS-style runway text copied when a mode is clicked (issue 150). Pure: built from
 // the mode's raw arrival and departure runway arrays, never from the mode id or the
 // display strings, and it never adds or drops a runway. No airport fact is written here.
-//   different arrivals and departures:  "07 ARR. 16L and R DEPS"
+//   different arrivals and departures:  "07 ARR. RWY 16L and R DEPS"
 //   the same runways for both:          "16L and R for ARR and DEP"
 // A parallel pair is merged only when its runways are in the arrays ("16L and R"); a
 // single runway prints as it is ("16", "07").
@@ -39,5 +39,5 @@ export function runwayWords(runways: readonly string[]): string {
 export function atisText(arrivals: readonly string[], departures: readonly string[]): string {
   const arr = runwayWords(arrivals);
   const dep = runwayWords(departures);
-  return arr === dep ? `${arr} for ARR and DEP` : `${arr} ARR. ${dep} DEPS`;
+  return arr === dep ? `${arr} for ARR and DEP` : `${arr} ARR. RWY ${dep} DEPS`;
 }
