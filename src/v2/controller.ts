@@ -11,8 +11,6 @@
 // the traffic it was calculated with.
 import { reloadPack, type AirportPack, type FetchLike } from '../refdata';
 import { clearAudit, exportAudit, loadAudit, loadWindowChoice, type AuditEntry, type AuditExport, type Store } from '../store';
-import { ATIS_POLL_MARGIN_MS } from '../atis/config';
-import { fetchAtis } from '../atis/fetchAtis';
 import { fetchFeed } from '../traffic/fetchFeed';
 import type { DecodedMetar, DecodedTaf } from '../weather';
 import { fetchMetarText, fetchTafText, type WeatherFetchResult } from '../weather/fetchWeather';
@@ -59,12 +57,6 @@ export interface AutoReportState {
   readonly warnings: readonly string[];
 }
 
-/** The last good real-world ATIS block and when the server fetched it (issue 159). The pack's wording turns it into a chip; this holds only the text. */
-export interface AtisReading {
-  readonly text: string;
-  readonly fetchedAtMs: number;
-}
-
 export const NO_AUTO_REPORT: AutoReportState = { source: null, paused: false, error: null, warnings: [] };
 export const NO_AUTO_WEATHER: Readonly<Record<WeatherKind, AutoReportState>> = { metar: NO_AUTO_REPORT, taf: NO_AUTO_REPORT };
 
@@ -81,8 +73,6 @@ export interface ControllerState {
   readonly notices: readonly string[];
   readonly reload: ReloadState;
   readonly autoWeather: Readonly<Record<WeatherKind, AutoReportState>>;
-  /** The last good real-world ATIS (issue 159), or null when there is none (no server route, or every fetch failed). Never cleared by a failure; the chip hides it once it is too old. */
-  readonly atis: AtisReading | null;
 }
 
 export interface Controller {
@@ -119,14 +109,9 @@ export function createController(deps: ControllerDeps): Controller {
   let generation = 0;
   let pollInFlight: Promise<void> | null = null;
   let weatherInFlight: Promise<void> | null = null;
-  let atisInFlight: Promise<void> | null = null;
-  let atis: AtisReading | null = null;
   let auto: Record<WeatherKind, AutoReportState> = { ...NO_AUTO_WEATHER };
   let pollTimer: unknown = null;
   let weatherTimer: unknown = null;
-  let atisTimer: unknown = null;
-  // Set when the local server has no ATIS route (a static host) or no credentials: it will not answer this session, so the page stops asking.
-  let atisOff = false;
   let tickTimer: unknown = null;
   let notices: string[] = [];
   let reload: ReloadState = { status: 'idle', message: null };
@@ -148,7 +133,7 @@ export function createController(deps: ControllerDeps): Controller {
   let audit: readonly AuditEntry[] = storedAudit.entries;
 
   const first = deps.now();
-  const build = (view: ViewData, displayNowMs: number): ControllerState => ({ view, feed, displayNowMs, audit, notices, reload, autoWeather: auto, atis });
+  const build = (view: ViewData, displayNowMs: number): ControllerState => ({ view, feed, displayNowMs, audit, notices, reload, autoWeather: auto });
   let state: ControllerState = build(calculate({ pack, nowMs: first, metar, taf, windowChoice, currentMode: null, feed }), first);
 
   const publish = (next: ControllerState): void => {
@@ -272,38 +257,6 @@ export function createController(deps: ControllerDeps): Controller {
     weatherInFlight = p;
   };
 
-  /**
-   * One read of the real-world ATIS from the local server (issue 159). The server holds the NAIPS
-   * credentials and never calls NAIPS more often than every 30 minutes; this only asks it. A failure
-   * keeps the last good reading (the chip hides it when it is too old) and never touches the plan.
-   */
-  const runAtisPoll = async (): Promise<void> => {
-    const icao = pack.airport.icao;
-    const result = await fetchAtis(icao, { fetch: deps.fetch });
-    if (!running || icao !== pack.airport.icao) return;
-    if (!result.ok) {
-      if (result.permanent === true) {
-        atisOff = true;
-        if (atisTimer !== null) deps.timers.clearInterval(atisTimer);
-        atisTimer = null;
-      }
-      return;
-    }
-    if (atis?.text === result.atis && atis.fetchedAtMs === result.fetchedAtMs) return;
-    atis = { text: result.atis, fetchedAtMs: result.fetchedAtMs };
-    republish();
-  };
-
-  const pollAtis = (): void => {
-    if (atisInFlight !== null || atisOff) return;
-    const p: Promise<void> = runAtisPoll()
-      .catch(() => undefined)
-      .finally(() => {
-        if (atisInFlight === p) atisInFlight = null;
-      });
-    atisInFlight = p;
-  };
-
   const tick = (): void => {
     const now = deps.now();
     if (needsRecalculation(state.view.calcNowMs, now)) recalculate(now);
@@ -313,17 +266,14 @@ export function createController(deps: ControllerDeps): Controller {
   const startTimers = (): void => {
     pollTimer = deps.timers.setInterval(poll, pack.settings.vatsimPollSeconds * 1000);
     weatherTimer = deps.timers.setInterval(pollWeather, pack.settings.weatherPollMinutes * 60_000);
-    atisTimer = atisOff ? null : deps.timers.setInterval(pollAtis, pack.settings.atisPollMinutes * 60_000 + ATIS_POLL_MARGIN_MS);
     tickTimer = deps.timers.setInterval(tick, TICK_MS);
   };
   const stopTimers = (): void => {
     if (pollTimer !== null) deps.timers.clearInterval(pollTimer);
     if (weatherTimer !== null) deps.timers.clearInterval(weatherTimer);
-    if (atisTimer !== null) deps.timers.clearInterval(atisTimer);
     if (tickTimer !== null) deps.timers.clearInterval(tickTimer);
     pollTimer = null;
     weatherTimer = null;
-    atisTimer = null;
     tickTimer = null;
   };
 
@@ -348,7 +298,7 @@ export function createController(deps: ControllerDeps): Controller {
         setReload({ status: 'unchanged', message: 'The airport data was re-read and has not changed.' });
         return;
       }
-      const pollChanged = result.pack.settings.vatsimPollSeconds !== pack.settings.vatsimPollSeconds || result.pack.settings.weatherPollMinutes !== pack.settings.weatherPollMinutes || result.pack.settings.atisPollMinutes !== pack.settings.atisPollMinutes;
+      const pollChanged = result.pack.settings.vatsimPollSeconds !== pack.settings.vatsimPollSeconds || result.pack.settings.weatherPollMinutes !== pack.settings.weatherPollMinutes;
       pack = result.pack;
       refreshAudit();
       if (running && pollChanged) {
@@ -376,7 +326,6 @@ export function createController(deps: ControllerDeps): Controller {
       running = true;
       poll();
       pollWeather();
-      pollAtis();
       startTimers();
     },
     stop: () => {
@@ -387,7 +336,6 @@ export function createController(deps: ControllerDeps): Controller {
     settled: async () => {
       await pollInFlight;
       await weatherInFlight;
-      await atisInFlight;
     },
     refresh: () => {
       recalculate(deps.now());

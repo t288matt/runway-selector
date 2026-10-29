@@ -444,29 +444,6 @@ body {
   font-size: 14px;
   font-weight: 600;
 }
-/* The real-world runway mode (issue 159): no border and no divider; the blue dot sits 10px in (1px border + 9px padding of the Also suitable chips), so the two columns of dots line up. Text is always white (owner, mockup, 29-10-2026). */
-.atis-chip {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  width: fit-content;
-  margin-top: 6px;
-  padding: 4px 0 4px 10px;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-}
-/* Inside the Also suitable block the same 12px gap as before (6px column gap plus 6px margin). */
-.alt .atis-chip {
-  margin-top: 12px;
-}
-.atis-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent);
-  flex: none;
-}
 .pic {
   display: flex;
   align-items: center;
@@ -1328,24 +1305,6 @@ dl.v dd {
 }
 
 @media (max-width: 640px) {
-  /* The real-world runway chip (issue 159) adds no row on a phone: it sits on the line of the "Also suitable" label, to its right. */
-  .alt {
-    position: relative;
-  }
-  .alt .atis-chip {
-    position: absolute;
-    top: 7px;
-    left: 104px;
-    max-width: calc(100% - 104px);
-    margin: 0;
-    padding: 0 0 0 6px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .answer:has(.cond) .alt .atis-chip {
-    top: 5px;
-  }
   .app {
     padding: 6px 10px 6px;
     gap: 6px;

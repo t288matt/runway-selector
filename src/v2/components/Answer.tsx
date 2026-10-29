@@ -2,7 +2,6 @@
 // the arrival and departure runways. Text nodes only (SEC-2). There is no current-mode selector (issue 104).
 import { useEffect, useState } from 'react';
 import type { AnswerModel } from '../model/answer';
-import type { AtisChip } from '../model/atis';
 import { copyText } from '../copy';
 import { StateGlyph } from './Icons';
 import { Tip } from './Popover';
@@ -70,17 +69,9 @@ function MainMode({ model }: { model: AnswerModel }) {
   return model.copyText === null ? <>{id}</> : <CopyButton text={model.copyText} modeId={id} className="mode-btn">{id}</CopyButton>;
 }
 
-export function Answer({ model, atis = null }: { model: AnswerModel; atis?: AtisChip | null }) {
+export function Answer({ model }: { model: AnswerModel }) {
   const { band } = model;
   const rich = model.priorityText === null ? undefined : <PriorityRich model={model} />;
-  // Under the "Also suitable" chips (inside their block, but outside their labelled group); on a phone it sits beside the label so the closed screen does not grow.
-  const atisChip =
-    atis === null ? null : (
-      <div className="atis-chip" role="group" tabIndex={0} aria-label={atis.label} data-testid="atis-chip" data-matched={atis.matched ? 'true' : 'false'}>
-        <i className="atis-dot" aria-hidden="true" />
-        {atis.text}
-      </div>
-    );
   return (
     <div className="answer">
       <div className="state-row">
@@ -127,28 +118,23 @@ export function Answer({ model, atis = null }: { model: AnswerModel; atis?: Atis
           Arr <b>{model.arrivals}</b> &middot; Dep <b>{model.departures}</b>
         </div>
       )}
-      {model.alternatives.length === 0 ? (
-        atisChip
-      ) : (
-        <div className="alt">
-          <div role="group" aria-label="Also suitable" data-testid="alternatives">
-            {model.priorityText === null ? (
-              <div className="alt-label">Also suitable</div>
-            ) : (
-              <Tip tag="div" text={model.priorityText} rich={rich} className="alt-label" data-testid="alt-label">
-                Also suitable
-              </Tip>
-            )}
-            <div className="alt-chips">
-              {model.alternatives.map((a) => (
-                <CopyButton key={a.modeId} text={a.copyText} modeId={a.modeId} className="alt-chip" testId="alt-chip">
-                  <i className="alt-dot" aria-hidden="true" />
-                  {a.modeId}
-                </CopyButton>
-              ))}
-            </div>
+      {model.alternatives.length === 0 ? null : (
+        <div className="alt" role="group" aria-label="Also suitable" data-testid="alternatives">
+          {model.priorityText === null ? (
+            <div className="alt-label">Also suitable</div>
+          ) : (
+            <Tip tag="div" text={model.priorityText} rich={rich} className="alt-label" data-testid="alt-label">
+              Also suitable
+            </Tip>
+          )}
+          <div className="alt-chips">
+            {model.alternatives.map((a) => (
+              <CopyButton key={a.modeId} text={a.copyText} modeId={a.modeId} className="alt-chip" testId="alt-chip">
+                <i className="alt-dot" aria-hidden="true" />
+                {a.modeId}
+              </CopyButton>
+            ))}
           </div>
-          {atisChip}
         </div>
       )}
       {model.conditional === null ? null : (
