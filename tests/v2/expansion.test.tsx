@@ -24,7 +24,7 @@ function stateOf(view: ViewData, displayNowMs: number = view.calcNowMs + 60_000)
   return { view, feed: EMPTY_FEED, displayNowMs, audit: [], notices: [], reload: { status: 'idle', message: null }, autoWeather: NO_AUTO_WEATHER };
 }
 function render(view: ViewData, displayNowMs?: number): string {
-  return renderToStaticMarkup(<Dashboard model={screenModel(stateOf(view, displayNowMs))} pack={view.pack} onDismissNotice={() => undefined} />);
+  return renderToStaticMarkup(<Dashboard model={screenModel(stateOf(view, displayNowMs))} pack={view.pack} onDismissNotice={() => undefined} detailOpen={false} onToggleDetail={() => undefined} />);
 }
 const textOf = (markup: string): string => markup.replace(/<[^>]*>/g, ' ').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/\s+/g, ' ');
 /** Just the expansion's markup. */

@@ -13,6 +13,7 @@ import { APP_TITLE, Header } from './components/Header';
 import { Notice } from './components/Notice';
 import type { AppDeps } from './deps';
 import { screenModel } from './model/screen';
+import { buildRoute, parseRoute } from './route';
 import { useController } from './useController';
 
 export type { AppDeps } from './deps';
@@ -57,7 +58,19 @@ interface AirportSwitch {
   readonly onSwitch: (icao: string) => void;
 }
 
-function Screen({ pack, deps, airport }: { pack: AirportPack; deps: AppDeps; airport: AirportSwitch }) {
+function Screen({
+  pack,
+  deps,
+  airport,
+  detailOpen,
+  onToggleDetail,
+}: {
+  pack: AirportPack;
+  deps: AppDeps;
+  airport: AirportSwitch;
+  detailOpen: boolean;
+  onToggleDetail: (open: boolean) => void;
+}) {
   const screen = useController(pack, deps);
   const model = screenModel(screen);
   // Reload data can replace the pack the controller holds, so the screen reads it from the calculation, not from the prop.
@@ -78,7 +91,7 @@ function Screen({ pack, deps, airport }: { pack: AirportPack; deps: AppDeps; air
           onMore={() => setMoreOpen(true)}
           moreRef={moreRef}
         />
-        <Dashboard model={model} pack={livePack} onDismissNotice={screen.dismissNotice} />
+        <Dashboard model={model} pack={livePack} onDismissNotice={screen.dismissNotice} detailOpen={detailOpen} onToggleDetail={onToggleDetail} />
       </div>
       <Drawer open={moreOpen} onClose={() => setMoreOpen(false)} returnFocusTo={moreRef}>
         <DrawerContent
@@ -114,12 +127,32 @@ class Boundary extends Component<{ children: ReactNode }, { error: string | null
 }
 
 /** What the page shows for each load state. An invalid pack gives the error and nothing else. */
-export function AppBody({ state, deps, onSwitchAirport = () => undefined, pendingAirport = null }: { state: PackState; deps: AppDeps; onSwitchAirport?: (icao: string) => void; pendingAirport?: string | null }) {
+export function AppBody({
+  state,
+  deps,
+  onSwitchAirport = () => undefined,
+  pendingAirport = null,
+  detailOpen = false,
+  onToggleDetail = () => undefined,
+}: {
+  state: PackState;
+  deps: AppDeps;
+  onSwitchAirport?: (icao: string) => void;
+  pendingAirport?: string | null;
+  detailOpen?: boolean;
+  onToggleDetail?: (open: boolean) => void;
+}) {
   if (state.status === 'loading') return <Loading />;
   if (state.status === 'error') return <PackError message={state.message} />;
   return (
     <Boundary key={state.pack.airport.icao}>
-      <Screen pack={state.pack} deps={deps} airport={{ airports: state.airports, airportError: state.airportError, pending: pendingAirport, onSwitch: onSwitchAirport }} />
+      <Screen
+        pack={state.pack}
+        deps={deps}
+        airport={{ airports: state.airports, airportError: state.airportError, pending: pendingAirport, onSwitch: onSwitchAirport }}
+        detailOpen={detailOpen}
+        onToggleDetail={onToggleDetail}
+      />
     </Boundary>
   );
 }
@@ -152,21 +185,25 @@ export async function loadInitialPack(deps: AppDeps, airportId: string | undefin
 
 export function App({ deps }: { deps: AppDeps }) {
   const [state, setState] = useState<PackState>({ status: 'loading' });
+  // A deep link (#/ICAO or #/ICAO/detail, owner, 29-10-2026) takes the airport straight to the one it names; failing
+  // that a refresh opens on the airport last chosen in the selector, not back at the default (OD-82). Either id is
+  // shape-checked only, so loadInitialPack above falls back if it is no longer offered.
+  const [initialRoute] = useState(() => parseRoute(window.location.hash));
+  const [detailOpen, setDetailOpen] = useState(initialRoute.detail);
   useEffect(() => {
     let live = true;
-    // A refresh opens on the airport last chosen in the selector, not back at the default (OD-82); the stored id
-    // is shape-checked only (selectedAirport.ts), so loadInitialPack above falls back if it is no longer offered.
-    void loadInitialPack(deps, loadSelectedAirportId(deps.store) ?? undefined).then((r) => {
+    void loadInitialPack(deps, initialRoute.icao ?? loadSelectedAirportId(deps.store) ?? undefined).then((r) => {
       if (live) setState(r.ok ? { status: 'ready', pack: r.pack, airports: r.app.airports, airportError: null } : { status: 'error', message: r.message });
     });
     return () => {
       live = false;
     };
-  }, [deps]);
+  }, [deps, initialRoute]);
   // Switching airport builds a new screen with its own controller: nothing of the old airport is carried over, and its
   // stored state stays under its own code (AG-8). A refused switch keeps the current airport. While the new pack is
   // fetched the selector shows the choice and says it is loading.
   const [pendingAirport, setPendingAirport] = useState<string | null>(null);
+  const switchAirportRef = useRef<(icao: string) => void>(() => undefined);
   const switchAirport = (icao: string): void => {
     if (state.status !== 'ready' || pendingAirport !== null) return;
     if (icao !== state.pack.airport.icao && state.airports.includes(icao)) setPendingAirport(icao);
@@ -178,5 +215,34 @@ export function App({ deps }: { deps: AppDeps }) {
       })
       .finally(() => setPendingAirport(null));
   };
-  return <AppBody state={state} deps={deps} onSwitchAirport={switchAirport} pendingAirport={pendingAirport} />;
+  useEffect(() => {
+    switchAirportRef.current = switchAirport;
+  });
+
+  // Keeps the hash in step with what is on screen, so the address bar is always a working link back to this view
+  // (owner, 29-10-2026). The very first run, and a run caused by the browser's own Back/Forward, must not push a
+  // new history entry: skipNextPush covers both.
+  const icao = state.status === 'ready' ? state.pack.airport.icao : null;
+  const skipNextPush = useRef(true);
+  useEffect(() => {
+    if (icao === null) return;
+    if (skipNextPush.current) {
+      skipNextPush.current = false;
+      return;
+    }
+    window.history.pushState(null, '', buildRoute(icao, detailOpen));
+  }, [icao, detailOpen]);
+
+  useEffect(() => {
+    const onPopState = (): void => {
+      const route = parseRoute(window.location.hash);
+      skipNextPush.current = true;
+      setDetailOpen(route.detail);
+      if (route.icao !== null) switchAirportRef.current(route.icao);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  return <AppBody state={state} deps={deps} onSwitchAirport={switchAirport} pendingAirport={pendingAirport} detailOpen={detailOpen} onToggleDetail={setDetailOpen} />;
 }

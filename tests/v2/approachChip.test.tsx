@@ -48,7 +48,7 @@ const chipOf = (v: ViewData) => answerModel(v).approach;
 
 function render(v: ViewData): string {
   const state = { view: v, feed: EMPTY_FEED, displayNowMs: v.calcNowMs + 60_000, audit: [], notices: [], reload: { status: 'idle' as const, message: null }, autoWeather: NO_AUTO_WEATHER };
-  return renderToStaticMarkup(<Dashboard model={screenModel(state)} pack={v.pack} onDismissNotice={() => undefined} />);
+  return renderToStaticMarkup(<Dashboard model={screenModel(state)} pack={v.pack} onDismissNotice={() => undefined} detailOpen={false} onToggleDetail={() => undefined} />);
 }
 const textOf = (markup: string): string => markup.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
 
