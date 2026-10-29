@@ -70,8 +70,8 @@ describe('click to copy', () => {
     const exec = vi.fn().mockReturnValue(true);
     vi.stubGlobal('navigator', {});
     vi.stubGlobal('document', { createElement: () => area, body: { appendChild: vi.fn(), removeChild: vi.fn() }, execCommand: exec });
-    expect(await copyText('07 ARR. RWY 16L and R DEPS')).toBe(true);
-    expect(area.value).toBe('07 ARR. RWY 16L and R DEPS');
+    expect(await copyText('07 FOR ARR. RWY 16L and R FOR DEPS')).toBe(true);
+    expect(area.value).toBe('07 FOR ARR. RWY 16L and R FOR DEPS');
     expect(exec).toHaveBeenCalledWith('copy');
   });
 
