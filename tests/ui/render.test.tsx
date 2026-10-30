@@ -345,8 +345,8 @@ describe('the weather components and the hover detail come from the engine', () 
 
 describe('the cell detail operating-plan line', () => {
   it('does not say "in time band all-day" for an all-day plan, and keeps the priority (OD-66, was "rank")', () => {
-    const ref = PACKS[0];
-    if (ref === undefined) throw new Error('no pack');
+    // TEST1 still has a single allDay band; YSSY gained a day/curfew split 30-10-2026.
+    const ref = TEST1_PACK;
     const pack = packWith(ref, { weatherStation: fixture(METAR_ID).station });
     const view = realView(pack, ref, true);
     const detail = cellDetailModel(view, 0, 0);
