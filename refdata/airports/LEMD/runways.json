@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "description": "Madrid-Barajas has four parallel runway strips, each with its own L/R designator: 18L/36R and 18R/36L (the west/terminal-side pair, roughly north-south) and 14L/32R and 14R/32L (the east pair, running diagonally NW-SE). Headings are given as TRUE. The Spanish AIP (ENAIRE AD 2-LEMD) states magnetic variation at LEMD is 0 degrees (epoch 2020, annual change 8.1' East), i.e. true and magnetic north are effectively the same here -- unlike LSZH (true, confirmed materially different from magnetic) or EGCC (unresolved, ~1 degree gap). This makes the true-vs-magnetic question low-stakes for LEMD specifically, but it has NOT been independently confirmed against a current AIP chart that the wind-report frame (METAR, reported true per ICAO Annex 3 outside the US) and the runway-heading frame actually line up -- see docs/LEMD_RUNWAY_RESEARCH.md section 2 and docs/NEW_AIRPORT_QUESTIONS.md section 2.",
+  "source": "Headings: PilotNav true headings (177/357 for 18L/36R; 140/320 for 14L/32R, via its older 15L/33R label). 18R/36L and 14R/32L assumed to match their parallel partner, unconfirmed. Thresholds: Sprinkle.com, 31-10-2026. Not checked against the Spanish AIP -- see research doc.",
+  "runways": [
+    { "name": "18L", "headingDegrees": 177, "threshold": { "latitude": 40.5326, "longitude": -3.5594 } },
+    { "name": "36R", "headingDegrees": 357, "threshold": { "latitude": 40.5011, "longitude": -3.5592 } },
+    { "name": "18R", "headingDegrees": 177, "threshold": { "latitude": 40.5318, "longitude": -3.5749 } },
+    { "name": "36L", "headingDegrees": 357, "threshold": { "latitude": 40.4926, "longitude": -3.5746 } },
+    { "name": "14L", "headingDegrees": 140, "threshold": { "latitude": 40.4949, "longitude": -3.5579 } },
+    { "name": "32R", "headingDegrees": 320, "threshold": { "latitude": 40.4700, "longitude": -3.5326 } },
+    { "name": "14R", "headingDegrees": 140, "threshold": { "latitude": 40.4849, "longitude": -3.5760 } },
+    { "name": "32L", "headingDegrees": 320, "threshold": { "latitude": 40.4557, "longitude": -3.5464 } }
+  ]
+}
