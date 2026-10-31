@@ -5,5 +5,5 @@
     { "id": "30LA30RD", "description": "SOP preferred config: main runway for departure is 30R, for arrival is 30L. Used normally unless the wind component (settings.json defaultCrosswindKt/tailwindDryKt) dictates otherwise.", "enabled": true, "arrivals": ["30L"], "departures": ["30R"] },
     { "id": "12LA12RD", "description": "SOP reciprocal config: 'otherwise normally Runway 12L use for Arrival and Runway 12R for Departure' -- the wind-driven fallback to the preferred pair, not a scheduled alternative.", "enabled": true, "arrivals": ["12L"], "departures": ["12R"] }
   ],
-  "atisWording": { "rwyWord": "RWY", "forWord": "FOR", "arrWord": "ARR", "depWord": "DEP", "andWord": "AND", "source": "project default -- no OMDB-specific ATIS phrasing template was researched this session; kept for schema compatibility only, see docs/OMDB_RUNWAY_RESEARCH.md section 6" }
+  "atisWording": { "rwyWord": "RWY", "forWord": "FOR", "arrWord": "ARR", "depWord": "DEPS", "andWord": "AND", "source": "project default -- no OMDB-specific ATIS phrasing template was researched this session; kept for schema compatibility only, see docs/OMDB_RUNWAY_RESEARCH.md section 6" }
 }
