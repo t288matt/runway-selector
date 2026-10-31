@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "description": "Built 31-10-2026 from VATSIM UK's EGCC vMATS Part 2 (Rev 2026/05). Two things modelled: a hard night rule and a soft daytime preference. NIGHT (hard): vMATS GEN 5.2.2 says 'Runway 05R/23L is not available 2200-0600L' -- true every day/season, so an unconditional forbid. DAYTIME (soft): vMATS GEN 5.2.1's dual-hours table differs by season and weekday/Sat/Sun, which docs/TIME_BASED_RULES.md (TB-4, TB-5) confirms the engine can't yet express -- worse than LSZH's Zurich case, since EGCC's winter Sat (06:30-11:00) and winter Sun (16:00-20:00) dual windows don't even overlap. Uses the weekday-summer window (06:15-20:00, matching vMATS and MAG's 2025 table exactly) as the one representative band -- a known simplification, not a claim it holds on weekends/winter. Outside the night rule dual is never forbidden by time alone: vMATS allows it under heavy traffic too, so this is a preference, not a gate. Full detail: docs/EGCC_RUNWAY_RESEARCH.md.",
+  "bands": [
+    {
+      "id": "night",
+      "start": "22:00",
+      "end": "06:00",
+      "rows": [
+        { "mode": "05RA05LD", "allowed": false, "penalty": 0 },
+        { "mode": "23RA23LD", "allowed": false, "penalty": 0 }
+      ]
+    },
+    {
+      "id": "earlyEdge",
+      "start": "06:00",
+      "end": "06:15",
+      "rows": []
+    },
+    {
+      "id": "dualPreferred",
+      "start": "06:15",
+      "end": "20:00",
+      "rows": [
+        { "mode": "05RA05LD", "allowed": true, "penalty": 0 },
+        { "mode": "23RA23LD", "allowed": true, "penalty": 0 }
+      ]
+    },
+    {
+      "id": "lateEdge",
+      "start": "20:00",
+      "end": "22:00",
+      "rows": []
+    }
+  ]
+}
