@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "description": "Los Angeles International Airport, California, USA. Reference point, elevation (127.8 ft) and magnetic variation (12E, 2020) are from the FAA's own Airport/Facility data as mirrored by AirNav (FAA information effective 30-10-2025) and cross-checked against SkyVector (127 ft surveyed). trafficAreaNm, groundMaxSpeedKt, groundAltitudeMarginFt and arrivalSpeedFloorKt are carried over unchanged from the other packs. See docs/KLAX_RUNWAY_RESEARCH.md for full sourcing and confidence notes.",
+  "icao": "KLAX",
+  "name": "Los Angeles International",
+  "latitude": 33.9425,
+  "longitude": -118.40805,
+  "elevationFt": 127.8,
+  "timeZone": "America/Los_Angeles",
+  "weatherStation": "KLAX",
+  "trafficAreaNm": 5,
+  "groundMaxSpeedKt": 40,
+  "groundAltitudeMarginFt": 100,
+  "arrivalSpeedFloorKt": 150,
+  "labels": {}
+}
