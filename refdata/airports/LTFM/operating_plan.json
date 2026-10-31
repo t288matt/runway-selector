@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "description": "Istanbul Airport operates H24 with no night curfew (DHMI AIP AD 2.3 'Operational Hours': AD operator, ATS, fuelling, handling etc. all H24; AD 2.21 governs APU/engine-run-up and departure-profile noise controls, not runway-use hours). No time-of-day or day-of-week runway-use structure was found anywhere in the AIP -- runway selection is governed purely by wind (the Preferential Runway System, AD 2.20) and by simultaneous-parallel-operations traffic management (AD 2.22), not by a published daily schedule the way EGCC's or LSZH's AIPs are. This pack therefore uses a single all-day band with both modes allowed and no time-based preference between them -- genuinely the simplest operating_plan.json in this project, not an under-researched shortcut: there is nothing time-based to encode. Mode choice in practice comes entirely from wind (settings.json tailwindDryKt/tailwindWetKt/defaultCrosswindKt) -- see docs/LTFM_RUNWAY_RESEARCH.md section 5.",
+  "bands": [
+    {
+      "id": "allday",
+      "start": "00:00",
+      "end": "00:00",
+      "allDay": true,
+      "rows": [
+        { "mode": "16AD", "allowed": true, "penalty": 0 },
+        { "mode": "34AD", "allowed": true, "penalty": 0 }
+      ]
+    }
+  ]
+}

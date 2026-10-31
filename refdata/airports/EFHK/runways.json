@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "description": "Helsinki-Vantaa has three runway strips: 04L/22R, 04R/22L (two independent parallel pairs, slightly offset from each other) and 15/33. Headings are TRUE, read directly from Finland's official eAIP AD 2.12 table (column header 'TRUE BRG'), which resolves the ~038 deg vs ~046 deg discrepancy between public aggregator sites in favour of the AIP's own ~047/048 deg figures -- the ~038 deg figure does not match either the true or the magnetic value and appears to simply be wrong. Runway heading must match the frame EFHK's METAR wind is reported in (docs/NEW_AIRPORT_QUESTIONS.md section 2); this pack assumes true (the global ICAO Annex 3 METAR convention), not confirmed by an FMI-specific document the way LSZH's true-heading finding was confirmed by MeteoSwiss. 22R and 04R have displaced thresholds (DTHR) per the AIP; the coordinates below are the DTHR (the real operational threshold), not the full paved runway end. Full detail: docs/EFHK_RUNWAY_RESEARCH.md.",
+  "source": "Finland eAIP, EF-AD 2 EFHK, AD 2.12 Runway Physical Characteristics (AIRAC 006-2025, eff. 27-11-2025), read directly 31-10-2026. Cross-checked against SkyVector/airport-data.com/Pilotnav/MetarCentral; AIP treated as authoritative.",
+  "runways": [
+    { "name": "04L", "headingDegrees": 47,  "threshold": { "latitude": 60.312947, "longitude": 24.903869 } },
+    { "name": "22R", "headingDegrees": 228, "threshold": { "latitude": 60.331142, "longitude": 24.943892 } },
+    { "name": "04R", "headingDegrees": 48,  "threshold": { "latitude": 60.311292, "longitude": 24.936372 } },
+    { "name": "22L", "headingDegrees": 228, "threshold": { "latitude": 60.330692, "longitude": 24.979092 } },
+    { "name": "15",  "headingDegrees": 153, "threshold": { "latitude": 60.330275, "longitude": 24.964497 } },
+    { "name": "33",  "headingDegrees": 333, "threshold": { "latitude": 60.307067, "longitude": 24.988286 } }
+  ]
+}

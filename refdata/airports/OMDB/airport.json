@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "description": "Dubai International Airport, UAE. Elevation (62 ft) agrees across Wikipedia, SkyBrary, SkyVector and a 2015 operator pilot-information sheet. ARP uses Sprinkle.com/LFS's 25.2498/55.3710, which sits near the geometric midpoint of the four runway thresholds; Wikipedia/SkyBrary's alternative figure coincides almost exactly with the 12R threshold instead, which looks like a propagated data error (OurAirports has a resolved problem report about bad 12R/30L coordinates) rather than a second ARP measurement. Not checked against the UAE GCAA AIP. trafficAreaNm, groundMaxSpeedKt, groundAltitudeMarginFt and arrivalSpeedFloorKt carried over unchanged from other packs. See docs/OMDB_RUNWAY_RESEARCH.md.",
+  "icao": "OMDB",
+  "name": "Dubai International",
+  "latitude": 25.2498,
+  "longitude": 55.371,
+  "elevationFt": 62,
+  "timeZone": "Asia/Dubai",
+  "weatherStation": "OMDB",
+  "trafficAreaNm": 5,
+  "groundMaxSpeedKt": 40,
+  "groundAltitudeMarginFt": 100,
+  "arrivalSpeedFloorKt": 150,
+  "labels": {}
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "description": "Manchester Airport, England. ARP, elevation and transition altitude are from VATSIM UK's EGCC vMATS Part 2 (Revision 2026/05, effective 25-05-2026, GEN 4.1), adapted under licence from NATS AIS content but explicitly disclaimed for real-world use -- not checked against the UK AIP itself. weatherStation assumes EGCC reports its own METAR; not separately confirmed. trafficAreaNm, groundMaxSpeedKt, groundAltitudeMarginFt and arrivalSpeedFloorKt are carried over unchanged from the other packs. See docs/EGCC_RUNWAY_RESEARCH.md for full sourcing and confidence notes.",
+  "icao": "EGCC",
+  "name": "Manchester",
+  "latitude": 53.3539,
+  "longitude": -2.2750,
+  "elevationFt": 257,
+  "timeZone": "Europe/London",
+  "weatherStation": "EGCC",
+  "trafficAreaNm": 5,
+  "groundMaxSpeedKt": 40,
+  "groundAltitudeMarginFt": 100,
+  "arrivalSpeedFloorKt": 150,
+  "labels": {}
+}

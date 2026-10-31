@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "description": "LAX has four parallel east-west runways on two pairs: north (06L/24R, 06R/24L) and south (07L/25R, 07R/25L). Headings are TRUE: US coded METAR/ASOS wind is referenced to true north (spoken ATIS/tower wind is magnetic instead) -- the OPPOSITE of the naive assumption, confirmed via secondary sources quoting the AIM/NWS ASOS docs, see research doc section 3. Not checked against the FAA Chart Supplement. Surprising, twice-corroborated finding: AirNav and SkyVector both give the SAME heading (083T/071M and 263T/251M) for all four runways -- the 06-side and 07-side pairs aren't distinguishable in current data despite different numbers; unresolved, see research doc section 2.",
+  "source": "AirNav (FAA data effective 30-10-2025) and SkyVector, cross-checked, 31-10-2026. Not checked against the FAA Chart Supplement/AIP.",
+  "runways": [
+    { "name": "06L", "headingDegrees": 83,  "threshold": { "latitude": 33.9491, "longitude": -118.4312 } },
+    { "name": "24R", "headingDegrees": 263, "threshold": { "latitude": 33.9521, "longitude": -118.4019 } },
+    { "name": "06R", "headingDegrees": 83,  "threshold": { "latitude": 33.9468, "longitude": -118.4347 } },
+    { "name": "24L", "headingDegrees": 263, "threshold": { "latitude": 33.9505, "longitude": -118.3990 } },
+    { "name": "07L", "headingDegrees": 83,  "threshold": { "latitude": 33.9356, "longitude": -118.4221 } },
+    { "name": "25R", "headingDegrees": 263, "threshold": { "latitude": 33.9399, "longitude": -118.3798 } },
+    { "name": "07R", "headingDegrees": 83,  "threshold": { "latitude": 33.9336, "longitude": -118.4190 } },
+    { "name": "25L", "headingDegrees": 263, "threshold": { "latitude": 33.9374, "longitude": -118.3827 } }
+  ]
+}

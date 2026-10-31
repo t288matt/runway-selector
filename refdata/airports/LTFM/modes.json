@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "description": "Built 31-10-2026 from DHMI's AIP Turkiye, AD 2 LTFM AD 2.20 'USE OF RWYs' and 'Preferential Runway System Operations' -- the best-sourced pack in this project (a national AIP, not a VATSIM/IVAO document). LTFM's AIP does NOT use named configurations (no Config A/B, no North/South labels) -- it states a hard landing restriction on two runway pairs, runs simultaneous independent parallel approaches/departures 'daily (24 hours)' (AD 2.22 section 1.1.1), and assigns departures within a direction to a runway by SID exit waypoint, not by a named mode. This schema has no SID-level field, so two modes are built here, one per flow direction (179.15 deg south-facing, 359.15/89.15 deg north/east-facing), matching the prevailing wind split. The SID-based departure split within each direction is a documented simplification, not an oversight -- see each mode's description and docs/LTFM_RUNWAY_RESEARCH.md section 3.",
+  "modes": [
+    {
+      "id": "16AD",
+      "description": "South-flow ('16/17 direction'): simultaneous independent parallel approaches/departures on the 179.15 deg true runways. Arrivals 16R, 17L only -- AD 2.20 'USE OF RWYs' #1 bars 16L and 17R from landing (paired with 34R/35L). Departures use all four: 16L, 16R, 17L, 17R. SIMPLIFICATION: AIP further splits departures by SID fix when 16L/R+17L/R run together -- MAKOL/EKAWE/VADEN/REZOV/TUDBU/IBLAL use 16L/R, BARPE/IVGUS/VICEN/RATVU use 17L/R (AD 2.20 #5) -- not encoded here, this schema has no SID-level field. See docs/LTFM_RUNWAY_RESEARCH.md section 3.",
+      "enabled": true,
+      "arrivals": ["16R", "17L"],
+      "departures": ["16L", "16R", "17L", "17R"]
+    },
+    {
+      "id": "34AD",
+      "description": "North-flow ('34/35/36/09 direction'): simultaneous independent parallel approaches/departures on the 359.15 deg true runways plus departures-only RWY 09 (89.15 deg true). Arrivals 34L, 35R, 36 only -- AD 2.20 #1 bars 34R/35L from landing; RWY 09 never lands (AD 2.20 #2). Departures use all six: 34L, 34R, 35L, 35R, 36, 09. SIMPLIFICATION: AIP splits departures by SID fix three further ways here (34L/R vs 35L/R; 36 vs 09; 18 vs 09 -- AD 2.20 #5-6) -- not encoded, this schema has no SID-level field. See docs/LTFM_RUNWAY_RESEARCH.md section 3.",
+      "enabled": true,
+      "arrivals": ["34L", "35R", "36"],
+      "departures": ["34L", "34R", "35L", "35R", "36", "09"]
+    }
+  ],
+  "atisWording": { "rwyWord": "RWY", "forWord": "FOR", "arrWord": "ARR", "depWord": "DEPS", "andWord": "AND", "source": "project default -- kept for schema compatibility only. LTFM's real ATIS announces PRS state with the fixed phrase 'Preferential Runway Operations are in progress' (AD 2.20 PRS #4), which does not map onto this schema's rwy/for/arr/dep/and template -- see docs/LTFM_RUNWAY_RESEARCH.md section 4." }
+}

@@ -37,7 +37,7 @@ describe('approach ladders: loading', () => {
   it('every other pack under refdata/airports and the fixture loads with no ladder', () => {
     const root = resolve(import.meta.dirname, '..', '..', 'refdata', 'airports');
     const ids = readdirSync(root);
-    expect(ids).toHaveLength(12);
+    expect(ids).toHaveLength(20);
     for (const id of ids) {
       const raw = {} as RawFiles;
       for (const n of PACK_FILE_NAMES) raw[n] = readFileSync(join(root, id, n), 'utf8');

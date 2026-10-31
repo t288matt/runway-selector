@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "description": "Cologne/Bonn has three runways: 13L/31R (primary, 3815x60m), 13R/31L (secondary, ~1km SW, 1863x45m) and 06/24 (crossing, 2459x45m). The parallel pair was renamed from 14L/32R and 14R/32L to 13L/31R and 13R/31L on 18-04-2024 (AIRAC 2404) as magnetic heading drifted below the 14/32 band -- dated evidence of magnetic drift (research doc section 2). Headings are TRUE: German METARs report wind relative to true north per a secondhand DWD-brochure citation (research doc section 3); must match the wind-report frame. Parallel-pair true heading (138/318) is from Sprinkle.com (via search snippet; page itself 410'd on direct fetch), consistent with SkyVector's magnetic 136/316 plus current ~3.15-3.2deg E variation. 06/24's true heading (066/246) is DERIVED (magnetic 063/243 plus variation), not independently sourced -- weakest figure here. Not checked against the German AIP. See docs/EDDK_RUNWAY_RESEARCH.md.",
+  "source": "SkyVector (magnetic headings, degree-minute thresholds, lengths/widths), Sprinkle.com (true heading for the parallel pair, via search snippet), OurAirports (confirms current designators), 31-10-2026. Not checked against the German AIP.",
+  "runways": [
+    { "name": "13L", "headingDegrees": 138, "threshold": { "latitude": 50.8805, "longitude": 7.1290 } },
+    { "name": "31R", "headingDegrees": 318, "threshold": { "latitude": 50.8552, "longitude": 7.1657 } },
+    { "name": "13R", "headingDegrees": 138, "threshold": { "latitude": 50.8708, "longitude": 7.1208 } },
+    { "name": "31L", "headingDegrees": 318, "threshold": { "latitude": 50.8585, "longitude": 7.1387 } },
+    { "name": "06",  "headingDegrees": 66,  "threshold": { "latitude": 50.8602, "longitude": 7.1238 } },
+    { "name": "24",  "headingDegrees": 246, "threshold": { "latitude": 50.8697, "longitude": 7.1553 } }
+  ]
+}

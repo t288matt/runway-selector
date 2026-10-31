@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "description": "Built 31-10-2026 from VATSIM Scandinavia's EFHK pilot briefing (wiki.vatsim-scandinavia.org). The briefing's preferential runway system is two independent ranked fallback lists (one for arrivals, one for departures, see modes.json description and docs/EFHK_RUNWAY_RESEARCH.md section 0 for the full modelling reasoning), not a day/night table, so there is only one band. The page was fully re-read this session specifically to look for a night-hours rule or a movement-capacity figure -- neither was found, and AD 2.20 (Finland's own local traffic regulations section, which might state a night restriction) could not be retrieved this session either. Per the task's instruction not to invent a time structure that was not found, this uses a single all-day band (matching NFFN's pattern for a similarly time-flat pack) rather than guessing at hours. This is a gap to close with a genuine AD 2.20 read later, not a claim that EFHK has no night restriction.",
+  "bands": [
+    {
+      "id": "all-day",
+      "allDay": true,
+      "start": "00:00",
+      "end": "00:00",
+      "rows": [
+        { "mode": "15A22RD",  "allowed": true, "penalty": 0 },
+        { "mode": "15A22LD",  "allowed": true, "penalty": 1 },
+        { "mode": "15A04RD",  "allowed": true, "penalty": 2 },
+        { "mode": "15A04LD",  "allowed": true, "penalty": 4 },
+        { "mode": "15A15D",   "allowed": true, "penalty": 5 },
+        { "mode": "22LA22RD", "allowed": true, "penalty": 1 },
+        { "mode": "22LA22LD", "allowed": true, "penalty": 2 },
+        { "mode": "22LA33D",  "allowed": true, "penalty": 4 },
+        { "mode": "22LA04LD", "allowed": true, "penalty": 5 },
+        { "mode": "22LA15D",  "allowed": true, "penalty": 6 },
+        { "mode": "04LA22LD", "allowed": true, "penalty": 3 },
+        { "mode": "04LA04RD", "allowed": true, "penalty": 4 },
+        { "mode": "04LA33D",  "allowed": true, "penalty": 5 },
+        { "mode": "04LA04LD", "allowed": true, "penalty": 6 },
+        { "mode": "04LA15D",  "allowed": true, "penalty": 7 },
+        { "mode": "04RA22RD", "allowed": true, "penalty": 3 },
+        { "mode": "04RA04RD", "allowed": true, "penalty": 5 },
+        { "mode": "04RA33D",  "allowed": true, "penalty": 6 },
+        { "mode": "04RA04LD", "allowed": true, "penalty": 7 },
+        { "mode": "04RA15D",  "allowed": true, "penalty": 8 },
+        { "mode": "22RA22RD", "allowed": true, "penalty": 4 },
+        { "mode": "22RA22LD", "allowed": true, "penalty": 5 },
+        { "mode": "22RA04RD", "allowed": true, "penalty": 6 },
+        { "mode": "22RA33D",  "allowed": true, "penalty": 7 },
+        { "mode": "22RA15D",  "allowed": true, "penalty": 9 },
+        { "mode": "33A22RD",  "allowed": true, "penalty": 5 },
+        { "mode": "33A22LD",  "allowed": true, "penalty": 6 },
+        { "mode": "33A04RD",  "allowed": true, "penalty": 7 },
+        { "mode": "33A33D",   "allowed": true, "penalty": 8 },
+        { "mode": "33A04LD",  "allowed": true, "penalty": 9 }
+      ]
+    }
+  ]
+}
