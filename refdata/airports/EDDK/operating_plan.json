@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "description": "Built 31-10-2026 from the VATGER EDDK Tower SOP. Unlike LSZH's and EGCC's sources, this one gives NO time-of-day or day-of-week structure at all -- no stated hours for when 31R is preferred over 13L, no night curfew, no weekday/weekend split. The only conditioning factors VATGER states are wind (the 5kt tailwind threshold, see settings.json tailwindDryKt) and traffic demand ('high-demand periods' for 13R/31L), neither of which is a time-of-day rule this file's band model can express -- traffic-demand-triggered preference is what the engine's own traffic-based penalty system is for, not something to hand-code as a clock-time band. This plan therefore uses a single all-day band, with no time-based preference: wind (via tailwindDryKt) and the engine's own traffic scoring do the preference work a researched time band would otherwise do. This reflects a genuine gap in the source, not an invented simplification of real structure -- see docs/EDDK_RUNWAY_RESEARCH.md section 6.",
+  "bands": [
+    {
+      "id": "allDay",
+      "allDay": true,
+      "start": "00:00",
+      "end": "00:00",
+      "rows": [
+        { "mode": "31RAD",      "allowed": true, "penalty": 0 },
+        { "mode": "13LAD",      "allowed": true, "penalty": 0 },
+        { "mode": "31RAD31LAD", "allowed": true, "penalty": 0 },
+        { "mode": "31R24AD",    "allowed": true, "penalty": 0 },
+        { "mode": "06AD",       "allowed": true, "penalty": 0 }
+      ]
+    }
+  ]
+}
