@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "description": "Manchester has two parallel runway pairs: 05L/23R (real-world 'Runway 1', closer to the terminal) and 05R/23L ('Runway 2'). Headings (051/231) are from SkyVector and MetarCentral, but whether they are TRUE or MAGNETIC is UNRESOLVED -- Manchester's ~1 degree West variation is too small to tell from cross-checking alone. Runway heading must match the frame EGCC's METAR wind is reported in (docs/NEW_AIRPORT_QUESTIONS.md section 2); not confirmed against UK Met Office or AIP documentation. Thresholds are decimal-degree figures from Sprinkle.com, cross-checked against SkyVector for 05R/23L (matched). Displaced thresholds exist in real life but sources disagree on the figures and the schema has no field for them, so none is recorded. Not checked against the UK AIP. Full detail: docs/EGCC_RUNWAY_RESEARCH.md.",
+  "source": "Headings: SkyVector and MetarCentral (51 deg / 231 deg), frame unconfirmed. Thresholds: Sprinkle.com, cross-checked against SkyVector for 05R/23L, 31-10-2026. Not checked against the UK AIP.",
+  "runways": [
+    { "name": "05L", "headingDegrees": 51,  "threshold": { "latitude": 53.3451, "longitude": -2.2927 } },
+    { "name": "23R", "headingDegrees": 231, "threshold": { "latitude": 53.3624, "longitude": -2.2571 } },
+    { "name": "05R", "headingDegrees": 51,  "threshold": { "latitude": 53.3320, "longitude": -2.3107 } },
+    { "name": "23L", "headingDegrees": 231, "threshold": { "latitude": 53.3491, "longitude": -2.2750 } }
+  ]
+}
