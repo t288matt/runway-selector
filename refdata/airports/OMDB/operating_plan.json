@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "description": "No time-of-day structure was found for OMDB in any source -- the IVAO SOP frames the runway choice entirely around wind component, not the clock (docs/OMDB_RUNWAY_RESEARCH.md section 4). This pack therefore uses a single all-day band, the same pattern as YSSY's plan after its curfew mode was removed: the preferred config (30LA30RD) is the baseline preference and the reciprocal config (12LA12RD) stays allowed at all times with a modest preference penalty, reflecting its description in the SOP as the wind-driven fallback rather than a scheduled alternative. Wind can still override this soft preference at any time (soft preference, hard eligibility).",
+  "bands": [
+    {
+      "id": "all-day",
+      "start": "00:00",
+      "end": "00:00",
+      "allDay": true,
+      "rows": [
+        { "mode": "30LA30RD", "allowed": true, "penalty": 0 },
+        { "mode": "12LA12RD", "allowed": true, "penalty": 2 }
+      ]
+    }
+  ]
+}

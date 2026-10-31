@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "description": "Dubai has two parallel runway pairs: 12L/30R and 12R/30L. Headings are TRUE (121/301), not magnetic, because no UAE-specific source was found confirming OMDB METAR wind frame, so this pack falls back to the universal ICAO Annex 3 convention that METAR wind is reported relative to true north -- a generic-convention assumption, not a UAE AIP confirmation (docs/OMDB_RUNWAY_RESEARCH.md section 1). Pilotnav's true headings (121.4/301.4) and SkyVector's figures read as magnetic (119/299) differ by about 2 degrees, matching a 2015 operator sheet's stated 2 degree East magnetic variation -- the same cross-check pattern used for LSZH. Not checked against the UAE GCAA AIP.",
+  "source": "Pilotnav.com (true headings, decimal thresholds) cross-checked against an independent web aggregation of Sprinkle.com's figures, 31-10-2026. Not checked against the UAE GCAA AIP.",
+  "runways": [
+    { "name": "12L", "headingDegrees": 121, "threshold": { "latitude": 25.264617, "longitude": 55.350414 } },
+    { "name": "30R", "headingDegrees": 301, "threshold": { "latitude": 25.247683, "longitude": 55.38095 } },
+    { "name": "12R", "headingDegrees": 121, "threshold": { "latitude": 25.252828, "longitude": 55.364369 } },
+    { "name": "30L", "headingDegrees": 301, "threshold": { "latitude": 25.235914, "longitude": 55.394875 } }
+  ]
+}

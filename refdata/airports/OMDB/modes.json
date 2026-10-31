@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "description": "Rebuilt 31-10-2026 from IVAO XG's 'Dubai SOP' Rev 1.0 section 3.2 'Runway Selection' (owner-supplied verbatim text, confirmed in an earlier session; direct re-fetch of the source 403'd this session, but a search-engine crawl of the same page independently corroborates the substance -- see docs/OMDB_RUNWAY_RESEARCH.md). Ids use the project's usual runway-coded form. The SOP's wind thresholds (15 kt crosswind / 5 kt tailwind, in settings.json) are a real ICAO-MID regional benchmark (ATM SG/10-IP/4) that this source also applies to Dubai -- not confirmed as Dubai's own published figure; see the research doc for the full caveat. A dual-30-simultaneous-runway configuration mentioned by other secondary sources is not modelled: no switching criteria were found for it.",
+  "modes": [
+    { "id": "30LA30RD", "description": "SOP preferred config: main runway for departure is 30R, for arrival is 30L. Used normally unless the wind component (settings.json defaultCrosswindKt/tailwindDryKt) dictates otherwise.", "enabled": true, "arrivals": ["30L"], "departures": ["30R"] },
+    { "id": "12LA12RD", "description": "SOP reciprocal config: 'otherwise normally Runway 12L use for Arrival and Runway 12R for Departure' -- the wind-driven fallback to the preferred pair, not a scheduled alternative.", "enabled": true, "arrivals": ["12L"], "departures": ["12R"] }
+  ],
+  "atisWording": { "rwyWord": "RWY", "forWord": "FOR", "arrWord": "ARR", "depWord": "DEP", "andWord": "AND", "source": "project default -- no OMDB-specific ATIS phrasing template was researched this session; kept for schema compatibility only, see docs/OMDB_RUNWAY_RESEARCH.md section 6" }
+}
