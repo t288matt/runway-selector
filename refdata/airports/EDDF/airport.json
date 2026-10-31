@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "description": "Frankfurt Airport (Rhein-Main), Germany. ARP (50 01 59.90N 008 34 13.64E, elevation 364 ft) is from a third-party copy of the Frankfurt AIP AD 2.2 table (via Scribd), cross-checked against ch-aviation (364 ft) and Airmate (363 ft) -- not opened from DFS's own eAIP directly. weatherStation assumes EDDF reports its own METAR; not separately confirmed. trafficAreaNm, groundMaxSpeedKt, groundAltitudeMarginFt and arrivalSpeedFloorKt are carried over unchanged from the other packs. See docs/EDDF_RUNWAY_RESEARCH.md for full sourcing and confidence notes.",
+  "icao": "EDDF",
+  "name": "Frankfurt",
+  "latitude": 50.033306,
+  "longitude": 8.570444,
+  "elevationFt": 364,
+  "timeZone": "Europe/Berlin",
+  "weatherStation": "EDDF",
+  "trafficAreaNm": 5,
+  "groundMaxSpeedKt": 40,
+  "groundAltitudeMarginFt": 100,
+  "arrivalSpeedFloorKt": 150,
+  "labels": {}
+}

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "description": "Built 31-10-2026 from VATGER's EDDF Tower page (Rev #11, re-confirmed live; no absolute date given). Frankfurt runs all four runways at once with fixed roles: 25C/07C departures only (emergency/swingover landings excepted, not modelled); 25L/07R landings plus occasional low-traffic southern-apron/GAT departures (no threshold given, not modelled -- known simplification); 25R/07L landing-only, no VFR approaches, barred to A380/B747/DC10/MD11/L-1011 (aircraft-class rule not modelled, no such engine input); 18 departures only, 36 never used so omitted from runways.json. Ids extend the project's 'arrivalsAdeparturesD' convention (LSZH's 14A28D) to multiple runways per role by concatenation: 25L25RA25C18D = arrivals [25L,25R], departures [25C,18]. No crosswind distinction (no limit found at all) -- both fall back to defaultCrosswindKt. No per-mode capacity: unresearched. ILS Y preference for 25R/07L has no cloud-base/visibility figures, not modelled. See docs/EDDF_RUNWAY_RESEARCH.md.",
+  "modes": [
+    {
+      "id": "25L25RA25C18D",
+      "description": "25-direction (westerly) multi-runway segregated mode: arrivals 25L and 25R, departures 25C and 18. Matches VATGER's 25C/07C-departures, 25L/07R + 25R/07L-landing, 18-departures pattern. 25-direction is preferred over 07-direction up to a 5 kt tailwind component (see settings.json tailwindDryKt).",
+      "enabled": true,
+      "arrivals": ["25L", "25R"],
+      "departures": ["25C", "18"]
+    },
+    {
+      "id": "07R07LA07C18D",
+      "description": "07-direction (easterly) equivalent: arrivals 07R and 07L, departures 07C and 18. Used when the tailwind component on 25-direction exceeds 5 kt (VATGER).",
+      "enabled": true,
+      "arrivals": ["07R", "07L"],
+      "departures": ["07C", "18"]
+    }
+  ],
+  "atisWording": { "rwyWord": "RWY", "forWord": "FOR", "arrWord": "ARR", "depWord": "DEPS", "andWord": "AND", "source": "project default -- no EDDF ATIS phrasing template was found this session; kept for schema compatibility only, same caveat as LSZH and EGCC" }
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "description": "Built 31-10-2026 from VATGER's EDDF Tower page, whose full text was searched for a crosswind limit and a night-hours rule and had neither. Direction choice (25 vs 07) is wind-driven, not time-of-day: 25-direction is preferred up to 5 kt tailwind (settings.json tailwindDryKt), already enforced through wind eligibility, not a time band. So there is no time structure to encode, and this pack uses a single all-day band, both modes allowed at equal (zero) penalty, per docs/NEW_AIRPORT_QUESTIONS.md section 4 and LSZH/EGCC's precedent. Note: docs/TIME_BASED_RULES.md (separate, general-web-research, not VATGER) mentions a Frankfurt night ban/quota around 23:00-05:00. Read there as a traffic quota, not a runway rule -- that document's own 'out of scope' section already excludes Frankfurt quotas by name. VATGER's own search found no runway-specific night rule, so none is built; a considered reading of a possible conflict, not an oversight. Full detail: docs/EDDF_RUNWAY_RESEARCH.md.",
+  "bands": [
+    {
+      "id": "all-day",
+      "allDay": true,
+      "start": "00:00",
+      "end": "00:00",
+      "rows": [
+        { "mode": "25L25RA25C18D", "allowed": true, "penalty": 0 },
+        { "mode": "07R07LA07C18D", "allowed": true, "penalty": 0 }
+      ]
+    }
+  ]
+}
