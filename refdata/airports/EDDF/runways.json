@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "description": "Frankfurt has three near-parallel east-west runways -- 07C/25C (4,000 m), 07R/25L (4,000 m) and 07L/25R (2,800 m, genuinely shorter, confirmed by SkyVector's own length field, not a data error) -- plus 18 (4,000 m, north-south; the reciprocal end 36 is never used per VATGER, so omitted rather than listed dead). Headings are TRUE, not magnetic: ICAO Annex 3/WMO convention (and secondhand DWD citations) say METAR wind is coded true, so runway heading must match the wind-report frame (docs/NEW_AIRPORT_QUESTIONS.md section 2), same resolution as LSZH (docs/LSZH_RUNWAY_RESEARCH.md section 1). SkyVector's magnetic headings (068/248 trio, 178 for 18) were cross-checked against PilotNav's true set (069/249, 179); the ~1 degree gap matches Frankfurt's small magnetic variation. See docs/EDDF_RUNWAY_RESEARCH.md for full detail; not checked against the DFS eAIP.",
+  "source": "SkyVector and PilotNav EDDF pages, cross-checked against each other, 31-10-2026. Thresholds: SkyVector's decimal-minute coordinates; 18's threshold cross-checked against PilotNav (matched to within 30 m). Not checked against the DFS eAIP. See docs/EDDF_RUNWAY_RESEARCH.md.",
+  "runways": [
+    { "name": "07C", "headingDegrees": 69,  "threshold": { "latitude": 50.032667, "longitude": 8.534667 } },
+    { "name": "25C", "headingDegrees": 249, "threshold": { "latitude": 50.045167, "longitude": 8.587000 } },
+    { "name": "07R", "headingDegrees": 69,  "threshold": { "latitude": 50.027500, "longitude": 8.534167 } },
+    { "name": "25L", "headingDegrees": 249, "threshold": { "latitude": 50.040000, "longitude": 8.586500 } },
+    { "name": "07L", "headingDegrees": 69,  "threshold": { "latitude": 50.037000, "longitude": 8.497000 } },
+    { "name": "25R", "headingDegrees": 249, "threshold": { "latitude": 50.045833, "longitude": 8.533667 } },
+    { "name": "18",  "headingDegrees": 179, "threshold": { "latitude": 50.034167, "longitude": 8.526000 } }
+  ]
+}
