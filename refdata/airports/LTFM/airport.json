@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "description": "Istanbul Airport, Turkiye. ARP, elevation and magnetic variation are from Turkiye's own AIP (DHMI), AD 2.2 'Aerodrome geographical and administrative data' -- current AIRAC cycle, downloaded and read directly this session (https://www.dhmi.gov.tr/AIPDocuments/LT_AD_2_LTFM_en.pdf). This is the best-sourced pack in the project: a national AIP, not a VATSIM/IVAO simulation document. weatherStation assumes LTFM reports its own METAR; not separately confirmed. trafficAreaNm, groundMaxSpeedKt, groundAltitudeMarginFt and arrivalSpeedFloorKt are carried over unchanged from the other packs. See docs/LTFM_RUNWAY_RESEARCH.md for full sourcing and confidence notes.",
+  "icao": "LTFM",
+  "name": "Istanbul",
+  "latitude": 41.275278,
+  "longitude": 28.751944,
+  "elevationFt": 325,
+  "timeZone": "Europe/Istanbul",
+  "weatherStation": "LTFM",
+  "trafficAreaNm": 5,
+  "groundMaxSpeedKt": 40,
+  "groundAltitudeMarginFt": 100,
+  "arrivalSpeedFloorKt": 150,
+  "labels": {}
+}
