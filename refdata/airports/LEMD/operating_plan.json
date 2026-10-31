@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "description": "Built 31-10-2026 from VATSIM Spain's LEMD Pilot Briefing (v1.0, May 2022), section 1.7, which gives a clean day/night split with no weekday/weekend or seasonal variation -- unlike LSZH/EGCC, this source needs no TB-4/TB-5 simplification. DAY (0700-2300 local): 32R32LA36R36LD preferred, 18R18LA14R14LD fallback. NIGHT (2300-0700 local): 32RA36LD preferred, 32R32LA36RD fallback. The briefing allows the night band to start early/run late 'if traffic, met or operational conditions allow' -- a soft, judgement-based exception with no stated trigger, not modelled as a separate band (see research doc). A mode with no row keeps the default penalty and stays allowed, so wind can still override preference.",
+  "bands": [
+    {
+      "id": "day",
+      "start": "07:00",
+      "end": "23:00",
+      "rows": [
+        { "mode": "32R32LA36R36LD", "allowed": true, "penalty": 0 },
+        { "mode": "18R18LA14R14LD", "allowed": true, "penalty": 3 }
+      ]
+    },
+    {
+      "id": "night",
+      "start": "23:00",
+      "end": "07:00",
+      "rows": [
+        { "mode": "32RA36LD", "allowed": true, "penalty": 0 },
+        { "mode": "32R32LA36RD", "allowed": true, "penalty": 3 }
+      ]
+    }
+  ]
+}

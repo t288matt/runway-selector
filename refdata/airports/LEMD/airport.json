@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "description": "Adolfo Suárez Madrid-Barajas Airport, Spain. ARP converted from the official Spanish AIP (ENAIRE, AD 2-LEMD, AIRAC cycle current as of this session's lookup, 31-10-2026): 402820N 0033339W -> 40.47222, -3.56083. Elevation 1998 ft (609 m) is also the AIP's own figure and matches every third-party source checked. trafficAreaNm, groundMaxSpeedKt, groundAltitudeMarginFt and arrivalSpeedFloorKt are carried over unchanged from the other packs, same as LSZH/EGCC. See docs/LEMD_RUNWAY_RESEARCH.md for full sourcing and confidence notes.",
+  "icao": "LEMD",
+  "name": "Madrid-Barajas",
+  "latitude": 40.47222,
+  "longitude": -3.56083,
+  "elevationFt": 1998,
+  "timeZone": "Europe/Madrid",
+  "weatherStation": "LEMD",
+  "trafficAreaNm": 5,
+  "groundMaxSpeedKt": 40,
+  "groundAltitudeMarginFt": 100,
+  "arrivalSpeedFloorKt": 150,
+  "labels": {}
+}

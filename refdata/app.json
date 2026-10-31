@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "airports": ["YMML", "YSSY", "YPAD", "YPPH", "YBBN", "YSWS", "YPDN", "YSCB", "NFFN", "YBCS", "YBTL", "LSZH"],
+  "airports": ["YMML", "YSSY", "YPAD", "YPPH", "YBBN", "YSWS", "YPDN", "YSCB", "NFFN", "YBCS", "YBTL", "LSZH", "LEMD"],
   "default": "YMML",
   "description": "Packs the app can load. The airport selector is shown only when more than one is listed."
 }
