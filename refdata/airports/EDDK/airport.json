@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "description": "Cologne/Bonn (Koln/Bonn) Airport, Germany. ARP (50.8660, 7.1427) and elevation (302 ft) are from SkyVector, cross-checked against airport-data.com's independently-sourced decimal figure (50.865917, 7.142744) which matches to the fourth decimal place; not checked against the German AIP (DFS). trafficAreaNm, groundMaxSpeedKt, groundAltitudeMarginFt and arrivalSpeedFloorKt are carried over unchanged from the other packs. See docs/EDDK_RUNWAY_RESEARCH.md for full sourcing and confidence notes.",
+  "icao": "EDDK",
+  "name": "Cologne Bonn",
+  "latitude": 50.8660,
+  "longitude": 7.1427,
+  "elevationFt": 302,
+  "timeZone": "Europe/Berlin",
+  "weatherStation": "EDDK",
+  "trafficAreaNm": 5,
+  "groundMaxSpeedKt": 40,
+  "groundAltitudeMarginFt": 100,
+  "arrivalSpeedFloorKt": 150,
+  "labels": {}
+}
