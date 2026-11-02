@@ -1460,6 +1460,22 @@ dl.v dd {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
+  white-space: nowrap;
+}
+/* On a phone the bar has no room for a second link; Summary 2 stays reachable from the switch on the summary page. */
+@media (max-width: 599px) {
+  .summary2-link {
+    display: none;
+  }
+}
+/* At 320 px the bar with the link is a few pixels too wide; tighten its gaps. */
+@media (max-width: 359px) {
+  .bar:has(.summary-link) {
+    gap: 6px;
+  }
+  .summary-link {
+    font-size: 12px;
+  }
 }
 .summary h2 {
   font-size: 14px;

@@ -141,7 +141,8 @@ describe('SummaryView, large size', () => {
     expect(html).toContain('aria-label="All airports"');
     expect(html).toContain('summary-large');
     expect((html.match(/class="scard[^"]*scard-large/g) ?? []).length).toBe(4);
-    expect(compact).not.toContain('large');
+    expect(compact).not.toContain('scard-large');
+    expect(compact).not.toContain('summary-large');
   });
 
   it('shows the code and name, the picture with its text left in, the runway rows with roles, and the wind', () => {
@@ -212,6 +213,7 @@ describe('the header link', () => {
     expect(both).toContain('href="#/summary"');
     expect(both).toContain('href="#/summary2"');
     expect(both).toContain('Summary 2');
+    expect(both).toContain('class="summary-link summary2-link"');
     const none = renderToStaticMarkup(<Header {...props} />);
     expect(none).not.toContain('Summary 2');
     expect(none).not.toContain('#/summary2');

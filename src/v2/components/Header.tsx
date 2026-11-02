@@ -101,7 +101,7 @@ export function Header({ icao, airports, pending, airportError, onSwitch, now, m
         </a>
       ) : null}
       {summary2Href !== undefined ? (
-        <a className="summary-link" href={summary2Href}>
+        <a className="summary-link summary2-link" href={summary2Href}>
           Summary 2
         </a>
       ) : null}
