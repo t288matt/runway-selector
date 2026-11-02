@@ -1,15 +1,17 @@
 // Deep links for v2, carried in the URL hash so the site stays pure static files
 // (GitHub Pages has no server-side routing): #/ICAO opens that airport, and
-// #/ICAO/detail also opens the Detail section. Owner, 29-10-2026. #/summary opens
-// the all-airports summary when app.json has groups (see SummaryScreen.tsx).
+// #/ICAO/detail also opens the Detail section. Owner, 29-10-2026. #/summary and #/summary2 open
+// the all-airports summary (compact and large boxes) when app.json has groups (see SummaryScreen.tsx).
 import { AIRPORT_ID } from '../refdata';
 
 export interface Route {
   /** The airport the hash names, or null when the hash has none or it is not a valid-shaped code. */
   readonly icao: string | null;
   readonly detail: boolean;
-  /** True for #/summary, the all-airports summary screen. */
+  /** True for #/summary and #/summary2, the all-airports summary screen. */
   readonly summary: boolean;
+  /** True for #/summary2, the summary with larger boxes (false for #/summary and every other hash). */
+  readonly large: boolean;
 }
 
 export function parseRoute(hash: string): Route {
@@ -20,11 +22,13 @@ export function parseRoute(hash: string): Route {
     .filter((s) => s.length > 0);
   const first = segments[0]?.toUpperCase() ?? '';
   // Check the summary keyword before the airport-id shape: "SUMMARY" matches AIRPORT_ID.
-  if (first === 'SUMMARY') return { icao: null, detail: false, summary: true };
+  if (first === 'SUMMARY') return { icao: null, detail: false, summary: true, large: false };
+  if (first === 'SUMMARY2') return { icao: null, detail: false, summary: true, large: true };
   return {
     icao: AIRPORT_ID.exec(first) !== null ? first : null,
     detail: segments[1]?.toLowerCase() === 'detail',
     summary: false,
+    large: false,
   };
 }
 
@@ -34,6 +38,10 @@ export function buildRoute(icao: string, detail: boolean): string {
 
 export function buildSummaryRoute(): string {
   return '#/summary';
+}
+
+export function buildSummary2Route(): string {
+  return '#/summary2';
 }
 
 /**
