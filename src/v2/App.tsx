@@ -14,7 +14,7 @@ import { Notice } from './components/Notice';
 import { SummaryScreen } from './components/SummaryScreen';
 import type { AppDeps } from './deps';
 import { screenModel } from './model/screen';
-import { afterSwitch, buildSummaryRoute, hashToShow, parseRoute } from './route';
+import { afterSwitch, buildSummary2Route, buildSummaryRoute, hashToShow, parseRoute } from './route';
 import { useController } from './useController';
 
 export type { AppDeps } from './deps';
@@ -65,6 +65,8 @@ interface AirportSwitch {
   readonly onSwitch: (icao: string) => void;
   /** The summary link target, or undefined when app.json has no groups. */
   readonly summaryHref?: string | undefined;
+  /** The Summary 2 link target, or undefined when app.json has no groups. */
+  readonly summary2Href?: string | undefined;
 }
 
 function Screen({
@@ -100,6 +102,7 @@ function Screen({
           onMore={() => setMoreOpen(true)}
           moreRef={moreRef}
           {...(airport.summaryHref === undefined ? {} : { summaryHref: airport.summaryHref })}
+          {...(airport.summary2Href === undefined ? {} : { summary2Href: airport.summary2Href })}
         />
         <Dashboard model={model} pack={livePack} onDismissNotice={screen.dismissNotice} detailOpen={detailOpen} onToggleDetail={onToggleDetail} />
       </div>
@@ -165,6 +168,7 @@ export function AppBody({
           pending: pendingAirport,
           onSwitch: onSwitchAirport,
           summaryHref: hasGroups(state.groups) ? buildSummaryRoute() : undefined,
+          summary2Href: hasGroups(state.groups) ? buildSummary2Route() : undefined,
         }}
         detailOpen={detailOpen}
         onToggleDetail={onToggleDetail}
@@ -255,6 +259,8 @@ export function App({ deps }: { deps: AppDeps }) {
   // The summary (#/summary) is a view of its own: while it shows, the hash is left alone. It needs groups in app.json;
   // without them #/summary opens the airport screen like any other hash.
   const [wantSummary, setWantSummary] = useState(initialRoute.summary);
+  // #/summary2 is the same screen with larger boxes: only this size changes between the two, so the summary stays mounted.
+  const [summarySize, setSummarySize] = useState<'compact' | 'large'>(initialRoute.large ? 'large' : 'compact');
   const summaryShown = wantSummary && state.status === 'ready' && hasGroups(state.groups);
   const skipNextPush = useRef(true);
   useEffect(() => {
@@ -279,6 +285,7 @@ export function App({ deps }: { deps: AppDeps }) {
     const onPopState = (): void => {
       const route = parseRoute(window.location.hash);
       if (route.summary) {
+        setSummarySize(route.large ? 'large' : 'compact');
         setWantSummary(true);
         return;
       }
@@ -300,6 +307,6 @@ export function App({ deps }: { deps: AppDeps }) {
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
-  if (summaryShown && state.status === 'ready' && hasGroups(state.groups)) return <SummaryScreen groups={state.groups} deps={deps} />;
+  if (summaryShown && state.status === 'ready' && hasGroups(state.groups)) return <SummaryScreen groups={state.groups} deps={deps} size={summarySize} />;
   return <AppBody state={state} deps={deps} onSwitchAirport={(icao) => void switchAirport(icao)} pendingAirport={pendingAirport} detailOpen={detailOpen} onToggleDetail={setDetailOpen} />;
 }

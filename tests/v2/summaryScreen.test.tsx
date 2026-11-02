@@ -8,10 +8,10 @@ import { parsePack } from '../../src/refdata';
 import { createMemoryStore } from '../../src/store';
 import { hasGroups, switchAirportTo, type PackState } from '../../src/v2/App';
 import { Header } from '../../src/v2/components/Header';
-import { summaryAirports, SummaryView } from '../../src/v2/components/SummaryScreen';
+import { summaryAirports, SummarySwitch, SummaryView } from '../../src/v2/components/SummaryScreen';
 import { createController } from '../../src/v2/controller';
 import { summaryCard } from '../../src/v2/model/summaryCard';
-import { buildRoute, buildSummaryRoute, parseRoute } from '../../src/v2/route';
+import { buildRoute, buildSummary2Route, buildSummaryRoute, parseRoute } from '../../src/v2/route';
 import { createSummary, type SummaryEntry } from '../../src/v2/summary';
 import { loadPackFrom, readJson, TEST_PACK, toRaw, YSSY_PACK } from '../helpers/packs';
 import { fixture, nowOf } from '../weather/helpers';
@@ -129,6 +129,72 @@ describe('SummaryView', () => {
   });
 });
 
+describe('SummaryView, large size', () => {
+  const e = readyEntry('AAAA');
+  const withWind = { ...e, card: { ...e.card, name: 'Alpha Airport', noReport: false, modeLabel: 'Recommended mode 34AD', windLabel: '030° 9 kt', reason: null, runways: [{ role: 'ARR', text: '34L/R' }, { role: 'DEP', text: '25' }] } };
+  const entries: SummaryEntry[] = [withWind, { ...readyEntry('BBBB') }, { icao: 'CCCC', status: 'error', message: 'pack broke' }, { icao: 'DDDD', status: 'loading' }];
+  const gs = [{ name: 'G', airports: ['AAAA', 'BBBB', 'CCCC', 'DDDD'] }];
+  const html = renderToStaticMarkup(<SummaryView groups={gs} entries={entries} size="large" />);
+  const compact = renderToStaticMarkup(<SummaryView groups={gs} entries={entries} />);
+
+  it('marks the section, grid and every card as large; the compact view has no large class', () => {
+    expect(html).toContain('aria-label="All airports"');
+    expect(html).toContain('summary-large');
+    expect((html.match(/class="scard[^"]*scard-large/g) ?? []).length).toBe(4);
+    expect(compact).not.toContain('large');
+  });
+
+  it('shows the code and name, the picture with its text left in, the runway rows with roles, and the wind', () => {
+    const one = renderToStaticMarkup(<SummaryView groups={[{ name: 'G', airports: ['AAAA'] }]} entries={[withWind]} size="large" />);
+    expect(one).toContain('<span class="scard-code">AAAA</span>');
+    expect(one).toContain('<span class="scard-name">Alpha Airport</span>');
+    expect(one).toContain('<svg');
+    expect(one).toContain('<span class="scard-rwy-text">34L/R</span>');
+    expect(one).toContain('<span class="scard-rwy-role">ARR</span>');
+    expect(one).toContain('<span class="scard-rwy-text">25</span>');
+    expect(one).toContain('<span class="scard-rwy-role">DEP</span>');
+    expect(one).toContain('<span class="scard-wind">030° 9 kt</span>');
+    expect(text(one)).not.toContain('34AD');
+    expect(one).not.toMatch(/chip|legend/i);
+  });
+
+  it('keeps the compact accessible name and title', () => {
+    const one = renderToStaticMarkup(<SummaryView groups={[{ name: 'G', airports: ['AAAA'] }]} entries={[withWind]} size="large" />);
+    const base = renderToStaticMarkup(<SummaryView groups={[{ name: 'G', airports: ['AAAA'] }]} entries={[withWind]} />);
+    expect(one).toContain('aria-label="AAAA, mode Recommended mode 34AD, arrivals 34L/R, departures 25, 030° 9 kt"');
+    expect(one).toContain('title="Recommended mode 34AD"');
+    expect(/aria-label="[^"]*"/.exec(one)?.[0]).toBe(/aria-label="[^"]*"/.exec(base)?.[0]);
+  });
+
+  it('a no-report box keeps the grey border class and says "no report"', () => {
+    const one = renderToStaticMarkup(<SummaryView groups={[{ name: 'G', airports: ['BBBB'] }]} entries={[readyEntry('BBBB')]} size="large" />);
+    expect(one).toContain('scard-noreport');
+    expect(text(one)).toContain('no report');
+  });
+
+  it('loading and error boxes are large too, with the same wording and title', () => {
+    expect(html).toMatch(/class="scard scard-wait scard-large" href="#\/DDDD" aria-label="DDDD, loading"/);
+    expect(html).toMatch(/class="scard scard-wait scard-large" href="#\/CCCC" title="pack broke" aria-label="CCCC, unavailable"/);
+  });
+
+  it('each box links to #/ICAO', () => {
+    const hrefs = [...html.matchAll(/class="scard[^"]*" href="([^"]+)"/g)].map((m) => m[1]);
+    expect(hrefs).toEqual(['#/AAAA', '#/BBBB', '#/CCCC', '#/DDDD']);
+  });
+});
+
+describe('SummarySwitch', () => {
+  it('marks the current size with aria-current and not as a link, the other is a link to its hash', () => {
+    const compact = renderToStaticMarkup(<SummarySwitch size="compact" />);
+    expect(compact).toMatch(/<span[^>]*aria-current="page"[^>]*>Compact<\/span>/);
+    expect(compact).toContain(`<a href="${buildSummary2Route()}">Large</a>`);
+    expect(compact).not.toContain('<a href="#/summary">');
+    const large = renderToStaticMarkup(<SummarySwitch size="large" />);
+    expect(large).toMatch(/<span[^>]*aria-current="page"[^>]*>Large<\/span>/);
+    expect(large).toContain(`<a href="${buildSummaryRoute()}">Compact</a>`);
+  });
+});
+
 describe('summaryAirports', () => {
   it('lists each airport once in group order', () => {
     expect(summaryAirports([{ name: 'a', airports: ['X', 'Y'] }, { name: 'b', airports: ['Y', 'Z'] }])).toEqual(['X', 'Y', 'Z']);
@@ -141,6 +207,15 @@ describe('the header link', () => {
     expect(renderToStaticMarkup(<Header {...props} summaryHref={buildSummaryRoute()} />)).toContain('href="#/summary"');
     expect(renderToStaticMarkup(<Header {...props} />)).not.toContain('All airports');
   });
+  it('shows "Summary 2" to #/summary2 as well when given a summary2Href, and neither without groups', () => {
+    const both = renderToStaticMarkup(<Header {...props} summaryHref={buildSummaryRoute()} summary2Href={buildSummary2Route()} />);
+    expect(both).toContain('href="#/summary"');
+    expect(both).toContain('href="#/summary2"');
+    expect(both).toContain('Summary 2');
+    const none = renderToStaticMarkup(<Header {...props} />);
+    expect(none).not.toContain('Summary 2');
+    expect(none).not.toContain('#/summary2');
+  });
   it('hasGroups is false without groups, or with only empty ones', () => {
     expect(hasGroups(undefined)).toBe(false);
     expect(hasGroups([])).toBe(false);
@@ -152,6 +227,7 @@ describe('the header link', () => {
 describe('routes the summary and the cards use', () => {
   it('#/summary is the summary and a card href is that airport, not the summary', () => {
     expect(parseRoute(buildSummaryRoute()).summary).toBe(true);
+    expect(parseRoute(buildSummary2Route())).toMatchObject({ summary: true, large: true });
     const r = parseRoute(buildRoute('YSSY', false));
     expect(r.summary).toBe(false);
     expect(r.icao).toBe('YSSY');
