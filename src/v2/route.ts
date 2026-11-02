@@ -1,6 +1,7 @@
 // Deep links for v2, carried in the URL hash so the site stays pure static files
 // (GitHub Pages has no server-side routing): #/ICAO opens that airport, and
-// #/ICAO/detail also opens the Detail section. Owner, 29-10-2026.
+// #/ICAO/detail also opens the Detail section. Owner, 29-10-2026. #/summary opens
+// the all-airports summary when app.json has groups (see SummaryScreen.tsx).
 import { AIRPORT_ID } from '../refdata';
 
 export interface Route {

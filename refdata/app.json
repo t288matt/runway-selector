@@ -3,5 +3,5 @@
   "airports": ["YMML", "YSSY", "YPAD", "YPPH", "YBBN", "YSWS", "YPDN", "YSCB", "NFFN", "YBCS", "YBTL", "LSZH"],
   "default": "YMML",
   "groups": [{ "name": "Australia", "airports": ["YSSY", "YMML", "YBBN", "YPPH", "YPAD", "YSWS", "YSCB", "YBCS", "YBTL", "YPDN"] }],
-  "description": "Packs the app can load. The airport selector is shown only when more than one is listed."
+  "description": "Packs the app can load; the airport pull-down offers only these. The optional groups name sets of these airports for the summary screen (#/summary), in card order."
 }
