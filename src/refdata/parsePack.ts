@@ -89,6 +89,15 @@ export function parseAppConfig(rawText: string): AppFile {
     if (!app.airports.includes(app.default)) {
       issues.push({ file: 'app.json', path: 'default', message: `The default airport "${app.default}" is not in the airports list` });
     }
+    app.groups?.forEach((group, g) => {
+      const inGroup = new Set<string>();
+      group.airports.forEach((id, i) => {
+        const path = `groups[${g}].airports[${i}]`;
+        if (!app.airports.includes(id)) issues.push({ file: 'app.json', path, message: `The group airport "${id}" is not in the airports list` });
+        else if (inGroup.has(id)) issues.push({ file: 'app.json', path, message: `Duplicate airport "${id}" in the group` });
+        inGroup.add(id);
+      });
+    });
   }
   if (issues.length > 0 || !app) throw new PackValidationError(issues);
   return deepFreeze(app);

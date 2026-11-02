@@ -356,6 +356,14 @@ export const SettingsFileSchema = v.strictObject({
 });
 
 // ------------------------------------------------------------------ app.json
+const AirportIdSchema = v.pipe(v.string('Expected text'), v.regex(AIRPORT_ID, 'An airport id is 3 to 8 capital letters or digits'));
+
+/** A named list of airports shown together on the summary screen. */
+const AppGroupSchema = v.strictObject({
+  name: text(C.nameChars),
+  airports: v.pipe(v.array(AirportIdSchema), v.minLength(1, 'At least one airport is required'), v.maxLength(C.maxAirports)),
+});
+
 export const AppFileSchema = v.strictObject({
   schemaVersion: version,
   description: v.optional(note),
@@ -364,7 +372,8 @@ export const AppFileSchema = v.strictObject({
     v.minLength(1, 'At least one airport is required'),
     v.maxLength(C.maxAirports),
   ),
-  default: v.pipe(v.string('Expected text'), v.regex(AIRPORT_ID, 'An airport id is 3 to 8 capital letters or digits')),
+  default: AirportIdSchema,
+  groups: v.optional(v.pipe(v.array(AppGroupSchema), v.maxLength(C.maxAirports))),
 });
 
 export type AirportFile = v.InferOutput<typeof AirportFileSchema>;
