@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { NO_AUTO_WEATHER, type ControllerState } from '../../src/v2/controller';
 import { EMPTY_FEED, type ViewData } from '../../src/v2/model/dashboard';
 import { screenModel } from '../../src/v2/model/screen';
+import { runwayRows } from '../../src/v2/model/runwayText';
 import { summaryCard } from '../../src/v2/model/summaryCard';
 import { TEST_PACK, YSSY_PACK } from '../helpers/packs';
 import { packOf, rigFor, same, type Wx } from '../engine/planHelpers';
@@ -17,19 +18,32 @@ describe.each([YSSY_PACK, TEST_PACK].map((p) => [p.name, p] as const))('summary 
   const rig = rigFor(ref);
   const pack = packOf(rig);
 
-  it("card mode, arrivals and departures equal the full screen's answer for the same state", () => {
+  it("card mode label, reason, name and picture equal the full screen's answer for the same state", () => {
     const real = packWith(ref, { weatherStation: FIXTURE_STATION });
     const state = stateOf(realView(real, ref));
     const answer = screenModel(state).answer;
     const card = summaryCard(state);
-    expect(card.modeId).toBe(answer.modeId);
     expect(card.modeLabel).toBe(answer.modeLabel);
-    expect(card.arrivals).toBe(answer.arrivals);
-    expect(card.departures).toBe(answer.departures);
     expect(card.reason).toBe(answer.why);
     expect(card.name).toBe(real.airport.name);
     expect(card.icao).toBe(real.airport.icao);
     expect(card.picture).toEqual(screenModel(state).picture);
+  });
+
+  it("card runways are the runwayRows of the recommended mode's raw arrays", () => {
+    const real = packWith(ref, { weatherStation: FIXTURE_STATION });
+    const state = stateOf(realView(real, ref));
+    const id = state.view.result.plan.recommendedModeId;
+    const mode = state.view.pack.modes.find((m) => m.id === id);
+    expect(mode).toBeDefined();
+    const card = summaryCard(state);
+    expect(card.runways).toEqual(runwayRows(mode?.arrivals ?? [], mode?.departures ?? []));
+    expect(card.runways.length).toBeGreaterThan(0);
+  });
+
+  it('a state with no recommended mode has no runways', () => {
+    const state = stateOf(viewOf(pack, rig, ['badBoth', 'badBoth'], same(2, 'medium')));
+    expect(summaryCard(state).runways).toEqual([]);
   });
 
   it('noReport card has null windLabel and a reason', () => {

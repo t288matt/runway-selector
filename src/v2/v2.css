@@ -1525,9 +1525,6 @@ dl.v dd {
     width: 64px;
     min-width: 64px;
   }
-  .scard-mode {
-    font-size: 15px;
-  }
 }
 /* The picture is small here, so the stripes and painted numbers drop out, as on a phone; its own text (wind, ARR/DEP)
    would be 2-3 px tall and the lines beside it say the same. The runway shapes and the wind arrow stay. */
@@ -1554,13 +1551,30 @@ dl.v dd {
   font-weight: 700;
   font-size: 15px;
 }
-.scard-mode {
+/* One runway row: the runways large and bold, the role small and muted beside them, wrapping under when narrow. */
+.scard-rwy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 5px;
+  min-width: 0;
+}
+.scard-rwy-text {
   font-weight: 800;
   font-size: 20px;
   line-height: 1.1;
+  color: var(--text);
+}
+@media (max-width: 599px) {
+  .scard-rwy-text {
+    font-size: 17px;
+  }
+}
+.scard-rwy-role {
+  font-size: 11px;
+  color: var(--muted);
 }
 .scard-nomode,
-.scard-rwy,
 .scard-wind,
 .scard-note {
   color: var(--muted);

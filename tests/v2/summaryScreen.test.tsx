@@ -69,25 +69,44 @@ describe('SummaryView', () => {
     expect(text(one)).toContain(e.card.modeLabel);
   });
 
-  it('a card with a report shows the wind and the A and D runways', () => {
+  it('a card with a report shows the runway rows with their roles and the wind', () => {
     const e = readyEntry();
-    const withWind = { ...e, card: { ...e.card, noReport: false, windLabel: '120 at 10 kt', arrivals: '16L', departures: '16R' } };
+    const withWind = { ...e, card: { ...e.card, noReport: false, windLabel: '120 at 10 kt', runways: [{ role: 'ARR', text: '34L/R' }, { role: 'DEP', text: '25' }] } };
     const one = renderToStaticMarkup(<SummaryView groups={[{ name: 'G', airports: ['YSSY'] }]} entries={[withWind]} />);
-    expect(text(one)).toContain('A 16L');
-    expect(text(one)).toContain('D 16R');
+    expect(one).toContain('<span class="scard-rwy-text">34L/R</span>');
+    expect(one).toContain('<span class="scard-rwy-role">ARR</span>');
+    expect(one).toContain('<span class="scard-rwy-text">25</span>');
+    expect(one).toContain('<span class="scard-rwy-role">DEP</span>');
+    expect(text(one)).not.toMatch(/A 34|D 25/);
     expect(text(one)).toContain('120 at 10 kt');
     expect(one).not.toContain('scard-noreport');
   });
 
-  it('a card shows the mode id on its own, keeps the full wording in its accessible name, and shows the label only when there is no mode', () => {
+  it('a shared row shows "ARR and DEP"; the mode id and mode wording are not visible but stay in the accessible name and title', () => {
     const e = readyEntry();
-    const withMode = { ...e, card: { ...e.card, noReport: false, modeId: 'M16', modeLabel: 'Recommended mode M16', windLabel: '120 at 10 kt' } };
+    const withMode = { ...e, card: { ...e.card, noReport: false, modeLabel: 'Recommended mode 16AD', windLabel: '120 at 10 kt', runways: [{ role: 'ARR and DEP', text: '16L/R' }] } };
     const one = renderToStaticMarkup(<SummaryView groups={[{ name: 'G', airports: ['YSSY'] }]} entries={[withMode]} />);
-    expect(one).toContain('<span class="scard-mode">M16</span>');
+    expect(one).toContain('<span class="scard-rwy-text">16L/R</span>');
+    expect(one).toContain('<span class="scard-rwy-role">ARR and DEP</span>');
+    expect(text(one)).not.toContain('16AD');
     expect(text(one)).not.toContain('Recommended mode');
-    expect(one).toContain('aria-label="YSSY, mode Recommended mode M16');
-    const none = renderToStaticMarkup(<SummaryView groups={[{ name: 'G', airports: ['YSSY'] }]} entries={[{ ...e, card: { ...e.card, modeId: null, modeLabel: 'No recommended mode' } }]} />);
+    expect(one).not.toContain('scard-mode');
+    expect(one).toContain('aria-label="YSSY, mode Recommended mode 16AD, arrivals 16L/R, departures 16L/R, 120 at 10 kt"');
+    expect(one).toContain('title="Recommended mode 16AD');
+  });
+
+  it('the accessible name separates arrivals and departures when they differ', () => {
+    const e = readyEntry();
+    const c = { ...e, card: { ...e.card, noReport: false, modeLabel: 'Recommended mode 34AD', windLabel: '030° 9 kt', runways: [{ role: 'ARR', text: '34L/R' }, { role: 'DEP', text: '25' }] } };
+    const one = renderToStaticMarkup(<SummaryView groups={[{ name: 'G', airports: ['YSSY'] }]} entries={[c]} />);
+    expect(one).toContain('aria-label="YSSY, mode Recommended mode 34AD, arrivals 34L/R, departures 25, 030° 9 kt"');
+  });
+
+  it('with no mode the label shows in the small style and there are no runway rows', () => {
+    const e = readyEntry();
+    const none = renderToStaticMarkup(<SummaryView groups={[{ name: 'G', airports: ['YSSY'] }]} entries={[{ ...e, card: { ...e.card, modeLabel: 'No recommended mode', runways: [] } }]} />);
     expect(none).toContain('<span class="scard-nomode">No recommended mode</span>');
+    expect(none).not.toContain('scard-rwy');
   });
 
   it('two groups with the same name do not collide on the React key', () => {

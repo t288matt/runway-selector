@@ -1,6 +1,7 @@
 // The all-airports summary: one small card per airport in each group of app.json,
 // each a link to that airport's own screen. The cards show what the full screen
-// shows (src/v2/model/summaryCard.ts) and add no rules of their own.
+// shows (src/v2/model/summaryCard.ts) and add no rules of their own. A card shows the
+// runways in use, not the mode id; the mode wording is in the hover title and the accessible name.
 import type { AppGroup } from '../../refdata';
 import type { AppDeps } from '../deps';
 import type { SummaryEntry } from '../summary';
@@ -34,10 +35,12 @@ function Card({ entry }: { entry: SummaryEntry }) {
     );
   }
   const { card } = entry;
-  // The card shows the mode id alone; the full-screen wording stays in the accessible name.
+  // The accessible name keeps the mode wording and the runways: "arrivals ..., departures ...".
   const parts = [card.icao, `mode ${card.modeLabel}`];
-  if (card.arrivals !== null) parts.push(`arrivals ${card.arrivals}`);
-  if (card.departures !== null) parts.push(`departures ${card.departures}`);
+  for (const row of card.runways) {
+    if (row.role !== 'DEP') parts.push(`arrivals ${row.text}`);
+    if (row.role !== 'ARR') parts.push(`departures ${row.text}`);
+  }
   parts.push(card.noReport ? 'no report' : (card.windLabel ?? ''));
   return (
     <a
@@ -49,9 +52,13 @@ function Card({ entry }: { entry: SummaryEntry }) {
       <Picture model={card.picture} />
       <span className="scard-body">
         <span className="scard-code">{card.icao}</span>
-        {card.modeId !== null ? <span className="scard-mode">{card.modeId}</span> : <span className="scard-nomode">{card.modeLabel}</span>}
-        {card.arrivals !== null ? <span className="scard-rwy">A {card.arrivals}</span> : null}
-        {card.departures !== null ? <span className="scard-rwy">D {card.departures}</span> : null}
+        {card.runways.length === 0 ? <span className="scard-nomode">{card.modeLabel}</span> : null}
+        {card.runways.map((row) => (
+          <span key={row.role} className="scard-rwy">
+            <span className="scard-rwy-text">{row.text}</span>
+            <span className="scard-rwy-role">{row.role}</span>
+          </span>
+        ))}
         <span className="scard-wind">{card.noReport ? 'no report' : card.windLabel}</span>
       </span>
     </a>
