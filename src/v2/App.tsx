@@ -3,7 +3,7 @@
 // section 4c, "First load"). This is v2's own copy of the v1 shell logic; v2
 // imports nothing from src/ui.
 import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
-import { loadPack, type AirportPack } from '../refdata';
+import { loadPack, type AirportPack, type AppGroup } from '../refdata';
 import { clearSelectedAirport, loadSelectedAirportId, saveSelectedAirport } from '../store';
 import { cacheBustToken } from './clock';
 import { Dashboard } from './components/Dashboard';
@@ -14,7 +14,7 @@ import { Notice } from './components/Notice';
 import { SummaryScreen } from './components/SummaryScreen';
 import type { AppDeps } from './deps';
 import { screenModel } from './model/screen';
-import { buildRoute, buildSummaryRoute, parseRoute } from './route';
+import { afterSwitch, buildSummaryRoute, hashToShow, parseRoute } from './route';
 import { useController } from './useController';
 
 export type { AppDeps } from './deps';
@@ -30,11 +30,6 @@ export type PackState =
       readonly groups?: readonly AppGroup[] | undefined;
       readonly airportError: string | null;
     };
-
-export interface AppGroup {
-  readonly name: string;
-  readonly airports: readonly string[];
-}
 
 export function PackError({ message }: { message: string }) {
   return (
@@ -229,20 +224,28 @@ export function App({ deps }: { deps: AppDeps }) {
   // stored state stays under its own code (AG-8). A refused switch keeps the current airport. While the new pack is
   // fetched the selector shows the choice and says it is loading.
   const [pendingAirport, setPendingAirport] = useState<string | null>(null);
-  const switchAirportRef = useRef<(icao: string) => Promise<void>>(() => Promise.resolve());
-  const switchAirport = (icao: string): Promise<void> => {
-    if (state.status !== 'ready' || pendingAirport !== null) return Promise.resolve();
+  const switchAirportRef = useRef<(icao: string) => Promise<boolean>>(() => Promise.resolve(false));
+  /** Resolves true when the airport changed or was already the one shown; false when the switch failed, was refused or was skipped because another is pending. */
+  const switchAirport = (icao: string): Promise<boolean> => {
+    if (state.status !== 'ready' || pendingAirport !== null) return Promise.resolve(false);
     if (icao !== state.pack.airport.icao && state.airports.includes(icao)) setPendingAirport(icao);
+    const alreadyShown = icao === state.pack.airport.icao;
     return switchAirportTo(state, icao, deps)
       .then((change) => {
-        if (change === null) return;
+        if (change === null) return true;
         if (change.pack !== undefined) saveSelectedAirport(deps.store, icao);
         setState((prev) => (prev.status === 'ready' ? { ...prev, ...change } : prev));
+        return alreadyShown || change.pack !== undefined;
       })
       .finally(() => setPendingAirport(null));
   };
+  // The latest values for the popstate listener, which is registered once.
+  const stateRef = useRef(state);
+  const detailRef = useRef(detailOpen);
   useEffect(() => {
     switchAirportRef.current = switchAirport;
+    stateRef.current = state;
+    detailRef.current = detailOpen;
   });
 
   // Keeps the hash in step with what is on screen, so the address bar is always a working link back to this view
@@ -260,10 +263,17 @@ export function App({ deps }: { deps: AppDeps }) {
       skipNextPush.current = false;
       return;
     }
-    const target = buildRoute(icao, detailOpen);
-    if (window.location.hash.toLowerCase() === target.toLowerCase()) return;
-    window.history.pushState(null, '', target);
+    const target = hashToShow(window.location.hash, icao, detailOpen);
+    if (target !== null) window.history.pushState(null, '', target);
   }, [icao, detailOpen, summaryShown]);
+
+  // #/summary without groups in app.json shows the airport screen: the address bar must say so too.
+  const noGroups = state.status === 'ready' && !hasGroups(state.groups);
+  useEffect(() => {
+    if (!wantSummary || !noGroups || icao === null) return;
+    const target = hashToShow(window.location.hash, icao, detailOpen);
+    if (target !== null) window.history.replaceState(null, '', target);
+  }, [wantSummary, noGroups, icao, detailOpen]);
 
   useEffect(() => {
     const onPopState = (): void => {
@@ -274,9 +284,17 @@ export function App({ deps }: { deps: AppDeps }) {
       }
       skipNextPush.current = true;
       setDetailOpen(route.detail);
-      // Leave the summary once the airport asked for is ready, so the airport last shown does not flash first.
+      // Leave the summary once the airport asked for is ready, so the airport last shown does not flash first. The hash
+      // is read again when the switch settles: the user may have gone back to the summary meanwhile.
       if (route.icao === null) setWantSummary(false);
-      else void switchAirportRef.current(route.icao).then(() => setWantSummary(false));
+      else {
+        void switchAirportRef.current(route.icao).then((switched) => {
+          const shown = stateRef.current;
+          const next = afterSwitch(window.location.hash, switched, { icao: shown.status === 'ready' ? shown.pack.airport.icao : (route.icao as string), detail: detailRef.current });
+          if (next.leaveSummary) setWantSummary(false);
+          if (next.replaceHash !== null) window.history.replaceState(null, '', next.replaceHash);
+        });
+      }
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);

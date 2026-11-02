@@ -104,8 +104,9 @@ export function createSummary(deps: SummaryDeps): Summary {
           ...(deps.baseUrl === undefined ? {} : { baseUrl: deps.baseUrl }),
           timers: deps.timers,
         });
+        // No generation check here: stop() unsubscribes every controller and stops it, and a stopped controller
+        // publishes nothing, so a stale notification cannot reach this function. Only the load above can arrive late.
         const refresh = (): void => {
-          if (mine !== generation) return;
           try {
             setEntry(index, { icao, status: 'ready', card: summaryCard(controller.getState()) });
           } catch (e) {

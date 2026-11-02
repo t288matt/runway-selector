@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { buildRoute, buildSummaryRoute, parseRoute } from '../../src/v2/route';
+import { afterSwitch, buildRoute, buildSummaryRoute, hashToShow, parseRoute } from '../../src/v2/route';
 
 describe('parseRoute', () => {
   test('empty hash has no airport and no detail', () => {
@@ -67,5 +67,36 @@ describe('buildRoute', () => {
 describe('buildSummaryRoute', () => {
   test('is #/summary', () => {
     expect(buildSummaryRoute()).toBe('#/summary');
+  });
+});
+
+describe('hashToShow', () => {
+  test('is null when the hash already names the view, ignoring case', () => {
+    expect(hashToShow('#/YSSY', 'YSSY', false)).toBeNull();
+    expect(hashToShow('#/yssy', 'YSSY', false)).toBeNull();
+    expect(hashToShow('#/yssy/DETAIL', 'YSSY', true)).toBeNull();
+  });
+  test('gives the route of the airport shown when the hash differs', () => {
+    expect(hashToShow('#/summary', 'YSSY', false)).toBe('#/YSSY');
+    expect(hashToShow('#/YSCB', 'YSSY', true)).toBe('#/YSSY/detail');
+  });
+});
+
+describe('afterSwitch', () => {
+  const shown = { icao: 'YSSY', detail: false };
+  test('success: leave the summary and leave the hash', () => {
+    expect(afterSwitch('#/YSCB', true, shown)).toEqual({ leaveSummary: true, replaceHash: null });
+  });
+  test('failure: leave the summary and put the hash back to the airport shown', () => {
+    expect(afterSwitch('#/YSCB', false, shown)).toEqual({ leaveSummary: true, replaceHash: '#/YSSY' });
+    expect(afterSwitch('#/YSCB/detail', false, { icao: 'YSSY', detail: true })).toEqual({ leaveSummary: true, replaceHash: '#/YSSY/detail' });
+  });
+  test('race: the user went back to the summary meanwhile, so it stays and the hash is untouched', () => {
+    expect(afterSwitch('#/summary', true, shown)).toEqual({ leaveSummary: false, replaceHash: null });
+    expect(afterSwitch('#/summary', false, shown)).toEqual({ leaveSummary: false, replaceHash: null });
+    expect(afterSwitch('#/SUMMARY', true, shown)).toEqual({ leaveSummary: false, replaceHash: null });
+  });
+  test('a hash that differs only in case needs no correction after a failure', () => {
+    expect(afterSwitch('#/yssy', false, shown)).toEqual({ leaveSummary: true, replaceHash: null });
   });
 });

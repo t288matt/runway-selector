@@ -29,6 +29,12 @@ describe('app.json groups', () => {
     expect(issues).toHaveLength(1);
     expect(issues[0]).toMatchObject({ file: 'app.json', path: 'groups[0].airports[2]' });
   });
+  it('refuses a duplicate group name', () => {
+    const issues = issuesOf(app([{ name: 'Same', airports: ['YSSY'] }, { name: 'Other', airports: ['YMML'] }, { name: 'Same', airports: ['YBBN'] }]));
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ file: 'app.json', path: 'groups[2].name' });
+    expect(issues[0]?.message).toContain('Same');
+  });
   it('accepts app.json with no groups', () => {
     expect(parseAppConfig(app()).groups).toBeUndefined();
   });

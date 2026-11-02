@@ -1442,15 +1442,31 @@ dl.v dd {
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+@media (min-width: 600px) {
+  .sgrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 900px) {
+  .sgrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1200px) {
+  .sgrid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
 }
 .scard {
   display: flex;
   align-items: center;
   gap: 8px;
   height: 100%;
-  padding: 8px;
+  padding: 6px 8px;
+  overflow: hidden;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -1469,37 +1485,53 @@ dl.v dd {
   min-height: 60px;
 }
 .scard .pic {
-  flex: 0 0 110px;
-  width: 110px;
+  flex: 0 1 clamp(72px, 38%, 110px);
+  width: clamp(72px, 38%, 110px);
+  min-width: 0;
 }
-/* Each picture is only about 110 px wide here, so the stripes and painted numbers drop out, as on a phone. */
+@media (max-width: 599px) {
+  .scard .pic {
+    flex-basis: 64px;
+    width: 64px;
+    min-width: 64px;
+  }
+  .scard-mode {
+    font-size: 15px;
+  }
+}
+/* The picture is small here, so the stripes and painted numbers drop out, as on a phone; its own text (wind, ARR/DEP)
+   would be 2-3 px tall and the lines beside it say the same. The runway shapes and the wind arrow stay. */
 .scard .pic svg {
-  width: 110px;
+  width: 100%;
   max-width: 110px;
   max-height: 80px;
 }
+.scard .pic svg text,
 .scard .rwy-detail {
   display: none;
 }
 .scard-body {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
+  flex: 1 1 0;
   min-width: 0;
   font-size: 12px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 .scard-code {
   font-weight: 700;
   font-size: 15px;
 }
-.scard-mode,
+.scard-mode {
+  font-weight: 800;
+  font-size: 20px;
+  line-height: 1.1;
+}
+.scard-nomode,
 .scard-rwy,
 .scard-wind,
 .scard-note {
   color: var(--muted);
-}
-@media (max-width: 1000px) {
-  .sgrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }

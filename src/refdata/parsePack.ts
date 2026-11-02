@@ -89,7 +89,10 @@ export function parseAppConfig(rawText: string): AppFile {
     if (!app.airports.includes(app.default)) {
       issues.push({ file: 'app.json', path: 'default', message: `The default airport "${app.default}" is not in the airports list` });
     }
+    const groupNames = new Set<string>();
     app.groups?.forEach((group, g) => {
+      if (groupNames.has(group.name)) issues.push({ file: 'app.json', path: `groups[${g}].name`, message: `Duplicate group name "${group.name}"` });
+      groupNames.add(group.name);
       const inGroup = new Set<string>();
       group.airports.forEach((id, i) => {
         const path = `groups[${g}].airports[${i}]`;

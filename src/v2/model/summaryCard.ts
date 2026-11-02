@@ -7,6 +7,8 @@ import { screenModel } from './screen';
 export interface SummaryCard {
   readonly icao: string;
   readonly name: string;
+  /** The mode id on its own (the large element of the card), or null when no mode is recommended. */
+  readonly modeId: string | null;
   readonly modeLabel: string;
   readonly arrivals: string | null;
   readonly departures: string | null;
@@ -23,6 +25,7 @@ export function summaryCard(state: ControllerState): SummaryCard {
   return {
     icao: state.view.pack.airport.icao,
     name: state.view.pack.airport.name,
+    modeId: answer.modeId,
     modeLabel: answer.modeLabel,
     arrivals: answer.arrivals,
     departures: answer.departures,

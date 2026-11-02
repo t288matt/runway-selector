@@ -22,6 +22,7 @@ describe.each([YSSY_PACK, TEST_PACK].map((p) => [p.name, p] as const))('summary 
     const state = stateOf(realView(real, ref));
     const answer = screenModel(state).answer;
     const card = summaryCard(state);
+    expect(card.modeId).toBe(answer.modeId);
     expect(card.modeLabel).toBe(answer.modeLabel);
     expect(card.arrivals).toBe(answer.arrivals);
     expect(card.departures).toBe(answer.departures);

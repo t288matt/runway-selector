@@ -1,5 +1,5 @@
 export { AIRPORT_ID, BOUNDS, SUPPORTED_SCHEMA_VERSIONS, SETTING_NAMES } from './schema';
-export type { Settings, SettingName, AppFile } from './schema';
+export type { Settings, SettingName, AppFile, AppGroup } from './schema';
 export { parsePack, parseAppConfig, deepFreeze, PACK_FILE_NAMES } from './parsePack';
 export type { RawPackText, PackFileName } from './parsePack';
 export { PackValidationError, formatIssue } from './issues';

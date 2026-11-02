@@ -3,7 +3,7 @@
 // StrictMode start/stop/start sequence against createSummary with the same
 // subscribe/getState calls useSyncExternalStore makes.
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { parsePack } from '../../src/refdata';
 import { createMemoryStore } from '../../src/store';
 import { hasGroups, switchAirportTo, type PackState } from '../../src/v2/App';
@@ -77,6 +77,24 @@ describe('SummaryView', () => {
     expect(text(one)).toContain('D 16R');
     expect(text(one)).toContain('120 at 10 kt');
     expect(one).not.toContain('scard-noreport');
+  });
+
+  it('a card shows the mode id on its own, keeps the full wording in its accessible name, and shows the label only when there is no mode', () => {
+    const e = readyEntry();
+    const withMode = { ...e, card: { ...e.card, noReport: false, modeId: 'M16', modeLabel: 'Recommended mode M16', windLabel: '120 at 10 kt' } };
+    const one = renderToStaticMarkup(<SummaryView groups={[{ name: 'G', airports: ['YSSY'] }]} entries={[withMode]} />);
+    expect(one).toContain('<span class="scard-mode">M16</span>');
+    expect(text(one)).not.toContain('Recommended mode');
+    expect(one).toContain('aria-label="YSSY, mode Recommended mode M16');
+    const none = renderToStaticMarkup(<SummaryView groups={[{ name: 'G', airports: ['YSSY'] }]} entries={[{ ...e, card: { ...e.card, modeId: null, modeLabel: 'No recommended mode' } }]} />);
+    expect(none).toContain('<span class="scard-nomode">No recommended mode</span>');
+  });
+
+  it('two groups with the same name do not collide on the React key', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    renderToStaticMarkup(<SummaryView groups={[{ name: 'Same', airports: ['AAAA'] }, { name: 'Same', airports: ['BBBB'] }]} entries={entries} />);
+    expect(spy.mock.calls.filter((c) => String(c[0]).includes('same key'))).toEqual([]);
+    spy.mockRestore();
   });
 
   it('an error card does not hide the other cards, shows "unavailable" and the message as its title', () => {

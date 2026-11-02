@@ -153,6 +153,26 @@ describe('createSummary', () => {
     expect(summary.getState().every((e) => e.status === 'loading')).toBe(true);
   });
 
+  it('a subscriber that stops the summary on a card update leaves no timers and gets no later updates', async () => {
+    const { summary, count } = make();
+    let stopped = false;
+    let after = 0;
+    summary.subscribe(() => {
+      if (stopped) after += 1;
+      // The first notification after the cards are published comes from a controller's first poll.
+      if (!stopped && summary.getState().every((e) => e.status === 'ready') && count() > 0) {
+        stopped = true;
+        summary.stop();
+      }
+    });
+    summary.start();
+    await until(() => stopped);
+    await new Promise((r) => setTimeout(r, 30));
+    expect(stopped).toBe(true);
+    expect(count()).toBe(0);
+    expect(after).toBe(0);
+  });
+
   it('notifies subscribers when entries change, and not after unsubscribing', async () => {
     const { summary } = make();
     let calls = 0;

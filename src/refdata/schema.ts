@@ -382,3 +382,4 @@ export type ModesFile = v.InferOutput<typeof ModesFileSchema>;
 export type OperatingPlanFile = v.InferOutput<typeof OperatingPlanFileSchema>;
 export type SettingsFile = v.InferOutput<typeof SettingsFileSchema>;
 export type AppFile = v.InferOutput<typeof AppFileSchema>;
+export type AppGroup = v.InferOutput<typeof AppGroupSchema>;

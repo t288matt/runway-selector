@@ -1,6 +1,7 @@
 // The all-airports summary: one small card per airport in each group of app.json,
 // each a link to that airport's own screen. The cards show what the full screen
 // shows (src/v2/model/summaryCard.ts) and add no rules of their own.
+import type { AppGroup } from '../../refdata';
 import type { AppDeps } from '../deps';
 import type { SummaryEntry } from '../summary';
 import { buildRoute } from '../route';
@@ -9,13 +10,8 @@ import { APP_TITLE } from './Header';
 import { Notice } from './Notice';
 import { Picture } from './Picture';
 
-export interface SummaryGroup {
-  readonly name: string;
-  readonly airports: readonly string[];
-}
-
 /** Every airport once, in group order. */
-export function summaryAirports(groups: readonly SummaryGroup[]): string[] {
+export function summaryAirports(groups: readonly AppGroup[]): string[] {
   return [...new Set(groups.flatMap((g) => g.airports))];
 }
 
@@ -38,6 +34,7 @@ function Card({ entry }: { entry: SummaryEntry }) {
     );
   }
   const { card } = entry;
+  // The card shows the mode id alone; the full-screen wording stays in the accessible name.
   const parts = [card.icao, `mode ${card.modeLabel}`];
   if (card.arrivals !== null) parts.push(`arrivals ${card.arrivals}`);
   if (card.departures !== null) parts.push(`departures ${card.departures}`);
@@ -46,13 +43,13 @@ function Card({ entry }: { entry: SummaryEntry }) {
     <a
       className={card.noReport ? 'scard scard-noreport' : 'scard'}
       href={href}
-      title={card.reason ?? ''}
+      title={card.reason === null ? card.modeLabel : `${card.modeLabel}. ${card.reason}`}
       aria-label={parts.filter((p) => p !== '').join(', ')}
     >
       <Picture model={card.picture} />
       <span className="scard-body">
         <span className="scard-code">{card.icao}</span>
-        <span className="scard-mode">{card.modeLabel}</span>
+        {card.modeId !== null ? <span className="scard-mode">{card.modeId}</span> : <span className="scard-nomode">{card.modeLabel}</span>}
         {card.arrivals !== null ? <span className="scard-rwy">A {card.arrivals}</span> : null}
         {card.departures !== null ? <span className="scard-rwy">D {card.departures}</span> : null}
         <span className="scard-wind">{card.noReport ? 'no report' : card.windLabel}</span>
@@ -62,12 +59,12 @@ function Card({ entry }: { entry: SummaryEntry }) {
 }
 
 /** The summary as markup, from entries already in hand. */
-export function SummaryView({ groups, entries }: { groups: readonly SummaryGroup[]; entries: readonly SummaryEntry[] }) {
+export function SummaryView({ groups, entries }: { groups: readonly AppGroup[]; entries: readonly SummaryEntry[] }) {
   const byIcao = new Map(entries.map((e) => [e.icao, e]));
   return (
     <section className="summary" aria-label="All airports">
-      {groups.map((g) => (
-        <div key={g.name} className="sgroup">
+      {groups.map((g, gi) => (
+        <div key={`${gi}:${g.name}`} className="sgroup">
           <h2>{g.name}</h2>
           <ul className="sgrid">
             {g.airports.map((icao) => {
@@ -85,7 +82,7 @@ export function SummaryView({ groups, entries }: { groups: readonly SummaryGroup
   );
 }
 
-export function SummaryScreen({ groups, deps }: { groups: readonly SummaryGroup[]; deps: AppDeps }) {
+export function SummaryScreen({ groups, deps }: { groups: readonly AppGroup[]; deps: AppDeps }) {
   const entries = useSummary(summaryAirports(groups), deps);
   return (
     <div className="app">
