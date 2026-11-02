@@ -1452,3 +1452,116 @@ dl.v dd {
     min-height: 44px;
   }
 }
+
+/* ---------- all-airports summary ---------- */
+.summary-link {
+  color: var(--accent-text);
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.summary h2 {
+  font-size: 14px;
+  margin: 14px 0 8px;
+  color: var(--muted);
+  font-weight: 650;
+}
+.sgrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (min-width: 600px) {
+  .sgrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 900px) {
+  .sgrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1200px) {
+  .sgrid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+.scard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding: 6px 8px;
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  text-decoration: none;
+}
+.scard:hover,
+.scard:focus-visible {
+  border-color: var(--accent);
+}
+.scard-noreport {
+  border-left: 4px solid var(--unk);
+}
+.scard-wait {
+  justify-content: space-between;
+  min-height: 60px;
+}
+.scard .pic {
+  flex: 0 1 clamp(72px, 38%, 110px);
+  width: clamp(72px, 38%, 110px);
+  min-width: 0;
+}
+@media (max-width: 599px) {
+  .scard .pic {
+    flex-basis: 64px;
+    width: 64px;
+    min-width: 64px;
+  }
+  .scard-mode {
+    font-size: 15px;
+  }
+}
+/* The picture is small here, so the stripes and painted numbers drop out, as on a phone; its own text (wind, ARR/DEP)
+   would be 2-3 px tall and the lines beside it say the same. The runway shapes and the wind arrow stay. */
+.scard .pic svg {
+  width: 100%;
+  max-width: 110px;
+  max-height: 80px;
+}
+.scard .pic svg text,
+.scard .rwy-detail {
+  display: none;
+}
+.scard-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.scard-code {
+  font-weight: 700;
+  font-size: 15px;
+}
+.scard-mode {
+  font-weight: 800;
+  font-size: 20px;
+  line-height: 1.1;
+}
+.scard-nomode,
+.scard-rwy,
+.scard-wind,
+.scard-note {
+  color: var(--muted);
+}
