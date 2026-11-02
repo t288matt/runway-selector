@@ -7,6 +7,8 @@ export interface Route {
   /** The airport the hash names, or null when the hash has none or it is not a valid-shaped code. */
   readonly icao: string | null;
   readonly detail: boolean;
+  /** True for #/summary, the all-airports summary screen. */
+  readonly summary: boolean;
 }
 
 export function parseRoute(hash: string): Route {
@@ -15,13 +17,20 @@ export function parseRoute(hash: string): Route {
     .split('/')
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
-  const icao = segments[0]?.toUpperCase() ?? '';
+  const first = segments[0]?.toUpperCase() ?? '';
+  // Check the summary keyword before the airport-id shape: "SUMMARY" matches AIRPORT_ID.
+  if (first === 'SUMMARY') return { icao: null, detail: false, summary: true };
   return {
-    icao: AIRPORT_ID.exec(icao) !== null ? icao : null,
+    icao: AIRPORT_ID.exec(first) !== null ? first : null,
     detail: segments[1]?.toLowerCase() === 'detail',
+    summary: false,
   };
 }
 
 export function buildRoute(icao: string, detail: boolean): string {
   return detail ? `#/${icao}/detail` : `#/${icao}`;
+}
+
+export function buildSummaryRoute(): string {
+  return '#/summary';
 }
