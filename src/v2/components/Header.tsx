@@ -27,9 +27,11 @@ export interface HeaderProps {
   readonly moreOpen: boolean;
   readonly onMore: () => void;
   readonly moreRef: React.RefObject<HTMLButtonElement | null>;
+  /** Where the all-airports summary lives; the link is shown only when this is given. */
+  readonly summaryHref?: string;
 }
 
-export function Header({ icao, airports, pending, airportError, onSwitch, now, moreOpen, onMore, moreRef }: HeaderProps) {
+export function Header({ icao, airports, pending, airportError, onSwitch, now, moreOpen, onMore, moreRef, summaryHref }: HeaderProps) {
   const shown = pending ?? icao;
   return (
     <header className="bar">
@@ -50,6 +52,11 @@ export function Header({ icao, airports, pending, airportError, onSwitch, now, m
         <span className="stamp" role="alert">
           {airportError}
         </span>
+      ) : null}
+      {summaryHref !== undefined ? (
+        <a className="summary-link" href={summaryHref}>
+          All airports
+        </a>
       ) : null}
       <span className="sp" />
       <UtcClock now={now} />

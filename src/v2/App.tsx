@@ -11,9 +11,10 @@ import { Drawer } from './components/Drawer';
 import { DrawerContent } from './components/DrawerContent';
 import { APP_TITLE, Header } from './components/Header';
 import { Notice } from './components/Notice';
+import { SummaryScreen } from './components/SummaryScreen';
 import type { AppDeps } from './deps';
 import { screenModel } from './model/screen';
-import { buildRoute, parseRoute } from './route';
+import { buildRoute, buildSummaryRoute, parseRoute } from './route';
 import { useController } from './useController';
 
 export type { AppDeps } from './deps';
@@ -21,8 +22,19 @@ export type { AppDeps } from './deps';
 export type PackState =
   | { readonly status: 'loading' }
   | { readonly status: 'error'; readonly message: string }
-  /** `airports` is the list in app.json; a refused airport switch leaves the pack in use and sets `airportError`. */
-  | { readonly status: 'ready'; readonly pack: AirportPack; readonly airports: readonly string[]; readonly airportError: string | null };
+  /** `airports` is the list in app.json and `groups` its optional summary groups; a refused airport switch leaves the pack in use and sets `airportError`. */
+  | {
+      readonly status: 'ready';
+      readonly pack: AirportPack;
+      readonly airports: readonly string[];
+      readonly groups?: readonly AppGroup[] | undefined;
+      readonly airportError: string | null;
+    };
+
+export interface AppGroup {
+  readonly name: string;
+  readonly airports: readonly string[];
+}
 
 export function PackError({ message }: { message: string }) {
   return (
@@ -56,6 +68,8 @@ interface AirportSwitch {
   /** The airport chosen in the selector whose pack is still being fetched, or null. */
   readonly pending: string | null;
   readonly onSwitch: (icao: string) => void;
+  /** The summary link target, or undefined when app.json has no groups. */
+  readonly summaryHref?: string | undefined;
 }
 
 function Screen({
@@ -90,6 +104,7 @@ function Screen({
           moreOpen={moreOpen}
           onMore={() => setMoreOpen(true)}
           moreRef={moreRef}
+          {...(airport.summaryHref === undefined ? {} : { summaryHref: airport.summaryHref })}
         />
         <Dashboard model={model} pack={livePack} onDismissNotice={screen.dismissNotice} detailOpen={detailOpen} onToggleDetail={onToggleDetail} />
       </div>
@@ -149,12 +164,23 @@ export function AppBody({
       <Screen
         pack={state.pack}
         deps={deps}
-        airport={{ airports: state.airports, airportError: state.airportError, pending: pendingAirport, onSwitch: onSwitchAirport }}
+        airport={{
+          airports: state.airports,
+          airportError: state.airportError,
+          pending: pendingAirport,
+          onSwitch: onSwitchAirport,
+          summaryHref: hasGroups(state.groups) ? buildSummaryRoute() : undefined,
+        }}
         detailOpen={detailOpen}
         onToggleDetail={onToggleDetail}
       />
     </Boundary>
   );
+}
+
+/** True when app.json lists at least one group with an airport, so the summary has something to show. */
+export function hasGroups(groups: readonly AppGroup[] | undefined): groups is readonly AppGroup[] {
+  return groups !== undefined && groups.some((g) => g.airports.length > 0);
 }
 
 type ReadyState = Extract<PackState, { status: 'ready' }>;
@@ -168,7 +194,7 @@ export async function switchAirportTo(current: ReadyState, icao: string, deps: A
   if (!current.airports.includes(icao)) return { airportError: `No data pack for ${icao} yet. Available: ${current.airports.join(', ')}.` };
   const r = await loadPack(deps.fetch, { baseUrl: deps.baseUrl ?? './refdata', cacheBust: cacheBustToken(deps.now()), airportId: icao });
   if (!r.ok) return { airportError: `The airport could not be changed; the current one stays in use. ${r.message}` };
-  return { pack: r.pack, airports: r.app.airports, airportError: null };
+  return { pack: r.pack, airports: r.app.airports, groups: r.app.groups, airportError: null };
 }
 
 /**
@@ -193,7 +219,7 @@ export function App({ deps }: { deps: AppDeps }) {
   useEffect(() => {
     let live = true;
     void loadInitialPack(deps, initialRoute.icao ?? loadSelectedAirportId(deps.store) ?? undefined).then((r) => {
-      if (live) setState(r.ok ? { status: 'ready', pack: r.pack, airports: r.app.airports, airportError: null } : { status: 'error', message: r.message });
+      if (live) setState(r.ok ? { status: 'ready', pack: r.pack, airports: r.app.airports, groups: r.app.groups, airportError: null } : { status: 'error', message: r.message });
     });
     return () => {
       live = false;
@@ -203,11 +229,11 @@ export function App({ deps }: { deps: AppDeps }) {
   // stored state stays under its own code (AG-8). A refused switch keeps the current airport. While the new pack is
   // fetched the selector shows the choice and says it is loading.
   const [pendingAirport, setPendingAirport] = useState<string | null>(null);
-  const switchAirportRef = useRef<(icao: string) => void>(() => undefined);
-  const switchAirport = (icao: string): void => {
-    if (state.status !== 'ready' || pendingAirport !== null) return;
+  const switchAirportRef = useRef<(icao: string) => Promise<void>>(() => Promise.resolve());
+  const switchAirport = (icao: string): Promise<void> => {
+    if (state.status !== 'ready' || pendingAirport !== null) return Promise.resolve();
     if (icao !== state.pack.airport.icao && state.airports.includes(icao)) setPendingAirport(icao);
-    void switchAirportTo(state, icao, deps)
+    return switchAirportTo(state, icao, deps)
       .then((change) => {
         if (change === null) return;
         if (change.pack !== undefined) saveSelectedAirport(deps.store, icao);
@@ -223,26 +249,39 @@ export function App({ deps }: { deps: AppDeps }) {
   // (owner, 29-10-2026). The very first run, and a run caused by the browser's own Back/Forward, must not push a
   // new history entry: skipNextPush covers both.
   const icao = state.status === 'ready' ? state.pack.airport.icao : null;
+  // The summary (#/summary) is a view of its own: while it shows, the hash is left alone. It needs groups in app.json;
+  // without them #/summary opens the airport screen like any other hash.
+  const [wantSummary, setWantSummary] = useState(initialRoute.summary);
+  const summaryShown = wantSummary && state.status === 'ready' && hasGroups(state.groups);
   const skipNextPush = useRef(true);
   useEffect(() => {
-    if (icao === null) return;
+    if (icao === null || summaryShown) return;
     if (skipNextPush.current) {
       skipNextPush.current = false;
       return;
     }
-    window.history.pushState(null, '', buildRoute(icao, detailOpen));
-  }, [icao, detailOpen]);
+    const target = buildRoute(icao, detailOpen);
+    if (window.location.hash.toLowerCase() === target.toLowerCase()) return;
+    window.history.pushState(null, '', target);
+  }, [icao, detailOpen, summaryShown]);
 
   useEffect(() => {
     const onPopState = (): void => {
       const route = parseRoute(window.location.hash);
+      if (route.summary) {
+        setWantSummary(true);
+        return;
+      }
       skipNextPush.current = true;
       setDetailOpen(route.detail);
-      if (route.icao !== null) switchAirportRef.current(route.icao);
+      // Leave the summary once the airport asked for is ready, so the airport last shown does not flash first.
+      if (route.icao === null) setWantSummary(false);
+      else void switchAirportRef.current(route.icao).then(() => setWantSummary(false));
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
-  return <AppBody state={state} deps={deps} onSwitchAirport={switchAirport} pendingAirport={pendingAirport} detailOpen={detailOpen} onToggleDetail={setDetailOpen} />;
+  if (summaryShown && state.status === 'ready' && hasGroups(state.groups)) return <SummaryScreen groups={state.groups} deps={deps} />;
+  return <AppBody state={state} deps={deps} onSwitchAirport={(icao) => void switchAirport(icao)} pendingAirport={pendingAirport} detailOpen={detailOpen} onToggleDetail={setDetailOpen} />;
 }

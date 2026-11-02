@@ -1422,3 +1422,84 @@ dl.v dd {
     min-height: 44px;
   }
 }
+
+/* ---------- all-airports summary ---------- */
+.summary-link {
+  color: var(--accent-text);
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.summary h2 {
+  font-size: 14px;
+  margin: 14px 0 8px;
+  color: var(--muted);
+  font-weight: 650;
+}
+.sgrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+.scard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding: 8px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  text-decoration: none;
+}
+.scard:hover,
+.scard:focus-visible {
+  border-color: var(--accent);
+}
+.scard-noreport {
+  border-left: 4px solid var(--unk);
+}
+.scard-wait {
+  justify-content: space-between;
+  min-height: 60px;
+}
+.scard .pic {
+  flex: 0 0 110px;
+  width: 110px;
+}
+/* Each picture is only about 110 px wide here, so the stripes and painted numbers drop out, as on a phone. */
+.scard .pic svg {
+  width: 110px;
+  max-width: 110px;
+  max-height: 80px;
+}
+.scard .rwy-detail {
+  display: none;
+}
+.scard-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 12px;
+}
+.scard-code {
+  font-weight: 700;
+  font-size: 15px;
+}
+.scard-mode,
+.scard-rwy,
+.scard-wind,
+.scard-note {
+  color: var(--muted);
+}
+@media (max-width: 1000px) {
+  .sgrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
