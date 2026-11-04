@@ -4,7 +4,7 @@
 // imports nothing from src/ui.
 import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
 import { loadPack, type AirportPack, type AppGroup } from '../refdata';
-import { clearSelectedAirport, loadSelectedAirportId, saveSelectedAirport } from '../store';
+import { clearSelectedAirport, loadSelectedAirportId, saveSavedPack, saveSelectedAirport } from '../store';
 import { cacheBustToken } from './clock';
 import { Dashboard } from './components/Dashboard';
 import { Drawer } from './components/Drawer';
@@ -15,6 +15,7 @@ import { SummaryScreen } from './components/SummaryScreen';
 import type { AppDeps } from './deps';
 import { screenModel } from './model/screen';
 import { afterSwitch, hashToShow, parseRoute } from './route';
+import { sameAsShown, savedPackFor, type SavedPack } from './savedPack';
 import { useController } from './useController';
 
 export type { AppDeps } from './deps';
@@ -185,6 +186,7 @@ export async function switchAirportTo(current: ReadyState, icao: string, deps: A
   if (!current.airports.includes(icao)) return { airportError: `No data pack for ${icao} yet. Available: ${current.airports.join(', ')}.` };
   const r = await loadPack(deps.fetch, { baseUrl: deps.baseUrl ?? './refdata', cacheBust: cacheBustToken(deps.now()), airportId: icao });
   if (!r.ok) return { airportError: `The airport could not be changed; the current one stays in use. ${r.message}` };
+  saveSavedPack(deps.store, r.raw, deps.now());
   return { pack: r.pack, airports: r.app.airports, groups: r.app.groups, airportError: null };
 }
 
@@ -195,27 +197,74 @@ export async function switchAirportTo(current: ReadyState, icao: string, deps: A
  */
 export async function loadInitialPack(deps: AppDeps, airportId: string | undefined): Promise<Awaited<ReturnType<typeof loadPack>>> {
   const r = await loadPack(deps.fetch, { baseUrl: deps.baseUrl ?? './refdata', cacheBust: cacheBustToken(deps.now()), airportId });
-  if (r.ok || airportId === undefined) return r;
+  if (r.ok) {
+    saveSavedPack(deps.store, r.raw, deps.now(), airportId === undefined);
+    return r;
+  }
+  if (airportId === undefined) return r;
   clearSelectedAirport(deps.store);
-  return loadPack(deps.fetch, { baseUrl: deps.baseUrl ?? './refdata', cacheBust: cacheBustToken(deps.now()) });
+  const fallback = await loadPack(deps.fetch, { baseUrl: deps.baseUrl ?? './refdata', cacheBust: cacheBustToken(deps.now()) });
+  if (fallback.ok) saveSavedPack(deps.store, fallback.raw, deps.now(), true);
+  return fallback;
+}
+
+const readyFrom = (r: { readonly pack: AirportPack; readonly app: { readonly airports: readonly string[]; readonly groups?: readonly AppGroup[] | undefined } }): ReadyState => ({
+  status: 'ready',
+  pack: r.pack,
+  airports: r.app.airports,
+  groups: r.app.groups,
+  airportError: null,
+});
+
+/** The state the page starts in: the saved pack when there is a valid one, else loading (issue 183). */
+export function initialPackState(saved: SavedPack | null): PackState {
+  return saved === null ? { status: 'loading' } : readyFrom(saved);
+}
+
+/**
+ * What the screen becomes when the first fresh load settles. With a saved copy on screen, a failed fresh load changes
+ * nothing (no error), the operator's own switch of airport since the start stands, and an unchanged pack keeps the
+ * same state object so nothing redraws. Without one, today's behaviour: the pack, or the full-screen error.
+ */
+export function afterFreshInitial(prev: PackState, startedOn: SavedPack | null, r: Awaited<ReturnType<typeof loadPack>>): PackState {
+  if (!r.ok) return startedOn === null ? { status: 'error', message: r.message } : prev;
+  if (prev.status === 'ready' && startedOn !== null && prev.pack.airport.icao !== startedOn.pack.airport.icao) return prev;
+  const next = readyFrom(r);
+  return prev.status === 'ready' && sameAsShown(prev, next) ? prev : next;
+}
+
+/** The change for choosing `icao` when a valid saved copy of it exists (shown at once, the fresh fetch still follows), or null. */
+export function switchFromSaved(current: ReadyState, icao: string, deps: AppDeps): Partial<ReadyState> | null {
+  if (icao === current.pack.airport.icao || !current.airports.includes(icao)) return null;
+  const saved = savedPackFor(deps, icao);
+  return saved === null ? null : readyFrom(saved);
+}
+
+/** The state once the fresh pack for a switch that was shown from a saved copy arrives. A failure, a switch away since, or the same pack changes nothing. */
+export function afterFreshSwitch(prev: PackState, icao: string, change: Partial<ReadyState> | null): PackState {
+  if (change?.pack === undefined || prev.status !== 'ready' || prev.pack.airport.icao !== icao) return prev;
+  const next = { ...prev, ...change };
+  return sameAsShown(prev, next) ? prev : next;
 }
 
 export function App({ deps }: { deps: AppDeps }) {
-  const [state, setState] = useState<PackState>({ status: 'loading' });
   // A deep link (#/ICAO or #/ICAO/detail, owner, 29-10-2026) takes the airport straight to the one it names; failing
   // that a refresh opens on the airport last chosen in the selector, not back at the default (OD-82). Either id is
   // shape-checked only, so loadInitialPack above falls back if it is no longer offered.
   const [initialRoute] = useState(() => parseRoute(window.location.hash));
+  // A valid saved copy under 24 hours old is shown at once (issue 183); the fresh fetch below still always runs.
+  const [savedAtStart] = useState(() => savedPackFor(deps, initialRoute.icao ?? loadSelectedAirportId(deps.store) ?? undefined));
+  const [state, setState] = useState<PackState>(() => initialPackState(savedAtStart));
   const [detailOpen, setDetailOpen] = useState(initialRoute.detail);
   useEffect(() => {
     let live = true;
     void loadInitialPack(deps, initialRoute.icao ?? loadSelectedAirportId(deps.store) ?? undefined).then((r) => {
-      if (live) setState(r.ok ? { status: 'ready', pack: r.pack, airports: r.app.airports, groups: r.app.groups, airportError: null } : { status: 'error', message: r.message });
+      if (live) setState((prev) => afterFreshInitial(prev, savedAtStart, r));
     });
     return () => {
       live = false;
     };
-  }, [deps, initialRoute]);
+  }, [deps, initialRoute, savedAtStart]);
   // Switching airport builds a new screen with its own controller: nothing of the old airport is carried over, and its
   // stored state stays under its own code (AG-8). A refused switch keeps the current airport. While the new pack is
   // fetched the selector shows the choice and says it is loading.
@@ -224,6 +273,14 @@ export function App({ deps }: { deps: AppDeps }) {
   /** Resolves true when the airport changed or was already the one shown; false when the switch failed, was refused or was skipped because another is pending. */
   const switchAirport = (icao: string): Promise<boolean> => {
     if (state.status !== 'ready' || pendingAirport !== null) return Promise.resolve(false);
+    // A valid saved copy of the airport asked for is shown at once; the fresh fetch still runs and is swapped in silently (issue 183).
+    const saved = switchFromSaved(state, icao, deps);
+    if (saved !== null) {
+      saveSelectedAirport(deps.store, icao);
+      setState((prev) => (prev.status === 'ready' ? { ...prev, ...saved } : prev));
+      void switchAirportTo(state, icao, deps).then((change) => setState((prev) => afterFreshSwitch(prev, icao, change)));
+      return Promise.resolve(true);
+    }
     if (icao !== state.pack.airport.icao && state.airports.includes(icao)) setPendingAirport(icao);
     const alreadyShown = icao === state.pack.airport.icao;
     return switchAirportTo(state, icao, deps)
