@@ -7,6 +7,8 @@ import type { AppDeps } from './deps';
 export interface SavedPack {
   readonly pack: AirportPack;
   readonly app: AppFile;
+  /** When the copy was saved (UTC ms), for the notice that says the latest data was refused. */
+  readonly savedAt: number;
 }
 
 /**
@@ -24,7 +26,7 @@ export function savedPackFor(deps: AppDeps, airportId: string | undefined): Save
     return null;
   }
   if (airportId === undefined && built.app.default !== icao) return null;
-  return built;
+  return { ...built, savedAt: text.savedAt };
 }
 
 export interface ShownPack {

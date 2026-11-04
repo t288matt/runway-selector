@@ -117,6 +117,8 @@ export function createController(deps: ControllerDeps): Controller {
   let tickTimer: unknown = null;
   let notices: string[] = [];
   let reload: ReloadState = { status: 'idle', message: null };
+  // Once Reload data has succeeded the pack in use is the newest there is: a slower background copy must not replace it.
+  let reloadedFresh = false;
   const listeners = new Set<() => void>();
 
   const notify = (message: string | null): void => {
@@ -310,6 +312,7 @@ export function createController(deps: ControllerDeps): Controller {
         return;
       }
       saveSavedPack(store, result.raw, deps.now());
+      reloadedFresh = true;
       if (!adoptPack(result.pack)) {
         setReload({ status: 'unchanged', message: 'The airport data was re-read and has not changed.' });
         return;
@@ -392,7 +395,7 @@ export function createController(deps: ControllerDeps): Controller {
     },
     reloadPack: doReload,
     replacePack: (next) => {
-      if (adoptPack(next)) recalculate(deps.now());
+      if (!reloadedFresh && adoptPack(next)) recalculate(deps.now());
     },
     clearAudit: () => {
       clearAudit(store, pack.airport.icao);

@@ -50,7 +50,7 @@ export function loadSavedDefaultId(store: Store): string | null {
  * The saved text for one airport, or null when there is none, it is corrupt, of another version, oversize, from the
  * future, or 24 hours old or older. Whether the text is a valid pack is for the caller (packFromSavedText).
  */
-export function loadSavedPack(store: Store, icao: string, nowMs: number): SavedPackText | null {
+export function loadSavedPack(store: Store, icao: string, nowMs: number): (SavedPackText & { readonly savedAt: number }) | null {
   if (!ICAO_PATTERN.test(icao)) return null;
   const read = readValidated(store, keyFor(icao), packCacheSchema, PACK_CACHE_MAX_CHARS, 'saved airport pack');
   if (read.kind !== 'ok') return null;
@@ -59,7 +59,7 @@ export function loadSavedPack(store: Store, icao: string, nowMs: number): SavedP
     clearSavedPack(store, icao);
     return null;
   }
-  return { airportId: icao, app: read.value.app, files: read.value.files };
+  return { airportId: icao, app: read.value.app, files: read.value.files, savedAt: read.value.savedAt };
 }
 
 /** Save text that has already passed validation. `asDefault` also records it as the airport to open when none was chosen. Storage failures are swallowed. */

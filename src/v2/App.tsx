@@ -3,8 +3,8 @@
 // section 4c, "First load"). This is v2's own copy of the v1 shell logic; v2
 // imports nothing from src/ui.
 import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
-import { loadPack, type AirportPack, type AppGroup } from '../refdata';
-import { clearSelectedAirport, loadSelectedAirportId, saveSavedPack, saveSelectedAirport } from '../store';
+import { formatIssue, loadPack, type AirportPack, type AppGroup } from '../refdata';
+import { clearSavedPack, clearSelectedAirport, loadSelectedAirportId, saveSavedPack, saveSelectedAirport } from '../store';
 import { cacheBustToken } from './clock';
 import { Dashboard } from './components/Dashboard';
 import { Drawer } from './components/Drawer';
@@ -13,6 +13,7 @@ import { APP_TITLE, Header } from './components/Header';
 import { Notice } from './components/Notice';
 import { SummaryScreen } from './components/SummaryScreen';
 import type { AppDeps } from './deps';
+import { savedNoticeFor } from './model/notice';
 import { screenModel } from './model/screen';
 import { afterSwitch, hashToShow, parseRoute } from './route';
 import { sameAsShown, savedPackFor, type SavedPack } from './savedPack';
@@ -30,6 +31,10 @@ export type PackState =
       readonly airports: readonly string[];
       readonly groups?: readonly AppGroup[] | undefined;
       readonly airportError: string | null;
+      /** When the pack on screen was saved (UTC ms) if it is a saved copy still waiting for, or kept over, a fresh one; else null. */
+      readonly savedAt?: number | null;
+      /** The loader's text for the first issue when the latest pack was refused by validation while the saved copy is shown (issue 183); else null. */
+      readonly refusal?: string | null;
     };
 
 export function PackError({ message }: { message: string }) {
@@ -72,9 +77,12 @@ function Screen({
   airport,
   detailOpen,
   onToggleDetail,
+  refusal,
 }: {
   pack: AirportPack;
   deps: AppDeps;
+  /** The saved copy's time and the loader's refusal text, while a saved pack is shown over a refused fresh one. */
+  refusal: { readonly savedAt: number; readonly text: string } | null;
   airport: AirportSwitch;
   detailOpen: boolean;
   onToggleDetail: (open: boolean) => void;
@@ -83,6 +91,8 @@ function Screen({
   const model = screenModel(screen);
   // Reload data can replace the pack the controller holds, so the screen reads it from the calculation, not from the prop.
   const livePack = screen.view.pack;
+  // A successful Reload data has brought fresh data in, so the line goes (issue 183).
+  const savedNotice = savedNoticeFor(refusal, screen.reload.status, deps.now());
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLButtonElement>(null);
   return (
@@ -99,7 +109,7 @@ function Screen({
           onMore={() => setMoreOpen(true)}
           moreRef={moreRef}
         />
-        <Dashboard model={model} pack={livePack} onDismissNotice={screen.dismissNotice} detailOpen={detailOpen} onToggleDetail={onToggleDetail} />
+        <Dashboard model={model} pack={livePack} savedNotice={savedNotice} onDismissNotice={screen.dismissNotice} detailOpen={detailOpen} onToggleDetail={onToggleDetail} />
       </div>
       <Drawer open={moreOpen} onClose={() => setMoreOpen(false)} returnFocusTo={moreRef}>
         <DrawerContent
@@ -165,6 +175,7 @@ export function AppBody({
         }}
         detailOpen={detailOpen}
         onToggleDetail={onToggleDetail}
+        refusal={state.refusal != null && state.savedAt != null ? { savedAt: state.savedAt, text: state.refusal } : null}
       />
     </Boundary>
   );
@@ -181,13 +192,19 @@ type ReadyState = Extract<PackState, { status: 'ready' }>;
  * What choosing an airport changes, or null when nothing does. Only airports with a reviewed pack listed in app.json
  * can be shown: any other code is refused here and nothing is generated or fetched for it (OD-5, RD-2).
  */
-export async function switchAirportTo(current: ReadyState, icao: string, deps: AppDeps): Promise<Partial<ReadyState> | null> {
+/** What switchAirportTo returns; `refused` is the first issue when the pack arrived and was refused by validation (not for a network failure). */
+export type SwitchChange = Partial<ReadyState> & { readonly refused?: Parameters<typeof formatIssue>[0] };
+
+export async function switchAirportTo(current: ReadyState, icao: string, deps: AppDeps): Promise<SwitchChange | null> {
   if (icao === current.pack.airport.icao) return current.airportError === null ? null : { airportError: null };
   if (!current.airports.includes(icao)) return { airportError: `No data pack for ${icao} yet. Available: ${current.airports.join(', ')}.` };
   const r = await loadPack(deps.fetch, { baseUrl: deps.baseUrl ?? './refdata', cacheBust: cacheBustToken(deps.now()), airportId: icao });
-  if (!r.ok) return { airportError: `The airport could not be changed; the current one stays in use. ${r.message}` };
+  if (!r.ok) {
+    const refused = r.fetchFailed || r.issues[0] === undefined ? {} : { refused: r.issues[0] };
+    return { airportError: `The airport could not be changed; the current one stays in use. ${r.message}`, ...refused };
+  }
   saveSavedPack(deps.store, r.raw, deps.now());
-  return { pack: r.pack, airports: r.app.airports, groups: r.app.groups, airportError: null };
+  return { pack: r.pack, airports: r.app.airports, groups: r.app.groups, airportError: null, savedAt: null, refusal: null };
 }
 
 /**
@@ -204,12 +221,18 @@ export async function loadInitialPack(deps: AppDeps, airportId: string | undefin
   if (airportId === undefined) return r;
   clearSelectedAirport(deps.store);
   const fallback = await loadPack(deps.fetch, { baseUrl: deps.baseUrl ?? './refdata', cacheBust: cacheBustToken(deps.now()) });
-  if (fallback.ok) saveSavedPack(deps.store, fallback.raw, deps.now(), true);
+  if (fallback.ok) {
+    saveSavedPack(deps.store, fallback.raw, deps.now(), true);
+    // The airport asked for could not be loaded but the default could: its saved copy must not be shown again for up to a day.
+    clearSavedPack(deps.store, airportId);
+  }
   return fallback;
 }
 
-const readyFrom = (r: { readonly pack: AirportPack; readonly app: { readonly airports: readonly string[]; readonly groups?: readonly AppGroup[] | undefined } }): ReadyState => ({
+const readyFrom = (r: { readonly pack: AirportPack; readonly app: { readonly airports: readonly string[]; readonly groups?: readonly AppGroup[] | undefined }; readonly savedAt?: number }): ReadyState => ({
   status: 'ready',
+  savedAt: r.savedAt ?? null,
+  refusal: null,
   pack: r.pack,
   airports: r.app.airports,
   groups: r.app.groups,
@@ -227,11 +250,21 @@ export function initialPackState(saved: SavedPack | null): PackState {
  * same state object so nothing redraws. Without one, today's behaviour: the pack, or the full-screen error.
  */
 export function afterFreshInitial(prev: PackState, startedOn: SavedPack | null, r: Awaited<ReturnType<typeof loadPack>>): PackState {
-  if (!r.ok) return startedOn === null ? { status: 'error', message: r.message } : prev;
+  if (!r.ok) {
+    if (startedOn === null) return { status: 'error', message: r.message };
+    // A pack refused by validation is said so, quietly; a network failure, timeout or HTTP error stays silent.
+    if (r.fetchFailed || prev.status !== 'ready' || prev.pack.airport.icao !== startedOn.pack.airport.icao) return prev;
+    return withRefusal(prev, r.issues[0]);
+  }
   if (prev.status === 'ready' && startedOn !== null && prev.pack.airport.icao !== startedOn.pack.airport.icao) return prev;
   const next = readyFrom(r);
-  return prev.status === 'ready' && sameAsShown(prev, next) ? prev : next;
+  return prev.status === 'ready' && prev.refusal == null && sameAsShown(prev, next) ? prev : next;
 }
+
+const withRefusal = (prev: ReadyState, issue: Parameters<typeof formatIssue>[0] | undefined): ReadyState => {
+  const refusal = issue === undefined ? 'unknown reason' : formatIssue(issue);
+  return prev.refusal === refusal ? prev : { ...prev, refusal };
+};
 
 /** The change for choosing `icao` when a valid saved copy of it exists (shown at once, the fresh fetch still follows), or null. */
 export function switchFromSaved(current: ReadyState, icao: string, deps: AppDeps): Partial<ReadyState> | null {
@@ -241,10 +274,11 @@ export function switchFromSaved(current: ReadyState, icao: string, deps: AppDeps
 }
 
 /** The state once the fresh pack for a switch that was shown from a saved copy arrives. A failure, a switch away since, or the same pack changes nothing. */
-export function afterFreshSwitch(prev: PackState, icao: string, change: Partial<ReadyState> | null): PackState {
-  if (change?.pack === undefined || prev.status !== 'ready' || prev.pack.airport.icao !== icao) return prev;
-  const next = { ...prev, ...change };
-  return sameAsShown(prev, next) ? prev : next;
+export function afterFreshSwitch(prev: PackState, icao: string, change: SwitchChange | null): PackState {
+  if (change === null || prev.status !== 'ready' || prev.pack.airport.icao !== icao) return prev;
+  if (change.pack === undefined) return change.refused === undefined ? prev : withRefusal(prev, change.refused);
+  const next = { ...prev, ...change, savedAt: null, refusal: null };
+  return prev.refusal == null && sameAsShown(prev, next) ? prev : next;
 }
 
 export function App({ deps }: { deps: AppDeps }) {
@@ -287,7 +321,8 @@ export function App({ deps }: { deps: AppDeps }) {
       .then((change) => {
         if (change === null) return true;
         if (change.pack !== undefined) saveSelectedAirport(deps.store, icao);
-        setState((prev) => (prev.status === 'ready' ? { ...prev, ...change } : prev));
+        const { refused: _refused, ...shown } = change;
+        setState((prev) => (prev.status === 'ready' ? { ...prev, ...shown } : prev));
         return alreadyShown || change.pack !== undefined;
       })
       .finally(() => setPendingAirport(null));

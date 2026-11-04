@@ -242,7 +242,10 @@ describe('the fresh fetch always follows and is swapped in silently', () => {
     const shown = initialPackState(saved);
     const r = await loadInitialPack(deps, undefined);
     expect(r.ok).toBe(false);
-    expect(afterFreshInitial(shown, saved, r)).toBe(shown);
+    // the saved copy stays on screen with no error screen (the quiet line is covered in packCacheNotice.test.tsx)
+    const after = afterFreshInitial(shown, saved, r);
+    expect(after.status).toBe('ready');
+    expect(nameOf(after)).toBe('Old name');
     expect(store.getItem(keyOf)).toBe(before);
     expect(savedPackFor(deps, 'TEST')?.pack.airport.name).toBe('Old name');
   });
