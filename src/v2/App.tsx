@@ -223,8 +223,8 @@ export async function loadInitialPack(deps: AppDeps, airportId: string | undefin
   const fallback = await loadPack(deps.fetch, { baseUrl: deps.baseUrl ?? './refdata', cacheBust: cacheBustToken(deps.now()) });
   if (fallback.ok) {
     saveSavedPack(deps.store, fallback.raw, deps.now(), true);
-    // The airport asked for could not be loaded but the default could: its saved copy must not be shown again for up to a day.
-    clearSavedPack(deps.store, airportId);
+    // The airport asked for could not be loaded but a different default could: its saved copy must not be shown again for up to a day. (If it is the default itself the retry just saved it, so it stays.)
+    if (airportId.toUpperCase() !== fallback.raw.airportId.toUpperCase()) clearSavedPack(deps.store, airportId);
   }
   return fallback;
 }

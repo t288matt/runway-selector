@@ -172,6 +172,16 @@ describe('review findings 3 and 4', () => {
     expect(loadSavedPack(store, 'TEST', NOW)).toBeNull();
   });
 
+  it('3: a chosen airport that is also the default, failing once and then loading on the retry, keeps its saved copy', async () => {
+    const store = createMemoryStore();
+    const good = server({ TEST: filesOf(TEST_PACK) }, 'TEST');
+    let calls = 0;
+    const flaky = async (url: string): Promise<Response> => (++calls === 1 ? new Response('down', { status: 503 }) : good.fetch(url));
+    const r = await loadInitialPack(depsOf(flaky, store), 'TEST');
+    expect(r.ok && r.pack.airport.icao).toBe('TEST');
+    expect(loadSavedPack(store, 'TEST', NOW)).not.toBeNull();
+  });
+
   it('4: a background pack arriving after Reload data succeeded does not replace the reloaded one', async () => {
     const srv = server({ TEST: filesOf(TEST_PACK, 'Reloaded name') }, 'TEST');
     const controller = createController({ pack: packOf(TEST_PACK, filesOf(TEST_PACK, 'Saved name')), fetch: srv.fetch, now: () => NOW, store: createMemoryStore(), timers: TIMERS });
