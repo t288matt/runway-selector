@@ -14,7 +14,7 @@ import { Notice } from './components/Notice';
 import { SummaryScreen } from './components/SummaryScreen';
 import type { AppDeps } from './deps';
 import { screenModel } from './model/screen';
-import { afterSwitch, buildSummary2Route, buildSummaryRoute, hashToShow, parseRoute } from './route';
+import { afterSwitch, hashToShow, parseRoute } from './route';
 import { useController } from './useController';
 
 export type { AppDeps } from './deps';
@@ -63,10 +63,6 @@ interface AirportSwitch {
   /** The airport chosen in the selector whose pack is still being fetched, or null. */
   readonly pending: string | null;
   readonly onSwitch: (icao: string) => void;
-  /** The summary link target, or undefined when app.json has no groups. */
-  readonly summaryHref?: string | undefined;
-  /** The Summary 2 link target, or undefined when app.json has no groups. */
-  readonly summary2Href?: string | undefined;
 }
 
 function Screen({
@@ -101,8 +97,6 @@ function Screen({
           moreOpen={moreOpen}
           onMore={() => setMoreOpen(true)}
           moreRef={moreRef}
-          {...(airport.summaryHref === undefined ? {} : { summaryHref: airport.summaryHref })}
-          {...(airport.summary2Href === undefined ? {} : { summary2Href: airport.summary2Href })}
         />
         <Dashboard model={model} pack={livePack} onDismissNotice={screen.dismissNotice} detailOpen={detailOpen} onToggleDetail={onToggleDetail} />
       </div>
@@ -167,8 +161,6 @@ export function AppBody({
           airportError: state.airportError,
           pending: pendingAirport,
           onSwitch: onSwitchAirport,
-          summaryHref: hasGroups(state.groups) ? buildSummaryRoute() : undefined,
-          summary2Href: hasGroups(state.groups) ? buildSummary2Route() : undefined,
         }}
         detailOpen={detailOpen}
         onToggleDetail={onToggleDetail}

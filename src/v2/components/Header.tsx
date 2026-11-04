@@ -67,13 +67,9 @@ export interface HeaderProps {
   readonly moreOpen: boolean;
   readonly onMore: () => void;
   readonly moreRef: React.RefObject<HTMLButtonElement | null>;
-  /** Where the all-airports summary lives; the link is shown only when this is given. */
-  readonly summaryHref?: string;
-  /** Where the large-box summary (Summary 2) lives; its link is shown only when this is given. */
-  readonly summary2Href?: string;
 }
 
-export function Header({ icao, airports, pending, airportError, onSwitch, now, moreOpen, onMore, moreRef, summaryHref, summary2Href }: HeaderProps) {
+export function Header({ icao, airports, pending, airportError, onSwitch, now, moreOpen, onMore, moreRef }: HeaderProps) {
   const shown = pending ?? icao;
   return (
     <header className="bar">
@@ -94,16 +90,6 @@ export function Header({ icao, airports, pending, airportError, onSwitch, now, m
         <span className="stamp" role="alert">
           {airportError}
         </span>
-      ) : null}
-      {summaryHref !== undefined ? (
-        <a className="summary-link" href={summaryHref}>
-          All airports
-        </a>
-      ) : null}
-      {summary2Href !== undefined ? (
-        <a className="summary-link summary2-link" href={summary2Href}>
-          Summary 2
-        </a>
       ) : null}
       <span className="sp" />
       <UtcClock now={now} />
