@@ -2,11 +2,12 @@
 // `fetch` function it is given (so tests pass a fake). It reads app.json, then
 // the five files of one pack, each with a cache-bust query, refusing any body
 // over its size cap BEFORE parsing. An invalid pack is refused with a precise
-// message; reloadPack keeps the previous valid pack in that case.
+// message; reloadPack keeps the previous valid pack in that case. A fetch never reads a saved copy:
+// the v2 page's saved copy (src/store/packCache.ts) is shown first and this fetch still always runs.
 import { Oversize, readLimited } from '../net/readLimited';
 import type { PackIssue } from './issues';
 import { PackValidationError, formatIssue } from './issues';
-import { PACK_FILE_NAMES, parseAppConfig, parsePack, type PackFileName } from './parsePack';
+import { PACK_FILE_NAMES, parseAppConfig, parsePack, type PackFileName, type RawPackText, type SavedPackText } from './parsePack';
 import { AIRPORT_ID, BOUNDS, type AppFile } from './schema';
 import type { AirportPack } from './types';
 
@@ -24,11 +25,11 @@ export interface LoadOptions {
 }
 
 export type LoadResult =
-  | { readonly ok: true; readonly pack: AirportPack; readonly app: AppFile }
+  | { readonly ok: true; readonly pack: AirportPack; readonly app: AppFile; readonly raw: SavedPackText }
   | { readonly ok: false; readonly issues: readonly PackIssue[]; readonly message: string };
 
 export type ReloadResult =
-  | { readonly ok: true; readonly pack: AirportPack; readonly app: AppFile }
+  | { readonly ok: true; readonly pack: AirportPack; readonly app: AppFile; readonly raw: SavedPackText }
   | { readonly ok: false; readonly pack: AirportPack; readonly issues: readonly PackIssue[]; readonly message: string };
 
 const DEFAULT_BASE = './refdata';
@@ -103,7 +104,8 @@ export async function loadPack(fetchFn: FetchLike, options: LoadOptions): Promis
     if (pack.airport.icao !== airportId) {
       return failure([{ file: 'airport.json', path: 'icao', message: `The pack folder is "${airportId}" but airport.json says "${pack.airport.icao}"` }]);
     }
-    return { ok: true, pack, app };
+    // The text is handed back only now that it has passed every check above, so a saved copy is never made from a refused pack.
+    return { ok: true, pack, app, raw: { airportId, app: appResult.text, files: raw as RawPackText } };
   } catch (e) {
     if (e instanceof PackValidationError) return failure(e.issues);
     throw e;
