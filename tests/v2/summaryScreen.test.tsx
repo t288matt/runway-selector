@@ -202,21 +202,14 @@ describe('summaryAirports', () => {
   });
 });
 
-describe('the header link', () => {
+describe('the airport screen header', () => {
   const props = { icao: 'YSSY', airports: ['YSSY'], pending: null, airportError: null, onSwitch: () => undefined, now: () => NOW, moreOpen: false, onMore: () => undefined, moreRef: { current: null } };
-  it('shows "All airports" to #/summary when given a summaryHref, and not otherwise (no groups)', () => {
-    expect(renderToStaticMarkup(<Header {...props} summaryHref={buildSummaryRoute()} />)).toContain('href="#/summary"');
-    expect(renderToStaticMarkup(<Header {...props} />)).not.toContain('All airports');
-  });
-  it('shows "Summary 2" to #/summary2 as well when given a summary2Href, and neither without groups', () => {
-    const both = renderToStaticMarkup(<Header {...props} summaryHref={buildSummaryRoute()} summary2Href={buildSummary2Route()} />);
-    expect(both).toContain('href="#/summary"');
-    expect(both).toContain('href="#/summary2"');
-    expect(both).toContain('Summary 2');
-    expect(both).toContain('class="summary-link summary2-link"');
-    const none = renderToStaticMarkup(<Header {...props} />);
-    expect(none).not.toContain('Summary 2');
-    expect(none).not.toContain('#/summary2');
+  it('has no "All airports" or "Summary 2" link on the airport screen (owner, 04-11-2026)', () => {
+    const html = renderToStaticMarkup(<Header {...props} />);
+    expect(html).not.toContain('All airports');
+    expect(html).not.toContain('Summary 2');
+    expect(html).not.toContain('#/summary');
+    expect(html).not.toContain('summary-link');
   });
   it('hasGroups is false without groups, or with only empty ones', () => {
     expect(hasGroups(undefined)).toBe(false);
