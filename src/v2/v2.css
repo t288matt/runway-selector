@@ -224,6 +224,13 @@ body {
 .toast span {
   flex: 1;
 }
+.saved-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
 .btn.small {
   min-height: 36px;
   font-size: 12px;

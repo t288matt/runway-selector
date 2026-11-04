@@ -18,9 +18,11 @@ export interface DashboardProps {
   /** Whether the Detail section is open, and how to report a user toggle; driven by the #/ICAO/detail route (owner, 29-10-2026). */
   readonly detailOpen: boolean;
   readonly onToggleDetail: (open: boolean) => void;
+  /** The quiet line shown while a saved pack stands in for a refused fresh one (issue 183); built in model/notice.ts. */
+  readonly savedNotice?: string | null;
 }
 
-export function Dashboard({ model, pack, onDismissNotice, detailOpen, onToggleDetail }: DashboardProps) {
+export function Dashboard({ model, pack, onDismissNotice, detailOpen, onToggleDetail, savedNotice = null }: DashboardProps) {
   const tone = model.answer.band.tone;
   return (
     <>
@@ -32,6 +34,11 @@ export function Dashboard({ model, pack, onDismissNotice, detailOpen, onToggleDe
           </button>
         </div>
       ))}
+      {savedNotice === null ? null : (
+        <p className="saved-note" role="status">
+          {savedNotice}
+        </p>
+      )}
       <main className={`hero tone-${tone}`} aria-label="Runway mode recommendation">
         <Answer model={model.answer} />
         <Picture model={model.picture} />

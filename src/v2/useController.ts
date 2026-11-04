@@ -28,6 +28,10 @@ export function useController(pack: AirportPack, deps: AppDeps): ScreenState {
     }),
   );
   const state = useSyncExternalStore(controller.subscribe, controller.getState, controller.getState);
+  // The page can hand over a fresh pack for the same airport (the saved copy was shown first, issue 183); the same pack changes nothing.
+  useEffect(() => {
+    controller.replacePack(pack);
+  }, [controller, pack]);
   useEffect(() => {
     controller.start();
     return () => controller.stop();

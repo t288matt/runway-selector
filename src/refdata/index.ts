@@ -1,7 +1,7 @@
 export { AIRPORT_ID, BOUNDS, SUPPORTED_SCHEMA_VERSIONS, SETTING_NAMES } from './schema';
 export type { Settings, SettingName, AppFile, AppGroup } from './schema';
-export { parsePack, parseAppConfig, deepFreeze, PACK_FILE_NAMES } from './parsePack';
-export type { RawPackText, PackFileName } from './parsePack';
+export { parsePack, parseAppConfig, packFromSavedText, deepFreeze, PACK_FILE_NAMES } from './parsePack';
+export type { RawPackText, SavedPackText, PackFileName } from './parsePack';
 export { PackValidationError, formatIssue } from './issues';
 export type { PackIssue } from './issues';
 export { loadPack, reloadPack } from './fetchPack';
