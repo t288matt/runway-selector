@@ -15,7 +15,7 @@ The main screen is "answer-first": it gives you the single recommendation withou
 ## What it does
 
 - Fetches the latest weather (METAR/TAF) and VATSIM traffic automatically — no manual entry needed, though you can paste your own report to override it.
-- Checks every standard runway mode for the airport against the wind, the runway surface, the traffic, and the airport's operating rules, for every half-hour of the forecast.
+- Checks every standard runway mode for the airport against the wind, the runway condition, the traffic, and the airport's operating rules, for every half-hour of the forecast.
 - Recommends the mode to use now, and the sequence of modes to expect across the rest of the forecast, with the fewest and least disruptive changes.
 - Warns you when changing early would avoid being forced to change later during busier traffic.
 - Explains its reasoning in plain language, for every recommendation and every cell in the timeline.
@@ -66,6 +66,5 @@ The full rules the recommendation engine follows, the screen-by-screen behaviour
 
 ## Known limits
 
-- It's only as good as the weather report and airport data you give it.
 - Traffic estimates are rough, especially for aircraft that haven't taken off yet.
 - If the weather feed fails, the last good report is kept and you're told; pasting your own report always works as a fallback.
