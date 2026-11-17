@@ -1,4 +1,4 @@
-// Geometry of the runway picture (UI_DESIGN section 5, AG-6). v2's own copy of
+// Geometry of the runway picture (DESIGN section 8a, AG-6). v2's own copy of
 // v1's diagram model (v2 imports nothing from src/ui); the picture is a little
 // taller than v1's. Generated
 // from the pack's runway ends only: any number of runways, including one. No

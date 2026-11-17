@@ -1,17 +1,11 @@
-// The answer band: the state rule, the mode and the next change, on every pack; and the PARITY test that v2 shows the same recommended
-// mode, next change and state as v1's own model on the same inputs.
+// The answer band: the state rule, the mode and the next change, on every pack.
 import { describe, expect, it } from 'vitest';
 import { type TrafficLevel } from '../../src/engine';
-import { panelAModel } from '../../src/ui/model/panels';
-import { hhmmZRel } from '../../src/ui/format';
 import { answerModel, bandOf, BANDS, modeSizeFor } from '../../src/v2/model/answer';
-import { calculate as calculateV2, EMPTY_FEED } from '../../src/v2/model/dashboard';
-import { calculate as calculateV1 } from '../../src/ui/model/dashboard';
 import { PACKS } from '../helpers/packs';
 import { packOf, rigFor, same, type Wx } from '../engine/planHelpers';
-import { viewOf as viewOfV1 } from '../ui/helpers';
-import { FIXTURE_NOW, FIXTURE_STATION, realView, viewOf } from './helpers';
-import { packWith } from '../weather/helpers';
+import { hhmmZRel } from '../../src/v2/format';
+import { viewOf } from './helpers';
 
 const med = (n: number) => same<TrafficLevel | null>(n, 'medium');
 const WX8: Wx[] = ['ok', 'ok', 'ok', 'ok', 'badA', 'badA', 'badA', 'badA'];
@@ -176,77 +170,5 @@ describe('v2 mode size', () => {
     expect(modeSizeFor('24A21AD')).toBe('long');
     expect(modeSizeFor('ABCDEFGH')).toBe('xlong');
     expect(modeSizeFor(null)).toBe('normal');
-  });
-});
-
-// ---------------------------------------------------------------- parity
-/** v1's state, from its own banners, in v2's words (the owner's provisional rule, issue 94 / 96). */
-function v1State(view: ReturnType<typeof viewOfV1>): string {
-  const m = panelAModel(view);
-  if (m.kind === 'no-suitable') return BANDS.NO_SUITABLE.id;
-  if (m.kind === 'no-data') return BANDS.NO_DATA.id;
-  if (m.banners.some((b) => b.tone === 'red')) return BANDS.CHANGE_NOW.id;
-  if (m.banners.some((b) => b.tone === 'amber')) return BANDS.CHANGE_SOON.id;
-  return BANDS.HOLD.id;
-}
-
-describe.each(PACKS.map((p) => [p.name, p] as const))('PARITY: v2 shows what v1 shows [%s]', (_n, ref) => {
-  const rig = rigFor(ref);
-  const pack = packOf(rig);
-  const scenarios: [string, Wx[], (TrafficLevel | null)[], string | null][] = [
-    ['all fine', same<Wx>(4, 'ok'), same(4, 'light'), null],
-    ['all fine, mode set', same<Wx>(4, 'ok'), same(4, 'light'), rig.b],
-    ['current unsuitable', ['badA', 'badA', 'ok'], med(3), rig.a],
-    ['early change', WX8, EARLY_LEVELS, null],
-    ['early change, mode set', WX8, EARLY_LEVELS, rig.a],
-    ['planned change', ['ok', 'ok', 'badA', 'badA', 'badA'], same(5, 'light'), null],
-    ['change then change back', ['ok', 'badA', 'badA', 'ok', 'ok', 'ok'], med(6), null],
-    ['marginal now', ['marginalA', 'ok', 'ok'], same(3, 'light'), null],
-    ['no suitable mode', ['badBoth', 'badBoth'], med(2), null],
-    ['gap later', ['ok', 'ok', 'badBoth', 'badA', 'badA'], med(5), null],
-    ['no data', same<Wx>(3, 'none'), [], null],
-    ['unknown traffic', same<Wx>(6, 'ok'), same(6, null), null],
-  ];
-
-  it.each(scenarios)('same mode, next change and state: %s', (_name, wx, levels, current) => {
-    const v1 = viewOfV1(pack, rig, wx, levels, current);
-    const v2 = viewOf(pack, rig, wx, levels, current);
-    const m1 = panelAModel(v1);
-    const a2 = answerModel(v2);
-    expect(a2.modeId).toBe(m1.modeId);
-    // OWNER DECISION (issue 104): v2 has no current mode, so its state is compared with v1's only for the no-current-mode case.
-    if (current === null) expect(a2.band.id).toBe(v1State(v1));
-    if (a2.nextChange === null) {
-      expect(m1.nextChange === 'No change planned' || a2.modeId === null).toBe(true);
-      if (a2.modeId !== null) expect(a2.next).toBe('No change planned');
-    } else {
-      const up = v1.result.changeovers.find((c) => c.change.slotIndex > 0);
-      expect(m1.nextChange).toBe(`${up?.change.fromModeId} to ${a2.nextChange.modeId} at ${hhmmZRel(a2.nextChange.atMs, v1.calcNowMs)}`);
-      expect(a2.next).toBe(`Forecasting: ${a2.nextChange.modeId} at ${hhmmZRel(a2.nextChange.atMs, v2.calcNowMs)}`);
-    }
-  });
-
-  it('same result for the real METAR and TAF fixtures, with each enabled mode set as the current one', () => {
-    const real = packWith(ref, { weatherStation: FIXTURE_STATION });
-    const feed = { aircraft: [], prefiles: [], fetchedAtMs: FIXTURE_NOW, error: null, errorAtMs: null };
-    for (const current of [null, ...real.modes.filter((m) => m.enabled).map((m) => m.id)]) {
-      const v2 = realView(real, ref, feed, current);
-      const v1 = calculateV1({ pack: real, nowMs: v2.calcNowMs, metar: v2.metar, taf: v2.taf, windowChoice: 'full', currentMode: current, feed });
-      const m1 = panelAModel(v1);
-      const a2 = answerModel(v2);
-      expect(a2.modeId, `current ${current}`).toBe(m1.modeId);
-      // OWNER DECISION (issue 104): v2 has no current mode, so its state is compared with v1's only for the no-current-mode case.
-      if (current === null) expect(a2.band.id, `current ${current}`).toBe(v1State(v1));
-      const up = v1.result.changeovers.find((c) => c.change.slotIndex > 0);
-      expect(a2.nextChange?.modeId ?? null, `current ${current}`).toBe(up?.change.toModeId ?? null);
-    }
-  });
-
-  it('v2 and v1 calculate the same plan from the same inputs', () => {
-    const real = packWith(ref, { weatherStation: FIXTURE_STATION });
-    const v2 = realView(real, ref);
-    const v1 = calculateV1({ pack: real, nowMs: v2.calcNowMs, metar: v2.metar, taf: v2.taf, windowChoice: 'full', currentMode: null, feed: EMPTY_FEED });
-    expect(v2.result).toEqual(v1.result);
-    expect(calculateV2({ pack: real, nowMs: v2.calcNowMs, metar: v2.metar, taf: v2.taf, windowChoice: 'full', currentMode: null, feed: EMPTY_FEED }).result).toEqual(v1.result);
   });
 });

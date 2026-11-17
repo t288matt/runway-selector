@@ -205,8 +205,8 @@ export function check(root) {
   const violations = [];
   const srcDir = join(root, 'src');
   const files = existsSync(srcDir) ? [...walk(srcDir)] : [];
-  // index.html and v1.html are part of the shipped pages too
-  for (const page of ['index.html', 'v1.html']) {
+  // index.html is part of the shipped page too
+  for (const page of ['index.html']) {
     if (existsSync(join(root, page))) files.push(join(root, page));
   }
   for (const file of files) {

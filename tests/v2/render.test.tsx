@@ -1,11 +1,11 @@
 // The v2 answer screen as static markup: what is drawn for each state, the tiles,
 // the picture, the forecast bar, the chips and the fixed notice. (Static markup
-// like tests/ui/render.test.tsx; the drawer's keyboard behaviour is checked in a
+// like the other render checks; the drawer's keyboard behaviour is checked in a
 // real browser.)
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { TrafficLevel } from '../../src/engine';
-import { FLIGHT_SIM_NOTICE as V1_NOTICE } from '../../src/ui/components/Frame';
+
 import { AppBody, PackError, type PackState } from '../../src/v2/App';
 import { Dashboard } from '../../src/v2/components/Dashboard';
 import { Drawer } from '../../src/v2/components/Drawer';
@@ -192,7 +192,7 @@ describe('v2 chips, notice and failure states on real reports', () => {
   });
 
   it('the fixed notice has the same wording as v1 and is always drawn', () => {
-    expect(FLIGHT_SIM_NOTICE).toBe(V1_NOTICE);
+    expect(FLIGHT_SIM_NOTICE).toBe('Flight simulation only. Never for real-world navigation, flight planning or operations.');
     expect(render(view)).toContain(`>${FLIGHT_SIM_NOTICE}<`);
     expect(renderToStaticMarkup(<AppBody state={{ status: 'loading' }} deps={{ fetch: async () => new Response(''), now: () => 0, store: createMemoryStore() }} />)).toContain(FLIGHT_SIM_NOTICE);
   });

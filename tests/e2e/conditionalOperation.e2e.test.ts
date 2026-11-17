@@ -3,8 +3,8 @@
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { PackRef } from '../helpers/packs';
-import { panelAModel } from '../../src/ui/model/panels';
-import type { ViewData } from '../../src/ui/model/dashboard';
+import { conditionalBanner } from '../../src/v2/model/conditional';
+import type { ViewData } from '../../src/v2/model/dashboard';
 import { cell, chosen, kt, run, type Run } from './pipeline';
 
 const ref = (icao: string): PackRef => ({ name: icao, dir: join(import.meta.dirname, '..', '..', 'refdata', 'airports', icao) });
@@ -12,7 +12,9 @@ const NOW = '2026-10-23T03:10:00Z';
 
 function banners(r: Run): { title: string; text: string }[] {
   const view: ViewData = { pack: r.pack, calcNowMs: r.nowMs, metar: r.metar, taf: r.taf, weather: r.built, demand: null, liveDemand: null, result: r.out, currentMode: null, windowChoice: 'full' };
-  return panelAModel(view).banners.filter((b) => b.tone === 'ok');
+  return r.pack.modes
+    .map((_m, i) => conditionalBanner(view, i))
+    .filter((b): b is NonNullable<typeof b> => b !== null && b.tone === 'ok');
 }
 
 describe('the real packs carry the note on one mode each', () => {

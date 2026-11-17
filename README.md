@@ -1,6 +1,6 @@
 # Runway Mode Planner
 
-A decision-support tool for VATSIM controllers. Give it the airport's weather, traffic and operating rules, and it tells you which runway mode to use — now, and for the rest of the forecast — so you change modes as rarely as possible and never get caught out by a change in busier traffic.
+A decision-support tool for VATSIM controllers. Pick an airport and it fetches the live weather and VATSIM traffic itself, applies that airport's operating rules (held in its data pack), and recommends a runway mode, then reviews how long that mode will last given the weather forecast — so you change modes as rarely as possible and never get caught out by a change in busier traffic.
 
 **Flight simulation only.** Never use it for real-world navigation, flight planning or operations.
 
@@ -10,14 +10,14 @@ A decision-support tool for VATSIM controllers. Give it the airport's weather, t
 
 Pick your airport from the selector, and the tool fetches the latest weather and traffic for you automatically.
 
-A second, "answer-first" screen is available too if you just want the single recommendation, no scrolling. (The older, more detailed screen is still available at `/v1.html` on the same site.)
+The main screen is "answer-first": it gives you the single recommendation without scrolling.
 
 The summary page (`#/summary`, there is no link to it from an airport screen) shows the airports grouped in `refdata/app.json`, with one card per airport showing the runways in use (for example 16L/R) and the wind. Tap a card to open that airport. **Summary 2** (`#/summary2`) is the same summary with larger boxes, three to a row on a wide screen, each with a large runway picture; a small Compact / Large switch in the top bar flips between the two.
 
 ## What it does
 
 - Fetches the latest weather (METAR/TAF) and VATSIM traffic automatically — no manual entry needed, though you can paste your own report to override it.
-- Checks every standard runway mode for the airport against the wind, the runway surface, the traffic, and the airport's operating rules, for every half-hour of the forecast.
+- Checks every standard runway mode for the airport against the wind, the runway condition, the traffic, and the airport's operating rules, for every half-hour of the forecast.
 - Recommends the mode to use now, and the sequence of modes to expect across the rest of the forecast, with the fewest and least disruptive changes.
 - Warns you when changing early would avoid being forced to change later during busier traffic.
 - Explains its reasoning in plain language, for every recommendation and every cell in the timeline.
@@ -26,13 +26,16 @@ It only ever advises — it never changes anything, and the decision is always y
 
 ## Supported airports
 
-YSSY (Sydney, the default), YMML, YPAD, YPPH, YBBN, YSWS, YPDN, YSCB, NFFN, YBCS and YBTL.
+- **Australia:** YBBN, YBCS, YBTL, YMML (the default), YPAD, YPDN, YPPH, YSCB, YSSY, YSWS
+- **Elsewhere:** NFFN (Fiji)
 
-Each airport's rules, runways and limits live in a separate data pack, so adding a new airport doesn't need any code changes — see [docs/DESIGN.md](docs/DESIGN.md) if you're setting one up.
+The airport list is in `refdata/app.json`, and the airport selector in the header only offers those.
+
+Each airport's rules, runways and limits live in a separate data pack in `refdata/airports/`, so adding a new airport doesn't need any code changes — see [docs/DESIGN.md](docs/DESIGN.md) if you're setting one up.
 
 ## Privacy
 
-Everything runs in your browser. Weather and traffic data are fetched directly from VATSIM and public weather services — nothing you do is sent to any other server. The only things saved (in your browser only) are your current mode, your settings, and your own change log, per airport.
+Everything runs in your browser. Weather and traffic data are fetched directly from VATSIM and public weather services — nothing you do is sent to any other server. The only thing saved (in your browser only) is the airport you last chose.
 
 ## Running it yourself
 
@@ -45,7 +48,7 @@ npm ci --ignore-scripts
 npm run dev
 ```
 
-Then open the address it prints (usually `http://localhost:5173`). The answer-first screen is at the root; the legacy screen is at `/v1.html`.
+Then open the address it prints (usually `http://localhost:5173`).
 
 To build a static copy you can deploy anywhere (the `dist/` folder is a complete, self-contained site — serve it over HTTP, not by double-clicking the files):
 
@@ -61,11 +64,9 @@ npm test
 
 ## Learn more
 
-The full rules the recommendation engine follows, the screen-by-screen behaviour, and the airport data format are documented in [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md), [docs/DESIGN.md](docs/DESIGN.md) and [docs/UI_DESIGN.md](docs/UI_DESIGN.md).
+The full rules the recommendation engine follows, the screen behaviour and the airport data format are documented in [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) and [docs/DESIGN.md](docs/DESIGN.md) (the screen is section 8a, its visual and accessibility rules section 8b).
 
 ## Known limits
 
-- It's only as good as the weather report and airport data you give it.
 - Traffic estimates are rough, especially for aircraft that haven't taken off yet.
-- With no current mode set, the recommendation can shift slightly between updates as the weather changes.
 - If the weather feed fails, the last good report is kept and you're told; pasting your own report always works as a fallback.
