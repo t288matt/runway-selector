@@ -1,7 +1,7 @@
 // OD-74: a short stay in a mode costs shortStayPenalty, so the plan does not change mode and change again soon after.
 import { describe, expect, it } from 'vitest';
 import { decodeMetar, decodeTaf } from '../../src/weather';
-import { calculate, EMPTY_FEED } from '../../src/ui/model/dashboard';
+import { calculate, EMPTY_FEED } from '../../src/v2/model/dashboard';
 import { YSSY_PACK } from '../helpers/packs';
 import { packWith } from '../weather/helpers';
 

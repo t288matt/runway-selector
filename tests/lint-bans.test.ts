@@ -59,7 +59,7 @@ describe('lint bans', () => {
   });
 
   it.each(general.filter((f) => f !== 'clean.ts'))('fails lint: %s', (f) => {
-    const r = lint(`src/ui/${f}`);
+    const r = lint(`src/v2/${f}`);
     expect(r.status, r.stdout + r.stderr).not.toBe(0);
   });
 
@@ -103,7 +103,7 @@ describe('metar-taf-parser import ban (scripts/check-banned-imports.mjs)', () =>
   });
 
   it('allows the import inside src/weather/decode and passes the clean tree', () => {
-    // tmp holds only fixtures copied under src/ui and src/engine, so use a fresh tree
+    // tmp holds only fixtures copied under src/v2 and src/engine, so use a fresh tree
     const dir = join(tmp, 'allowed');
     mkdirSync(join(dir, 'src', 'weather', 'decode'), { recursive: true });
     cpSync(join(fixtures, 'script-metar-require.ts'), join(dir, 'src', 'weather', 'decode', 'ok.ts'));
