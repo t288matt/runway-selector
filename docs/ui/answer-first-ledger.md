@@ -1,6 +1,6 @@
 # Radical answer-first design: ledger (25-10-2026)
 
-**Status, 26-10-2026.** This is the design note for the mockups of 25-10-2026, kept as a record. The shipped v2 screen (`v2.html`) is described in [../DESIGN.md](../DESIGN.md) section 8a, and where the two differ, that section is right. The main differences from the mockup are:
+**Status, 26-10-2026.** This is the design note for the mockups of 25-10-2026, kept as a record. The shipped v2 screen (`index.html`) is described in [../DESIGN.md](../DESIGN.md) section 8a, and where the two differ, that section is right. The main differences from the mockup are:
 - The state word for the normal state is RECOMMENDED, not HOLD.
 - There is no "I am on" selector and no current mode in v2.
 - There is no slim forecast bar. The Evaluation and TAF section is one closed row that opens to the full timeline.
@@ -113,8 +113,8 @@ Unchanged content, now one section of the drawer (Limits, Operating plan priorit
 | OD-72 | A removed banner returns, as the state label colour (HOLD / CHANGE SOON / CHANGE NOW). This reverses the banner removal. |
 | OD-81 | Marginal is drawn amber with a triangle and the cause word, not plain green. The old rule hid a caution inside green; colour plus shape plus word now separate suitable from marginal. |
 | OD-70 | Row order not changed; mockup lists the three visible modes in the plan order. |
-| UI_DESIGN section 3 | The screen order (header, chips, A, B, weather, D and F) is replaced entirely. D is no longer a panel (owner steer); F is no longer a lower panel. |
-| UI_DESIGN section 6.1 | Timeline row labels and lanes are kept only in the drawer. |
+| UI_DESIGN section 3 (former v1 layout; the file was removed 17-11-2026) | The screen order (header, chips, A, B, weather, D and F) is replaced entirely. D is no longer a panel (owner steer); F is no longer a lower panel. |
+| UI_DESIGN section 6.1 (former v1 timeline; removed) | Timeline row labels and lanes are kept only in the drawer. |
 | Section 9.4 | The grid keeps arrow-key navigation in the real build; the mockup cells use Tab focus only. |
 
 Not overturned: OD-36 (UTC only), OD-35 (whole knots), OD-43 wind-change threshold, OD-44, OD-45, OD-46 (no "provisional" word on screen), SEC-1 notice wording, SEC-2 text-only rendering.

@@ -1,6 +1,6 @@
 # Runway Mode Planner
 
-A decision-support tool for VATSIM controllers. Pick an airport and it fetches the live weather and VATSIM traffic itself, applies that airport's operating rules (held in its data pack), and tells you which runway mode to use — now, and for the rest of the forecast — so you change modes as rarely as possible and never get caught out by a change in busier traffic.
+A decision-support tool for VATSIM controllers. Pick an airport and it fetches the live weather and VATSIM traffic itself, applies that airport's operating rules (held in its data pack), and recommends a runway mode, then reviews how long that mode will last given the weather forecast — so you change modes as rarely as possible and never get caught out by a change in busier traffic.
 
 **Flight simulation only.** Never use it for real-world navigation, flight planning or operations.
 
@@ -33,7 +33,7 @@ Each airport's rules, runways and limits live in a separate data pack in `refdat
 
 ## Privacy
 
-Everything runs in your browser. Weather and traffic data are fetched directly from VATSIM and public weather services — nothing you do is sent to any other server. The only things saved (in your browser only) are the airport you last chose and your forecast window.
+Everything runs in your browser. Weather and traffic data are fetched directly from VATSIM and public weather services — nothing you do is sent to any other server. The only thing saved (in your browser only) is the airport you last chose.
 
 ## Running it yourself
 
@@ -62,7 +62,7 @@ npm test
 
 ## Learn more
 
-The full rules the recommendation engine follows, the screen-by-screen behaviour, and the airport data format are documented in [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md), [docs/DESIGN.md](docs/DESIGN.md) and [docs/UI_DESIGN.md](docs/UI_DESIGN.md).
+The full rules the recommendation engine follows, the screen behaviour and the airport data format are documented in [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) and [docs/DESIGN.md](docs/DESIGN.md) (the screen is section 8a, its visual and accessibility rules section 8b).
 
 ## Known limits
 
