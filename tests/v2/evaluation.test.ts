@@ -10,12 +10,12 @@ import { PACKS, YSSY_PACK } from '../helpers/packs';
 import { packWith } from '../weather/helpers';
 import { FIXTURE_NOW, FIXTURE_STATION, realView, viewFromInput, viewOf } from './helpers';
 
-const row = (modeId: string, extra: Partial<ModeRow> = {}): ModeRow => ({ index: 0, modeId, isRecommended: false, isCurrent: false, allUnsuitable: false, runwaysText: '', title: '', ...extra });
+const row = (modeId: string, extra: Partial<ModeRow> = {}): ModeRow => ({ index: 0, modeId, isRecommended: false, allUnsuitable: false, runwaysText: '', title: '', ...extra });
 
 describe('which mode rows are drawn (v1 rule, no reveal button)', () => {
-  it('hides a row that is red in every slot unless it is recommended or current', () => {
-    const rows = [row('A', { allUnsuitable: true }), row('B', { allUnsuitable: true, isRecommended: true }), row('C', { allUnsuitable: true, isCurrent: true }), row('D')];
-    expect(visibleRowIndexes(rows)).toEqual([1, 2, 3]);
+  it('hides a row that is red in every slot unless it is recommended', () => {
+    const rows = [row('A', { allUnsuitable: true }), row('B', { allUnsuitable: true, isRecommended: true }), row('D')];
+    expect(visibleRowIndexes(rows)).toEqual([1, 2]);
   });
   it('keeps every row when none is fully red, and never leaves the grid empty when all are', () => {
     expect(visibleRowIndexes([row('A'), row('B')])).toEqual([0, 1]);
@@ -27,12 +27,12 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('evaluation model [%s]', (
   const rig = rigFor(ref);
   const pack = packOf(rig);
 
-  it('leaves the fully red rows out and reports how many; the recommended and current rows stay', () => {
-    const view = viewOf(pack, rig, ['badA', 'badA', 'badA', 'badA'], same(4, 'medium'), rig.b);
+  it('leaves the fully red rows out and reports how many; the recommended row stays', () => {
+    const view = viewOf(pack, rig, ['badA', 'badA', 'badA', 'badA'], same(4, 'medium'));
     const m = evaluationModel(view, view.calcNowMs);
     const enabled = pack.modes.filter((x) => x.enabled).length;
     expect(m.rows.length + m.hiddenCount).toBe(enabled);
-    for (const r of m.rows.filter((x) => x.allUnsuitable)) expect(r.isRecommended || r.isCurrent || m.hiddenCount === 0).toBe(true);
+    for (const r of m.rows.filter((x) => x.allUnsuitable)) expect(r.isRecommended || m.hiddenCount === 0).toBe(true);
     expect(m.rows.find((r) => r.isRecommended)?.modeId).toBe(view.result.plan.recommendedModeId);
   });
 
@@ -70,7 +70,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('evaluation model [%s]', (
   it('the white corner: a cell that depends on an uncertain input says so in its flag and name', () => {
     const overlay: WeatherOverlay = { kind: 'TEMPO', probabilityPct: null, wind: rig.badForA, precipitation: false, text: 'TEMPO 1502/1504 test' };
     const specs = specsFor(rig, same<Wx>(4, 'ok')).map((s, i) => (i === 1 ? { ...s, overlays: [overlay] } : s));
-    const view = viewFromInput(pack, { ...inputFor(BASE, specs, trafficFor(pack, same(4, 'light'))), currentMode: null } as EngineInput);
+    const view = viewFromInput(pack, { ...inputFor(BASE, specs, trafficFor(pack, same(4, 'light'))) } as EngineInput);
     const cells = evaluationModel(view, view.calcNowMs).rows.flatMap((r) => r.cells);
     const unc = cells.filter((c) => c.uncertain);
     expect(unc.length).toBeGreaterThan(0);

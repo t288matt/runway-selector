@@ -36,15 +36,14 @@ export function viewFromInput(pack: AirportPack, input: EngineInput): ViewData {
     demand,
     liveDemand: demand,
     result,
-    currentMode: result.plan.startModeId,
     windowChoice: 'full',
   };
 }
 
 /** A ViewData from an engine scenario: no reports in it. */
-export function viewOf(pack: AirportPack, rig: Rig, wx: readonly Wx[], levels: readonly (TrafficLevel | null)[] = [], currentMode: string | null = null): ViewData {
+export function viewOf(pack: AirportPack, rig: Rig, wx: readonly Wx[], levels: readonly (TrafficLevel | null)[] = []): ViewData {
   const traffic: EngineInput['traffic'] = levels.length === 0 ? [] : trafficFor(pack, levels);
-  const input: EngineInput = { ...inputFor(BASE, specsFor(rig, wx), traffic), currentMode };
+  const input: EngineInput = inputFor(BASE, specsFor(rig, wx), traffic);
   return viewFromInput(pack, input);
 }
 
@@ -52,14 +51,13 @@ const METAR_ID = 'metar-yssy-auto-nodata';
 const TAF_ID = 'taf-yssy-multiline-fm-tempo';
 
 /** A ViewData from the real METAR and TAF fixtures (the pack's station must be the fixture's), with or without aircraft. */
-export function realView(pack: AirportPack, ref: PackRef, feed: FeedState = EMPTY_FEED, currentMode: string | null = null): ViewData {
+export function realView(pack: AirportPack, ref: PackRef, feed: FeedState = EMPTY_FEED): ViewData {
   return calculate({
     pack,
     nowMs: nowOf(fixture(TAF_ID)),
     metar: decodeMetarFixture(METAR_ID, ref),
     taf: decodeTafFixture(TAF_ID, ref),
     windowChoice: 'full',
-    currentMode,
     feed,
   });
 }

@@ -12,8 +12,6 @@ Pick your airport from the selector, and the tool fetches the latest weather and
 
 The main screen is "answer-first": it gives you the single recommendation without scrolling.
 
-The summary page (`#/summary`, there is no link to it from an airport screen) shows the airports grouped in `refdata/app.json`, with one card per airport showing the runways in use (for example 16L/R) and the wind. Tap a card to open that airport. **Summary 2** (`#/summary2`) is the same summary with larger boxes, three to a row on a wide screen, each with a large runway picture; a small Compact / Large switch in the top bar flips between the two.
-
 ## What it does
 
 - Fetches the latest weather (METAR/TAF) and VATSIM traffic automatically — no manual entry needed, though you can paste your own report to override it.

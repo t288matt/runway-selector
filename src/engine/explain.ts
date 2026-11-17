@@ -269,7 +269,7 @@ function rankOf(pack: AirportPack, result: EngineResult, modeId: string): number
   return better + 1;
 }
 
-function whyNotTop(pack: AirportPack, result: EngineResult, plan: Plan, chosen: string, nowMs: number): string | null {
+function whyNotTop(pack: AirportPack, result: EngineResult, chosen: string, nowMs: number): string | null {
   const top = topPreference(pack, result);
   if (top === null) return null;
   const chosenIndex = pack.modes.findIndex((m) => m.id === chosen);
@@ -290,10 +290,6 @@ function whyNotTop(pack: AirportPack, result: EngineResult, plan: Plan, chosen: 
   }
   if (topCell.status === 'MARGINAL' && chosenCell.status === 'SUITABLE') {
     return `${prefix} because ${topMode.id} relies on an uncertain input and ${chosen} does not.`;
-  }
-  if (plan.startModeId === chosen) {
-    const level = plan.slots[0]?.trafficLevel ?? null;
-    return `${prefix} because you are in ${chosen}, and a change to ${topMode.id} would disturb ${level === null ? 'traffic' : `${level} traffic`} without a lasting gain.`;
   }
   return `${prefix} because it gives a steadier sequence of modes over the forecast window.`;
 }
@@ -370,7 +366,7 @@ export function explain(pack: AirportPack, input: EngineInput, result: EngineRes
   // No line when no change is planned: the Next change row in Panel A already says so (OD-41).
   if (upcoming !== undefined) lines.push(nextChangeLine(upcoming, nowMs));
   lines.push(...gaps);
-  const notTop = whyNotTop(pack, result, plan, modeId, nowMs);
+  const notTop = whyNotTop(pack, result, modeId, nowMs);
   if (notTop !== null) lines.push(notTop);
 
   return {

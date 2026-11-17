@@ -1,4 +1,4 @@
-/* v2 front end styles. Own stylesheet: nothing from src/ui or src/index.css is imported.
+/* v2 front end styles.
    The tokens, spacing and type follow docs/ui/answer-first-ypph-expand.html. */
 :root {
   --bg: #0b1426;

@@ -1,7 +1,5 @@
-// The v2 airport switch (v2's own copy of src/ui/App.tsx's logic): what choosing an option does
-// (switchAirportTo), and what a page refresh opens on (loadInitialPack, OD-82). See
-// tests/ui/airportEntry.test.tsx for the same behaviour on v1; kept separate because v2 imports
-// nothing from src/ui.
+// The airport switch: what choosing an option does (switchAirportTo), and what a page refresh
+// opens on (loadInitialPack, OD-82).
 import { describe, expect, it } from 'vitest';
 import { parsePack } from '../../src/refdata';
 import { createMemoryStore, loadSelectedAirportId, saveSelectedAirport } from '../../src/store';

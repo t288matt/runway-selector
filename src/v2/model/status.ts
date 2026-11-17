@@ -1,5 +1,4 @@
-// The one mapping from an engine cell to what the expanded grid draws. v2's own
-// copy of v1's rule (v2 imports nothing from src/ui). Colour comes from
+// The one mapping from an engine cell to what the expanded grid draws. Colour comes from
 // `cell.status` and from nothing else, so a cell is drawn green only when the
 // engine said SUITABLE or MARGINAL (DB-3, UD-3, OD-81). A MARGINAL cell is green
 // but has no tick: it keeps its cause word, the white uncertain corner and the

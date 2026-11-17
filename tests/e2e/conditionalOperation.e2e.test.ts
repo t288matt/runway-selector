@@ -11,7 +11,7 @@ const ref = (icao: string): PackRef => ({ name: icao, dir: join(import.meta.dirn
 const NOW = '2026-10-23T03:10:00Z';
 
 function banners(r: Run): { title: string; text: string }[] {
-  const view: ViewData = { pack: r.pack, calcNowMs: r.nowMs, metar: r.metar, taf: r.taf, weather: r.built, demand: null, liveDemand: null, result: r.out, currentMode: null, windowChoice: 'full' };
+  const view: ViewData = { pack: r.pack, calcNowMs: r.nowMs, metar: r.metar, taf: r.taf, weather: r.built, demand: null, liveDemand: null, result: r.out, windowChoice: 'full' };
   return r.pack.modes
     .map((_m, i) => conditionalBanner(view, i))
     .filter((b): b is NonNullable<typeof b> => b !== null && b.tone === 'ok');

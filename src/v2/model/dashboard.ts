@@ -1,7 +1,6 @@
 // One calculation for the whole screen (DESIGN section 4, 8): weather slots,
 // traffic slots and the engine's plan, from plain inputs. Pure: the clock is an
-// argument. This is v2's own copy of the v1 data flow (v2 imports nothing from
-// src/ui). Nothing here knows an airport; everything comes from the pack.
+// argument. Nothing here knows an airport; everything comes from the pack.
 import { plan, type PlanResult } from '../../engine';
 import type { AirportPack } from '../../refdata';
 import { buildTrafficSlots } from '../../traffic/demand';
@@ -67,7 +66,6 @@ export interface CalcInput {
   readonly metar: DecodedMetar | null;
   readonly taf: DecodedTaf | null;
   readonly windowChoice: WindowChoice;
-  readonly currentMode: string | null;
   readonly feed: FeedState;
 }
 
@@ -83,8 +81,6 @@ export interface ViewData {
   /** The latest traffic, for the traffic tile. Moves with every poll; the plan does not (UP-1). */
   readonly liveDemand: ReturnType<typeof buildTrafficSlots> | null;
   readonly result: PlanResult;
-  /** The operator's current mode if it is an enabled mode of the pack, else null. */
-  readonly currentMode: string | null;
   readonly windowChoice: WindowChoice;
 }
 
@@ -93,9 +89,8 @@ export function calculate(input: CalcInput): ViewData {
   const weather = buildWeatherSlots({ pack, nowMs, metar: input.metar, taf: input.taf, windowMinutes: windowMinutes(input.windowChoice) });
   const starts = weather.slots.map((s) => s.startMs);
   const demand = input.feed.aircraft === null ? null : buildTrafficSlots({ pack, nowMs, aircraft: input.feed.aircraft, prefiles: input.feed.prefiles, slotStartsMs: starts });
-  const currentMode = pack.modes.some((m) => m.enabled && m.id === input.currentMode) ? input.currentMode : null;
-  const result = plan(pack, { nowMs, weather: weather.slots, traffic: demand?.slots ?? [], currentMode });
-  return { pack, calcNowMs: nowMs, metar: input.metar, taf: input.taf, weather, demand, liveDemand: demand, result, currentMode, windowChoice: input.windowChoice };
+  const result = plan(pack, { nowMs, weather: weather.slots, traffic: demand?.slots ?? [] });
+  return { pack, calcNowMs: nowMs, metar: input.metar, taf: input.taf, weather, demand, liveDemand: demand, result, windowChoice: input.windowChoice };
 }
 
 /** The latest traffic on the slots the plan was calculated over. Does not touch the plan. */

@@ -6,13 +6,11 @@
 // and the Traffic row of the Detail section carry the traffic.
 import { useState } from 'react';
 import type { AirportPack } from '../../refdata';
-import type { AuditEntry, AuditExport } from '../../store';
 import { WEATHER_CREDIT } from '../../weather/config';
 import type { AutoReportState, ReloadState, WeatherKind } from '../controller';
-import { downloadText } from '../download';
 import type { ApplyOutcome } from '../model/apply';
 import type { ViewData } from '../model/dashboard';
-import { auditRows, keyModel, READ_ONLY_NOTE, settingsModel, SIMULATION_LABEL, whyModel } from '../model/drawer';
+import { keyModel, READ_ONLY_NOTE, settingsModel, SIMULATION_LABEL, whyModel } from '../model/drawer';
 import { LEGEND_GLYPH } from '../model/evaluation';
 import { StateGlyph } from './Icons';
 
@@ -21,13 +19,10 @@ export interface DrawerBridge {
   readonly displayNowMs: number;
   readonly auto: Readonly<Record<WeatherKind, AutoReportState>>;
   readonly reload: ReloadState;
-  readonly audit: readonly AuditEntry[];
   readonly onApplyMetar: (text: string) => ApplyOutcome;
   readonly onApplyTaf: (text: string) => ApplyOutcome;
   readonly onResume: (kind: WeatherKind) => void;
   readonly onReload: () => void;
-  readonly onClearAudit: () => void;
-  readonly onExportAudit: () => AuditExport;
 }
 
 export const DRAWER_SECTIONS = [
@@ -233,9 +228,7 @@ function Rows({ rows }: { rows: readonly { label: string; value: string; help: s
 
 function Settings({ view, displayNowMs, bridge }: { view: ViewData; displayNowMs: number; bridge: DrawerBridge }) {
   const { pack } = view;
-  const [confirmClear, setConfirmClear] = useState(false);
   const m = settingsModel(pack, displayNowMs);
-  const rows = auditRows(bridge.audit);
   const reload = bridge.reload;
   return (
     <>
@@ -301,72 +294,6 @@ function Settings({ view, displayNowMs, bridge }: { view: ViewData; displayNowMs
           <p role="status" className="small">
             {reload.message}
           </p>
-        ) : null}
-      </details>
-      <details>
-        <summary>
-          Audit trail <span className="small">&nbsp;local record, not tamper-proof</span>
-        </summary>
-        <p className="small">{m.auditNote}</p>
-        {rows.length === 0 ? (
-          <p className="small" data-testid="audit-empty">
-            {m.auditEmpty}
-          </p>
-        ) : (
-          <table className="tb" data-testid="audit-table">
-            <thead>
-              <tr>
-                <th scope="col">Time (UTC)</th>
-                <th scope="col">Changed</th>
-                <th scope="col">Old</th>
-                <th scope="col">New</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.key}>
-                  <td>{r.time}</td>
-                  <td>{r.what}</td>
-                  <td>{r.old}</td>
-                  <td>{r.new}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        <div className="act">
-          <button
-            type="button"
-            className="btn"
-            disabled={rows.length === 0}
-            onClick={() => {
-              const file = bridge.onExportAudit();
-              downloadText(file.filename, file.text);
-            }}
-          >
-            Export audit trail
-          </button>
-          <button type="button" className="btn" disabled={rows.length === 0} onClick={() => setConfirmClear(true)}>
-            Clear audit trail
-          </button>
-        </div>
-        {confirmClear ? (
-          <div className="refused" role="alert">
-            <b>Clear the whole audit trail? This cannot be undone.</b>{' '}
-            <button
-              type="button"
-              className="btn small"
-              onClick={() => {
-                bridge.onClearAudit();
-                setConfirmClear(false);
-              }}
-            >
-              Yes, clear it
-            </button>{' '}
-            <button type="button" className="btn small" onClick={() => setConfirmClear(false)}>
-              Keep it
-            </button>
-          </div>
         ) : null}
       </details>
     </>

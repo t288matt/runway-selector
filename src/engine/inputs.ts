@@ -125,6 +125,4 @@ export interface EngineInput {
   readonly weather: readonly WeatherSlot[];
   /** Same length and order as `weather`, or shorter (missing slots count as unknown). */
   readonly traffic: readonly TrafficSlot[];
-  /** The operator's current mode id, or null if not set (OD-21). */
-  readonly currentMode: string | null;
 }

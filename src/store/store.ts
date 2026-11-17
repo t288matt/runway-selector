@@ -21,16 +21,6 @@ export type StorageAccessor = () => StorageLike | undefined;
 
 export const KEY_PREFIX = 'runway-planner:v1';
 
-const ICAO_PATTERN = /^[A-Za-z0-9]{2,8}$/;
-
-export type StoredName = 'currentMode' | 'audit' | 'forecastWindow';
-
-/** The key for one record of one airport (AG-8): switching airport never reads another airport's key. */
-export function storageKey(icao: string, name: StoredName): string {
-  if (!ICAO_PATTERN.test(icao)) throw new RangeError('Airport code must be 2 to 8 letters or digits');
-  return `${KEY_PREFIX}:${icao.toUpperCase()}:${name}`;
-}
-
 export interface BrowserStore extends Store {
   /** True once any read or write fell back to memory, so the screen can say that nothing will persist. */
   usingMemoryFallback(): boolean;

@@ -2,7 +2,6 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 import { defineConfig, type Plugin } from 'vitest/config';
 import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
 
 const refdataDir = resolve(import.meta.dirname, 'refdata');
 
@@ -58,7 +57,7 @@ function refdata(): Plugin {
 
 export default defineConfig({
   base: './',
-  plugins: [react(), tailwindcss(), refdata()],
+  plugins: [react(), refdata()],
   // One page entry: the front end (index.html, the root). refdata/ is still copied once, by the plugin above.
   build: {
     rollupOptions: {

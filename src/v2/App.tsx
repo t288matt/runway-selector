@@ -1,7 +1,6 @@
 // The v2 shell: load the pack from static JSON, then show the screen. An
 // invalid pack gives a full-screen error and nothing else is drawn (DESIGN
-// section 4c, "First load"). This is v2's own copy of the v1 shell logic; v2
-// imports nothing from src/ui.
+// section 4c, "First load").
 import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
 import { formatIssue, loadPack, type AirportPack, type AppGroup } from '../refdata';
 import { clearSavedPack, clearSelectedAirport, loadSelectedAirportId, saveSavedPack, saveSelectedAirport } from '../store';
@@ -118,13 +117,10 @@ function Screen({
             displayNowMs: screen.displayNowMs,
             auto: screen.autoWeather,
             reload: screen.reload,
-            audit: screen.audit,
             onApplyMetar: screen.applyMetar,
             onApplyTaf: screen.applyTaf,
             onResume: screen.resumeAutomatic,
             onReload: () => void screen.reloadPack(),
-            onClearAudit: screen.clearAudit,
-            onExportAudit: screen.exportAudit,
           }}
         />
       </Drawer>

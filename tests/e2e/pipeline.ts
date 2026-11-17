@@ -19,7 +19,6 @@ export interface RunOptions {
   readonly taf?: string | null;
   /** Minutes from the start of slot 0, or null for the full TAF validity. */
   readonly windowMinutes: number | null;
-  readonly current?: string | null;
   /** Arrivals per slot (null or missing = unknown). */
   readonly arrivals?: readonly (number | null)[];
   /** Departures per slot (null or missing = unknown). */
@@ -63,7 +62,7 @@ export function run(o: RunOptions): Run {
     o.arrivals === undefined && o.departures === undefined
       ? []
       : built.slots.map((s, i) => ({ startMs: s.startMs, arrivals: o.arrivals?.[i] ?? null, departures: o.departures?.[i] ?? null }));
-  const input: EngineInput = { nowMs, weather: built.slots, traffic, currentMode: o.current ?? null };
+  const input: EngineInput = { nowMs, weather: built.slots, traffic };
   return { pack, nowMs, metar, taf, built, input, out: plan(pack, input) };
 }
 

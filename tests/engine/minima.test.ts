@@ -33,7 +33,7 @@ function cells(p: typeof pack, mode: string, slots: readonly Slot[]): Cell[] {
     weather: { ...w.weather, ...slots[i]?.weather },
     tafView: w.tafView === null ? null : { ...w.tafView, ...slots[i]?.tafView },
   }));
-  const result = evaluate(p, { nowMs: baseMs, weather, traffic: quietTraffic(baseMs, slots.length), currentMode: null });
+  const result = evaluate(p, { nowMs: baseMs, weather, traffic: quietTraffic(baseMs, slots.length) });
   return [...(result.cells[p.modes.findIndex((m) => m.id === mode)] ?? [])];
 }
 const first = (w: Partial<SlotWeather>, p = pack, extra: Omit<Slot, 'weather'> = {}): Cell => cells(p, MODE, [{ weather: w, ...extra }])[0]!;
@@ -144,7 +144,7 @@ describe('rule MIN: scope', () => {
     const crosswind = { kind: 'steady' as const, directionDegrees: 180, speedKt: 40, gustKt: null, variableRangeDegrees: null };
     const weather = makeSlots(baseMs, [{ gov: 'METAR', wind: crosswind }]).map((w) => ({ ...w, weather: { ...w.weather, ceilingFt: 100, visibilityMetres: 9999 } }));
     const traffic = [{ startMs: baseMs, arrivals: 50, departures: 50 }];
-    const c = evaluate(p, { nowMs: baseMs, weather, traffic, currentMode: null }).cells[0]![0]!;
+    const c = evaluate(p, { nowMs: baseMs, weather, traffic }).cells[0]![0]!;
     const codes = c.reasons.map((r) => r.code);
     expect(codes).toContain('XW');
     expect(codes.indexOf('XW')).toBeLessThan(codes.indexOf('MIN'));

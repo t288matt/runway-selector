@@ -1,6 +1,4 @@
-// Geometry of the runway picture (DESIGN section 8a, AG-6). v2's own copy of
-// v1's diagram model (v2 imports nothing from src/ui); the picture is a little
-// taller than v1's. Generated
+// Geometry of the runway picture (DESIGN section 8a, AG-6). Generated
 // from the pack's runway ends only: any number of runways, including one. No
 // airport is laid out by hand. North is up; a runway end's heading is the
 // direction of landing, so its label sits at the threshold (the start of the roll).

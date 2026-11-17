@@ -11,7 +11,7 @@ import { packWith } from '../weather/helpers';
 import { FIXTURE_STATION, realView, viewOf } from './helpers';
 
 function stateOf(view: ViewData): ControllerState {
-  return { view, feed: EMPTY_FEED, displayNowMs: view.calcNowMs, audit: [], notices: [], reload: { status: 'idle', message: null }, autoWeather: NO_AUTO_WEATHER };
+  return { view, feed: EMPTY_FEED, displayNowMs: view.calcNowMs, notices: [], reload: { status: 'idle', message: null }, autoWeather: NO_AUTO_WEATHER };
 }
 
 describe.each([YSSY_PACK, TEST_PACK].map((p) => [p.name, p] as const))('summary card [%s]', (_n, ref) => {

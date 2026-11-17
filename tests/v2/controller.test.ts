@@ -2,7 +2,7 @@
 // own, the plan recalculated only when UP-1 allows, and no current mode at all
 // (issue 104). Fake clock, timers and network (tests/v2/rig.ts).
 import { describe, expect, it } from 'vitest';
-import { createMemoryStore, loadAudit, loadCurrentMode, recordCurrentMode } from '../../src/store';
+import { createMemoryStore, KEY_PREFIX } from '../../src/store';
 import { answerModel } from '../../src/v2/model/answer';
 import { TICK_MS } from '../../src/v2/controller';
 import { chipModels } from '../../src/v2/model/chips';
@@ -144,36 +144,43 @@ describe('v2 failure states show through the chips', () => {
   });
 });
 
-describe('v2 has no current mode (issue 104)', () => {
-  const enabled = pack.modes.filter((m) => m.enabled).map((m) => m.id);
+describe('v2 has no current mode and no saved forecast window (OD-86, OD-87)', () => {
+  const icao = pack.airport.icao;
+  /** What an older version left in the browser for this airport. */
+  const OLD_KEYS = {
+    currentMode: JSON.stringify({ schemaVersion: 1, modeId: pack.modes.find((m) => m.enabled)?.id ?? 'missing', setAtMs: EARLY - 60_000 }),
+    forecastWindow: JSON.stringify({ schemaVersion: 1, choice: '4h' }),
+    audit: JSON.stringify({ schemaVersion: 1, entries: [{ schemaVersion: 1, timeMs: EARLY - 60_000, airport: icao, path: 'currentMode', old: null, new: 'x' }] }),
+  };
+  const seed = (store: ReturnType<typeof createMemoryStore>): void => {
+    for (const [name, value] of Object.entries(OLD_KEYS)) store.setItem(`${KEY_PREFIX}:${icao}:${name}`, value);
+  };
 
-  it('offers no way to set one', () => {
+  it('offers no way to set a mode or a window', () => {
     const r = rig(pack, EARLY);
     expect('setCurrentMode' in r.ctrl).toBe(false);
+    expect('setWindow' in r.ctrl).toBe(false);
   });
 
-  it('ignores a mode saved earlier by v1 in the shared storage: the plan is calculated with none, and the state is never CHANGE NOW', () => {
+  it('ignores a mode, a window and an audit log saved earlier by an older version: the plan and the window are the pack default, with no notice', () => {
     const store = createMemoryStore();
-    // v1 saved a mode that is unsuitable now; v2 must not read it.
-    recordCurrentMode(store, pack, EARLY - 60_000, enabled[0] ?? 'missing');
-    expect(loadCurrentMode(store, pack).record?.modeId).toBe(enabled[0]);
-    const r = rig(pack, EARLY, store);
-    const s = r.ctrl.getState();
-    expect(s.view.currentMode).toBeNull();
-    expect(s.view.result.plan.startModeId).toBe(rig(pack, EARLY).ctrl.getState().view.result.plan.startModeId);
-    expect(answerModel(s.view).band.id).not.toBe('CHANGE_NOW');
+    seed(store);
+    const s = rig(pack, EARLY, store).ctrl.getState();
+    const clean = rig(pack, EARLY).ctrl.getState();
+    expect(s.view.windowChoice).toBe(clean.view.windowChoice);
+    expect(s.view.result).toEqual(clean.view.result);
+    expect(s.view.weather.slots).toHaveLength(clean.view.weather.slots.length);
     expect(s.notices).toEqual([]);
   });
 
-  it('writes nothing about a current mode to the store, and leaves a saved one as it was', async () => {
+  it('writes nothing for them, and leaves what an older version saved as it was', async () => {
     const store = createMemoryStore();
-    const saved = recordCurrentMode(store, pack, EARLY - 60_000, enabled[0] ?? 'missing');
+    seed(store);
     const r = rig(pack, EARLY, store);
     r.ctrl.start();
     await r.advance(WEATHER_MS * 2);
     r.ctrl.stop();
-    expect(loadCurrentMode(store, pack).record).toEqual(saved.record);
-    expect(loadAudit(store, pack.airport.icao, pack.settings.auditMaxEntries).entries).toHaveLength(1);
+    for (const [name, value] of Object.entries(OLD_KEYS)) expect(store.getItem(`${KEY_PREFIX}:${icao}:${name}`)).toBe(value);
   });
 
   it('the next change and the plan still work with no current mode', async () => {

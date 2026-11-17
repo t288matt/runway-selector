@@ -1,22 +1,20 @@
 // The page's state and scheduling with no React in it (DESIGN section 4a,
 // "Scheduler"). The clock, the timer functions and the network arrive as
-// arguments, so every rule is testable with fakes. This is v2's own copy of the
-// v1 data flow (v2 imports nothing from src/ui), cut down to what the answer
-// screen needs: weather and VATSIM fetched on the pack's own intervals, the
-// engine run, and the "I am on" mode.
+// arguments, so every rule is testable with fakes. It does what the answer
+// screen needs: weather and VATSIM fetched on the pack's own intervals, and the
+// engine run.
 //
-// UP-1: the plan is recalculated ONLY on the 30-minute boundary, on a new
-// METAR or TAF, on a current-mode change and on Refresh. A VATSIM poll updates
-// the traffic shown and the freshness chip but never the plan: the plan keeps
-// the traffic it was calculated with.
+// UP-1: the plan is recalculated ONLY on the 30-minute boundary and on a new
+// METAR or TAF. A VATSIM poll updates the traffic shown and the freshness chip
+// but never the plan: the plan keeps the traffic it was calculated with.
 import { reloadPack, type AirportPack, type FetchLike } from '../refdata';
-import { clearAudit, exportAudit, loadAudit, loadWindowChoice, saveSavedPack, type AuditEntry, type AuditExport, type Store } from '../store';
+import { saveSavedPack, type Store } from '../store';
 import { fetchFeed } from '../traffic/fetchFeed';
 import type { DecodedMetar, DecodedTaf } from '../weather';
 import { fetchMetarText, fetchTafText, type WeatherFetchResult } from '../weather/fetchWeather';
 import { cacheBustToken, type Clock } from './clock';
 import { applyMetarText, applyTafText, type ApplyOutcome } from './model/apply';
-import { applyFeedResult, calculate, defaultWindowFor, EMPTY_FEED, liveDemandFor, needsRecalculation, WINDOW_OPTIONS, type FeedState, type ViewData, type WindowChoice } from './model/dashboard';
+import { applyFeedResult, calculate, defaultWindowFor, EMPTY_FEED, liveDemandFor, needsRecalculation, type FeedState, type ViewData, type WindowChoice } from './model/dashboard';
 
 /** The timer functions, injected. The handle is opaque. */
 export interface Timers {
@@ -29,7 +27,7 @@ export interface ControllerDeps {
   readonly fetch: FetchLike;
   readonly now: Clock;
   readonly timers: Timers;
-  /** Where the current mode, the window and the audit trail are kept (per airport, AG-8). */
+  /** Where the saved pack copy is kept (per airport, AG-8). */
   readonly store: Store;
   /** Where the pack is served from, for Reload data; defaults to ./refdata. */
   readonly baseUrl?: string;
@@ -68,8 +66,6 @@ export interface ControllerState {
   readonly feed: FeedState;
   readonly displayNowMs: number;
   /** Messages about stored values that were cleared or discarded; each is shown until dismissed. */
-  /** The audit trail, oldest first, as stored. */
-  readonly audit: readonly AuditEntry[];
   readonly notices: readonly string[];
   readonly reload: ReloadState;
   readonly autoWeather: Readonly<Record<WeatherKind, AutoReportState>>;
@@ -84,7 +80,6 @@ export interface Controller {
   readonly stop: () => void;
   /** Resolves when the poll in flight (if any) has finished; for tests. */
   readonly settled: () => Promise<void>;
-  readonly refresh: () => void;
   readonly dismissNotice: (index: number) => void;
   /** Use pasted text for a report. A refused text leaves the report in use (and its automatic updates) as they were. */
   readonly applyMetar: (text: string) => ApplyOutcome;
@@ -95,15 +90,11 @@ export interface Controller {
   readonly reloadPack: () => Promise<void>;
   /** A fresh, validated pack arrived in the background (the saved copy was shown first): use it, silently, and recalculate. The same pack changes nothing. */
   readonly replacePack: (next: AirportPack) => void;
-  readonly clearAudit: () => void;
-  /** The audit file text and name; the screen turns it into a download after a click. */
-  readonly exportAudit: () => AuditExport;
 }
 
 export function createController(deps: ControllerDeps): Controller {
   let pack = deps.pack;
   const { store } = deps;
-  const windowIds = WINDOW_OPTIONS.map((o) => o.id);
   let metar: DecodedMetar | null = null;
   let taf: DecodedTaf | null = null;
   let feed: FeedState = EMPTY_FEED;
@@ -121,24 +112,13 @@ export function createController(deps: ControllerDeps): Controller {
   let reloadedFresh = false;
   const listeners = new Set<() => void>();
 
-  const notify = (message: string | null): void => {
-    if (message !== null && !notices.includes(message)) notices = [...notices, message];
-  };
-
-  // Stored state is read once, here (OD-30). A value that was cleared or discarded is reported once (SEC-3).
-  // v2 has no current mode (owner decision, issue 104): it never reads or writes one, and a mode saved by v1 in the shared
-  // storage is ignored, so a stale saved mode can never make the screen say CHANGE NOW or CHANGE SOON.
-  const storedWindow = loadWindowChoice(store, pack.airport.icao, windowIds);
-  notify(storedWindow.message);
-  const windowChoice: WindowChoice = (storedWindow.choice as WindowChoice | null) ?? defaultWindowFor(pack);
-
-  const storedAudit = loadAudit(store, pack.airport.icao, pack.settings.auditMaxEntries);
-  notify(storedAudit.message);
-  let audit: readonly AuditEntry[] = storedAudit.entries;
+  // The forecast window is the pack's own (OD-87). v2 has no window control and reads no saved choice, and it has no
+  // current mode (OD-86): anything an older version saved under those keys is ignored.
+  const windowChoice: WindowChoice = defaultWindowFor(pack);
 
   const first = deps.now();
-  const build = (view: ViewData, displayNowMs: number): ControllerState => ({ view, feed, displayNowMs, audit, notices, reload, autoWeather: auto });
-  let state: ControllerState = build(calculate({ pack, nowMs: first, metar, taf, windowChoice, currentMode: null, feed }), first);
+  const build = (view: ViewData, displayNowMs: number): ControllerState => ({ view, feed, displayNowMs, notices, reload, autoWeather: auto });
+  let state: ControllerState = build(calculate({ pack, nowMs: first, metar, taf, windowChoice, feed }), first);
 
   const publish = (next: ControllerState): void => {
     state = next;
@@ -148,15 +128,9 @@ export function createController(deps: ControllerDeps): Controller {
   /** Publish the held view again with the current stored state (no recalculation). */
   const republish = (): void => publish(build(state.view, deps.now()));
 
-  const refreshAudit = (): void => {
-    const loaded = loadAudit(store, pack.airport.icao, pack.settings.auditMaxEntries);
-    audit = loaded.entries;
-    notify(loaded.message);
-  };
-
   /** A full recalculation with everything held now, including the latest traffic. */
   const recalculate = (nowMs: number): void => {
-    publish(build(calculate({ pack, nowMs, metar, taf, windowChoice, currentMode: null, feed }), nowMs));
+    publish(build(calculate({ pack, nowMs, metar, taf, windowChoice, feed }), nowMs));
   };
 
   const runPoll = async (): Promise<void> => {
@@ -291,7 +265,6 @@ export function createController(deps: ControllerDeps): Controller {
     if (JSON.stringify(next) === JSON.stringify(pack)) return false;
     const pollChanged = next.settings.vatsimPollSeconds !== pack.settings.vatsimPollSeconds || next.settings.weatherPollMinutes !== pack.settings.weatherPollMinutes;
     pack = next;
-    refreshAudit();
     if (running && pollChanged) {
       stopTimers();
       startTimers();
@@ -349,11 +322,6 @@ export function createController(deps: ControllerDeps): Controller {
       await pollInFlight;
       await weatherInFlight;
     },
-    refresh: () => {
-      recalculate(deps.now());
-      poll();
-      pollWeather();
-    },
     dismissNotice: (index) => {
       notices = notices.filter((_n, i) => i !== index);
       republish();
@@ -397,11 +365,5 @@ export function createController(deps: ControllerDeps): Controller {
     replacePack: (next) => {
       if (!reloadedFresh && adoptPack(next)) recalculate(deps.now());
     },
-    clearAudit: () => {
-      clearAudit(store, pack.airport.icao);
-      audit = [];
-      republish();
-    },
-    exportAudit: () => exportAudit(audit, pack.airport.icao, deps.now()),
   };
 }
