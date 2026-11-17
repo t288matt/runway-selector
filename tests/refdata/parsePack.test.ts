@@ -62,10 +62,15 @@ describe('good packs', () => {
 
   it('turns the YSSY plan bands into minutes of the local day', () => {
     const pack = loadPackFrom(YSSY_PACK);
-    // The owner removed the curfew mode and confirmed every remaining mode is
-    // usable at any time, so the Sydney pack now has one all-day band.
-    expect(pack.plan.map((b) => [b.id, b.startMinute, b.endMinute])).toEqual([['all-day', 0, 0]]);
-    expect(pack.plan[0]?.rows[0]).toMatchObject({ mode: 'SODPROPS', allowed: true, penalty: 0 });
+    // 30-10-2026: CURFEW was added back, restricted to the curfew band (23:00-06:00, crosses
+    // midnight); every other mode stays usable in both bands.
+    expect(pack.plan.map((b) => [b.id, b.startMinute, b.endMinute])).toEqual([
+      ['day', 360, 1380],
+      ['curfew', 1380, 360],
+    ]);
+    expect(pack.plan[0]?.rows.find((r) => r.mode === 'SODPROPS')).toMatchObject({ allowed: true, penalty: 0 });
+    expect(pack.plan[0]?.rows.find((r) => r.mode === 'CURFEW')).toMatchObject({ allowed: false });
+    expect(pack.plan[1]?.rows.find((r) => r.mode === 'CURFEW')).toMatchObject({ allowed: true, penalty: 2 });
   });
 
   it('every tunable of every pack is unwrapped and its description kept apart', () => {

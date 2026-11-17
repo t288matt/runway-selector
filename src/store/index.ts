@@ -14,6 +14,7 @@ export { loadAudit, appendAudit, clearAudit, exportAudit, AUDIT_NOTICE } from '.
 export type { AuditEntry, AuditExport, AuditLoad, AuditValue } from './audit';
 export { loadWindowChoice, saveWindowChoice, clearWindowChoice } from './forecastWindow';
 export { loadSelectedAirportId, saveSelectedAirport, clearSelectedAirport } from './selectedAirport';
+export { loadSavedPack, saveSavedPack, clearSavedPack, loadSavedDefaultId, PACK_CACHE_MAX_AGE_MS } from './packCache';
 
 export interface CurrentModeChange {
   readonly changed: boolean;

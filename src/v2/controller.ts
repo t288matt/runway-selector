@@ -10,7 +10,7 @@
 // the traffic shown and the freshness chip but never the plan: the plan keeps
 // the traffic it was calculated with.
 import { reloadPack, type AirportPack, type FetchLike } from '../refdata';
-import { clearAudit, exportAudit, loadAudit, loadWindowChoice, type AuditEntry, type AuditExport, type Store } from '../store';
+import { clearAudit, exportAudit, loadAudit, loadWindowChoice, saveSavedPack, type AuditEntry, type AuditExport, type Store } from '../store';
 import { fetchFeed } from '../traffic/fetchFeed';
 import type { DecodedMetar, DecodedTaf } from '../weather';
 import { fetchMetarText, fetchTafText, type WeatherFetchResult } from '../weather/fetchWeather';
@@ -93,6 +93,8 @@ export interface Controller {
   readonly resumeAutomatic: (kind: WeatherKind) => void;
   /** Re-read and re-validate the pack. A refused pack leaves the previous one in use. */
   readonly reloadPack: () => Promise<void>;
+  /** A fresh, validated pack arrived in the background (the saved copy was shown first): use it, silently, and recalculate. The same pack changes nothing. */
+  readonly replacePack: (next: AirportPack) => void;
   readonly clearAudit: () => void;
   /** The audit file text and name; the screen turns it into a download after a click. */
   readonly exportAudit: () => AuditExport;
@@ -115,6 +117,8 @@ export function createController(deps: ControllerDeps): Controller {
   let tickTimer: unknown = null;
   let notices: string[] = [];
   let reload: ReloadState = { status: 'idle', message: null };
+  // Once Reload data has succeeded the pack in use is the newest there is: a slower background copy must not replace it.
+  let reloadedFresh = false;
   const listeners = new Set<() => void>();
 
   const notify = (message: string | null): void => {
@@ -282,6 +286,19 @@ export function createController(deps: ControllerDeps): Controller {
     republish();
   };
 
+  /** Take a validated pack in place of the one in use. False when it is the same pack (nothing is touched). */
+  const adoptPack = (next: AirportPack): boolean => {
+    if (JSON.stringify(next) === JSON.stringify(pack)) return false;
+    const pollChanged = next.settings.vatsimPollSeconds !== pack.settings.vatsimPollSeconds || next.settings.weatherPollMinutes !== pack.settings.weatherPollMinutes;
+    pack = next;
+    refreshAudit();
+    if (running && pollChanged) {
+      stopTimers();
+      startTimers();
+    }
+    return true;
+  };
+
   const doReload = async (): Promise<void> => {
     if (reload.status === 'busy') return;
     const started = generation;
@@ -294,16 +311,11 @@ export function createController(deps: ControllerDeps): Controller {
         setReload({ status: 'refused', message: result.message });
         return;
       }
-      if (JSON.stringify(result.pack) === JSON.stringify(pack)) {
+      saveSavedPack(store, result.raw, deps.now());
+      reloadedFresh = true;
+      if (!adoptPack(result.pack)) {
         setReload({ status: 'unchanged', message: 'The airport data was re-read and has not changed.' });
         return;
-      }
-      const pollChanged = result.pack.settings.vatsimPollSeconds !== pack.settings.vatsimPollSeconds || result.pack.settings.weatherPollMinutes !== pack.settings.weatherPollMinutes;
-      pack = result.pack;
-      refreshAudit();
-      if (running && pollChanged) {
-        stopTimers();
-        startTimers();
       }
       reload = { status: 'changed', message: 'The airport data was re-read and has changed. The plan was recalculated.' };
       recalculate(deps.now());
@@ -382,6 +394,9 @@ export function createController(deps: ControllerDeps): Controller {
       pollWeather();
     },
     reloadPack: doReload,
+    replacePack: (next) => {
+      if (!reloadedFresh && adoptPack(next)) recalculate(deps.now());
+    },
     clearAudit: () => {
       clearAudit(store, pack.airport.icao);
       audit = [];

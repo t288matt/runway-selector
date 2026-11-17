@@ -6,7 +6,7 @@ The single index of the project's documents. One topic has one home: follow the 
 |---|---|
 | [../README.md](../README.md) | The user guide: what the tool does, how to read the screens, how a mode is judged, how to run it. |
 | [REQUIREMENTS.md](REQUIREMENTS.md) | What the app must do. The owner's decisions (OD numbers) and the requirement ids (AG, WC, WX, TR, OP, DB, UP, RD, SY, SEC). The source of truth. |
-| [DESIGN.md](DESIGN.md) | How it is built: architecture, the airport pack schema, the engine, the demand model, the front end (section 8a), its visual and accessibility rules (section 8b), security. |
+| [DESIGN.md](DESIGN.md) | How it is built: architecture, the airport pack schema, the engine, the demand model, the front end and its all-airports summary (section 8a), its visual and accessibility rules (section 8b), security. |
 | [SCORING_EXPLAINED.md](SCORING_EXPLAINED.md) | The scoring and the choice of mode explained in plain words. |
 | [TRACKER.md](TRACKER.md) | The work items and their state. Kept by the manager. |
 | [ui/](ui/) | Design material: `answer-first-*.html` (mockups of the current screen) and `answer-first-ledger.md` (the design note for the current screen). Illustration only, not live data. |

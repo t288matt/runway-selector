@@ -29,6 +29,13 @@ export type PackFileName = (typeof PACK_FILE_NAMES)[number];
 /** The raw text of each pack file, keyed by file name. */
 export type RawPackText = Readonly<Record<PackFileName, string>>;
 
+/** The raw text of app.json and the five files of one airport's pack, exactly as fetched: what a saved copy holds. */
+export interface SavedPackText {
+  readonly airportId: string;
+  readonly app: string;
+  readonly files: RawPackText;
+}
+
 /** Raw text -> JSON value, after the size cap, the depth cap and the forbidden-key check. */
 function readJson(file: string, text: unknown, maxBytes: number, issues: PackIssue[], keepAt: readonly string[] = []): unknown {
   if (typeof text !== 'string') {
@@ -89,6 +96,18 @@ export function parseAppConfig(rawText: string): AppFile {
     if (!app.airports.includes(app.default)) {
       issues.push({ file: 'app.json', path: 'default', message: `The default airport "${app.default}" is not in the airports list` });
     }
+    const groupNames = new Set<string>();
+    app.groups?.forEach((group, g) => {
+      if (groupNames.has(group.name)) issues.push({ file: 'app.json', path: `groups[${g}].name`, message: `Duplicate group name "${group.name}"` });
+      groupNames.add(group.name);
+      const inGroup = new Set<string>();
+      group.airports.forEach((id, i) => {
+        const path = `groups[${g}].airports[${i}]`;
+        if (!app.airports.includes(id)) issues.push({ file: 'app.json', path, message: `The group airport "${id}" is not in the airports list` });
+        else if (inGroup.has(id)) issues.push({ file: 'app.json', path, message: `Duplicate airport "${id}" in the group` });
+        inGroup.add(id);
+      });
+    });
   }
   if (issues.length > 0 || !app) throw new PackValidationError(issues);
   return deepFreeze(app);
@@ -228,4 +247,21 @@ export function deepFreeze<T>(value: T): T {
     for (const item of Object.values(value)) deepFreeze(item);
   }
   return value;
+}
+
+/**
+ * Build a pack from saved raw text, through the same parseAppConfig / parsePack checks as a fresh fetch (size, depth,
+ * forbidden keys, schema, cross-references, and that the pack is the airport it is saved for and is still listed).
+ * Pure: no network, no clock, no storage. Any failure gives null, which means "no saved copy".
+ */
+export function packFromSavedText(text: SavedPackText): { readonly pack: AirportPack; readonly app: AppFile } | null {
+  try {
+    const app = parseAppConfig(text.app);
+    if (!app.airports.includes(text.airportId)) return null;
+    const pack = parsePack(text.files);
+    if (pack.airport.icao !== text.airportId) return null;
+    return { pack, app };
+  } catch {
+    return null;
+  }
 }
