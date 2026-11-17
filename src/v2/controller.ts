@@ -125,8 +125,7 @@ export function createController(deps: ControllerDeps): Controller {
   // current mode (OD-86): anything an older version saved under those keys is ignored.
   const windowChoice: WindowChoice = defaultWindowFor(pack);
 
-  // Stored state is read once, here (OD-30). A value that was cleared or discarded is reported once (SEC-3).
-
+  // The audit log an older version left is read once, here (OD-30). A value that was discarded is reported once (SEC-3).
   const storedAudit = loadAudit(store, pack.airport.icao, pack.settings.auditMaxEntries);
   notify(storedAudit.message);
   let audit: readonly AuditEntry[] = storedAudit.entries;
