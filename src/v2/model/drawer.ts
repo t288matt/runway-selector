@@ -1,14 +1,13 @@
 // What the More drawer shows, as plain data: the Settings values (read only, from
-// the pack), the audit trail rows, the Why text and the Key. Every string is shown as a text
+// the pack), the Why text and the Key. Every string is shown as a text
 // node (SEC-2). The words penalty, cost, points and score never appear: the
 // operating plan is shown as a rank derived from the pack numbers.
 import type { AirportPack, PlanBand, SettingName } from '../../refdata';
 import { formatClock } from '../../refdata';
-import type { AuditEntry, AuditValue } from '../../store';
 import { hhmmZ, kt1, minimaText } from '../format';
 import { BANDS, type Band } from './answer';
 import { conditionalBanner, type WhyBanner } from './conditional';
-import { WINDOW_OPTIONS, type ViewData } from './dashboard';
+import type { ViewData } from './dashboard';
 import { LEGEND, type LegendItem } from './evaluation';
 import { CAUSE_WORDS } from './status';
 import { levelWord } from './tiles';
@@ -54,8 +53,6 @@ export interface SettingsModel {
   readonly zone: readonly DrawerRow[];
   readonly airportNote: string;
   readonly reloadNote: string;
-  readonly auditNote: string;
-  readonly auditEmpty: string;
 }
 
 export const SIMULATION_LABEL = 'Simulation setting';
@@ -155,37 +152,9 @@ export function settingsModel(pack: AirportPack, nowMs: number): SettingsModel {
       { label: 'Time zone', value: pack.airport.timeZone, help: "The airport's own time zone. Used only to work out the operating plan's time bands; every time on screen is UTC." },
       { label: 'Now', value: hhmmZ(nowMs), help: 'Times on screen are UTC.' },
     ],
-    airportNote: 'Choose the airport at the top of the screen. Only airports with a reviewed data pack can be shown. Each airport keeps its own current mode, window and audit trail.',
+    airportNote: 'Choose the airport at the top of the screen. Only airports with a reviewed data pack can be shown.',
     reloadNote: 'Reload data re-reads and re-checks the airport files. A file that fails the check is refused and the previous valid data stays in use.',
-    auditNote: `Kept in this browser. It records changes to the current mode and the window only, newest first, and keeps the last ${s.auditMaxEntries} entries. Changes to the airport data files are not recorded here.`,
-    auditEmpty: 'No changes yet. Change the current mode to see an entry.',
   };
-}
-
-// -------------------------------------------------------------- audit trail
-export interface AuditRowModel {
-  readonly key: string;
-  readonly time: string;
-  readonly what: string;
-  readonly old: string;
-  readonly new: string;
-}
-
-const WHAT: Readonly<Record<string, string>> = { currentMode: 'Current mode', forecastWindow: 'Forecast window' };
-
-function auditValue(path: string, value: AuditValue): string {
-  if (value === null) return 'Not set';
-  if (path === 'currentMode') return `Mode ${value}`;
-  if (path === 'forecastWindow') return WINDOW_OPTIONS.find((o) => o.id === value)?.label ?? String(value);
-  return String(value);
-}
-
-/** Newest first. */
-export function auditRows(entries: readonly AuditEntry[]): AuditRowModel[] {
-  return [...entries]
-    .map((e, i) => ({ e, i }))
-    .reverse()
-    .map(({ e, i }) => ({ key: `${i}-${e.timeMs}`, time: hhmmZ(e.timeMs), what: WHAT[e.path] ?? e.path, old: auditValue(e.path, e.old), new: auditValue(e.path, e.new) }));
 }
 
 // ---------------------------------------------------------------------- why

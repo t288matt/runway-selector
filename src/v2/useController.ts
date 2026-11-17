@@ -12,8 +12,6 @@ export interface ScreenState extends ControllerState {
   readonly applyTaf: Controller['applyTaf'];
   readonly resumeAutomatic: Controller['resumeAutomatic'];
   readonly reloadPack: Controller['reloadPack'];
-  readonly clearAudit: Controller['clearAudit'];
-  readonly exportAudit: Controller['exportAudit'];
 }
 
 export function useController(pack: AirportPack, deps: AppDeps): ScreenState {
@@ -43,7 +41,5 @@ export function useController(pack: AirportPack, deps: AppDeps): ScreenState {
     applyTaf: controller.applyTaf,
     resumeAutomatic: controller.resumeAutomatic,
     reloadPack: controller.reloadPack,
-    clearAudit: controller.clearAudit,
-    exportAudit: controller.exportAudit,
   };
 }

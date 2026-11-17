@@ -9,6 +9,6 @@ export interface AppDeps {
   readonly now: Clock;
   /** Where the pack is served from; defaults to ./refdata. */
   readonly baseUrl?: string;
-  /** Where the audit trail, the saved pack copy and the airport last chosen are kept. */
+  /** Where the saved pack copy and the airport last chosen are kept. */
   readonly store: Store;
 }

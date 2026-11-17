@@ -31,6 +31,5 @@
   "tafStaleMinutes":          { "value": 180,  "description": "TAF older than this is flagged stale." },
   "vatsimStaleMinutes":       { "value": 10,   "description": "Traffic data older than this is flagged stale." },
   "weatherPollMinutes":       { "value": 5,    "description": "How often weather is fetched." },
-  "vatsimPollSeconds":        { "value": 300,  "description": "How often traffic is fetched." },
-  "auditMaxEntries":          { "value": 500,  "description": "Audit trail size cap; oldest entries drop first." }
+  "vatsimPollSeconds":        { "value": 300,  "description": "How often traffic is fetched." }
 }

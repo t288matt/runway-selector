@@ -2,7 +2,7 @@
 // own, the plan recalculated only when UP-1 allows, and no current mode at all
 // (issue 104). Fake clock, timers and network (tests/v2/rig.ts).
 import { describe, expect, it } from 'vitest';
-import { createMemoryStore, KEY_PREFIX, loadAudit } from '../../src/store';
+import { createMemoryStore, KEY_PREFIX } from '../../src/store';
 import { answerModel } from '../../src/v2/model/answer';
 import { TICK_MS } from '../../src/v2/controller';
 import { chipModels } from '../../src/v2/model/chips';
@@ -150,6 +150,7 @@ describe('v2 has no current mode and no saved forecast window (OD-86, OD-87)', (
   const OLD_KEYS = {
     currentMode: JSON.stringify({ schemaVersion: 1, modeId: pack.modes.find((m) => m.enabled)?.id ?? 'missing', setAtMs: EARLY - 60_000 }),
     forecastWindow: JSON.stringify({ schemaVersion: 1, choice: '4h' }),
+    audit: JSON.stringify({ schemaVersion: 1, entries: [{ schemaVersion: 1, timeMs: EARLY - 60_000, airport: icao, path: 'currentMode', old: null, new: 'x' }] }),
   };
   const seed = (store: ReturnType<typeof createMemoryStore>): void => {
     for (const [name, value] of Object.entries(OLD_KEYS)) store.setItem(`${KEY_PREFIX}:${icao}:${name}`, value);
@@ -161,7 +162,7 @@ describe('v2 has no current mode and no saved forecast window (OD-86, OD-87)', (
     expect('setWindow' in r.ctrl).toBe(false);
   });
 
-  it('ignores a mode and a window saved earlier by an older version: the plan and the window are the pack default, with no notice', () => {
+  it('ignores a mode, a window and an audit log saved earlier by an older version: the plan and the window are the pack default, with no notice', () => {
     const store = createMemoryStore();
     seed(store);
     const s = rig(pack, EARLY, store).ctrl.getState();
@@ -180,7 +181,6 @@ describe('v2 has no current mode and no saved forecast window (OD-86, OD-87)', (
     await r.advance(WEATHER_MS * 2);
     r.ctrl.stop();
     for (const [name, value] of Object.entries(OLD_KEYS)) expect(store.getItem(`${KEY_PREFIX}:${icao}:${name}`)).toBe(value);
-    expect(loadAudit(store, icao, pack.settings.auditMaxEntries).entries).toEqual([]);
   });
 
   it('the next change and the plan still work with no current mode', async () => {

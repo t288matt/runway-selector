@@ -141,9 +141,5 @@
   "vatsimPollSeconds": {
     "value": 300,
     "description": "How often traffic is fetched."
-  },
-  "auditMaxEntries": {
-    "value": 100,
-    "description": "Audit trail size cap; oldest entries drop first."
   }
 }

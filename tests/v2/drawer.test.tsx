@@ -1,18 +1,17 @@
 // The More drawer's contents as static markup: Why, Reports, Key and Settings, and
 // the owner's decision that there is NO Data section and no per-slot arrivals,
-// departures and movements figures in v2. (The paste, audit and reload behaviour is
+// departures and movements figures in v2. (The paste and reload behaviour is
 // in drawerController.test.ts; the keyboard behaviour of the dialog is checked in a
 // real browser.)
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import type { AuditEntry } from '../../src/store';
 import { WEATHER_CREDIT } from '../../src/weather/config';
 import { Drawer } from '../../src/v2/components/Drawer';
 import { DrawerContent, DRAWER_SECTIONS, type DrawerBridge } from '../../src/v2/components/DrawerContent';
 import { NO_AUTO_WEATHER } from '../../src/v2/controller';
 import type { ViewData } from '../../src/v2/model/dashboard';
 import { evaluationModel } from '../../src/v2/model/evaluation';
-import { auditRows, keyModel, planBandModel, settingsModel, whyModel } from '../../src/v2/model/drawer';
+import { keyModel, planBandModel, settingsModel, whyModel } from '../../src/v2/model/drawer';
 import { CAUSE_WORDS } from '../../src/v2/model/status';
 import { packOf, rigFor, same, type Wx } from '../engine/planHelpers';
 import { PACKS, YSSY_PACK } from '../helpers/packs';
@@ -28,13 +27,10 @@ function bridgeFor(view: ViewData, extra: Partial<DrawerBridge> = {}): DrawerBri
     displayNowMs: view.calcNowMs,
     auto: NO_AUTO_WEATHER,
     reload: { status: 'idle', message: null },
-    audit: [],
     onApplyMetar: () => ({ ok: true, message: null, warnings: [] }),
     onApplyTaf: () => ({ ok: true, message: null, warnings: [] }),
     onResume: () => undefined,
     onReload: () => undefined,
-    onClearAudit: () => undefined,
-    onExportAudit: () => ({ filename: 'x.json', text: '{}' }),
     ...extra,
   };
 }
@@ -128,38 +124,20 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the drawer sections [%s]'
     for (const l of k.runwayKey) expect(t).toContain(l);
   });
 
-  it('Settings: read-only values from the pack, in named groups; Reload data; the audit trail with Export and Clear', () => {
+  it('Settings: read-only values from the pack, in named groups; Reload data; no audit trail', () => {
     const html = render(view);
     const t = textOf(html);
     const m = settingsModel(pack, view.calcNowMs);
-    for (const label of ['Limits', 'Runway wetness', 'Traffic and timing', 'Enabled modes', 'Operating plan priorities', 'Time zone', 'Airport and data', 'Audit trail']) expect(t).toContain(label);
+    for (const label of ['Limits', 'Runway wetness', 'Traffic and timing', 'Enabled modes', 'Operating plan priorities', 'Time zone', 'Airport and data']) expect(t).toContain(label);
     for (const sec of m.sections) for (const r of sec.rows) expect(t).toContain(r.value);
     expect(t).toContain(`${pack.settings.tailwindDryKt} kt`);
     expect(t).toContain(pack.airport.timeZone);
     expect(html).toContain('>Reload data<');
-    expect(html).toContain('>Export audit trail<');
-    expect(html).toContain('>Clear audit trail<');
+    expect(html).not.toContain('Audit trail');
+    expect(html).not.toContain('audit trail');
     expect(html).not.toContain('<input');
     expect(t).toContain('Simulation setting');
     expect(t).toContain('Choose the airport at the top of the screen');
-  });
-
-  it('Settings: with no changes the audit buttons are disabled and it says so; with entries it lists them newest first', () => {
-    const empty = render(view);
-    expect(empty).toContain('data-testid="audit-empty"');
-    expect(empty).toMatch(/<button type="button" class="btn" disabled="">Export audit trail<\/button>/);
-    expect(empty).toMatch(/<button type="button" class="btn" disabled="">Clear audit trail<\/button>/);
-    const id = pack.modes.filter((x) => x.enabled).map((x) => x.id);
-    const entries: AuditEntry[] = [
-      { schemaVersion: 1, airport: pack.airport.icao, timeMs: view.calcNowMs - 3_600_000, path: 'currentMode', old: null, new: id[0] ?? 'x' },
-      { schemaVersion: 1, airport: pack.airport.icao, timeMs: view.calcNowMs, path: 'currentMode', old: id[0] ?? 'x', new: id[1] ?? 'y' },
-    ];
-    const rows = auditRows(entries);
-    expect(rows[0]).toMatchObject({ what: 'Current mode', old: `Mode ${id[0]}`, new: `Mode ${id[1]}` });
-    expect(rows[1]).toMatchObject({ old: 'Not set' });
-    const html = render(view, { audit: entries });
-    expect(html).toContain('data-testid="audit-table"');
-    expect(html).not.toMatch(/disabled="">Export audit trail/);
   });
 
   it('Settings: the reload states are said in words, and a refusal keeps the precise message', () => {

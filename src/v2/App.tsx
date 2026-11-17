@@ -117,13 +117,10 @@ function Screen({
             displayNowMs: screen.displayNowMs,
             auto: screen.autoWeather,
             reload: screen.reload,
-            audit: screen.audit,
             onApplyMetar: screen.applyMetar,
             onApplyTaf: screen.applyTaf,
             onResume: screen.resumeAutomatic,
             onReload: () => void screen.reloadPack(),
-            onClearAudit: screen.clearAudit,
-            onExportAudit: screen.exportAudit,
           }}
         />
       </Drawer>

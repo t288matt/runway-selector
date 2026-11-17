@@ -54,7 +54,6 @@ export const BOUNDS = {
     weatherPollMinutes: { min: 1, max: 120 },
     // No enforced minimum (OD/UP-2): 1 is the smallest positive whole number of seconds.
     vatsimPollSeconds: { min: 1, max: 3600 },
-    auditMaxEntries: { min: 10, max: 5000 },
   },
   /** Size, length, count and depth caps. */
   cap: {
@@ -332,7 +331,6 @@ export const SETTING_VALUE_SCHEMAS = {
   vatsimStaleMinutes: int(R.staleMinutes),
   weatherPollMinutes: int(R.weatherPollMinutes),
   vatsimPollSeconds: int(R.vatsimPollSeconds),
-  auditMaxEntries: int(R.auditMaxEntries),
 } as const;
 
 /** The engine-facing settings: plain values, no descriptions. */
