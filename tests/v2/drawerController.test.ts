@@ -3,7 +3,7 @@
 // and clear through the store, and Reload data. v2's own copy of v1's behaviour,
 // proved on the same fixtures. Fake clock, timers and network (tests/v2/rig.ts).
 import { describe, expect, it, vi } from 'vitest';
-import { appendAudit, createMemoryStore, loadAudit } from '../../src/store';
+import { createMemoryStore, loadAudit, storageKey } from '../../src/store';
 import { MAX_REPORT_CHARS } from '../../src/weather/decode';
 import { YSSY_PACK } from '../helpers/packs';
 import { fixture, nowOf, packWith } from '../weather/helpers';
@@ -185,14 +185,16 @@ describe('Use my own weather: pasted text', () => {
 });
 
 describe('the audit trail through the store', () => {
-  // v2 writes no audit entries of its own (it has no current mode); entries v1 saved are shown, exported and cleared.
+  // v2 writes no audit entries of its own (it has no current mode); entries an older version saved are shown, exported and cleared.
   const seed = (store: ReturnType<typeof createMemoryStore>): string => {
     const first = pack.modes.filter((m) => m.enabled)[0]?.id ?? 'missing';
-    appendAudit(store, pack.airport.icao, { timeMs: NOW - 60_000, path: 'currentMode', old: null, new: first }, pack.settings.auditMaxEntries);
+    // The log an older version left in the browser (nothing writes one now).
+    const entry = { schemaVersion: 1, timeMs: NOW - 60_000, airport: pack.airport.icao, path: 'currentMode', old: null, new: first };
+    store.setItem(storageKey(pack.airport.icao, 'audit'), JSON.stringify({ schemaVersion: 1, entries: [entry] }));
     return first;
   };
 
-  it('shows a trail saved by v1, exports it as a file, and Clear empties the store as well as the screen', () => {
+  it('shows a trail saved by an older version, exports it as a file, and Clear empties the store as well as the screen', () => {
     const store = createMemoryStore();
     const first = seed(store);
     const r = rig(pack, NOW, store);

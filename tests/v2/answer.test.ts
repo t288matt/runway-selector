@@ -16,20 +16,14 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 state band [%s]', (_n,
   const rig = rigFor(ref);
   const pack = packOf(rig);
 
-  it('is RECOMMENDED (internal id HOLD) when nothing is wrong and no mode is set', () => {
+  it('is RECOMMENDED (internal id HOLD) when nothing is wrong', () => {
     const view = viewOf(pack, rig, same<Wx>(4, 'ok'), same(4, 'light'));
     expect(bandOf(view)).toBe(BANDS.HOLD);
     expect(bandOf(view).word).toBe('RECOMMENDED');
     expect(bandOf(view).id).toBe('HOLD');
   });
 
-  it('is CHANGE NOW when the mode the operator is on is unsuitable now (v1 red banner)', () => {
-    const view = viewOf(pack, rig, ['badA', 'badA', 'ok'], med(3), rig.a);
-    expect(bandOf(view)).toBe(BANDS.CHANGE_NOW);
-    expect(answerModel(view).why).toContain(`Current mode ${rig.a} is unsuitable`);
-  });
-
-  it('is CHANGE SOON when the engine recommends an early change (v1 amber banner)', () => {
+  it('is CHANGE SOON when the engine recommends an early change (the amber early-change banner)', () => {
     const view = viewOf(pack, rig, WX8, EARLY_LEVELS);
     expect(view.result.explanation.earlyChange).not.toBeNull();
     expect(bandOf(view)).toBe(BANDS.CHANGE_SOON);
@@ -42,11 +36,6 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('v2 state band [%s]', (_n,
     const a = answerModel(view);
     expect(a.nextChange).not.toBeNull();
     expect(a.band).toBe(BANDS.HOLD);
-  });
-
-  it('is CHANGE NOW, not CHANGE SOON, when both banners would show in v1', () => {
-    const view = viewOf(pack, rig, ['badA', 'ok', 'ok', 'ok', 'badA', 'badA', 'badA', 'badA'], EARLY_LEVELS, rig.a);
-    expect(bandOf(view)).toBe(BANDS.CHANGE_NOW);
   });
 
   it('says no suitable mode, with a cross, when every mode fails now', () => {

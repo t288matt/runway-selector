@@ -183,7 +183,7 @@ describe('v2 ceiling tile words', () => {
   const tileFor = (body: string) => {
     const metar = decodeMetar(`YSSY 241000Z ${body}`, { pack, nowMs: now });
     if (metar.kind !== 'ok') throw new Error('bad fixture METAR');
-    return ceilingTile(calculate({ pack, nowMs: now, metar: metar.report, taf: null, windowChoice: 'full', currentMode: null, feed: EMPTY_FEED }));
+    return ceilingTile(calculate({ pack, nowMs: now, metar: metar.report, taf: null, windowChoice: 'full', feed: EMPTY_FEED }));
   };
 
   it('CAVOK reads just "CAVOK" (the words "no ceiling" are redundant)', () => {

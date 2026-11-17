@@ -114,7 +114,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the Detail section [%s]',
   it('draws the white corner on a cell with an uncertain input, and the blue outline on the recommended path', () => {
     const overlay: WeatherOverlay = { kind: 'TEMPO', probabilityPct: null, wind: rig.badForA, precipitation: false, text: 'TEMPO 1502/1504 test' };
     const specs = specsFor(rig, same<Wx>(4, 'ok')).map((s, i) => (i === 1 ? { ...s, overlays: [overlay] } : s));
-    const view = viewFromInput(pack, { ...inputFor(BASE, specs, trafficFor(pack, same(4, 'light'))), currentMode: null } as EngineInput);
+    const view = viewFromInput(pack, { ...inputFor(BASE, specs, trafficFor(pack, same(4, 'light'))) } as EngineInput);
     const html = render(view);
     expect(html).toMatch(/class="cell [^"]*\bunc\b[^"]*"/);
     expect(html).toMatch(/class="cell [^"]*\brec\b[^"]*"/);
@@ -134,21 +134,21 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the Detail section [%s]',
     expect(textOf(html)).toContain('Amber band: HIGH traffic');
   });
 
-  it('hides a mode row that is red in every slot unless it is recommended or current, and has no button to reveal them', () => {
-    const view = viewOf(pack, rig, ['badA', 'badA', 'badA', 'badA'], same(4, 'medium'), rig.b);
+  it('hides a mode row that is red in every slot unless it is recommended, and has no button to reveal them', () => {
+    const view = viewOf(pack, rig, ['badA', 'badA', 'badA', 'badA'], same(4, 'medium'));
     const model = screenModel(stateOf(view)).evaluation;
     const html = render(view);
     expect(count(html, 'data-testid="mode-row"')).toBe(model.rows.length);
     expect(textOf(html)).not.toMatch(/Show \d+ unsuitable|Hide unsuitable/);
     const all = pack.modes.filter((m) => m.enabled).map((m) => m.id);
     const shown = model.rows.map((r) => r.modeId);
-    for (const id of all.filter((x) => !shown.includes(x))) expect(view.result.plan.recommendedModeId === id || view.currentMode === id).toBe(false);
+    for (const id of all.filter((x) => !shown.includes(x))) expect(view.result.plan.recommendedModeId === id).toBe(false);
   });
 
   it('draws the wind bars, and the TEMPO, INTER and PROB bars when the TAF has them', () => {
     const overlay: WeatherOverlay = { kind: 'INTER', probabilityPct: null, wind: null, precipitation: false, text: 'INTER 1502/1504 4000 SHRA' };
     const specs = specsFor(rig, same<Wx>(4, 'ok')).map((s, i) => (i >= 1 && i <= 2 ? { ...s, overlays: [overlay] } : s));
-    const html = render(viewFromInput(pack, { ...inputFor(BASE, specs, trafficFor(pack, same(4, 'light'))), currentMode: null } as EngineInput));
+    const html = render(viewFromInput(pack, { ...inputFor(BASE, specs, trafficFor(pack, same(4, 'light'))) } as EngineInput));
     expect(html).toContain('data-testid="wind-bar"');
     expect(html).toContain('data-testid="group-bar"');
     expect(textOf(html)).toContain('INTER 4000 SHRA');

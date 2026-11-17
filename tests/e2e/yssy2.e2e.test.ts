@@ -119,22 +119,6 @@ describe('E21 traffic level takes the higher of arrivals and departures (TR-4, O
 // 24-10-2026 — a METAR-governed slot is judged on the METAR alone; see E07). Not a YR-20b recompute case.
 
 describe('E23 other behaviours worked from the requirements', () => {
-  // No mode is disabled in the shipped pack now (SODPROPS was enabled on 23-10-2026), so the rule is tested on a copy where SODPROPS is
-  // switched off. A current mode that is disabled is not the starting mode, so there is no start and no change is charged from it: the plan
-  // is the cheapest enabled path, 25A16D (penalty 2; SODPROPS cannot be used), with no change at all. The enabled-start case is the control.
-  it('a current mode that is disabled in the pack is not used as the starting mode (DESIGN 6 Current mode)', () => {
-    const noSodprops: RunOptions['edit'] = (files) => {
-      files['modes.json'].modes.find((m: { id: string }) => m.id === 'SODPROPS').enabled = false;
-    };
-    const wx = { metar: metar(kt(250, 10)), taf: taf(kt(250, 10) + ' 9999 SCT020') };
-    const r = go({ ...wx, edit: noSodprops, current: 'SODPROPS' });
-    expect(r.out.plan.startModeId).toBeNull();
-    expect(r.out.plan.recommendedModeId).toBe('25A16D');
-    expect(r.out.plan.changes).toHaveLength(0);
-    // Control: with SODPROPS enabled it is a usable starting mode.
-    const control = go({ ...wx, current: 'SODPROPS' });
-    expect(control.out.plan.startModeId).toBe('SODPROPS');
-  });
   it('a METAR trend (TEMPO RA) is not weather in the slots: no trend (OD-32)', () => {
     const r = go({ metar: metar(kt(158, 4)) + ' TEMPO RA', taf: taf(kt(158, 4) + ' 9999 SCT020') });
     for (const s of r.out.evaluation.slots) expect(s.runwayState).toBe('DRY');

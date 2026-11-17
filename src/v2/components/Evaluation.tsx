@@ -155,12 +155,11 @@ export function Evaluation({ model }: { model: EvaluationModel }) {
               </div>
 
               {rows.map((r, ri) => (
-                <div key={r.modeId} role="row" className={`row${r.isRecommended ? ' isrec' : ''}${r.isCurrent ? ' isact' : ''}`} data-testid="mode-row">
+                <div key={r.modeId} role="row" className={`row${r.isRecommended ? ' isrec' : ''}`} data-testid="mode-row">
                   <Tip tag="div" text={r.title} className="lab" role="rowheader">
                     <span>
                       {r.modeId}
                       {r.isRecommended ? <span className="rt rec"> REC</span> : null}
-                      {r.isCurrent ? <span className="rt act"> CURRENT</span> : null}
                     </span>
                     <small>{r.runwaysText}</small>
                   </Tip>

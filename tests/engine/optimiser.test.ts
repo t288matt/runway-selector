@@ -57,14 +57,6 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
     expect(r.explanation.earlyChange?.trafficAtForced).toBe('busy');
   });
 
-  it('(ii) with A as the current mode the best plan that waits is 0 + 25 + 8 = 33', () => {
-    const levels = [...med];
-    levels[4] = 'busy';
-    const r = go(pack, rig, WX8, levels, a);
-    expect(r.plan.totalScore).toBe(15);
-    expect(r.changeovers[0]?.early?.internal.waitingScore).toBe(33);
-  });
-
   it('(ii) no early banner when waiting is no worse: a tie is not an improvement', () => {
     const levels = [...med];
     levels[4] = 'busy';
@@ -76,33 +68,11 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
     expect(r.explanation.earlyChange).toBeNull();
   });
 
-  it('(iii) current mode B: staying in B (16) beats 13 plus the cost of leaving B (18)', () => {
-    const r = go(pack, rig, WX8, med, b);
+  it('(iv) an UNSUITABLE cell is never entered, even when a change costs far more', () => {
+    const dear = packOf(rig, { ...WORKED, medium: 1000 });
+    const r = go(dear, rig, WX8, med);
     expect(modesOf(r)).toEqual(same(8, b));
     expect(r.plan.totalScore).toBe(16);
-    expect(r.plan.changes).toHaveLength(0);
-    expect(r.changeovers).toHaveLength(0);
-  });
-
-  it('(iii) current mode B in light traffic: leaving B now is worth it (1 + 0 + 1 + 8 = 10)', () => {
-    const r = go(pack, rig, WX8, same(8, 'light'), b);
-    expect(modesOf(r)).toEqual(seq(8, a, b, 4));
-    expect(r.plan.totalScore).toBe(10);
-    expect(r.plan.changes[0]).toMatchObject({ slotIndex: 0, fromModeId: b, toModeId: a });
-    expect(r.changeovers[0]?.trigger).toBeNull();
-    expect(r.changeovers[0]?.early).toBeNull();
-    expect(r.explanation.earlyChange).toBeNull();
-  });
-
-  it('(iii) current mode A in medium traffic costs nothing extra', () => {
-    expect(go(pack, rig, WX8, med, a).plan.totalScore).toBe(13);
-  });
-
-  it('(iv) an UNSUITABLE cell is never entered, even when staying is far cheaper', () => {
-    const dear = packOf(rig, { ...WORKED, medium: 1000 });
-    const r = go(dear, rig, WX8, med, a);
-    expect(modesOf(r)).toEqual(seq(8, a, b, 4));
-    expect(r.plan.totalScore).toBe(1000 + 8);
     r.plan.slots.forEach((s, t) => {
       const m = dear.modes.findIndex((x) => x.id === s.modeId);
       expect(r.evaluation.cells[m]?.[t]?.status).not.toBe('UNSUITABLE');
@@ -118,7 +88,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
   });
 
   it('(v) NO_MODE in slot 0 gives no recommendation and the required message', () => {
-    const r = go(pack, rig, ['badBoth', 'ok'], same(2, 'medium'), a);
+    const r = go(pack, rig, ['badBoth', 'ok'], same(2, 'medium'));
     expect(r.plan.slots[0]?.modeId).toBeNull();
     expect(r.plan.recommendedModeId).toBeNull();
     expect(r.plan.noRecommendation).toBe('NO_SUITABLE_MODE');
@@ -153,17 +123,19 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
   it('(vii) ties: lower total preference first, then the mode first in the pack', () => {
     const tie = packOf(rig, { ...WORKED, prefA: 3, prefB: 3 });
     expect(modesOf(go(tie, rig, same(4, 'ok'), same(4, 'medium')))).toEqual(same(4, a));
-    // Equal totals (4 each); A is first in the pack but B has the lower preference total, so B wins.
+    // Equal totals (6 each): B, B, A (preference 0 + 0 + 2, plus a change of 4) and A, A, A (2 + 2 + 2). A is first in the
+    // pack but B, B, A has the lower preference total, so it wins.
     const t2 = packOf(rig, { ...WORKED, prefA: 2, prefB: 0, light: 4 });
-    const r = go(t2, rig, same(2, 'ok'), same(2, 'light'), a);
-    expect(r.plan.totalScore).toBe(4);
-    expect(modesOf(r)).toEqual(same(2, b));
+    const r = go(t2, rig, ['ok', 'ok', 'badB'], same(3, 'light'));
+    expect(r.plan.totalScore).toBe(6);
+    expect(r.plan.preferenceScore).toBe(2);
+    expect(modesOf(r)).toEqual([b, b, a]);
   });
 
   it('(vii) the same input gives the same output twice', () => {
     const levels = [...med];
     levels[4] = 'busy';
-    expect(JSON.stringify(run(pack, rig, WX8, levels, b))).toBe(JSON.stringify(run(pack, rig, WX8, levels, b)));
+    expect(JSON.stringify(run(pack, rig, WX8, levels))).toBe(JSON.stringify(run(pack, rig, WX8, levels)));
   });
 
   it('(viii) stable weather keeps the mode; small wind changes cause no repeated changes', () => {
@@ -220,30 +192,21 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
     expect(known.changeovers[0]?.early).not.toBeNull();
   });
 
-  it('(xii) no early change for a change made only for preference', () => {
-    // B is current and never fails; the plan moves to A for preference in light traffic.
-    const r = go(pack, rig, same(6, 'ok'), same(6, 'light'), b);
-    expect(r.plan.changes).toHaveLength(1);
-    expect(r.changeovers[0]?.trigger).toBeNull();
-    expect(r.changeovers[0]?.early).toBeNull();
-    expect(r.explanation.earlyChange).toBeNull();
-  });
-
   it('review 1: no early banner unless the forced change is in strictly busier traffic', () => {
-    // Current mode B fails at slot 6 (A fine), light traffic throughout: the change is not to avoid anything worse.
-    const wx: Wx[] = [...same<Wx>(6, 'ok'), 'badB', 'badB'];
-    const light = go(pack, rig, wx, same(8, 'light'), b);
+    // Mode A fails at slot 6 (B fine), light traffic throughout: the change is not to avoid anything worse.
+    const wx: Wx[] = [...same<Wx>(6, 'ok'), 'badA', 'badA'];
+    const light = go(pack, rig, wx, same(8, 'light'));
     expect(light.changeovers[0]?.trigger?.slotIndex).toBe(6);
     expect(light.changeovers[0]?.early).toBeNull();
     expect(light.explanation.earlyChange).toBeNull();
     // Forced slot busier than the change slot: raised (the 6D example is the main case above).
     const lv: (TrafficLevel | null)[] = same(8, 'light');
     lv[6] = 'busy';
-    const busier = go(pack, rig, wx, lv, b);
+    const busier = go(pack, rig, wx, lv);
     expect(busier.changeovers.some((c) => c.early !== null)).toBe(true);
     // Forced slot equally busy, or unknown: not raised.
     lv[6] = 'light';
-    expect(go(pack, rig, wx, lv, b).explanation.earlyChange).toBeNull();
+    expect(go(pack, rig, wx, lv).explanation.earlyChange).toBeNull();
     const west: (TrafficLevel | null)[] = same(8, 'medium');
     west[4] = null;
     expect(go(pack, rig, WX8, west).explanation.earlyChange).toBeNull();
@@ -273,44 +236,8 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
     expect(tail.explanation.lines.join('\n')).toContain('no mode is expected to be suitable again');
   });
 
-  it('review 3: a disabled or unknown current mode is treated as not set', () => {
-    const withOff = packOf(rig, WORKED, (files) => {
-      files['modes.json'].modes.push({ id: 'XOFF', description: 'Disabled', enabled: false, arrivals: [], departures: [] });
-    });
-    const r = go(withOff, rig, WX8, med, 'XOFF');
-    expect(r.plan.startModeId).toBeNull();
-    expect(r.plan.totalScore).toBe(13);
-  });
-
-  it('review 3: the early check uses the stint start after the first change', () => {
-    // Current B; A is good to slot 5 and fails from slot 6 (medium there); light elsewhere.
-    const wx: Wx[] = [...same<Wx>(6, 'ok'), 'badA', 'badA', 'badA', 'badA'];
-    const lv: (TrafficLevel | null)[] = same(10, 'light');
-    lv[6] = 'medium';
-    const r = go(pack, rig, wx, lv, b);
-    // B to A now (1), A to slot 4, A to B at slot 5 in light traffic (1), B for five slots (10): 12.
-    expect(r.plan.totalScore).toBe(12);
-    expect(r.plan.changes.map((c) => c.slotIndex)).toEqual([0, 5]);
-    const second = r.changeovers[1];
-    expect(second?.early).not.toBeNull();
-    // The plan that waits may still make the first change (slot 0): 1 + 5 (medium, slot 6) + 8 = 14. With the
-    // first change wrongly forbidden it would be B throughout, 20.
-    expect(second?.early?.internal.waitingScore).toBe(14);
-  });
-
-  it('review 3: current mode B with slot 5 busy in the worked example stays in B (total 16)', () => {
-    const levels = [...med];
-    levels[4] = 'busy';
-    const r = go(pack, rig, WX8, levels, b);
-    // Hand count: B throughout 8 x 2 = 16. Leaving B now and changing back in slot 4 costs 5 + 5 + 10 = 20;
-    // leaving B now and waiting costs 5 + 25 + 8 = 38.
-    expect(modesOf(r)).toEqual(same(8, b));
-    expect(r.plan.totalScore).toBe(16);
-    expect(r.explanation.earlyChange).toBeNull();
-  });
-
   it('review 3: the engine does not change its inputs and gives the same output twice', () => {
-    const input = { ...inputFor(BASE, specsFor(rig, WX8), trafficFor(pack, med)), currentMode: b };
+    const input = inputFor(BASE, specsFor(rig, WX8), trafficFor(pack, med));
     deepFreeze(input);
     const before = JSON.stringify(input);
     const one = JSON.stringify(plan(pack, input));
@@ -326,14 +253,6 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
     const failing = go(pack, rig, ['badBoth', 'ok'], same(2, 'medium'));
     expect(failing.plan.noRecommendation).toBe('NO_SUITABLE_MODE');
     expect(failing.explanation.noSuitableMode?.perMode.length).toBeGreaterThan(0);
-  });
-
-  it('review 5: a change in slot 0 says "Change now" once and no "Next change" for it', () => {
-    const r = go(pack, rig, WX8, same(8, 'light'), b);
-    expect(r.explanation.headline).toBe(`Change now to ${a}.`);
-    expect(r.explanation.lines.some((l) => l.startsWith(`Change now to ${a}`))).toBe(true);
-    expect(r.explanation.lines.filter((l) => l.startsWith('Next change')).length).toBe(1);
-    expect(r.explanation.lines.find((l) => l.startsWith('Next change'))).toContain(`to ${b}`);
   });
 
   it('(xiii) a changed weight in pack data changes the plan with no code change', () => {
@@ -353,12 +272,6 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
     expect(c?.replacementSurvival?.viableSlots).toBe(4);
   });
 
-  it('an unknown current mode is treated as not set', () => {
-    const r = go(pack, rig, WX8, med, 'no-such-mode');
-    expect(r.plan.startModeId).toBeNull();
-    expect(r.plan.totalScore).toBe(13);
-  });
-
   it('matches a brute-force search on small pseudo-random scenarios', () => {
     let seed = 12345;
     const next = (n: number): number => {
@@ -373,8 +286,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
       const n = 5;
       const wx = Array.from({ length: n }, () => wxs[next(wxs.length)] ?? 'ok');
       const lv = Array.from({ length: n }, () => lvls[next(lvls.length)] ?? null);
-      const cur = [null, a, b][next(3)] ?? null;
-      const r = run(p, rig, wx, lv, cur);
+      const r = run(p, rig, wx, lv);
       const cellOf = (id: string, t: number) => r.evaluation.cells[p.modes.findIndex((m) => m.id === id)]?.[t];
       const pen = (l: TrafficLevel | null): number => (l === null ? w.unknown : l === 'light' ? w.light : l === 'medium' ? w.medium : w.busy);
       let best = Infinity;
@@ -399,7 +311,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('optimiser [%s]', (_n, ref
           walk(t + 1, s, total + c);
         }
       };
-      walk(0, cur, 0);
+      walk(0, null, 0);
       expect(r.plan.totalScore).toBe(best);
     }
   });

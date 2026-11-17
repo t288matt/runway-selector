@@ -55,7 +55,7 @@ export function makeSlots(baseMs: number, specs: readonly Spec[]): WeatherSlot[]
 }
 
 export function inputFor(baseMs: number, specs: readonly Spec[], traffic: EngineInput['traffic'] = []): EngineInput {
-  return { nowMs: baseMs, weather: makeSlots(baseMs, specs), traffic, currentMode: null };
+  return { nowMs: baseMs, weather: makeSlots(baseMs, specs), traffic };
 }
 
 const baseCache = new WeakMap<AirportPack, Map<string, number>>();

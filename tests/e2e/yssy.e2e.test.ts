@@ -40,6 +40,12 @@ function metar(wind: string, wx = '', obs = '230300Z'): string {
 function taf(body: string, issue = '230200Z', valid = '2303/2403'): string {
   return `TAF YSSY ${issue} ${valid} ${body}`;
 }
+/** An edit for a copy of the pack where `id` is the most preferred mode (penalty 0) and every other mode costs 5. */
+function preferring(id: string): NonNullable<RunOptions['edit']> {
+  return (files) => {
+    for (const band of files['operating_plan.json'].bands as { rows: { mode: string; penalty: number }[] }[]) for (const row of band.rows) row.penalty = row.mode === id ? 0 : 5;
+  };
+}
 function go(o: Partial<RunOptions> & { metar?: string | null; taf?: string | null }) {
   return run({ ref: YSSY_PACK, nowIso: NOW, windowMinutes: 240, ...o });
 }
@@ -515,22 +521,19 @@ describe('E13 capacity set on a copy of the pack (TR-6, OD-16, OD-24)', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
-describe('E14 the current mode becomes unsuitable: red banner data and the replacement (UP-4, OD-21, OP-8)', () => {
-  it('already unsuitable now: 070/10 with Mode 25AD current (tailwind 9.9 on runway 25)', () => {
+describe('E14 a mode that is unsuitable now, or becomes unsuitable later (UP-4, OP-8)', () => {
+  it('already unsuitable now: 070/10 puts Mode 25AD out (tailwind 9.9 on runway 25) and the plan is SODPROPS', () => {
     // 25 is hdg 242: dir-hdg = -172 -> tailwind 9.9 > 5.05, UNSUITABLE TW. Suitable at 070/10: 07AD (a 9.9 kt headwind), 07A16D, 16AD, 34AD (each
     // under a 1 kt tail/head component with xw 9.96) and SODPROPS (34L tailwind 0.87, 16 headwind, xw 9.96). The lowest penalty is SODPROPS (0).
-    // Leaving the current mode in slot 0 costs the unknown-demand change 5, which any alternative needs too, so SODPROPS from slot 0 is the plan.
-    const r = go({ metar: metar(kt(70, 10)), taf: taf(kt(70, 10) + ' 9999 SCT020'), current: '25AD' });
+    const r = go({ metar: metar(kt(70, 10)), taf: taf(kt(70, 10) + ' 9999 SCT020') });
     expect(cell(r, '25AD', 0)).toMatchObject({ status: 'UNSUITABLE', cause: 'TW' });
-    expect(r.out.plan.startModeId).toBe('25AD');
     expect(r.out.plan.recommendedModeId).toBe('SODPROPS');
-    expect(r.out.plan.changes[0]).toMatchObject({ slotIndex: 0, fromModeId: '25AD', toModeId: 'SODPROPS' });
-    const co = r.out.changeovers[0]!;
-    expect(co.trigger).toMatchObject({ slotIndex: 0, cause: 'TW' });
-    expect(co.replacementModeId).toBe('SODPROPS');
+    expect(r.out.plan.changes).toHaveLength(0);
   });
   it('becomes unsuitable at 05:00 (FM to 070/10): the trigger is the 05:00 slot and unknown traffic gives no early-change banner', () => {
-    const r = go({ metar: metar(kt(250, 10)), taf: taf(`${kt(250, 10)} 9999 SCT020 FM230500 ${kt(70, 10)} 9999 SCT020`), current: '25AD' });
+    // On a copy of the pack where 25AD is the most preferred mode, so the plan starts in it.
+    const r = go({ edit: preferring('25AD'), metar: metar(kt(250, 10)), taf: taf(`${kt(250, 10)} 9999 SCT020 FM230500 ${kt(70, 10)} 9999 SCT020`) });
+    expect(chosen(r)[0]).toBe('25AD');
     expect(cell(r, '25AD', 3).status).toBe('SUITABLE');
     expect(cell(r, '25AD', 4).status).toBe('UNSUITABLE');
     expect(r.out.changeovers.length).toBeGreaterThan(0);
@@ -543,23 +546,24 @@ describe('E14 the current mode becomes unsuitable: red banner data and the repla
 
 // ---------------------------------------------------------------------------------------------
 describe('E15 busy-traffic early change: banner only when the forced change is in strictly busier traffic (OP-6, OP-7)', () => {
-  // METAR 160/12; FM 05:00 -> 340/12. Current mode 16AD (hdg 155: a headwind, then a 11.95 kt tailwind > 5.05 -> UNSUITABLE from slot 4).
+  // METAR 160/12; FM 05:00 -> 340/12. Mode 16AD is the plan's first mode (hdg 155: a headwind, then a 11.95 kt tailwind > 5.05 -> UNSUITABLE from slot 4).
   // Survivors of every slot are 07AD and 25AD only (1.67 kt components either way, see E05); SODPROPS never passes. Window 4 h: slots 0-3
   // before the shift, slot 4 is the forced slot.
   // Arrivals decide the level: light <= 10, medium 11-20, busy >= 21. Change cost: light 1, medium 5, busy 25 (charged in the slot where the new mode starts).
   // The two decisive tests below (medium before / busy after, and medium before / light after) run on a COPY of the pack where every mode
-  // has the same preference (5) and no capacity, which is the situation these cases were written for: only change costs then differ, with
-  // the real preferences (SODPROPS 0 ... 07AD 12) a cheaper mode always wins by preference, and the real capacities would remove 07AD and 25AD
-  // at 15 or more arrivals a slot. The other tests keep the real pack.
-  const wx = { metar: metar(kt(160, 12)), taf: taf(`${kt(160, 12)} 9999 SCT020 FM230500 ${kt(340, 12)} 9999 SCT020`), current: '16AD' };
+  // except 16AD has the same preference (5), 16AD is the most preferred (0, so the plan starts in it) and no mode has a capacity, which is
+  // the situation these cases were written for: only change costs then differ, with the real preferences (SODPROPS 0 ... 07AD 12) a cheaper
+  // mode always wins by preference, and the real capacities would remove 07AD and 25AD at 15 or more arrivals a slot. The other tests keep
+  // the real pack.
+  const wx = { metar: metar(kt(160, 12)), taf: taf(`${kt(160, 12)} 9999 SCT020 FM230500 ${kt(340, 12)} 9999 SCT020`) };
   const traffic = (before: number | null, after: number | null) => [before, before, before, before, after, after, after, after];
   const flatPlan: RunOptions['edit'] = (files) => {
     for (const m of files['modes.json'].modes as { capacity: number | null }[]) m.capacity = null;
-    for (const band of files['operating_plan.json'].bands as { rows: { penalty: number }[] }[]) for (const row of band.rows) row.penalty = 5;
+    preferring('16AD')(files);
   };
 
-  // Flat preference 5, so a plan costs 8 x 5 = 40 plus its changes. Waiting for slot 4 means a busy change: 40 + 25 = 65. Changing early in
-  // a medium slot to 07AD or 25AD (the survivors) and staying costs 40 + 5 = 45, so the early plan wins and the banner appears.
+  // 16AD costs 0 a slot and the survivors 5. Waiting in 16AD for slot 4 means a busy change: 0 + 25 + 4 x 5 = 45. Changing early (slot 3, medium)
+  // to 07AD or 25AD and staying costs 5 + 5 x 5 = 30, and 07AD or 25AD throughout costs 40, so the early plan wins and the banner appears.
   it('medium before, busy at the forced slot: changing early costs 5, waiting costs 25 -> EARLY banner, change in a medium slot before 05:00', () => {
     const r = go({ ...wx, edit: flatPlan, arrivals: traffic(15, 22) });
     const early = r.out.explanation.earlyChange;
@@ -587,7 +591,7 @@ describe('E15 busy-traffic early change: banner only when the forced change is i
     const r = go({ ...wx, arrivals: traffic(22, 22) });
     expect(r.out.explanation.earlyChange).toBeNull();
   });
-  // Flat preference 5: waiting for slot 4 costs a light change, 40 + 1 = 41; changing early in a medium slot costs 40 + 5 = 45. Waiting wins.
+  // Waiting in 16AD for slot 4 costs a light change, 0 + 1 + 4 x 5 = 21; changing early in a medium slot costs 30, and 07AD or 25AD throughout 40. Waiting wins.
   it('medium before, light at the forced slot: waiting costs 1 < 5, so the plan waits for 05:00 and shows no banner', () => {
     const r = go({ ...wx, edit: flatPlan, arrivals: traffic(15, 3) });
     expect(r.out.explanation.earlyChange).toBeNull();

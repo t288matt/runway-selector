@@ -131,8 +131,8 @@ export function trafficFor(pack: AirportPack, levels: readonly (TrafficLevel | n
   return levels.map((level, i) => ({ startMs: BASE + i * SLOT_MS, arrivals: level === null ? null : countFor(pack, level), departures: null }));
 }
 
-export function run(pack: AirportPack, rig: Rig, wx: readonly Wx[], levels: readonly (TrafficLevel | null)[], currentMode: string | null = null): PlanResult {
-  const input: EngineInput = { ...inputFor(BASE, specsFor(rig, wx), trafficFor(pack, levels)), currentMode };
+export function run(pack: AirportPack, rig: Rig, wx: readonly Wx[], levels: readonly (TrafficLevel | null)[]): PlanResult {
+  const input: EngineInput = inputFor(BASE, specsFor(rig, wx), trafficFor(pack, levels));
   return plan(pack, input);
 }
 

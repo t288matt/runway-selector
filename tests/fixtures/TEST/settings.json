@@ -142,10 +142,6 @@
     "value": 300,
     "description": "How often traffic is fetched."
   },
-  "currentModeStaleMinutes": {
-    "value": 120,
-    "description": "A current mode set longer ago than this is flagged amber as possibly out of date."
-  },
   "auditMaxEntries": {
     "value": 100,
     "description": "Audit trail size cap; oldest entries drop first."

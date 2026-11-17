@@ -1,7 +1,5 @@
-// The view model of the expanded "Detail" section: v1's timeline
-// block as plain data, from one engine result. v2's own copy of v1's timeline
-// model (v2 imports nothing from src/ui); tests/v2/evaluationParity.test.ts
-// proves it matches v1's on the same fixtures: which rows are hidden, every cell
+// The view model of the expanded "Detail" section: the timeline
+// block as plain data, from one engine result: which rows are hidden, every cell
 // status, cause word and uncertain flag, the recommended path, the change
 // positions, the wind and group bars and the busy runs.
 //
@@ -38,7 +36,6 @@ export interface ModeRow {
   readonly index: number;
   readonly modeId: string;
   readonly isRecommended: boolean;
-  readonly isCurrent: boolean;
   /** Every slot in the window is UNSUITABLE for this mode (a fully red row). */
   readonly allUnsuitable: boolean;
   /** Second line of the row header, from the mode's runways. */
@@ -69,7 +66,7 @@ export function planRank(view: ViewData, modeIndex: number, slotIndex = 0): numb
   return better + 1;
 }
 
-/** Rows in operating-plan priority order for the first slot; the recommended and current modes are badged, not moved. Enabled modes only. */
+/** Rows in operating-plan priority order for the first slot; the recommended mode is badged, not moved. Enabled modes only. */
 export function modeRows(view: ViewData): ModeRow[] {
   const { pack, result } = view;
   const rec = result.plan.recommendedModeId;
@@ -87,7 +84,6 @@ export function modeRows(view: ViewData): ModeRow[] {
       index,
       modeId: mode.id,
       isRecommended: mode.id === rec,
-      isCurrent: mode.id === view.currentMode,
       allUnsuitable: cellsOfMode.length > 0 && cellsOfMode.every((c) => c.status === 'UNSUITABLE'),
       runwaysText: runwaysText(mode.arrivals, mode.departures),
       title: `Mode ${mode.id}: ${runwaysText(mode.arrivals, mode.departures)}; ${cap}; crosswind limit ${kt1(mode.maxCrosswindKt)} kt${mode.minima === null ? '' : `; minima: ${minimaText(mode.minima)}`}${rank === null ? '' : `; plan priority ${rank}`}${outlook === '' ? '' : `. ${outlook}`}`,
@@ -101,11 +97,11 @@ export function modeRows(view: ViewData): ModeRow[] {
 
 /**
  * The rows to draw (v1's rule, with no reveal button in v2). A fully red row (UNSUITABLE in every slot) is hidden
- * unless it is the recommended or the current mode. When every row is fully red all are shown, so the grid is
+ * unless it is the recommended mode. When every row is fully red all are shown, so the grid is
  * never empty. Returns the positions in `rows` to keep.
  */
 export function visibleRowIndexes(rows: readonly ModeRow[]): number[] {
-  const hide = (r: ModeRow): boolean => r.allUnsuitable && !r.isRecommended && !r.isCurrent;
+  const hide = (r: ModeRow): boolean => r.allUnsuitable && !r.isRecommended;
   const hidden = rows.filter(hide).length;
   if (hidden === 0 || hidden === rows.length) return rows.map((_r, i) => i);
   return rows.map((r, i) => (hide(r) ? -1 : i)).filter((i) => i >= 0);

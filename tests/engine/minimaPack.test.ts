@@ -19,7 +19,7 @@ function cellFor(body: string, mode = MODE): Cell {
   const r = decodeMetar(`METAR ${pack.airport.weatherStation} 150150Z ${body}`, { pack, nowMs });
   if (r.kind !== 'ok') throw new Error('metar not decoded');
   const { slots } = buildWeatherSlots({ pack, nowMs, metar: r.report, taf: null, windowMinutes: 30 });
-  const result = evaluate(pack, { nowMs, weather: slots, traffic: [], currentMode: null });
+  const result = evaluate(pack, { nowMs, weather: slots, traffic: [] });
   return result.cells[pack.modes.findIndex((m) => m.id === mode)]![0]!;
 }
 

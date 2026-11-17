@@ -12,7 +12,7 @@ import { DrawerContent, DRAWER_SECTIONS, type DrawerBridge } from '../../src/v2/
 import { NO_AUTO_WEATHER } from '../../src/v2/controller';
 import type { ViewData } from '../../src/v2/model/dashboard';
 import { evaluationModel } from '../../src/v2/model/evaluation';
-import { auditRows, keyModel, REACHABLE_STATES, planBandModel, settingsModel, whyModel } from '../../src/v2/model/drawer';
+import { auditRows, keyModel, planBandModel, settingsModel, whyModel } from '../../src/v2/model/drawer';
 import { CAUSE_WORDS } from '../../src/v2/model/status';
 import { packOf, rigFor, same, type Wx } from '../engine/planHelpers';
 import { PACKS, YSSY_PACK } from '../helpers/packs';
@@ -80,13 +80,6 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the drawer sections [%s]'
     for (const l of m.lines) expect(html).toContain(l.slice(0, 40));
   });
 
-  it('Why: with the current mode unsuitable, gives the v1 sentence under CURRENT MODE UNSUITABLE', () => {
-    const v = viewOf(pack, rig, ['badA', 'badA', 'ok'], same(3, 'medium'), rig.a);
-    const m = whyModel(v);
-    expect(m.banners.find((b) => b.tone === 'red')?.text).toContain(`Current mode ${rig.a} is unsuitable`);
-    expect(textOf(render(v))).toContain('CURRENT MODE UNSUITABLE');
-  });
-
   it('Why: with no suitable mode, says why for each mode; with no data, says what is missing', () => {
     const none = viewOf(pack, rig, ['badBoth', 'badBoth'], same(2, 'medium'));
     expect(whyModel(none).kind).toBe('no-suitable');
@@ -122,7 +115,7 @@ describe.each(PACKS.map((p) => [p.name, p] as const))('the drawer sections [%s]'
     const k = keyModel();
     // only states that can appear: no current mode in v2, so no CHANGE NOW; HOLD is worded RECOMMENDED
     expect(k.states.map((s) => s.band.word)).toEqual(['RECOMMENDED', 'CHANGE SOON', 'NO SUITABLE STANDARD MODE IDENTIFIED', 'NO DATA']);
-    expect(k.states.map((s) => s.band.id)).toEqual([...REACHABLE_STATES]);
+    expect(k.states.map((s) => s.band.id)).toEqual(['HOLD', 'CHANGE_SOON', 'NO_SUITABLE', 'NO_DATA']);
     expect(textOf(render(view))).not.toContain('CHANGE NOW');
     expect(textOf(render(view))).not.toContain('HOLD');
     const t = textOf(render(view));

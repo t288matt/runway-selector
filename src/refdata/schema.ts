@@ -332,7 +332,6 @@ export const SETTING_VALUE_SCHEMAS = {
   vatsimStaleMinutes: int(R.staleMinutes),
   weatherPollMinutes: int(R.weatherPollMinutes),
   vatsimPollSeconds: int(R.vatsimPollSeconds),
-  currentModeStaleMinutes: int(R.staleMinutes),
   auditMaxEntries: int(R.auditMaxEntries),
 } as const;
 

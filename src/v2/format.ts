@@ -1,5 +1,4 @@
-// v2's own plain-text formatting helpers (a copy of the few v1 ones it needs;
-// v2 imports nothing from src/ui). UTC only (OD-36). Every function returns a
+// Plain-text formatting helpers. UTC only (OD-36). Every function returns a
 // string; nothing here produces markup (SEC-2).
 import type { ModeMinima } from '../refdata';
 

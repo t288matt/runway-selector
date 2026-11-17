@@ -35,7 +35,7 @@ export interface PlanSlot {
   readonly uncertain: boolean;
 }
 
-/** A change between two real modes, including leaving the current mode in slot 0. */
+/** A change between two real modes. */
 export interface PlanChange {
   readonly slotIndex: number;
   readonly startMs: number;
@@ -65,8 +65,6 @@ export interface Plan {
   readonly changes: readonly PlanChange[];
   /** Runs of slots with no suitable mode. A change across a gap is not listed in `changes`. */
   readonly gaps: readonly PlanGap[];
-  /** The starting mode that was used (the current mode, if it is known and enabled), else null. */
-  readonly startModeId: string | null;
   /** INTERNAL. Total of preference, marginal, change and no-mode scores. Never shown to users. */
   readonly totalScore: number;
   /** INTERNAL. The preference part of totalScore (the first tie-break). */
@@ -109,12 +107,6 @@ export function changePenaltyFor(pack: AirportPack, level: TrafficLevel | null):
   return s.changePenaltyBusy;
 }
 
-/** The starting mode index: the current mode when it is an enabled mode of the pack, else -1. */
-export function startModeIndex(pack: AirportPack, currentMode: string | null): number {
-  if (currentMode === null) return -1;
-  return pack.modes.findIndex((m) => m.id === currentMode && m.enabled);
-}
-
 const NONE = -1;
 
 interface Pair {
@@ -131,7 +123,6 @@ export function optimiseConstrained(pack: AirportPack, input: EngineInput, resul
   const slotCount = result.slots.length;
   const modeCount = pack.modes.length;
   const noModeState = modeCount;
-  const startIndex = startModeIndex(pack, input.currentMode);
   const levels = trafficLevelsFor(
     pack,
     result.slots.map((s) => s.startMs),
@@ -158,7 +149,7 @@ export function optimiseConstrained(pack: AirportPack, input: EngineInput, resul
     return { total: pref + (cell.status === 'MARGINAL' ? pack.settings.marginalPenalty : 0), pref };
   };
 
-  /** Change score for entering slot t in state cur from state prev (NONE = no starting mode). */
+  /** Change score for entering slot t in state cur from state prev (NONE = the first slot: there is no mode before it, so entering it costs nothing). */
   const move = (t: number, prev: number, cur: number): Pair => {
     if (prev === cur || prev === NONE || prev === noModeState || cur === noModeState) return { total: 0, pref: 0 };
     if (t >= forbidFrom && t < forbidBefore) return INF;
@@ -166,7 +157,7 @@ export function optimiseConstrained(pack: AirportPack, input: EngineInput, resul
   };
 
   if (slotCount === 0) {
-    return emptyPlan(startIndex < 0 ? null : (pack.modes[startIndex]?.id ?? null));
+    return emptyPlan();
   }
 
   const stateCount = modeCount + 1;
@@ -226,7 +217,7 @@ export function optimiseConstrained(pack: AirportPack, input: EngineInput, resul
 
   // Forward pass: the lowest-index state among the equal best, so ties go to the mode first in the pack.
   const path: number[] = [];
-  let prev = startIndex < 0 ? NONE : startIndex;
+  let prev = NONE;
   let prevLevel = capLevel;
   let totals: Pair = { total: 0, pref: 0 };
   for (let t = 0; t < slotCount; t += 1) {
@@ -248,21 +239,20 @@ export function optimiseConstrained(pack: AirportPack, input: EngineInput, resul
     prev = bestState;
     prevLevel = bestLevel;
   }
-  return buildPlan(pack, result, levels, path, startIndex, totals);
+  return buildPlan(pack, result, levels, path, totals);
 }
 
 /** The best plan with no extra rules. Always exists, because NO_MODE covers a slot where nothing fits. */
 export function optimise(pack: AirportPack, input: EngineInput, result: EngineResult): Plan {
   const plan = optimiseConstrained(pack, input, result);
-  return plan ?? emptyPlan(null);
+  return plan ?? emptyPlan();
 }
 
-function emptyPlan(startModeId: string | null): Plan {
+function emptyPlan(): Plan {
   return {
     slots: [],
     changes: [],
     gaps: [],
-    startModeId,
     totalScore: 0,
     preferenceScore: 0,
     uncertainSlots: 0,
@@ -277,14 +267,13 @@ function buildPlan(
   result: EngineResult,
   levels: readonly (TrafficLevel | null)[],
   path: readonly number[],
-  startIndex: number,
   totals: Pair,
 ): Plan {
   const modeCount = pack.modes.length;
   const slots: PlanSlot[] = [];
   const changes: PlanChange[] = [];
   let uncertainSlots = 0;
-  let previousModeId: string | null = startIndex < 0 ? null : (pack.modes[startIndex]?.id ?? null);
+  let previousModeId: string | null = null;
 
   path.forEach((state, t) => {
     const info = result.slots[t];
@@ -338,7 +327,6 @@ function buildPlan(
     slots,
     changes,
     gaps,
-    startModeId: startIndex < 0 ? null : (pack.modes[startIndex]?.id ?? null),
     totalScore: totals.total,
     preferenceScore: totals.pref,
     uncertainSlots,

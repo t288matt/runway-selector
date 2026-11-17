@@ -1,16 +1,18 @@
-// The audit trail (RD-6, OD-23): a local record of current-mode and on-screen
-// setting changes. It is a convenience, not evidence: the user can clear or edit
-// it, so it carries no hash chain (SEC-7 not adopted) and says so on export.
+// The audit trail (RD-6, OD-23): a local record that an older version of the
+// app wrote. Nothing writes it any more (v2 has no current mode and no window
+// control), so this module only reads, clears and exports what is already in the
+// browser. It is a convenience, not evidence: the user can clear or edit it, so
+// it carries no hash chain (SEC-7 not adopted) and says so on export.
 import * as v from 'valibot';
 import { BOUNDS } from '../refdata';
-import { MAX_TIME_MS } from './currentMode';
 import { storageKey, type Store } from './store';
-import { readValidated, writeJson } from './stored';
+import { readValidated } from './stored';
 
 export const AUDIT_SCHEMA_VERSION = 1;
 export const AUDIT_NOTICE =
   'This is a local record, not tamper-proof. It is kept in this browser, can be cleared or edited by the user, and is not evidence. Changes to the reference data files are not recorded here; the repository history is the record of those.';
 
+const MAX_TIME_MS = 8_640_000_000_000_000; // the largest time a JavaScript Date holds
 const MAX_PATH = 64;
 const MAX_VALUE_CHARS = 200;
 /** An entry as JSON is well under 600 characters; the log is capped at the largest allowed entry count. */
@@ -74,20 +76,6 @@ export function loadAudit(store: Store, icao: string, maxEntries: number): Audit
     new: e.new,
   }));
   return { entries: cap(entries, maxEntries), message: null };
-}
-
-/** Append one entry; the oldest drop first once there are more than maxEntries. */
-export function appendAudit(
-  store: Store,
-  icao: string,
-  entry: Omit<AuditEntry, 'schemaVersion' | 'airport'>,
-  maxEntries: number,
-): AuditLoad {
-  const loaded = loadAudit(store, icao, maxEntries);
-  const full: AuditEntry = { schemaVersion: 1, airport: icao.toUpperCase(), ...entry };
-  const entries = cap([...loaded.entries, full], maxEntries);
-  writeJson(store, storageKey(icao, 'audit'), { schemaVersion: AUDIT_SCHEMA_VERSION, entries });
-  return { entries, message: loaded.message };
 }
 
 export function clearAudit(store: Store, icao: string): void {

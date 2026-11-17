@@ -1,4 +1,4 @@
-// v2's own copy of the clock helpers (v2 imports nothing from src/ui). The
+// The clock helpers. The
 // wall clock is read only here and in main.tsx; everything else is handed the
 // time as an argument, so the view model stays pure.
 // UTC milliseconds since the epoch.
